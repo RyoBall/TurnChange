@@ -1,0 +1,234 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.Linq;
+public class TurnManager : MonoBehaviour
+{
+    public static TurnManager Instance { get; private set; }
+    [Tooltip("是否自动开始回合循环")]
+    public bool autoStart = true;
+
+    [Tooltip("每个回合结束后等待的帧数")]
+    public float turnDelay = 0.1f;
+
+    private List<Combatant> combatants = new List<Combatant>();
+    // 回合顺序由链表维护，链表头永远表示下一个行动的角色。
+    [SerializeField] private readonly LinkedList<Combatant> turnOrder = new LinkedList<Combatant>();
+
+    public IEnumerable<Combatant> CurrentTurnOrder => turnOrder;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+    private void Start()
+    {
+        if (autoStart)
+        {
+            // 场上角色初始化，构建回合链表，并开始回合循环。
+            InitializeCombatants();
+            BuildTurnOrder();
+            StartCoroutine(StartFight());
+        }
+    }
+    #region 回合开始的函数
+    IEnumerator StartFight()
+    {
+        //在此处插入需要在回合进行前进行的事情
+
+        //设置回合图片
+        yield return StartCoroutine(SetTurnImages());
+
+        //回合开始
+        yield return StartCoroutine(RunTurnLoop());
+    }
+    IEnumerator SetTurnImages()//初始化回合图片
+    {
+        if (TurnImageManager.Instance != null)
+        {
+            yield return StartCoroutine(TurnImageManager.Instance.InitializeTurnImages());
+        }
+    }
+    private void InitializeCombatants()//初始化获取所有应该获取的角色
+    {
+        combatants.Clear();
+        foreach (var combatant in FindObjectsOfType<Combatant>())
+        {
+            if (combatant != null && combatant.participateInTurnLoop)
+            {
+                combatants.Add(combatant);
+            }
+        }
+
+        foreach (var combatant in combatants)
+        {
+            combatant.currentActionValue = combatant.BaseActionValue;
+        }
+    }
+    #endregion
+    private IEnumerator RunTurnLoop()
+    {
+        while (true)
+        {
+            // 回合开始前
+            // 直接读取链表头，链表头就是下一位行动者。
+            var nextNode = turnOrder.First;
+            if (nextNode == null)
+            {
+                yield break;
+            }
+
+            //读取当前行动者行动值
+            var nextCombatant = nextNode.Value;
+            // 用当前行动者的行动值推进整张时间轴。
+            float advanceValue = nextCombatant.currentActionValue;
+            foreach (var combatant in turnOrder)
+            {
+                combatant.currentActionValue = Mathf.Max(0f, combatant.currentActionValue - advanceValue);
+            }
+
+            Debug.Log($"[TurnManager] 进入回合: {nextCombatant.name} (速度={nextCombatant.speed})");
+
+            // 回合开始。
+            yield return StartCoroutine(nextCombatant.PerformTurn());
+            // 回合结束
+            // 回合结束后重新计算当前角色的下一次行动值。
+            nextCombatant.currentActionValue = nextCombatant.BaseActionValue;
+            NotifyCombatantActionValueChanged(nextCombatant);
+            Debug.Log($"[TurnManager] 结束回合: {nextCombatant.name}，重置行动值到 {nextCombatant.BaseActionValue:F0}");
+            //进行回合修改动画
+            if (TurnImageManager.Instance != null)
+            {
+                TurnImageManager.Instance.Reorder();
+            }
+            //回合转换延迟
+            if (turnDelay > 0f)
+            {
+                yield return new WaitForSeconds(turnDelay);
+            }
+            else
+            {
+                yield return null;
+            }
+        }
+    }
+
+    public Combatant GetCurrentTurnCombatant()//获取当前回合角色
+    {
+        return turnOrder.First?.Value;
+    }
+
+    public void NotifyCombatantActionValueChanged(Combatant combatant)//重置单个角色的回合位置
+    {
+        if (combatant == null || combatant.participateInTurnLoop == false)
+        {
+            return;
+        }
+
+        RemoveCombatantFromTurnOrder(combatant);
+        InsertCombatantByActionValue(combatant);
+
+        if (TurnImageManager.Instance != null)
+        {
+            TurnImageManager.Instance.Reorder();
+        }
+    }
+
+    private void BuildTurnOrder()////重排回合顺序
+    {
+        turnOrder.Clear();
+
+        combatants = combatants.OrderBy(c => c.currentActionValue).ToList();
+        foreach (var combatant in combatants)
+        {
+            turnOrder.AddLast(combatant);
+        }
+    }
+
+    private void InsertCombatantByActionValue(Combatant combatant, bool insertAtEnd = true)//插入角色回合
+    {
+        if (combatant == null)
+        {
+            return;
+        }
+
+        foreach (var c in turnOrder)
+        {
+            if (c == combatant)
+            {
+                return;
+            }
+        }
+
+        if (turnOrder.Count == 0)
+        {
+            turnOrder.AddFirst(combatant);
+            return;
+        }
+
+        var node = turnOrder.First.Next;
+        while (node != null && (insertAtEnd ? node.Value.currentActionValue <= combatant.currentActionValue : node.Value.currentActionValue < combatant.currentActionValue))
+        {
+            node = node.Next;
+        }
+
+        if (node == null)
+        {
+            turnOrder.AddLast(combatant);
+        }
+        else
+        {
+            turnOrder.AddBefore(node, combatant);
+        }
+    }
+    private void RemoveCombatantFromTurnOrder(Combatant combatant)//移除角色回合
+    {
+        if (combatant == null)
+        {
+            Debug.LogWarning("[TurnManager] 尝试移除 null 角色");
+            return;
+        }
+
+        var node = turnOrder.First;
+        while (node != null)
+        {
+            if (node.Value == combatant)
+            {
+                turnOrder.Remove(node);
+                Debug.Log($"[TurnManager] 移除角色: {combatant.name}");
+                return;
+            }
+
+            node = node.Next;
+        }
+    }
+    //从外部插入角色回合的接口,在触发时默认进行一次重排
+    public void InsertCombatant(Combatant combatant, bool insertAtEnd = true)
+    {
+        InsertCombatantByActionValue(combatant, insertAtEnd);
+        if (TurnImageManager.Instance != null)
+        {
+            TurnImageManager.Instance.Reorder();
+        }
+    }
+    public void RemoveCombatant(Combatant combatant)
+    {
+        RemoveCombatantFromTurnOrder(combatant);
+        if (TurnImageManager.Instance != null)
+        {
+            TurnImageManager.Instance.Reorder();
+        }
+    }
+}
