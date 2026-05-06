@@ -27,6 +27,7 @@ public class Enemy : Combatant
 
     public override IEnumerator PerformTurn()
     {
+        ProcessStatesOnTurnStart();
         yield break;
     }
 
@@ -39,13 +40,19 @@ public class Enemy : Combatant
         if(currentHP <= 0)
         Die();
     }
+    public void Die()
+    {
+        EnemyManager.Instance?.UnregisterEnemy(this);
+        Destroy(gameObject);
+    }
+    #region 选敌相关
     private void OnMouseDown()
     {
         // OnMouseDown 默认响应鼠标左键，这里把点击事件转发给选敌系统。
         SkillManager.Instance?.OnEnemyClicked(this);
     }
 
-    public void SetSelectedVisual(bool selected)
+    public void SetSelectedVisual(bool selected)//被选中可视化函数
     {
         if (m_scaleTween != null)
         {
@@ -56,10 +63,5 @@ public class Enemy : Combatant
         var targetScale = selected ? m_defaultScale * selectedScale : m_defaultScale;
         m_scaleTween = transform.DOScale(targetScale, selectAnimDuration).SetEase(Ease.OutQuad);
     }
-
-    public void Die()
-    {
-        EnemyManager.Instance?.UnregisterEnemy(this);
-        Destroy(gameObject);
-    }
+    #endregion
 }

@@ -106,11 +106,6 @@ public class TurnImageManager : MonoBehaviour
 
     public Coroutine Reorder()
     {
-        if (reorderCoroutine != null)
-        {
-            StopCoroutine(reorderCoroutine);
-        }
-
         reorderCoroutine = StartCoroutine(ReorderCoroutine());
         return reorderCoroutine;
     }
@@ -154,21 +149,9 @@ public class TurnImageManager : MonoBehaviour
         var currentOrder = TurnManager.Instance.CurrentTurnOrder.ToList();
         var previousCombatants = new HashSet<Combatant>(imageMap.Keys);
         var latestCombatants = new HashSet<Combatant>(currentOrder);
-        //临时:打印当前回合顺序和之前的角色列表，帮助调试
-        Debug.Log("TurnImageManager: Current turn order from TurnManager:");
-        foreach (var combatant in currentOrder)
-        {
-            Debug.Log($" - {combatant.name}");
-        }
-        Debug.Log("TurnImageManager: Previous combatants in imageMap:");
-        foreach (var combatant in previousCombatants)        
-        {
-            Debug.Log($" - {combatant.name}");
-        }
         // 找出新增与消失的角色。
-        foreach (var combatant in latestCombatants.Except(previousCombatants))//对于所有在最新角色列表中但不在之前角色列表中的角色，创建新的回合图像并添加到 addedImages 列表中
+        foreach (var combatant in latestCombatants.Except(previousCombatants))//对于新增的角色，创建新的回合图像并添加到 addedImages 列表中
         {
-            Debug.Log($"TurnImageManager: Detected new combatant in turn order: {combatant.name}");
             var turnImage = CreateTurnImage(combatant);
             if (turnImage != null)
             {
@@ -176,7 +159,7 @@ public class TurnImageManager : MonoBehaviour
             }
         }
 
-        foreach (var combatant in previousCombatants.Except(latestCombatants))//对于所有在之前角色列表中但不在最新角色列表中的角色，从 imageMap 中找到对应的回合图像，添加到 removedImages 列表中，并从 imageMap 中移除该角色的映射关系
+        foreach (var combatant in previousCombatants.Except(latestCombatants))//对于所有消失的角色，从 imageMap 中找到对应的回合图像，添加到 removedImages 列表中，并从 imageMap 中移除该角色的映射关系
         {
             Debug.Log($"TurnImageManager: Detected removed combatant from turn order: {combatant.name}");
             if (imageMap.TryGetValue(combatant, out var turnImage))

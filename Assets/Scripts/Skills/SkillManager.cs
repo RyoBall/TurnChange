@@ -10,13 +10,16 @@ public class SkillManager : MonoBehaviour
     public GameObject changeCharacter;
     [Header("选敌提示")]
     public TMP_Text targetPromptText;
-
+    //选敌相关
     private readonly List<Enemy> m_selectedEnemies = new List<Enemy>();
     private int m_requiredEnemyCount;
     private bool m_isSelectingEnemies;
 
     public bool IsSelectingEnemies => m_isSelectingEnemies;
-
+    //选友相关
+    private readonly List<Character> m_selectedCharacters = new List<Character>();
+    private int m_requiredCharacterCount;
+    private bool m_isSelectingCharacters;
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -118,15 +121,15 @@ public class SkillManager : MonoBehaviour
             enemy.SetSelectedVisual(true);
         }
 
-        UpdatePromptText();
+        UpdatePromptText($"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}");
     }
 
-    private void UpdatePromptText()//更新提示文本内容
+    private void UpdatePromptText(string text = "")//更新提示文本内容
     {
         if (targetPromptText == null)
             return;
 
-        targetPromptText.text = $"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}";
+        targetPromptText.text = $"{text}";
     }
 
     private void SetPromptVisible(bool visible)//设置提示文本是否可见

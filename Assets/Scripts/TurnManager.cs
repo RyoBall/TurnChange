@@ -77,6 +77,16 @@ public class TurnManager : MonoBehaviour
             combatant.currentActionValue = combatant.BaseActionValue;
         }
     }
+    private void BuildTurnOrder()////构建回合顺序
+    {
+        turnOrder.Clear();
+
+        combatants = combatants.OrderBy(c => c.currentActionValue).ToList();
+        foreach (var combatant in combatants)
+        {
+            turnOrder.AddLast(combatant);
+        }
+    }
     #endregion
     private IEnumerator RunTurnLoop()
     {
@@ -146,16 +156,6 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    private void BuildTurnOrder()////重排回合顺序
-    {
-        turnOrder.Clear();
-
-        combatants = combatants.OrderBy(c => c.currentActionValue).ToList();
-        foreach (var combatant in combatants)
-        {
-            turnOrder.AddLast(combatant);
-        }
-    }
 
     private void InsertCombatantByActionValue(Combatant combatant, bool insertAtEnd = true)//插入角色回合
     {

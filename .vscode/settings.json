@@ -52,5 +52,5 @@
         "Temp/": true
     },
     "dotnet.preferCSharpExtension": true,
-    "dotnet.defaultSolution": "TurnChange.slnx"
+    "dotnet.defaultSolution": "Github Store.slnx"
 }

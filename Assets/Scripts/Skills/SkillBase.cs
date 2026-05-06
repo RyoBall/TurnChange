@@ -24,7 +24,7 @@ public class SkillBase : ScriptableObject
     [Header("目标选择设置")]
     public bool requiresEnemyTarget = false;
     [Min(1)]
-    public int enemyTargetCount = 1;
+    public int enemyTargetCount = 1;    
 
     public IEnumerator Execute(Character character)
     {
@@ -91,8 +91,6 @@ public class SkillBase : ScriptableObject
 
         SkillManager.Instance.changeCharacter.GetComponent<Combatant>().currentActionValue=0;
         TurnManager.Instance.InsertCombatant(SkillManager.Instance.changeCharacter.GetComponent<Combatant>(),false);
-
-        Debug.Log($"[SkillBase] 技能 {skillName} 已将 {SkillManager.Instance.changeCharacter.name} 插入行动轮次");
         yield return new WaitForSeconds(.5f);
     }
     private IEnumerator ExecuteAllAttack(Character character)
