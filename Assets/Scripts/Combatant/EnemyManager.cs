@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class EnemyManager : MonoBehaviour
 {
     public static EnemyManager Instance { get; private set; }
 
     private readonly List<Enemy> m_aliveEnemies = new List<Enemy>();
+    [Header("胜利回调")]
+    [SerializeField] private UnityEvent onVictory;
+
 
     public IReadOnlyList<Enemy> AliveEnemies => m_aliveEnemies;
 
@@ -41,6 +45,31 @@ public class EnemyManager : MonoBehaviour
         if (enemy == null)
             return;
 
-        m_aliveEnemies.Remove(enemy);
+        bool removed = m_aliveEnemies.Remove(enemy);
+        if (!removed)
+            return;
+
+        CheckAllEnemiesDefeated();
+    }
+
+    private void CheckAllEnemiesDefeated()
+    {
+        for (int i = m_aliveEnemies.Count - 1; i >= 0; i--)
+        {
+            if (m_aliveEnemies[i] == null)
+            {
+                m_aliveEnemies.RemoveAt(i);
+            }
+        }
+
+        if (m_aliveEnemies.Count > 0)
+            return;
+
+        Victory();
+    }
+
+    private void Victory()
+    {
+        FloatingTipGenerator.Instance?.ShowDefaultTip("所有敌人已清空");
     }
 }

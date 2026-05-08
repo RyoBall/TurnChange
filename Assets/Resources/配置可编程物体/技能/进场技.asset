@@ -10,12 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: Add
+  m_Name: "\u8FDB\u573A\u6280"
   m_EditorClassIdentifier: 
-  skillName: Add
+  skillName: "\u8FDB\u573A\u6280"
   description: 
   icon: {fileID: 0}
-  skillType: 2
+  skillType: 3
   requiresEnemyTarget: 0
   enemyTargetCount: 1
-  insertAsNextTurn: 1
+  endTurnAfterUse: 0
+  skillBase: 0
+  skillCoef: 1

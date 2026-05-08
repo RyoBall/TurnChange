@@ -60,7 +60,7 @@ public class SkillManager : MonoBehaviour
         m_requiredEnemyCount = safeRequiredCount;
         m_selectedEnemies.Clear();
         m_isSelectingEnemies = true;
-        UpdatePromptText();
+        UpdatePromptText($"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}");
         SetPromptVisible(true);
 
         yield return new WaitUntil(() => m_selectedEnemies.Count >= m_requiredEnemyCount);
@@ -121,7 +121,7 @@ public class SkillManager : MonoBehaviour
             enemy.SetSelectedVisual(true);
         }
 
-        UpdatePromptText($"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}");
+        UpdatePromptText();
     }
 
     private void UpdatePromptText(string text = "")//更新提示文本内容

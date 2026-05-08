@@ -36,7 +36,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             return;
         }
 
-        CommandEventManager.ExecuteSkill(m_owner, m_skill);
+        SkillExecuteManager.ExecuteSkill(m_owner, m_skill);
     }
 
     public void OnPointerEnter(PointerEventData eventData)

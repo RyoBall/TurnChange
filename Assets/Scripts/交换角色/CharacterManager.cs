@@ -101,9 +101,9 @@ public class CharacterManager : MonoBehaviour
 			m_selectedFieldCharacter.SetSelectedVisual(false);
 		}
     //第三步:执行替换
-		ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter);
-    //第四步:清理UI
 		HideReserveButtonsImmediate();
+		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter));
+    //第四步:清理UI
 		SetPromptVisible(false);
 	}
 
@@ -128,52 +128,55 @@ public class CharacterManager : MonoBehaviour
 		m_selectedFieldCharacter.SetSelectedVisual(true);
 	}
 
-	private void ReplaceCharacter(Character oldCharacter, Character newCharacter)//执行角色替换
+	private IEnumerator ReplaceCharacter(Character oldCharacter, Character newCharacter)//执行角色替换
 	{
 		if (oldCharacter == null || newCharacter == null)
 		{
 			Debug.LogWarning("[CharacterManager] 替换失败：角色为空");
-			return;
+			yield break;
 		}
 
 		if (!fieldCharacters.Contains(oldCharacter) || !reserveCharacters.Contains(newCharacter))
 		{
 			Debug.LogWarning("[CharacterManager] 替换失败：角色不在正确列表中");
-			return;
+			yield break;
 		}
-
+		//设置入场角色位置
+		newCharacter.transform.position = oldCharacter.transform.position;
+		//执行退场技能
+		if (oldCharacter.exitSkill != null)
+		{
+			SkillExecuteManager.ExecuteSkill(oldCharacter, oldCharacter.exitSkill);
+			yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+		}
+		//执行退场动画
+		yield return oldCharacter.PlayExitAnimation();
+		//交换角色列表中的角色
 		int fieldIndex = fieldCharacters.IndexOf(oldCharacter);
 		fieldCharacters[fieldIndex] = newCharacter;
 
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
-
-		Transform oldTransform = oldCharacter.transform;
-		Transform newTransform = newCharacter.transform;
-
-		Vector3 oldPosition = oldTransform.position;
-		Quaternion oldRotation = oldTransform.rotation;
-		Transform oldParent = oldTransform.parent;
-
-		newTransform.SetParent(oldParent);
-		newTransform.position = oldPosition;
-		newTransform.rotation = oldRotation;
-
-		oldCharacter.participateInTurnLoop = false;
-		newCharacter.participateInTurnLoop = true;
-
-		oldCharacter.gameObject.SetActive(false);
-		newCharacter.gameObject.SetActive(true);
-
+		//执行入场技能
+		if (newCharacter.enterSkill != null)
+		{
+			SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.enterSkill);
+			yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+		}
+		//执行入场动画
+		yield return newCharacter.PlayEnterAnimation();
+		//更新 TurnManager 中的角色引用，确保回合顺序正确
 		if (TurnManager.Instance != null)
 		{
+			Debug.Log($"[CharacterManager] 更新 TurnManager 中的角色引用，将 {oldCharacter.name} 替换为 {newCharacter.name}");
 			float oldActionValue = oldCharacter.currentActionValue;
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
-			newCharacter.currentActionValue = oldActionValue;
-			TurnManager.Instance.InsertCombatant(newCharacter, true);
+			newCharacter.currentActionValue = 0f; //换入角色立即插入回合
+			TurnManager.Instance.InsertCombatant(newCharacter, false);
 		}
 
 		Debug.Log($"[CharacterManager] 已将场上角色 {oldCharacter.name} 替换为 {newCharacter.name}");
+		yield break;
 	}
 
 	private void BuildReserveButtons()//构建候补角色选择按钮

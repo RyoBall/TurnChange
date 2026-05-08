@@ -56,14 +56,14 @@ public class TurnImageManager : MonoBehaviour
     private TurnImage CreateTurnImage(Combatant combatant)
     {
         // 实例化回合图像预制体，并设置父级为容器
-        var instance = Instantiate(turnImagePrefab, turnImageContainer, false);
-        var turnImage = instance.GetComponent<TurnImage>();
+        var Instance = Instantiate(turnImagePrefab, turnImageContainer, false);
+        var turnImage = Instance.GetComponent<TurnImage>();
 
         // 如果没有找到 TurnImage 组件，说明预制体配置错误，输出提示并销毁实例
         if (turnImage == null)
         {
             Debug.LogError("TurnImageManager: turnImagePrefab does not contain a TurnImage component.");
-            Destroy(instance);
+            Destroy(Instance);
             return null;
         }
 

@@ -4,10 +4,11 @@ using UnityEngine;
 
 public enum SkillType
 {
-    Attack,
-    RemoveSelf,
-    InsertCharacter,
-    AllAttack
+    Change,
+    AllAttack,
+    StrengthenSelf,
+    EnterSkillOne,
+    ExitSkillOne
 }
 
 [CreateAssetMenu(fileName = "NewSkill", menuName = "TurnChange/Skill"), System.Serializable]
@@ -24,7 +25,12 @@ public class SkillBase : ScriptableObject
     [Header("目标选择设置")]
     public bool requiresEnemyTarget = false;
     [Min(1)]
-    public int enemyTargetCount = 1;    
+    public int enemyTargetCount = 1;
+    [Header("是否结束回合")]
+    public bool endTurnAfterUse = true;
+    [Header("伤害技能相关参数")]
+    public int skillBase;
+    public float skillCoef = 1f;
 
     public IEnumerator Execute(Character character)
     {
@@ -48,82 +54,84 @@ public class SkillBase : ScriptableObject
             yield return SkillManager.Instance.SelectEnemiesCoroutine(enemyTargetCount, selectedEnemies);
         }
 
+        FloatingTipGenerator.Instance.ShowDefaultTip($"{skillName}");
+
         switch (skillType)
         {
-            case SkillType.Attack:
-                yield return ExecuteAttack(character, selectedEnemies);
-                break;
-            case SkillType.InsertCharacter:
-                yield return ExecuteInsertCharacter(character, selectedEnemies);
-                break;
-            case SkillType.RemoveSelf:
-                yield return ExecuteRemoveSelf(character, selectedEnemies);
+            case SkillType.Change:
+                yield return ExcuteChange(character, selectedEnemies);
                 break;
             case SkillType.AllAttack:
                 yield return ExecuteAllAttack(character);
                 break;
+            case SkillType.EnterSkillOne:
+                yield return EnterSkillOne(null, character);
+                break;
+            case SkillType.ExitSkillOne:
+                yield return ExitSkillOne(character, null);
+                break;
         }
-        
-        character.EndTurn();
-    }
 
-    private IEnumerator ExecuteAttack(Character character, List<Enemy> selectedEnemies)
+        if (endTurnAfterUse)
+        {
+            character.EndTurn();
+        }
+    }
+    #region 技能具体执行逻辑
+    private IEnumerator StrengthenSelf(Character character, List<Enemy> selectedEnemies)
     {
-        LogSkillTargets("Attack", selectedEnemies);
-        foreach (var enemy in selectedEnemies)
+        State state = character.AddState(StateType.StrengthenSelf, character, skillCoef, 2);
+        yield break;
+    }
+    private IEnumerator EnterSkillOne(Character oldCharacter, Character newCharacter)
+    {
+        yield return new WaitForSeconds(.5f);
+        FloatingTipGenerator.Instance.ShowDefaultTip($"{newCharacter.name}的入场技能触发，获得重力环境");
+        EnvironmentManager.Instance.AddEnvironment(EnvironmentType.Gravity, 200);
+        yield break;
+    }
+    private IEnumerator ExitSkillOne(Character oldCharacter, Character newCharacter)
+    {
+        yield return new WaitForSeconds(.5f);
+        FloatingTipGenerator.Instance.ShowDefaultTip($"{oldCharacter.name}的离场技能触发，结算dot伤害");
+        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
         {
             if (enemy != null)
             {
-                enemy.TakeDamage((int)character.attack);
+                foreach (var state in enemy.States)
+                {
+                    if (state.isDot)
+                    {
+                        state.DotTrigger(1.2f);
+                    }
+                }
             }
         }
         yield break;
     }
-    private IEnumerator ExecuteRemoveSelf(Character character, List<Enemy> selectedEnemies)
+    private IEnumerator ExcuteChange(Character character, List<Enemy> selectedEnemies)
     {
-        LogSkillTargets("RemoveSelf", selectedEnemies);
-        TurnManager.Instance.RemoveCombatant(character);
-        yield return new WaitForSeconds(.5f);
-    }
-    private IEnumerator ExecuteInsertCharacter(Character character, List<Enemy> selectedEnemies)
-    {
-        LogSkillTargets("InsertCharacter", selectedEnemies);
-
-        SkillManager.Instance.changeCharacter.GetComponent<Combatant>().currentActionValue=0;
-        TurnManager.Instance.InsertCombatant(SkillManager.Instance.changeCharacter.GetComponent<Combatant>(),false);
+        SkillManager.Instance.changeCharacter.GetComponent<Combatant>().currentActionValue = 0;
+        TurnManager.Instance.InsertCombatant(SkillManager.Instance.changeCharacter.GetComponent<Combatant>(), false);
         yield return new WaitForSeconds(.5f);
     }
     private IEnumerator ExecuteAllAttack(Character character)
     {
-        LogSkillTargets("AllAttack", null);
-
-        var enemies = EnemyManager.Instance.AliveEnemies;
+        var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         foreach (var enemy in enemies)
         {
             if (enemy != null)
             {
                 enemy.TakeDamage((int)character.attack);
+                State state=enemy.AddState(StateType.Burn, character, skillCoef,1);
+                state.ChangeRemainingTurns(2);
             }
         }
         yield break;
     }
-    private void LogSkillTargets(string typeName, List<Enemy> selectedEnemies)//打印选择的目标
+    #endregion
+    private int damageCount(UnitCombatant attacker)
     {
-        if (selectedEnemies == null || selectedEnemies.Count == 0)
-        {
-            Debug.Log($"[SkillBase] 执行 {skillName} ({typeName})，无需目标或未选择目标");
-            return;
-        }
-
-        var names = new List<string>();
-        for (int i = 0; i < selectedEnemies.Count; i++)
-        {
-            if (selectedEnemies[i] != null)
-            {
-                names.Add(selectedEnemies[i].name);
-            }
-        }
-
-        Debug.Log($"[SkillBase] 执行 {skillName} ({typeName})，目标: {string.Join(", ", names)}");
+        return Mathf.RoundToInt(skillBase + skillCoef * skillBase);
     }
 }

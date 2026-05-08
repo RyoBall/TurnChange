@@ -3,19 +3,17 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-public class Enemy : Combatant
+public class Enemy : UnitCombatant
 {
+    public string enemyID;
     public float selectedScale = 1.1f;
     public float selectAnimDuration = 0.12f;
 
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
-    [Header("属性")]
-    public int maxHP;
-    public int currentHP;
-    public float attack;
     private void Start()
     {
+        LoadDataFromCSV();
         m_defaultScale = transform.localScale;
         EnemyManager.Instance?.RegisterEnemy(this);
     }
@@ -31,19 +29,10 @@ public class Enemy : Combatant
         yield break;
     }
 
-    public void TakeDamage(int damage)
-    {
-        // 这里可以添加受伤动画、音效等反馈。
-        Debug.Log($"[Enemy] {gameObject.name} 受到 {damage} 点伤害");
-        //展示伤害
-        DamageTextPool.Instance.Get().ShowDamage(damage, transform.position);
-        if(currentHP <= 0)
-        Die();
-    }
-    public void Die()
+    public override void Die()
     {
         EnemyManager.Instance?.UnregisterEnemy(this);
-        Destroy(gameObject);
+        base.Die();
     }
     #region 选敌相关
     private void OnMouseDown()
@@ -62,6 +51,31 @@ public class Enemy : Combatant
 
         var targetScale = selected ? m_defaultScale * selectedScale : m_defaultScale;
         m_scaleTween = transform.DOScale(targetScale, selectAnimDuration).SetEase(Ease.OutQuad);
+    }
+    #endregion
+
+    #region 读取数据
+    public void LoadDataFromCSV()
+    {
+        if (string.IsNullOrEmpty(enemyID))
+        {
+            Debug.Log("EnemyID is null or empty for " + gameObject.name);
+            return;
+        }
+
+        var levelDataDict = LevelDataContainer.EnemyLevelData[enemyID];
+        if(levelDataDict == null || !levelDataDict.ContainsKey(level))
+        {
+            Debug.LogError($"未找到敌人数据: {enemyID} 等级: {level}");
+            return;
+        }
+        var levelData = levelDataDict[level];
+        maxHP = levelData.maxHP;
+        currentHP = maxHP;
+        attack = levelData.attack;
+        defense = levelData.defense;
+        speed = levelData.speed;
+        K = levelData.K;
     }
     #endregion
 }

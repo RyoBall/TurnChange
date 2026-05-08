@@ -66,7 +66,7 @@ public class TurnManager : MonoBehaviour
         combatants.Clear();
         foreach (var combatant in FindObjectsOfType<Combatant>())
         {
-            if (combatant != null && combatant.participateInTurnLoop)
+            if (combatant != null && combatant.participateInTurnLoopAtStart)
             {
                 combatants.Add(combatant);
             }
@@ -109,6 +109,11 @@ public class TurnManager : MonoBehaviour
                 combatant.currentActionValue = Mathf.Max(0f, combatant.currentActionValue - advanceValue);
             }
 
+            if (EnvironmentManager.Instance != null)
+            {
+                EnvironmentManager.Instance.TickEnvironments(advanceValue);
+            }
+
             Debug.Log($"[TurnManager] 进入回合: {nextCombatant.name} (速度={nextCombatant.speed})");
 
             // 回合开始。
@@ -142,7 +147,7 @@ public class TurnManager : MonoBehaviour
 
     public void NotifyCombatantActionValueChanged(Combatant combatant)//重置单个角色的回合位置
     {
-        if (combatant == null || combatant.participateInTurnLoop == false)
+        if (combatant == null || !turnOrder.Contains(combatant))
         {
             return;
         }
@@ -230,5 +235,10 @@ public class TurnManager : MonoBehaviour
         {
             TurnImageManager.Instance.Reorder();
         }
+    }
+    //获取当前回合的角色
+    public Combatant GetCurrentCombatant()
+    {
+        return turnOrder.First?.Value;
     }
 }

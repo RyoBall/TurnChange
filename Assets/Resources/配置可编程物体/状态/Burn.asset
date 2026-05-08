@@ -9,12 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: Attack
+  m_Script: {fileID: 11500000, guid: 5dd9b37d48325a6429f7b9a47e9ac998, type: 3}
+  m_Name: Burn
   m_EditorClassIdentifier: 
-  skillName: Attack
-  description: 
-  icon: {fileID: 0}
-  skillType: 0
-  requiresEnemyTarget: 1
-  enemyTargetCount: 1
+  defaultTurns: 1
+  stateType: 0
+  isDot: 1
+  isBuff: 0
+  atkT: 0
+  skillCoefT: 0
+  buffMultiplier: 0
