@@ -17,7 +17,8 @@ public class Character : UnitCombatant
     [SerializeField] private bool pendingChaosRecover;
     private const int MaxChaosValue = 5;
     private const int ChaosRecoverValue = 2;
-
+    public int ChaosValue=> chaosValue;
+    public int MaxChaosValueConst => MaxChaosValue;
     bool endTurn = false;
     [Header("选中效果")]
     public float selectedScale = 1.1f;
@@ -26,6 +27,7 @@ public class Character : UnitCombatant
     private Tween m_scaleTween;
     [Header("动画精灵")]
     [SerializeField] private List<SpriteRenderer> spriteRenderer;
+    [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
     private void Start()
     {
         LoadDataFromCSV();
@@ -86,7 +88,6 @@ public class Character : UnitCombatant
     }
     #region 混沌值相关
 
-    public int ChaosValue => chaosValue;
     public bool IsActionEffectHalved => HasState(StateType.ChaosHalf);
 
     public float GetActionEffectMultiplier()
@@ -166,7 +167,10 @@ public class Character : UnitCombatant
     private void OnMouseEnter()
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
+        {
+            enterFeedback?.PlayFeedbacks();
             SkillDescription.Instance.ChangeDescription(SkillDictionaryManager.GetSkill(enterSkill));
+        }
     }
     private void OnMouseExit()
     {
@@ -207,6 +211,10 @@ public class Character : UnitCombatant
         {
             exitSequence.Join(sr.DOFade(0, duration));
         }
+        foreach (var cg in slidersCanvasGroups)
+        {
+            exitSequence.Join(cg.DOFade(0, duration));
+        }
         yield return exitSequence.WaitForCompletion();
     }
     public IEnumerator PlayEnterAnimation()
@@ -221,6 +229,10 @@ public class Character : UnitCombatant
         foreach (var sr in spriteRenderer)
         {
             enterSequence.Join(sr.DOFade(1, duration));
+        }
+        foreach (var cg in slidersCanvasGroups)
+        {
+            enterSequence.Join(cg.DOFade(1, duration));
         }
         yield return enterSequence.WaitForCompletion();
     }

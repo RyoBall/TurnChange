@@ -627,7 +627,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8226855461546359373}
   - component: {fileID: 5865469435561360362}
-  - component: {fileID: 3189906323124876465}
+  - component: {fileID: 5274441821617728162}
   m_Layer: 5
   m_Name: Chaos
   m_TagString: Untagged
@@ -707,7 +707,7 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &3189906323124876465
+--- !u!114 &5274441821617728162
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -716,11 +716,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2973637342039946237}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a80a3fb429815e418876ddb2ba4c701, type: 3}
+  m_Script: {fileID: 11500000, guid: 3eca4dd343a9a0a44b12f551f3e259ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetUnit: {fileID: 7405273775391058398}
-  hpSlider: {fileID: 5865469435561360362}
+  character: {fileID: 7405273775391058398}
+  chaosSlider: {fileID: 5865469435561360362}
 --- !u!1 &3442757985910048126
 GameObject:
   m_ObjectHideFlags: 0
@@ -890,6 +890,7 @@ GameObject:
   - component: {fileID: 1141610489337687549}
   - component: {fileID: 6736325518134067266}
   - component: {fileID: 1055193972026094527}
+  - component: {fileID: 4725551788374761809}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -981,6 +982,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &4725551788374761809
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5262832334378078687}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &6442302268307707668
 GameObject:
   m_ObjectHideFlags: 0
@@ -1497,7 +1510,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.6, y: 0.6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6454902621345208546}
@@ -1546,6 +1559,8 @@ MonoBehaviour:
   - {fileID: 3102227015238221381}
   - {fileID: 928052170698381519}
   - {fileID: 3207555847263050971}
+  slidersCanvasGroups:
+  - {fileID: 4725551788374761809}
 --- !u!65 &8270290180047432832
 BoxCollider:
   m_ObjectHideFlags: 0
