@@ -16,7 +16,8 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private readonly LinkedList<Combatant> turnOrder = new LinkedList<Combatant>();
 
     public IEnumerable<Combatant> CurrentTurnOrder => turnOrder;
-
+    public GameObject ExtraTurnPrefab;//额外回合的预制体
+    
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -40,7 +41,32 @@ public class TurnManager : MonoBehaviour
             // 场上角色初始化，构建回合链表，并开始回合循环。
             InitializeCombatants();
             BuildTurnOrder();
+            RegisterStateUI();//使初始角色注册状态UI
             StartCoroutine(StartFight());
+        }
+    }
+    void RegisterStateUI()
+    {
+        foreach (var combatant in combatants)
+        {
+            if (combatant is UnitCombatant unitCombatant)
+            {
+                UnitStateTextDisplay.Instance.RegisterUnit(unitCombatant);
+            }
+        }
+    }
+    public void ExtraTurnInsert(Character character)//插入额外回合的接口
+    {
+        if (ExtraTurnPrefab != null)
+        {
+            ExtraCharacter extraCombatant = Instantiate(ExtraTurnPrefab, transform).GetComponent<ExtraCharacter>();
+            if (extraCombatant != null)
+            {
+                extraCombatant.Initialize(character);
+            }
+            extraCombatant.combatantName = character.combatantName;
+            extraCombatant.ChangeActionValue(0f, false);
+            InsertCombatant(extraCombatant, false);
         }
     }
     #region 回合开始的函数
@@ -74,7 +100,7 @@ public class TurnManager : MonoBehaviour
 
         foreach (var combatant in combatants)
         {
-            combatant.currentActionValue = combatant.BaseActionValue;
+            combatant.ChangeActionValue(combatant.BaseActionValue, false);
         }
     }
     private void BuildTurnOrder()////构建回合顺序
@@ -92,7 +118,7 @@ public class TurnManager : MonoBehaviour
     {
         while (true)
         {
-            // 回合开始前
+            ////// 回合开始前
             // 直接读取链表头，链表头就是下一位行动者。
             var nextNode = turnOrder.First;
             if (nextNode == null)
@@ -104,30 +130,38 @@ public class TurnManager : MonoBehaviour
             var nextCombatant = nextNode.Value;
             // 用当前行动者的行动值推进整张时间轴。
             float advanceValue = nextCombatant.currentActionValue;
-            foreach (var combatant in turnOrder)
+            var combatantsSnapshot = turnOrder.ToList();
+            foreach (var combatant in combatantsSnapshot)
             {
-                combatant.currentActionValue = Mathf.Max(0f, combatant.currentActionValue - advanceValue);
+                combatant.ChangeActionValue(Mathf.Max(0f, combatant.currentActionValue - advanceValue), false);
             }
+
+            State.TickAllStatesByActionValue(advanceValue);
 
             if (EnvironmentManager.Instance != null)
             {
                 EnvironmentManager.Instance.TickEnvironments(advanceValue);
             }
 
-            Debug.Log($"[TurnManager] 进入回合: {nextCombatant.name} (速度={nextCombatant.speed})");
-
-            // 回合开始。
-            yield return StartCoroutine(nextCombatant.PerformTurn());
-            // 回合结束
-            // 回合结束后重新计算当前角色的下一次行动值。
-            nextCombatant.currentActionValue = nextCombatant.BaseActionValue;
-            NotifyCombatantActionValueChanged(nextCombatant);
-            Debug.Log($"[TurnManager] 结束回合: {nextCombatant.name}，重置行动值到 {nextCombatant.BaseActionValue:F0}");
-            //进行回合修改动画
-            if (TurnImageManager.Instance != null)
+            if (nextCombatant != null)
             {
-                TurnImageManager.Instance.Reorder();
+                Debug.Log($"[TurnManager] 进入回合: {nextCombatant.name} (速度={nextCombatant.speed})");
             }
+
+            ////// 回合开始。
+            yield return StartCoroutine(nextCombatant.PerformTurn());
+            ////// 回合结束
+            // 回合结束后重新计算当前角色的下一次行动值。
+            if (nextCombatant != null)
+            {   
+                nextCombatant.ChangeActionValue(nextCombatant.BaseActionValue);
+                Debug.Log($"[TurnManager] 结束回合: {nextCombatant.name}，重置行动值到 {nextCombatant.BaseActionValue:F0}");
+            }
+            else
+            {
+                Debug.Log($"[TurnManager] 角色死亡");
+            }
+
             //回合转换延迟
             if (turnDelay > 0f)
             {
@@ -161,7 +195,34 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-
+    //从外部插入角色回合的接口,在触发时默认进行一次重排
+    public void InsertCombatant(Combatant combatant, bool insertAtEnd = true)
+    {
+        InsertCombatantByActionValue(combatant, insertAtEnd);
+        if (TurnImageManager.Instance != null)
+        {
+            TurnImageManager.Instance.Reorder();
+        }
+        //如果是新角色加入战斗，注册状态UI
+        if (combatant is UnitCombatant unitCombatant)
+        {
+            UnitStateTextDisplay.Instance.RegisterUnit(unitCombatant);
+        }
+    }
+    public void RemoveCombatant(Combatant combatant)
+    {
+        RemoveCombatantFromTurnOrder(combatant);
+        if (TurnImageManager.Instance != null)
+        {
+            TurnImageManager.Instance.Reorder();
+        }
+        //如果是角色离开战斗，注销状态UI
+        if (combatant is UnitCombatant unitCombatant)
+        {
+            UnitStateTextDisplay.Instance.UnregisterUnit(unitCombatant);
+        }
+    }
+    #region 工具
     private void InsertCombatantByActionValue(Combatant combatant, bool insertAtEnd = true)//插入角色回合
     {
         if (combatant == null)
@@ -219,23 +280,7 @@ public class TurnManager : MonoBehaviour
             node = node.Next;
         }
     }
-    //从外部插入角色回合的接口,在触发时默认进行一次重排
-    public void InsertCombatant(Combatant combatant, bool insertAtEnd = true)
-    {
-        InsertCombatantByActionValue(combatant, insertAtEnd);
-        if (TurnImageManager.Instance != null)
-        {
-            TurnImageManager.Instance.Reorder();
-        }
-    }
-    public void RemoveCombatant(Combatant combatant)
-    {
-        RemoveCombatantFromTurnOrder(combatant);
-        if (TurnImageManager.Instance != null)
-        {
-            TurnImageManager.Instance.Reorder();
-        }
-    }
+    #endregion
     //获取当前回合的角色
     public Combatant GetCurrentCombatant()
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 public enum EnvironmentType
 {
     Gravity,
-    // 可以根据需要添加更多环境类型
+    Cutdown
 }
 [CreateAssetMenu(fileName = "Environment", menuName = "环境/新环境")]
 public class BattleEnvironment:ScriptableObject

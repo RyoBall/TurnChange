@@ -12,8 +12,14 @@ public class Combatant : MonoBehaviour
     public bool participateInTurnLoopAtStart = true;
     public string combatantName;
 
-    public float currentActionValue;
+    public float currentActionValue{get; private set;}
     public float BaseActionValue => 10000f / Mathf.Max(1, speed);
+    public void ChangeActionValue(float delta,bool ifChangePos=true)
+    {
+        currentActionValue = Mathf.Max(0, delta);
+        if(ifChangePos)
+        TurnManager.Instance?.NotifyCombatantActionValueChanged(this);
+    }
 
     public virtual IEnumerator PerformTurn()
     {

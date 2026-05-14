@@ -17,5 +17,6 @@ public class Changer : Combatant
         TurnManager.Instance.RemoveCombatant(this); // 换人后移除自己的回合
         Debug.Log("[Changer] 已从回合循环中移除");
         yield return new WaitForSeconds(0.5f); // 等待换人动画等效果结束
+        Destroy(gameObject); // 销毁换人角色的对象
     }   
 }

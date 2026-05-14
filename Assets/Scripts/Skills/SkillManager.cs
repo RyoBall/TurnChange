@@ -20,6 +20,7 @@ public class SkillManager : MonoBehaviour
     private readonly List<Character> m_selectedCharacters = new List<Character>();
     private int m_requiredCharacterCount;
     private bool m_isSelectingCharacters;
+    public bool IsSelectingCharacters => m_isSelectingCharacters;
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -124,6 +125,70 @@ public class SkillManager : MonoBehaviour
         UpdatePromptText();
     }
 
+    public IEnumerator SelectCharactersCoroutine(int requiredCount, List<Character> selectedResult)
+    {
+        int aliveCount = CharacterManager.Instance != null ? CharacterManager.Instance.fieldCharacters.Count : 0;
+        int safeRequiredCount = Mathf.Max(1, requiredCount);
+        if (aliveCount <= 0)
+        {
+            Debug.LogWarning("[SkillManager] 当前场上没有我方角色，无法进行选友");
+            selectedResult?.Clear();
+            yield break;
+        }
+
+        if (aliveCount < safeRequiredCount)
+        {
+            safeRequiredCount = aliveCount;
+        }
+
+        m_requiredCharacterCount = safeRequiredCount;
+        m_selectedCharacters.Clear();
+        m_isSelectingCharacters = true;
+        UpdatePromptText($"请选择技能作用的我方角色:{m_selectedCharacters.Count}/{m_requiredCharacterCount}");
+        SetPromptVisible(true);
+
+        yield return new WaitUntil(() => m_selectedCharacters.Count >= m_requiredCharacterCount);
+
+        selectedResult?.Clear();
+        if (selectedResult != null)
+        {
+            selectedResult.AddRange(m_selectedCharacters);
+        }
+
+        ClearSelectionState();
+    }
+
+    public void OnCharacterClicked(Character character)
+    {
+        if (!m_isSelectingCharacters || character == null)
+        {
+            return;
+        }
+
+        if (CharacterManager.Instance != null && !CharacterManager.Instance.fieldCharacters.Contains(character))
+        {
+            return;
+        }
+
+        if (m_selectedCharacters.Contains(character))
+        {
+            m_selectedCharacters.Remove(character);
+            character.SetSelectedVisual(false);
+        }
+        else
+        {
+            if (m_selectedCharacters.Count >= m_requiredCharacterCount)
+            {
+                return;
+            }
+
+            m_selectedCharacters.Add(character);
+            character.SetSelectedVisual(true);
+        }
+
+        UpdatePromptText($"请选择技能作用的我方角色:{m_selectedCharacters.Count}/{m_requiredCharacterCount}");
+    }
+
     private void UpdatePromptText(string text = "")//更新提示文本内容
     {
         if (targetPromptText == null)
@@ -150,9 +215,20 @@ public class SkillManager : MonoBehaviour
             }
         }
 
+        for (int i = 0; i < m_selectedCharacters.Count; i++)
+        {
+            if (m_selectedCharacters[i] != null)
+            {
+                m_selectedCharacters[i].SetSelectedVisual(false);
+            }
+        }
+
         m_selectedEnemies.Clear();
+        m_selectedCharacters.Clear();
         m_requiredEnemyCount = 0;
+        m_requiredCharacterCount = 0;
         m_isSelectingEnemies = false;
+        m_isSelectingCharacters = false;
         SetPromptVisible(false);
     }
 }

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8289597659571950187}
   - component: {fileID: 1885034501067102390}
   - component: {fileID: 1644372549910762980}
+  - component: {fileID: 3670644607090559515}
   m_Layer: 5
   m_Name: "\u6362\u4EBA\u6309\u94AE"
   m_TagString: Untagged
@@ -34,9 +35,9 @@ RectTransform:
   - {fileID: 7548172093610114255}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 50, y: 0}
   m_SizeDelta: {x: 250, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8289597659571950187
@@ -121,6 +122,19 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3670644607090559515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4625052007221169119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70c918a6146da7949b9ea3859a4b4092, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  character: {fileID: 0}
 --- !u!1 &7946461522021602736
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
+  m_Name: "\u6280\u80FD4"
+  m_EditorClassIdentifier: 
+  skillName: "\u6280\u80FD4"
+  description: "\u6307\u5B9A\u654C\u65B9\u5355\u4F53\u83B7\u5F97\u5143\u7D20\u5F15\u7206\uFF0C\u6301\u7EED\u4E24\u56DE\u5408\uFF0C\u5E76\u4F7F\u5176\u7ACB\u5373\u89E6\u53D1\u4E00\u6B21\u6301\u7EED\u4F24\u5BB3\u7ED3\u7B97"
+  icon: {fileID: 0}
+  skillBase: 0
+  skillCoef: 1
+  skillType: 8
+  requiresEnemyTarget: 1
+  enemyTargetCount: 1
+  requiresAllyTarget: 0
+  allyTargetCount: 1
+  endTurnAfterUse: 1
+  cooldownTurns: 0

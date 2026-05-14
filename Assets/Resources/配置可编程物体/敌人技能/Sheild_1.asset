@@ -9,15 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: "\u8FDB\u573A\u6280"
+  m_Script: {fileID: 11500000, guid: fa1f07fb98d28ff4c9daafb355c0f2b8, type: 3}
+  m_Name: Sheild_1
   m_EditorClassIdentifier: 
-  skillName: "\u8FDB\u573A\u6280"
+  skillName: 
   description: 
   icon: {fileID: 0}
-  skillType: 3
-  requiresEnemyTarget: 0
-  enemyTargetCount: 1
-  endTurnAfterUse: 0
   skillBase: 0
   skillCoef: 1
+  enemySkillType: 1

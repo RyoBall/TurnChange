@@ -1,18 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+
+public enum CommandButtonState
+{
+    Character,
+    Command
+}
 public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    public CommandButtonState buttonState = CommandButtonState.Character;
     public Image skillIcon;
     public TMP_Text skillNameText;
     public TMP_Text skillDescriptionText;
     public float selectedScale = 1.08f;
     public float selectAnimDuration = 0.12f;
+
+    [Header("Feedback")]
+    [SerializeField] private MMF_Player pointerEnterFeedback;
+    [SerializeField] private MMF_Player pointerExitFeedback;
 
     private Character m_owner;
     private SkillBase m_skill;
@@ -30,7 +42,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnButtonClicked()
     {
-        if (m_owner == null || m_skill == null)
+        if (m_skill == null)
         {
             Debug.LogWarning($"[CommandButton] {name} 未绑定技能或角色");
             return;
@@ -41,28 +53,48 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (!HasSkill)
-            return;
-
-        CommandButtonManager.Instance?.OnButtonPointerEnter(this);
+        pointerEnterFeedback?.PlayFeedbacks();
+        SkillDescription.Instance?.ChangeDescription(m_skill);
+        PlaySelectAnimation();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        CommandButtonManager.Instance?.OnButtonPointerExit(this);
+        pointerExitFeedback?.PlayFeedbacks();
+        SkillDescription.Instance?.ChangeDescription(null);
+        PlayDeselectAnimation();
     }
 
     public void BindSkill(Character owner, SkillBase skill)//注入当前角色和技能
     {
+        if (skill == null)
+            return;
         m_owner = owner;
         m_skill = skill;
 
         InitializeInformation(skill);
 
         var button = GetComponent<Button>();
+        var charaSkill = skill as CharacterSkillBase;
         if (button != null)
         {
-            button.interactable = skill != null;
+            if (charaSkill != null)
+            {
+                int cooldown = charaSkill.GetRemainingCooldown(owner);
+                button.interactable = cooldown <= 0;
+                if (skillNameText != null)
+                {
+                    skillNameText.text = cooldown > 0 ? $"{charaSkill.skillName} (冷却中:{cooldown})" : charaSkill.skillName;
+                }
+            }
+            else
+            {
+                button.interactable = true;
+                if (skillNameText != null)
+                {
+                    skillNameText.text = skill.skillName;
+                }
+            }
         }
 
         if (skill == null)
@@ -104,7 +136,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         }
         else
         {
-            m_scaleTween = transform.DOScale(target, selectAnimDuration).SetEase(Ease.OutQuad);
+            m_scaleTween = m_rectTransform.DOScale(target, selectAnimDuration).SetEase(Ease.OutQuad);
         }
     }
 

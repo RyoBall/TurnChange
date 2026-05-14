@@ -25,12 +25,21 @@ public class TurnImageManager : MonoBehaviour
     public Ease moveEase = Ease.OutQuad;
     public Ease fadeEase = Ease.OutCubic;
 
+    [Header("Auto Reorder")]
+    public bool autoReorder = false;
+    public float reorderInterval = 2f;
+
     // 使用链表维护回合图像的顺序，方便插入和重新排序
     private readonly LinkedList<TurnImage> turnOrder = new LinkedList<TurnImage>();
+    private Coroutine autoReorderCoroutine;
     // 根据 Combatant 快速查找对应的 TurnImage
     private readonly Dictionary<Combatant, TurnImage> imageMap = new Dictionary<Combatant, TurnImage>();
     // 记录重排协程,如果已存在就停止协程
     private Coroutine reorderCoroutine;
+    private Sequence currentAnimationSequence;
+
+    private List<TurnImage> removedImages = new List<TurnImage>();
+    private List<TurnImage> addedImages = new List<TurnImage>();
 
     /// 单例初始化：如果已存在另一个实例，则销毁当前对象。
     private void Awake()
@@ -44,9 +53,23 @@ public class TurnImageManager : MonoBehaviour
         Instance = this;
     }
 
+    private void Start()
+    {
+        if (autoReorder)
+        {
+            autoReorderCoroutine = StartCoroutine(AutoReorderRoutine());
+        }
+    }
+
     /// 清理单例引用，避免场景切换后遗留引用。
     private void OnDestroy()
     {
+        if (autoReorderCoroutine != null)
+        {
+            StopCoroutine(autoReorderCoroutine);
+            autoReorderCoroutine = null;
+        }
+
         if (Instance == this)
         {
             Instance = null;
@@ -70,7 +93,7 @@ public class TurnImageManager : MonoBehaviour
         // 绑定角色数据并初始化尺寸、缩放等属性。
         turnImage.combatant = combatant;
         turnImage.Initialize(cellSize, normalScale);
-        turnImage.SetTopLeftAnchor();
+        turnImage.SetTopRightAnchor();
 
         // 将回合图像添加到链表尾部，并在字典中记录映射关系
         turnOrder.AddLast(turnImage);
@@ -91,7 +114,7 @@ public class TurnImageManager : MonoBehaviour
         // 初始入场：每个元素从右侧与 0 尺寸进入，再过渡到自己的目标尺寸和目标位置。
         foreach (var turnImage in turnOrder)
         {
-            turnImage.SetTopLeftAnchor();
+            turnImage.SetTopRightAnchor();
             float targetScale = targetScales[turnImage];
             Vector2 targetPosition = targetPositions[turnImage];
 
@@ -99,39 +122,96 @@ public class TurnImageManager : MonoBehaviour
             turnImage.SetLayoutScale(cellSize, 0f);
             turnImage.SetAnchoredPosition(new Vector2(slideDistance, targetPosition.y));
 
-            yield return PlaySlideFadeScaleTo(turnImage, targetScale, false);
+            PlaySlideFadeScaleTween(turnImage, targetScale);
             yield return new WaitForSeconds(enterDelay);
         }
     }
 
     public Coroutine Reorder()
     {
+        StopCurrentReorder();
         reorderCoroutine = StartCoroutine(ReorderCoroutine());
         return reorderCoroutine;
     }
+
+    private void StopCurrentReorder()
+    {
+        if (reorderCoroutine != null)
+        {
+            StopCoroutine(reorderCoroutine);
+            reorderCoroutine = null;
+        }
+
+        if (currentAnimationSequence != null && currentAnimationSequence.IsActive())
+        {
+            currentAnimationSequence.Kill();
+            currentAnimationSequence = null;
+        }
+    }
+
     private IEnumerator ReorderCoroutine()
     {
-        SyncOrderFromTurnManager(out var addedImages, out var removedImages);
+        SyncOrderFromTurnManager(out var naddedImages, out var nremovedImages);
+        addedImages.AddRange(naddedImages);
+        removedImages.AddRange(nremovedImages);
 
         var targetScales = BuildTargetScales();
         var targetPositions = BuildTargetPositions(targetScales);
 
+        if (currentAnimationSequence != null && currentAnimationSequence.IsActive())
+        {
+            currentAnimationSequence.Kill();
+            currentAnimationSequence = null;
+        }
+
+        currentAnimationSequence = DOTween.Sequence();
+
         if (removedImages.Count > 0)
         {
-            yield return FadeOutAndDestroyRemovedTurnImages(removedImages);
+            currentAnimationSequence.Append(BuildFadeOutSequence(removedImages));
+            currentAnimationSequence.AppendInterval(.5f);
         }
+
+        currentAnimationSequence.Append(BuildReflowSequence(targetPositions, targetScales));
 
         if (addedImages.Count > 0)
         {
-            PrepareNewTurnImagesForFadeIn(addedImages, targetPositions, targetScales);
+            currentAnimationSequence.Append(BuildFadeInSequence(addedImages, targetPositions, targetScales));
+
         }
 
-        // 元素并行移动到新顺序的位置。
-        yield return PlayReflowWithFadeOut(targetPositions, targetScales, null);
+        yield return currentAnimationSequence.WaitForCompletion();
 
-        if (addedImages.Count > 0)
+        LogCurrentTurnOrder();
+        currentAnimationSequence = null;
+        reorderCoroutine = null;
+    }
+
+    private void LogCurrentTurnOrder()
+    {
+        if (TurnManager.Instance == null)
         {
-            yield return PlayFadeInNewTurnImages(addedImages, targetPositions, targetScales);
+            Debug.Log("TurnImageManager: Cannot log turn order because TurnManager.Instance is null.");
+            return;
+        }
+
+        var orderNames = TurnManager.Instance.CurrentTurnOrder
+            .Select(combatant => combatant != null ? combatant.name : "<null>")
+            .ToArray();
+
+        var uniqueTag = System.Guid.NewGuid().ToString("N").Substring(0, 8);
+        Debug.Log($"TurnImageManager: Current turn order after reorder [{uniqueTag}]: {string.Join(", ", orderNames)}");
+    }
+
+    private IEnumerator AutoReorderRoutine()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(reorderInterval);
+            if (TurnManager.Instance != null)
+            {
+                Reorder();
+            }
         }
     }
     #region 动画工具
@@ -185,57 +265,110 @@ public class TurnImageManager : MonoBehaviour
         }
     }
 
-    private void PrepareNewTurnImagesForFadeIn(List<TurnImage> addedImages, Dictionary<TurnImage, Vector2> targetPositions, Dictionary<TurnImage, float> targetScales)
+    private void PrepareNewTurnImagesForFadeIn(List<TurnImage> addedImages, Dictionary<TurnImage, Vector2> targetPositions)
     {
         foreach (var turnImage in addedImages)
         {
-            turnImage.SetTopLeftAnchor();
+            turnImage.SetTopRightAnchor();
             if (targetPositions.TryGetValue(turnImage, out var targetPosition))
             {
                 turnImage.SetAlpha(0f);
                 turnImage.SetLayoutScale(cellSize, 0f);
-                turnImage.SetAnchoredPosition(new Vector2(0f, targetPosition.y));
+                turnImage.SetAnchoredPosition(new Vector2(-slideDistance, targetPosition.y));
             }
         }
     }
-
-    private IEnumerator PlayFadeInNewTurnImages(List<TurnImage> addedImages, Dictionary<TurnImage, Vector2> targetPositions, Dictionary<TurnImage, float> targetScales)
+    #region 具体效果构建动画
+    private Sequence BuildFadeInSequence(List<TurnImage> addedImages, Dictionary<TurnImage, Vector2> targetPositions, Dictionary<TurnImage, float> targetScales)
     {
+        var sequence = DOTween.Sequence();
+
         if (addedImages == null || addedImages.Count == 0)
         {
-            yield break;
+            return sequence;
         }
 
-        var sequence = DOTween.Sequence();
+        int c = 0;
+        sequence.JoinCallback(() => PrepareNewTurnImagesForFadeIn(addedImages, targetPositions));
         foreach (var turnImage in addedImages)
         {
             if (!targetScales.TryGetValue(turnImage, out var targetScale))
             {
                 targetScale = normalScale;
             }
-
-            sequence.Join(TweenAlpha(turnImage, 0f, 1f, fadeDuration, fadeEase));
-            sequence.Join(TweenLayoutScale(turnImage, targetScale, fadeDuration, moveEase));
+            sequence.Join(TweenAlpha(turnImage, 0f, 1f, moveDuration, fadeEase)).SetDelay(enterDelay * c);
+            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase,0)).SetDelay(enterDelay * c).OnUpdate(() => Debug.Log($"Updating layout scale for {turnImage.combatant.combatantName} to {turnImage.CurrentLayoutScale}"));
+            sequence.Join(turnImage.MoveTo(targetPositions[turnImage], moveDuration).SetEase(moveEase).SetDelay(enterDelay * c));
+            c++;
         }
-
-        yield return sequence.WaitForCompletion();
+        sequence.AppendCallback(() => addedImages.Clear());
+        return sequence;
     }
 
-    private IEnumerator FadeOutAndDestroyRemovedTurnImages(List<TurnImage> removedImages)
+    private Sequence BuildFadeOutSequence(List<TurnImage> removedImages)
     {
+        var sequence = DOTween.Sequence();
+
         if (removedImages == null || removedImages.Count == 0)
         {
-            yield break;
+            return sequence;
         }
 
-        var sequence = DOTween.Sequence();
+        int c = 0;
         foreach (var turnImage in removedImages)
         {
-            sequence.Join(turnImage.FadeOut(fadeDuration));
+            sequence.Join(turnImage.FadeOut(moveDuration).SetDelay(enterDelay * c));
+            sequence.Join(turnImage.MoveTo(new Vector2(slideDistance, turnImage.GetAnchoredPosition().y), moveDuration).SetEase(moveEase).SetDelay(enterDelay * c));
+            c++;
+        }
+        sequence.AppendCallback(DestroyRemovedTurnImages);
+        return sequence;
+    }
+    // 当前行动者淡出的同时，其他元素移动与缩放到新顺序。
+    private Sequence BuildReflowSequence(
+        Dictionary<TurnImage, Vector2> targetPositions,
+        Dictionary<TurnImage, float> targetScales)
+    {
+        var sequence = DOTween.Sequence();
+
+        foreach (var turnImage in turnOrder)
+        {
+            turnImage.SetTopRightAnchor();
+
+            if (targetPositions.TryGetValue(turnImage, out var targetPos))
+            {
+                sequence.Join(turnImage.MoveTo(targetPos, moveDuration).SetEase(moveEase));
+            }
+
+            float targetScale = targetScales.TryGetValue(turnImage, out var scale) ? scale : normalScale;
+            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
         }
 
-        yield return sequence.WaitForCompletion();
+        return sequence;
+    }
+    //初始化专用动画
+    private Tween PlaySlideFadeScaleTween(TurnImage turnImage, float targetScale)
+    {
+        float startAlpha = 0f;
+        float endAlpha = 1f;
+        float startX = -slideDistance;
+        float endX = 0;
+        float startScale = turnImage.CurrentLayoutScale;
 
+        var sequence = DOTween.Sequence();
+        sequence.Join(TweenAlpha(turnImage, startAlpha, endAlpha, fadeDuration, fadeEase));
+        sequence.Join(turnImage.MoveTo(new Vector2(endX, turnImage.GetAnchoredPosition().y), moveDuration).SetEase(moveEase));
+        sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
+
+        turnImage.SetAlpha(startAlpha);
+        turnImage.SetLayoutScale(cellSize, startScale);
+        turnImage.SetAnchoredPosition(new Vector2(startX, turnImage.GetAnchoredPosition().y));
+
+        return sequence;
+    }
+    #endregion
+    private void DestroyRemovedTurnImages()
+    {
         foreach (var turnImage in removedImages)
         {
             if (turnImage != null)
@@ -243,6 +376,7 @@ public class TurnImageManager : MonoBehaviour
                 Destroy(turnImage.gameObject);
             }
         }
+        removedImages.Clear();
     }
 
     // 按当前顺序为每个元素计算目标尺寸：首位高亮，其余常规。
@@ -268,7 +402,7 @@ public class TurnImageManager : MonoBehaviour
         {
             float scale = targetScales.TryGetValue(turnImage, out var value) ? value : normalScale;
             float height = cellSize.y * scale;
-            float centerY = -(currentY + height * 0.5f);
+            float centerY = -(currentY);
             result[turnImage] = new Vector2(0f, centerY);
             currentY += height + spacing.y;
         }
@@ -276,106 +410,16 @@ public class TurnImageManager : MonoBehaviour
         return result;
     }
 
-    // 当前行动者淡出的同时，其他元素移动与缩放到新顺序。
-    private IEnumerator PlayReflowWithFadeOut(
-        Dictionary<TurnImage, Vector2> targetPositions,
-        Dictionary<TurnImage, float> targetScales,
-        TurnImage fadingOutImage)
-    {
-        var sequence = DOTween.Sequence();
 
-        if (fadingOutImage != null)
+    private Tween TweenLayoutScale(TurnImage turnImage, float targetScale, float duration, Ease ease,float startScale = -1f)
+    {
+        if (startScale < 0f)
         {
-            sequence.Join(PlaySlideFadeScaleTween(fadingOutImage, 0f, true));
+            startScale = turnImage.CurrentLayoutScale;
         }
 
-        foreach (var turnImage in turnOrder)
-        {
-            turnImage.SetTopLeftAnchor();
-            if (turnImage == fadingOutImage)
-            {
-                continue;
-            }
-
-            if (targetPositions.TryGetValue(turnImage, out var targetPos))
-            {
-                sequence.Join(turnImage.MoveTo(targetPos, moveDuration).SetEase(moveEase));
-            }
-
-            float targetScale = targetScales.TryGetValue(turnImage, out var scale) ? scale : normalScale;
-            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
-        }
-
-        yield return sequence.WaitForCompletion();
-    }
-
-    // 根据目标坐标和目标尺寸并行动画，放弃逐帧强制重排。
-    private IEnumerator PlayReflow(
-        Dictionary<TurnImage, Vector2> targetPositions,
-        Dictionary<TurnImage, float> targetScales,
-        TurnImage animatedImage)
-    {
-        var sequence = DOTween.Sequence();
-
-        foreach (var turnImage in turnOrder)
-        {
-            turnImage.SetTopLeftAnchor();
-            if (turnImage == animatedImage)
-            {
-                continue;
-            }
-
-            if (targetPositions.TryGetValue(turnImage, out var targetPos))
-            {
-                sequence.Join(turnImage.MoveTo(targetPos, moveDuration).SetEase(moveEase));
-            }
-
-            float targetScale = targetScales.TryGetValue(turnImage, out var scale) ? scale : normalScale;
-            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
-        }
-
-        if (animatedImage != null)
-        {
-            float actorTargetScale = targetScales.TryGetValue(animatedImage, out var scale) ? scale : normalScale;
-            sequence.Join(PlaySlideFadeScaleTween(animatedImage, actorTargetScale, false));
-        }
-
-        yield return sequence.WaitForCompletion();
-    }
-
-    private IEnumerator PlaySlideFadeScaleTo(TurnImage turnImage, float targetScale, bool fadeOut)
-    {
-        var tween = PlaySlideFadeScaleTween(turnImage, targetScale, fadeOut);
-        yield return tween.WaitForCompletion();
-    }
-
-    private Tween PlaySlideFadeScaleTween(TurnImage turnImage, float targetScale, bool fadeOut)
-    {
-        float duration = Mathf.Max(fadeDuration, moveDuration);
-        float startAlpha = fadeOut ? 1f : 0f;
-        float endAlpha = fadeOut ? 0f : 1f;
-        float startX = fadeOut ? 0f : -slideDistance;
-        float endX = fadeOut ? -slideDistance : 0f;
-        float startScale = turnImage.CurrentLayoutScale;
-
-        var sequence = DOTween.Sequence();
-        sequence.Join(TweenAlpha(turnImage, startAlpha, endAlpha, duration, fadeEase));
-        sequence.Join(turnImage.MoveTo(new Vector2(endX, turnImage.GetAnchoredPosition().y), duration).SetEase(moveEase));
-        sequence.Join(TweenLayoutScale(turnImage, targetScale, duration, moveEase));
-
-        if (!fadeOut)
-        {
-            turnImage.SetAlpha(startAlpha);
-            turnImage.SetLayoutScale(cellSize, startScale);
-            turnImage.SetAnchoredPosition(new Vector2(startX, turnImage.GetAnchoredPosition().y));
-        }
-
-        return sequence;
-    }
-
-    private Tween TweenLayoutScale(TurnImage turnImage, float targetScale, float duration, Ease ease)
-    {
-        float value = turnImage.CurrentLayoutScale;
+        turnImage.SetLayoutScale(cellSize, startScale);
+        float value = startScale;
         return DOTween.To(() => value, v =>
         {
             value = v;
@@ -395,48 +439,48 @@ public class TurnImageManager : MonoBehaviour
     }
     #endregion
     #region NotUsed
-       /// <summary>
+    /// <summary>
     /// 回合结束后重新排序回合图像：当前图像淡出、插入合适位置、其他图像移动、首位放大、高亮。
     /// </summary>
     /// <param name="combatant">结束回合的角色</param>
- /*   public IEnumerator ReorderAfterTurn(Combatant combatant)
-    {
-        if (!imageMap.TryGetValue(combatant, out var turnImage))
-        {
-            yield break;
-        }
+    /*   public IEnumerator ReorderAfterTurn(Combatant combatant)
+       {
+           if (!imageMap.TryGetValue(combatant, out var turnImage))
+           {
+               yield break;
+           }
 
-        // 第一阶段：TurnManager 已经把角色重新插回正确位置，这里只需要把图像顺序同步过来。
-        SyncOrderFromTurnManager(out var addedImages, out var removedImages);
+           // 第一阶段：TurnManager 已经把角色重新插回正确位置，这里只需要把图像顺序同步过来。
+           SyncOrderFromTurnManager(out var addedImages, out var removedImages);
 
-        var targetScales = BuildTargetScales();
-        var targetPositions = BuildTargetPositions(targetScales);
+           var targetScales = BuildTargetScales();
+           var targetPositions = BuildTargetPositions(targetScales);
 
-        if (removedImages.Count > 0)
-        {
-            yield return FadeOutAndDestroyRemovedTurnImages(removedImages);
-        }
+           if (removedImages.Count > 0)
+           {
+               yield return FadeOutAndDestroyRemovedTurnImages(removedImages);
+           }
 
-        if (addedImages.Count > 0)
-        {
-            PrepareNewTurnImagesForFadeIn(addedImages, targetPositions, targetScales);
-        }
+           if (addedImages.Count > 0)
+           {
+               PrepareNewTurnImagesForFadeIn(addedImages, targetPositions, targetScales);
+           }
 
-        // 当前行动者淡出的同时，其他元素并行移动到新顺序的位置。
-        yield return PlayReflowWithFadeOut(targetPositions, targetScales, turnImage);
+           // 当前行动者淡出的同时，其他元素并行移动到新顺序的位置。
+           yield return PlayReflowWithFadeOut(targetPositions, targetScales, turnImage);
 
-        if (addedImages.Count > 0)
-        {
-            yield return PlayFadeInNewTurnImages(addedImages, targetPositions, targetScales);
-        }
+           if (addedImages.Count > 0)
+           {
+               yield return PlayFadeInNewTurnImages(addedImages, targetPositions, targetScales);
+           }
 
-        // 第二阶段：当前行动者在新位置从右侧滑入并展开到目标尺寸。
-        Vector2 actorTarget = targetPositions[turnImage];
-        float actorTargetScale = targetScales.TryGetValue(turnImage, out var scale) ? scale : normalScale;
-        turnImage.SetAlpha(0f);
-        turnImage.SetLayoutScale(cellSize, 0f);
-        turnImage.SetAnchoredPosition(new Vector2(slideDistance, actorTarget.y));
-        yield return PlaySlideFadeScaleTo(turnImage, actorTargetScale, false);
-    }*/
+           // 第二阶段：当前行动者在新位置从右侧滑入并展开到目标尺寸。
+           Vector2 actorTarget = targetPositions[turnImage];
+           float actorTargetScale = targetScales.TryGetValue(turnImage, out var scale) ? scale : normalScale;
+           turnImage.SetAlpha(0f);
+           turnImage.SetLayoutScale(cellSize, 0f);
+           turnImage.SetAnchoredPosition(new Vector2(slideDistance, actorTarget.y));
+           yield return PlaySlideFadeScaleTo(turnImage, actorTargetScale, false);
+       }*/
     #endregion
 }

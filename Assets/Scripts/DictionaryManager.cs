@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;  // 仅在编辑器下使用
@@ -109,6 +110,128 @@ public class EnvironmentDictionaryManager : MonoBehaviour
         }
 
         Debug.LogError($"未找到环境: {environmentType}");
+        return null;
+    }
+}
+public class SkillDictionaryManager : MonoBehaviour
+{
+    private static Dictionary<CharacterSkillType, CharacterSkillBase> skillDict;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Initialize()
+    {
+        LoadAllSkills();
+    }
+
+#if UNITY_EDITOR
+    [InitializeOnLoadMethod]
+    private static void EditorInitialize()
+    {
+        LoadAllSkills();
+        EditorApplication.projectChanged -= LoadAllSkills;
+        EditorApplication.projectChanged += LoadAllSkills;
+    }
+#endif
+
+    private static void LoadAllSkills()
+    {
+        skillDict = new Dictionary<CharacterSkillType, CharacterSkillBase>();
+        CharacterSkillBase[] allSkills = Resources.LoadAll<CharacterSkillBase>(string.Empty);
+
+        foreach (var skill in allSkills)
+        {
+            if (skill == null)
+            {
+                continue;
+            }
+
+            if (!skillDict.ContainsKey(skill.skillType))
+            {
+                skillDict.Add(skill.skillType, skill);
+            }
+            else
+            {
+                Debug.LogWarning($"重复的技能类型: {skill.skillType}，请检查资源命名和配置");
+            }
+        }   
+
+        Debug.Log($"技能字典加载完成，共 {skillDict.Count} 种技能");
+    }
+
+    public static CharacterSkillBase GetSkill(CharacterSkillType skillType)
+    {
+        if (skillDict == null)
+        {
+            LoadAllSkills();
+        }
+
+        if (skillDict.TryGetValue(skillType, out var skill))
+        {
+            return skill;
+        }
+
+        Debug.LogError($"未找到技能: {skillType}");
+        return null;
+    }
+}
+public class EnemySkillDictionaryManager : MonoBehaviour
+{
+    private static Dictionary<EnemySkillType, EnemySkillBase> enemySkillDict;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Initialize()
+    {
+        LoadAllEnemySkills();
+    }
+
+#if UNITY_EDITOR
+    [InitializeOnLoadMethod]
+    private static void EditorInitialize()
+    {
+        LoadAllEnemySkills();
+        EditorApplication.projectChanged -= LoadAllEnemySkills;
+        EditorApplication.projectChanged += LoadAllEnemySkills;
+    }
+#endif
+
+    private static void LoadAllEnemySkills()
+    {
+        enemySkillDict = new Dictionary<EnemySkillType, EnemySkillBase>();
+        EnemySkillBase[] allEnemySkills = Resources.LoadAll<EnemySkillBase>(string.Empty);
+
+        foreach (var skill in allEnemySkills)
+        {
+            if (skill == null)
+            {
+                continue;
+            }
+
+            if (!enemySkillDict.ContainsKey(skill.enemySkillType))
+            {
+                enemySkillDict.Add(skill.enemySkillType, skill);
+            }
+            else
+            {
+                Debug.LogWarning($"重复的敌人技能类型: {skill.enemySkillType}，请检查资源命名和配置");
+            }
+        }
+
+        Debug.Log($"敌人技能字典加载完成，共 {enemySkillDict.Count} 种敌人技能");
+    }
+
+    public static EnemySkillBase GetEnemySkill(EnemySkillType skillType)
+    {
+        if (enemySkillDict == null)
+        {
+            LoadAllEnemySkills();
+        }
+
+        if (enemySkillDict.TryGetValue(skillType, out var skill))
+        {
+            return skill;
+        }
+
+        Debug.LogError($"未找到敌人技能: {skillType}");
         return null;
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine;
 public class CommandButtonManager : MonoBehaviour
 {
     public static CommandButtonManager Instance { get; private set; }
+    //[SerializeField] private List<SkillBase> commandSkills;
     public List<CommandButton> commandButtons;
 
     [Header("动画相关参数")]
@@ -14,8 +15,6 @@ public class CommandButtonManager : MonoBehaviour
     public float fadeDuration = 0.25f; // 单个按钮淡入/淡出时间
 
     private List<Vector2> m_initialAnchoredPositions;//所有按钮的起始位置(显示的位置)
-    private int m_selectedIndex = -1;
-    private bool m_inputEnabled;
 
     private void Awake()
     {
@@ -25,11 +24,14 @@ public class CommandButtonManager : MonoBehaviour
             return;
         }
 
-        Instance = this;
+        Instance = this;    
+    }
+
+    void Start()
+    {
         CacheInitialPositions();
         ResetButtonsImmediate(false);
     }
-
     private void OnDestroy()
     {
         if (Instance == this)
@@ -40,24 +42,8 @@ public class CommandButtonManager : MonoBehaviour
 
     private void Update()
     {
-        if (!m_inputEnabled)
-            return;
 
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            MoveSelection(1);
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            MoveSelection(-1);
-        }
-
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-            TriggerSelectedButton();
-        }
     }
-
     public Coroutine FadeInButtons(Character character)
     {
         ConfigureButtons(character);
@@ -72,8 +58,6 @@ public class CommandButtonManager : MonoBehaviour
         if (commandButtons == null || commandButtons.Count == 0)
             yield break;
 
-        m_inputEnabled = false;
-        ClearSelection(true);
 
         int activeButtonIndex = 0;
         for (int i = 0; i < commandButtons.Count; i++)
@@ -123,8 +107,6 @@ public class CommandButtonManager : MonoBehaviour
         //根据按钮数量推迟协程结束时间，确保所有动画完成后再结束
         yield return new WaitForSeconds(buttonMoveSpacing * activeButtonIndex + fadeDuration);
 
-        SelectFirstAvailableButton();
-        m_inputEnabled = true;
     }
 
 
@@ -132,8 +114,6 @@ public class CommandButtonManager : MonoBehaviour
     {
         if (commandButtons == null || commandButtons.Count == 0)
             yield break;
-
-        m_inputEnabled = false;
 
         int activeButtonIndex = 0;
         for (int i = 0; i < commandButtons.Count; i++)
@@ -179,7 +159,6 @@ public class CommandButtonManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(buttonMoveSpacing * activeButtonIndex + fadeDuration);
-        ClearSelection(true);
     }
 
     private void ConfigureButtons(Character character)
@@ -193,40 +172,29 @@ public class CommandButtonManager : MonoBehaviour
             if (button == null)
                 continue;
 
-            SkillBase skill = null;
+            CharacterSkillBase skill = null;
             if (character != null && character.skills != null && i < character.skills.Count)
             {
-                skill = character.skills[i];
+                skill = SkillDictionaryManager.GetSkill(character.skills[i]);
             }
 
             button.BindSkill(character, skill);
         }
     }
-
-    public void OnButtonPointerEnter(CommandButton button)
+    /*private void ConfigureCommandButtons()
     {
-        if (!m_inputEnabled || button == null)
+        if (commandButtons == null)
             return;
 
-        int index = commandButtons.IndexOf(button);
-        if (index < 0 || !button.HasSkill)
-            return;
-
-        SelectIndex(index);
-    }
-
-    public void OnButtonPointerExit(CommandButton button)
-    {
-        if (!m_inputEnabled || button == null)
-            return;
-
-        int index = commandButtons.IndexOf(button);
-        if (index >= 0 && index == m_selectedIndex)
+        for (int i = 0; i < Mathf.Min(commandButtons.Count, commandSkills.Count); i++)
         {
-            button.PlayDeselectAnimation();
-            m_selectedIndex = -1;
+            var button = commandButtons[i];
+            if (button == null)
+                continue;
+
+            button.BindSkill(null,commandSkills[i]);
         }
-    }
+    }*/
 
     private void CacheInitialPositions()//记录所有按钮的初始位置
     {
@@ -286,28 +254,7 @@ public class CommandButtonManager : MonoBehaviour
             button.PlayDeselectAnimation(true);
         }
 
-        m_inputEnabled = false;
-        m_selectedIndex = -1;
     }
-
-    private void MoveSelection(int direction)
-    {
-        if (commandButtons == null || commandButtons.Count == 0)
-            return;
-
-        int startIndex = m_selectedIndex;
-        if (startIndex < 0)
-        {
-            startIndex = direction > 0 ? -1 : 0;
-        }
-
-        int nextIndex = FindNextSelectableIndex(startIndex, direction);
-        if (nextIndex >= 0)
-        {
-            SelectIndex(nextIndex);
-        }
-    }
-
     private int FindNextSelectableIndex(int startIndex, int direction)
     {
         if (commandButtons == null || commandButtons.Count == 0)
@@ -329,57 +276,5 @@ public class CommandButtonManager : MonoBehaviour
         return -1;
     }
 
-    private void TriggerSelectedButton()
-    {
-        if (m_selectedIndex < 0 || m_selectedIndex >= commandButtons.Count)
-            return;
 
-        var button = commandButtons[m_selectedIndex];
-        if (button == null || !button.HasSkill)
-            return;
-
-        button.OnButtonClicked();
-    }
-
-    private void SelectFirstAvailableButton()
-    {
-        int index = FindNextSelectableIndex(-1, 1);
-        if (index >= 0)
-        {
-            SelectIndex(index);
-        }
-    }
-
-    private void SelectIndex(int index)
-    {
-        if (index < 0 || index >= commandButtons.Count)
-            return;
-
-        if (m_selectedIndex == index)
-            return;
-
-        if (m_selectedIndex >= 0 && m_selectedIndex < commandButtons.Count)
-        {
-            var oldButton = commandButtons[m_selectedIndex];
-            oldButton?.PlayDeselectAnimation();
-        }
-
-        m_selectedIndex = index;
-        var newButton = commandButtons[m_selectedIndex];
-        newButton?.PlaySelectAnimation();
-    }
-
-    private void ClearSelection(bool immediate)
-    {
-        if (m_selectedIndex >= 0 && m_selectedIndex < commandButtons.Count)
-        {
-            var oldButton = commandButtons[m_selectedIndex];
-            if (oldButton != null)
-            {
-                oldButton.PlayDeselectAnimation(immediate);
-            }
-        }
-
-        m_selectedIndex = -1;
-    }
 }

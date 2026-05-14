@@ -33,7 +33,9 @@ public class CharacterManager : MonoBehaviour
 	private readonly List<Button> m_runtimeButtons = new List<Button>();
 
 	private bool m_isSelectingFieldCharacter;
+	public bool IsSelectingFieldCharacter => m_isSelectingFieldCharacter;
 	private bool m_isSelectingReserveCharacter;
+	public bool IsSelectingReserveCharacter => m_isSelectingReserveCharacter;
 	private Character m_selectedFieldCharacter;
 	private Character m_selectedReserveCharacter;
 
@@ -61,7 +63,7 @@ public class CharacterManager : MonoBehaviour
 			Instance = null;
 		}
 	}
-
+	#region  换人流程
 	public IEnumerator SelectAndSwapCoroutine()//换人协程，处理整个换人流程
 	{
 		if (fieldCharacters.Count <= 0)
@@ -80,14 +82,14 @@ public class CharacterManager : MonoBehaviour
 		m_selectedReserveCharacter = null;
 		m_isSelectingReserveCharacter = false;
 		m_isSelectingFieldCharacter = true;
-    //第一步:选择场上的角色
+		//第一步:选择场上的角色
 		UpdatePromptText("请选择一个场上角色进行更换");
 		SetPromptVisible(true);
-        Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
+		Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
 		yield return new WaitUntil(() => m_selectedFieldCharacter != null);
 		m_isSelectingFieldCharacter = false;
 		m_isSelectingReserveCharacter = true;
-    //第二步:选择候补角色
+		//第二步:选择候补角色
 		BuildReserveButtons();
 		PlayReserveButtonsEnterAnim();
 		UpdatePromptText($"请选择替换 {m_selectedFieldCharacter.name} 的候补角色");
@@ -100,10 +102,10 @@ public class CharacterManager : MonoBehaviour
 		{
 			m_selectedFieldCharacter.SetSelectedVisual(false);
 		}
-    //第三步:执行替换
+		//第三步:执行替换
 		HideReserveButtonsImmediate();
 		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter));
-    //第四步:清理UI
+		//第四步:清理UI
 		SetPromptVisible(false);
 	}
 
@@ -144,11 +146,8 @@ public class CharacterManager : MonoBehaviour
 		//设置入场角色位置
 		newCharacter.transform.position = oldCharacter.transform.position;
 		//执行退场技能
-		if (oldCharacter.exitSkill != null)
-		{
-			SkillExecuteManager.ExecuteSkill(oldCharacter, oldCharacter.exitSkill);
-			yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
-		}
+		SkillExecuteManager.ExecuteSkill(oldCharacter, SkillDictionaryManager.GetSkill(oldCharacter.exitSkill));
+		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 		//执行退场动画
 		yield return oldCharacter.PlayExitAnimation();
 		//交换角色列表中的角色
@@ -158,11 +157,8 @@ public class CharacterManager : MonoBehaviour
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
 		//执行入场技能
-		if (newCharacter.enterSkill != null)
-		{
-			SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.enterSkill);
-			yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
-		}
+		SkillExecuteManager.ExecuteSkill(newCharacter, SkillDictionaryManager.GetSkill(newCharacter.enterSkill));
+		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 		//执行入场动画
 		yield return newCharacter.PlayEnterAnimation();
 		//更新 TurnManager 中的角色引用，确保回合顺序正确
@@ -171,7 +167,7 @@ public class CharacterManager : MonoBehaviour
 			Debug.Log($"[CharacterManager] 更新 TurnManager 中的角色引用，将 {oldCharacter.name} 替换为 {newCharacter.name}");
 			float oldActionValue = oldCharacter.currentActionValue;
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
-			newCharacter.currentActionValue = 0f; //换入角色立即插入回合
+			newCharacter.ChangeActionValue(0f); //换入角色立即插入回合
 			TurnManager.Instance.InsertCombatant(newCharacter, false);
 		}
 
@@ -215,6 +211,7 @@ public class CharacterManager : MonoBehaviour
 			}
 
 			Character captured = reserve;
+			button.GetComponent<EnterCharacterButton>()?.Initialize(captured);
 			button.onClick.AddListener(() => OnReserveButtonClicked(captured));
 			m_runtimeButtons.Add(button);
 		}
@@ -265,7 +262,7 @@ public class CharacterManager : MonoBehaviour
 
 		m_runtimeButtons.Clear();
 	}
-
+	#endregion
 	private void UpdatePromptText(string text)
 	{
 		if (promptText == null)
@@ -285,4 +282,26 @@ public class CharacterManager : MonoBehaviour
 
 		promptText.gameObject.SetActive(visible);
 	}
+
+	#region 角色相关工具
+	public Character GetCharacterByRand()
+	{
+		float totalWeight = 0f;
+		foreach (var character in fieldCharacters)
+		{
+			totalWeight += character.GetAttractCount();
+		}
+		float rand = Random.Range(0f, totalWeight);
+		float cumulativeWeight = 0f;
+		foreach (var character in fieldCharacters)
+		{
+			cumulativeWeight += character.GetAttractCount();
+			if (rand <= cumulativeWeight)
+			{
+				return character;
+			}
+		}
+		return null;
+	}
+	#endregion
 }

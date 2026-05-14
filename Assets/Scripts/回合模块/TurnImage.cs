@@ -1,6 +1,7 @@
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class TurnImage : MonoBehaviour
@@ -13,6 +14,7 @@ public class TurnImage : MonoBehaviour
 
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
+    private Tween moveTween;
 
     private void Awake()
     {
@@ -26,7 +28,7 @@ public class TurnImage : MonoBehaviour
 
     public void Initialize(Vector2 size, float initialScale)
     {
-        SetTopLeftAnchor();
+        SetTopRightAnchor();
 
         if (rectTransform != null)
         {
@@ -59,40 +61,22 @@ public class TurnImage : MonoBehaviour
         }
     }
 
-    // 将锚点与轴心统一到左上，便于垂直列表从父节点左上角向下排布
-    public void SetTopLeftAnchor()
+    // 将锚点与轴心统一到右上，便于垂直列表从父节点右上角向下排布
+    public void SetTopRightAnchor()
     {
         if (rectTransform == null)
         {
             return;
         }
 
-        rectTransform.anchorMin = new Vector2(0f, 1f);
-        rectTransform.anchorMax = new Vector2(0f, 1f);
-        rectTransform.pivot = new Vector2(0f, 0.5f);
-    }
-
-    // 改变尺寸时保持左上角视觉位置不变，避免元素因 pivot 不同出现位移
-    public void SetSizeAndKeepTopLeft(Vector2 size)
-    {
-        if (rectTransform == null)
-        {
-            return;
-        }
-
-        Vector2 oldSize = rectTransform.sizeDelta;
-        Vector2 oldAnchored = rectTransform.anchoredPosition;
-        Vector2 pivot = rectTransform.pivot;
-
-        rectTransform.sizeDelta = size;
-
-        Vector2 delta = size - oldSize;
-        Vector2 correction = new Vector2(pivot.x * delta.x, -(1f - pivot.y) * delta.y);
-        rectTransform.anchoredPosition = oldAnchored + correction;
+        rectTransform.anchorMin = new Vector2(1f, 1f);
+        rectTransform.anchorMax = new Vector2(1f, 1f);
+        rectTransform.pivot = new Vector2(1f, 1f);
     }
 
     public void SetAnchoredPosition(Vector2 position)
     {
+        rectTransform = transform as RectTransform;
         if (rectTransform != null)
         {
             rectTransform.anchoredPosition = position;
@@ -126,7 +110,7 @@ public class TurnImage : MonoBehaviour
     public void SetLayoutScale(Vector2 baseSize, float scale)
     {
         CurrentLayoutScale = scale;
-        SetSizeAndKeepTopLeft(baseSize * Mathf.Max(0f, scale));
+        rectTransform.sizeDelta = baseSize * Mathf.Max(0f, scale);
     }
 
     public Tween MoveTo(Vector2 position, float duration)
@@ -136,7 +120,13 @@ public class TurnImage : MonoBehaviour
             return DOTween.Sequence();
         }
 
-        return rectTransform.DOAnchorPos(position, duration).SetTarget(gameObject);
+        if (moveTween != null)
+        {
+            moveTween.Kill();
+        }
+
+        moveTween = rectTransform.DOAnchorPos(position, duration).SetTarget(gameObject);
+        return moveTween;
     }
 
     public Tween FadeIn(float duration)
@@ -163,4 +153,24 @@ public class TurnImage : MonoBehaviour
     {
         return transform.DOScale(Vector3.one * scale, duration).SetTarget(gameObject);
     }
+    #region NotUse
+    /* 改变尺寸时保持右上角视觉位置不变，避免元素因 pivot 不同出现位移
+public void SetSizeAndKeepTopRight(Vector2 size)
+{
+    if (rectTransform == null)
+    {
+        return;
+    }
+
+    Vector2 oldSize = rectTransform.sizeDelta;
+    Vector2 oldAnchored = rectTransform.anchoredPosition;
+    Vector2 pivot = rectTransform.pivot;
+
+    rectTransform.sizeDelta = size;
+
+    Vector2 delta = size - oldSize;
+    Vector2 correction = new Vector2(pivot.x * delta.x, -(1f - pivot.y) * delta.y);
+    rectTransform.anchoredPosition = oldAnchored + correction;
+}*/
+    #endregion
 }

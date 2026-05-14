@@ -75,4 +75,18 @@ public class EnvironmentManager : MonoBehaviour
             environment.TickByActionValue(actionValueCost);
         }
     }
+
+    public bool HasEnvironment(EnvironmentType type)
+    {
+        for (int i = 0; i < activeEnvironments.Count; i++)
+        {
+            BattleEnvironment environment = activeEnvironments[i];
+            if (environment != null && environment.environmentType == type && environment.IsApplied)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

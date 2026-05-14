@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
-
+using MoreMountains.Feedbacks;
 public class Enemy : UnitCombatant
 {
     public string enemyID;
@@ -11,26 +11,51 @@ public class Enemy : UnitCombatant
 
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
+    public List<EnemySkillType> skills = new List<EnemySkillType>();
+    #region 自爆相关 因为项目比较小 所以先把自爆相关的状态和逻辑写在Enemy类里，后续如果需要的话再重构
+    public bool hasStartExploded = false;
+    #endregion
     private void Start()
     {
         LoadDataFromCSV();
+        maxHP*=5;
+        currentHP*=5;
         m_defaultScale = transform.localScale;
         EnemyManager.Instance?.RegisterEnemy(this);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
         EnemyManager.Instance?.UnregisterEnemy(this);
+        base.OnDestroy();
     }
 
     public override IEnumerator PerformTurn()
     {
         ProcessStatesOnTurnStart();
+
+        if (!CanActThisTurn())
+        {
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
+            yield break;
+        }
+        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
+        yield return ActionCoroutine();
+        yield return new WaitForSeconds(0.2f);//行动后短暂等待，给玩家一些反馈时间
+    }
+    private IEnumerator ActionCoroutine()
+    {
+        //这里先写个随机攻击的逻辑，后续会替换成更复杂的AI
+        int rand=Random.Range(0, skills.Count);
+        EnemySkillType skillType = skills[rand];
+        yield return EnemySkillDictionaryManager.GetEnemySkill(skillType)?.Execute(this);
         yield break;
     }
-
     public override void Die()
     {
+        TransferElementalDetonationOnDeath();//传播一个状态，耦合度太高了后面再改
+
         EnemyManager.Instance?.UnregisterEnemy(this);
         base.Die();
     }
@@ -78,4 +103,43 @@ public class Enemy : UnitCombatant
         K = levelData.K;
     }
     #endregion
+
+    private void TransferElementalDetonationOnDeath()
+    {
+        State detonation = GetState(StateType.ElementalDetonation);
+        if (detonation == null || EnemyManager.Instance == null)
+        {
+            return;
+        }
+
+        Enemy target = null;
+        int minHp = int.MaxValue;
+        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        {
+            if (enemy == null || enemy == this)
+            {
+                continue;
+            }
+
+            if (enemy.currentHP < minHp)
+            {
+                minHp = enemy.currentHP;
+                target = enemy;
+            }
+        }
+
+        if (target == null)
+        {
+            return;
+        }
+
+        UnitCombatant giver = detonation.giver as UnitCombatant;
+        if (giver == null)
+        {
+            giver = this;
+        }
+
+        target.AddState(StateType.ElementalDetonation, giver, 2,1, detonation.skillCoefT);
+        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"元素引爆转移至{target.name}");
+    }
 }

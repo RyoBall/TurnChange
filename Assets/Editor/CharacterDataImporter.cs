@@ -8,7 +8,7 @@ using System;
 public class CharacterDataImporter
 {
 
-    [MenuItem("Tools/")]
+    [MenuItem("Tools/ImportCharacterDatas")]
     public static void ImportCharacterDatas()
     {
         Debug.Log("正在导入角色数据...");

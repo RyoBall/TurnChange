@@ -9,15 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: "\u9000\u573A\u6280"
+  m_Script: {fileID: 11500000, guid: 5dd9b37d48325a6429f7b9a47e9ac998, type: 3}
+  m_Name: "\u9707\u6151"
   m_EditorClassIdentifier: 
-  skillName: "\u51FA\u573A\u6280"
-  description: 
-  icon: {fileID: 0}
-  skillType: 4
-  requiresEnemyTarget: 0
-  enemyTargetCount: 1
-  endTurnAfterUse: 0
-  skillBase: 0
-  skillCoef: 1
+  durationType: 0
+  maxStacks: 1
+  stateType: 4
+  isDot: 0
+  isBuff: 0
+  isDebuff: 1
+  atkT: 0
+  skillCoefT: 0
+  buffMultiplier: 0
