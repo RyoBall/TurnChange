@@ -169,7 +169,7 @@ public class Character : UnitCombatant
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
             enterFeedback?.PlayFeedbacks();
-            SkillDescription.Instance.ChangeDescription(SkillDictionaryManager.GetSkill(enterSkill));
+            SkillDescription.Instance.ChangeDescription(SkillDictionaryManager.GetSkill(exitSkill));
         }
     }
     private void OnMouseExit()
@@ -181,10 +181,10 @@ public class Character : UnitCombatant
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
-            SkillManager.Instance?.OnCharacterClicked(this);
             CharacterManager.Instance?.OnFieldCharacterClicked(this);
             SkillDescription.Instance.ChangeDescription(null);
         }
+        SkillManager.Instance?.OnCharacterClicked(this);
     }
 
     public void SetSelectedVisual(bool selected)

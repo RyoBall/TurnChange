@@ -407,6 +407,10 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
 
     public override void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
     {
+        if(!(target is Enemy))
+        {
+            return;
+        }
         int damage = Mathf.RoundToInt(state.owner.attack * 0.6f);
         target.TakeDamage(damage, state.owner, false, false);
         FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"{state.owner.name}触发追惩，对{target.name}追击");
