@@ -86,11 +86,11 @@ public class DamageTextPool : MonoBehaviour
         damageText.gameObject.SetActive(false);
         pool.Enqueue(damageText);
     }
-    public void ShowDamage(int damage, Vector3 worldPosition, bool isCritical = false)
+    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false,string additionalText="")
     {
         DamageText damageText = Get();
-        // ������������
-        damageText.ShowDamage(damage, worldPosition, isCritical);
+
+        damageText.ShowDamage(damage, worldPosition, isDotDamage, additionalText);
     }
 
 }

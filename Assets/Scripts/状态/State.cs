@@ -29,7 +29,8 @@ public enum StateType
     Attract,//瞩目
     Poison,//毒
     ChaosHalf,//混沌半效
-    ChaosStun//混沌眩晕
+    ChaosStun,//混沌眩晕
+    None
 }
 
 [CreateAssetMenu(fileName = "State", menuName = "状态/新状态")]
@@ -150,30 +151,49 @@ public class State : ScriptableObject
         ChangeStackCount(stackCount + stacks);
     }
 
-    public bool TickOnTurnStart()
+    public Coroutine TickOnTurnStart()
     {
-        Behavior.OnOwnerTurnStart();
+        var coroutine = CoroutineHelper.GetHelper().StartCoroutine(Behavior.OnOwnerTurnStart());
 
         if (durationType != StateDurationType.Turn)
         {
-            return false;
+            return null;
         }
 
-        remainingTurns--;
-        return remainingTurns <= 0;
+        ChangeDuration(Mathf.Max(0, remainingTurns - 1));
+        return coroutine;
     }
 
-    public bool TickByActionValue(int actionValueCost)
+    public void TickByActionValue(int actionValueCost)
     {
         if (durationType != StateDurationType.ActionValue)
         {
-            return false;
+            return;
         }
 
-        remainingActionValue -= Mathf.Max(0, actionValueCost);
-        return remainingActionValue <= 0;
+        ChangeDuration(Mathf.Max(0, remainingActionValue - actionValueCost));
     }
-
+    void ChangeDuration(int newDuration)
+    {
+        if (durationType == StateDurationType.Turn)
+        {
+            remainingTurns = Mathf.Max(0, newDuration);
+            if (remainingTurns <= 0)
+            {
+                Debug.Log($"状态 {stateType} 在 {owner.gameObject.name} 上持续回合数已耗尽");
+                EndState();
+            }
+        }
+        else
+        {
+            remainingActionValue = Mathf.Max(0, newDuration);
+            if (remainingActionValue <= 0)
+            {
+                Debug.Log($"状态 {stateType} 在 {owner.gameObject.name} 上持续行动值已耗尽");
+                EndState();
+            }
+        }
+    }
     public void EndState()
     {
         Behavior.OnStateEnd();
@@ -233,7 +253,7 @@ public class State : ScriptableObject
             return;
         }
 
-        remainingTurns += extraTurns;
+        ChangeDuration(remainingTurns + extraTurns);
     }
 
     public bool TryConsumeResist()
@@ -291,7 +311,7 @@ public interface IStateBehavior
 {
     void Initialize(State state);
     void OnStateApply();
-    void OnOwnerTurnStart();
+    IEnumerator OnOwnerTurnStart();
     void OnStateEnd();
     void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage);
     void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver);
@@ -314,7 +334,7 @@ public abstract class StateBehaviorBase : IStateBehavior
     }
 
     public virtual void OnStateApply() { }
-    public virtual void OnOwnerTurnStart() { }
+    public virtual IEnumerator OnOwnerTurnStart() { yield break; }//由于这是回合开始的行为，最好支持协程，以便实现一些需要等待的效果
     public virtual void OnStateEnd() { }
     public virtual void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage) { }
     public virtual void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver) { }
@@ -379,40 +399,29 @@ public class DefaultStateBehavior : StateBehaviorBase
 
 public class BloodContractStateBehavior : StateBehaviorBase
 {
-    public override void OnOwnerTurnStart()
+    public override IEnumerator OnOwnerTurnStart()
     {
         if (state.owner == null)
         {
-            return;
+            yield break;
         }
 
         int selfDamage = Mathf.CeilToInt(state.owner.maxHP * 0.2f);
-        state.owner.TakeDamage(selfDamage, state.owner, false, true);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}因血契失去{selfDamage}生命");
+        state.owner.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, state.owner).AsTrueDamage());
     }
 }
 
 public class PursuitPunishStateBehavior : StateBehaviorBase
 {
-    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
-    {
-        int add = target == state.owner ? 3 : 1;
-        state.ChangeStackCount(state.StackCount + add);
-        if (state.StackCount >= 8)
-        {
-            TriggerCounterCharge();
-            state.ChangeStackCount(0);
-        }
-    }
 
     public override void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
     {
-        if(!(target is Enemy))
+        if (!(target is Enemy))
         {
             return;
         }
         int damage = Mathf.RoundToInt(state.owner.attack * 0.6f);
-        target.TakeDamage(damage, state.owner, false, false);
+        target.TakeDamage(new UnitCombatant.DamageInfo(damage, state.owner));
         FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"{state.owner.name}触发追惩，对{target.name}追击");
     }
 
@@ -426,39 +435,15 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
         return 1f;
     }
 
-    private void TriggerCounterCharge()
-    {
-        if (state.owner == null)
-        {
-            return;
-        }
-
-        if (state.owner is Character && CharacterManager.Instance != null)
-        {
-            int shieldValue = Mathf.RoundToInt(state.owner.maxHP * 0.2f + state.skillCoefT * 100f);
-            foreach (var ally in CharacterManager.Instance.fieldCharacters)
-            {
-                if (ally == null)
-                {
-                    continue;
-                }
-
-                ally.AddShield(shieldValue);
-            }
-        }
-
-        TurnManager.Instance?.ExtraTurnInsert(state.owner as Character);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}触发蓄势逆击");
-    }
 }
 
 public class PersistentTormentStateBehavior : StateBehaviorBase
 {
-    public override void OnOwnerTurnStart()
+    public override IEnumerator OnOwnerTurnStart()
     {
         if (state.owner == null)
         {
-            return;
+            yield break;
         }
 
         int validLayer = Mathf.Clamp(state.StackCount, 0, 5);
@@ -478,9 +463,10 @@ public class PersistentTormentStateBehavior : StateBehaviorBase
 
 public abstract class DotStateBehaviorBase : StateBehaviorBase
 {
-    public override void OnOwnerTurnStart()
+    public override IEnumerator OnOwnerTurnStart()
     {
         TriggerConfiguredDotDamage();
+        yield return new WaitForSeconds(0.1f);
     }
 
     public override void DotTrigger(float damageMultiplier)
@@ -505,8 +491,7 @@ public abstract class DotStateBehaviorBase : StateBehaviorBase
             case StateType.Wind:
                 int damage = DamageCounter.CountDotDamage(state, state.giver, state.owner);
                 damage = Mathf.RoundToInt(damage * damageMultiplier);
-                state.owner.TakeDamage(damage, state.giver, true, false);
-                FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}受到{damage}点持续伤害");
+                state.owner.TakeDamage(new UnitCombatant.DamageInfo(damage, state.giver).AsDot().WithState(state.stateType));
                 break;
         }
     }
@@ -551,14 +536,15 @@ public class ElementalDetonationStateBehavior : StateBehaviorBase
         }
 
         int finalDamage = (int)(damage * 0.25f);
-        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        foreach (var enemy in enemies)
         {
             if (enemy == null || enemy == target)
             {
                 continue;
             }
 
-            enemy.TakeDamage(finalDamage, source, false, true);
+            enemy.TakeDamage(new UnitCombatant.DamageInfo(finalDamage, source).AsTrueDamage());
         }
     }
 
@@ -693,14 +679,15 @@ public class ChaosStunStateBehavior : StateBehaviorBase
         hasStunned = true;
         return false;
     }
-    public override void OnOwnerTurnStart()
+    public override IEnumerator OnOwnerTurnStart()
     {
         if (hasStunned)
         {
-            var cha= state.owner as Character;
+            var cha = state.owner as Character;
             cha?.SetChaos(2);
             state.EndState();
         }
+        yield break;
     }
 }
 

@@ -37,27 +37,49 @@ public class UnitCombatant : Combatant
         return Mathf.RoundToInt(attack);
     }
     protected virtual void OnDestroy(){}
-    public virtual void TakeDamage(int damage, UnitCombatant source = null, bool isDotDamage = false, bool isTrueDamage = false)
+    public struct DamageInfo
+{
+    public int Damage;
+    public UnitCombatant Source;
+    public bool IsDotDamage;
+    public bool IsTrueDamage;
+    public StateType StateType;
+    
+    // 便捷构造
+    public DamageInfo(int damage, UnitCombatant source = null)
     {
-        if (damage <= 0)
+        Damage = damage;
+        Source = source;
+        IsDotDamage = false;
+        IsTrueDamage = false;
+        StateType = StateType.None;
+    }
+    
+    // 链式配置（流畅接口）
+    public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
+    public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
+    public DamageInfo WithState(StateType state) { StateType = state; return this; }
+}
+    public virtual void TakeDamage(DamageInfo damageInfo)
+    {
+        if(damageInfo.Damage <= 0)
         {
-            return;
+            damageInfo.Damage = 0;
         }
-
-        int finalDamage = damage;
+        int finalDamage = damageInfo.Damage;
         //结算盾值
         finalDamage = ConsumeShield(finalDamage);
+        hitFeedback?.PlayFeedbacks();
+        OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType);
         //如果伤害小于0直接结束
         if (finalDamage <= 0)
         {
-            NotifyAnyDamageSettled(source, this, 0);
+            NotifyAnyDamageSettled(damageInfo.Source, this, 0, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
             return;
         }
         //扣血
         currentHP = Mathf.Max(0, currentHP - finalDamage);
-        OnDamaged(finalDamage);
-        hitFeedback?.PlayFeedbacks();
-        NotifyAnyDamageSettled(source, this, finalDamage,isDotDamage,isTrueDamage);
+        NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
         //检查血量
         if (currentHP <= 0)
         {
@@ -75,10 +97,10 @@ public class UnitCombatant : Combatant
         currentHP = Mathf.Min(maxHP, currentHP + amount);
     }
 
-    protected virtual void OnDamaged(int damage)
+    protected virtual void OnDamaged(int damage,bool isDotDamage=false,StateType stateType=StateType.None)
     {
         Debug.Log($"[{GetType().Name}] {gameObject.name} 受到 {damage} 点伤害");
-        DamageTextPool.Instance?.ShowDamage(damage, transform.position);
+        DamageTextPool.Instance?.ShowDamage(damage, transform.position,isDotDamage,StateDictionaryManager.GetStateName(stateType));
     }
 
     public virtual void Die()
@@ -153,7 +175,7 @@ public class UnitCombatant : Combatant
         return true;
     }
 
-    public void ProcessStatesOnTurnStart()
+    public IEnumerator ProcessStatesOnTurnStart()
     {
         for (int i = states.Count - 1; i >= 0; i--)
         {
@@ -164,20 +186,7 @@ public class UnitCombatant : Combatant
                 continue;
             }
 
-            bool shouldEnd = state.TickOnTurnStart();
-            if (state.DurationType == StateDurationType.Turn)
-            {
-                Debug.Log($"[ {gameObject.name} 状态 {state.stateType} 持续回合数剩余: {state.RemainingTurns}");
-            }
-            else
-            {
-                Debug.Log($"[ {gameObject.name} 状态 {state.stateType} 持续行动值剩余: {state.RemainingActionValue}");
-            }
-
-            if (shouldEnd)
-            {
-                state.EndState();
-            }
+            yield return state.TickOnTurnStart();
         }
     }
 
@@ -192,11 +201,7 @@ public class UnitCombatant : Combatant
                 continue;
             }
 
-            bool shouldEnd = state.TickByActionValue(actionValueCost);
-            if (shouldEnd)
-            {
-                state.EndState();
-            }
+            state.TickByActionValue(actionValueCost);
         }
     }
     #endregion

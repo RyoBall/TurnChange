@@ -147,7 +147,8 @@ public class CharacterSkillBase : SkillBase
     {
         yield return new WaitForSeconds(.5f);
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的离场技能触发，结算dot伤害");
-        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        foreach (var enemy in enemies)
         {
             if (enemy != null)
             {
@@ -175,8 +176,8 @@ public class CharacterSkillBase : SkillBase
         {
             if (enemy != null)
             {
-                int damage = Mathf.RoundToInt(character.attack * 0.5f);
-                enemy.TakeDamage(damage, character, false, false);
+                int damage = DamageCounter.CountDamage(character,enemy,this);
+                enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
                 bool hadSeqFlame = enemy.HasState(StateType.SeqFlame);
                 State state=enemy.AddState(StateType.SeqFlame, character, 2,1);
 
@@ -206,7 +207,8 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        foreach (var enemy in enemies)
         {
             if (enemy == null)
             {
@@ -226,7 +228,8 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        foreach (var enemy in enemies)
         {
             if (enemy == null)
             {
@@ -254,15 +257,16 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        foreach (var enemy in enemies)
         {
             if (enemy == null)
             {
                 continue;
             }
 
-            int damage = Mathf.RoundToInt(character.attack * 0.4f);
-            enemy.TakeDamage(damage, character, false, false);
+            int damage = DamageCounter.CountDamage(character,enemy,this);
+            enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
 
             StateType dotType = PickRandomDotState(enemy);
             enemy.AddState(dotType, character,3);
@@ -285,14 +289,19 @@ public class CharacterSkillBase : SkillBase
         }
 
         target.AddState(StateType.ElementalDetonation, character, 2);
+        bool ifAttack=false;
         foreach (var state in target.States)
         {
             if (state != null && state.isDot)
             {
+                ifAttack = true;
                 state.DotTrigger();
             }
         }
-        GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
+        if(ifAttack)
+        {
+            GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
+        }
         yield break;
     }
 

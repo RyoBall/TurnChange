@@ -358,7 +358,7 @@ MonoBehaviour:
         Owner: {fileID: 3195374147485118276}
         DebugActive: 0
         AnimateScaleTarget: {fileID: 8001485717535995727}
-        DeclaredDuration: 0.5
+        DeclaredDuration: 0.3
         Axis: 0
         Damping: 0.2
         Frequency: 6
@@ -573,6 +573,8 @@ MonoBehaviour:
   enemyID: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA"
   selectedScale: 1.1
   selectAnimDuration: 0.12
+  skills: 
+  hasStartExploded: 0
 --- !u!1 &3176342309017625078
 GameObject:
   m_ObjectHideFlags: 0
@@ -789,8 +791,8 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   FeedbacksList:
-  - rid: 8038954249421586433
-  - rid: 8038954249421586436
+  - rid: 8038954291638566914
+  - rid: 8038954291638566915
   KeepPlayModeChanges: 0
   PerformanceMode: 0
   StopFeedbacksOnDisable: 0
@@ -798,7 +800,7 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 8038954249421586433
+    - rid: 8038954291638566914
       type: {class: MMF_SpriteRenderer, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
@@ -942,12 +944,12 @@ MonoBehaviour:
           m_RotationOrder: 4
         FlipX: 0
         FlipY: 0
-    - rid: 8038954249421586436
-      type: {class: MMF_PositionSpring, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
+    - rid: 8038954291638566915
+      type: {class: MMF_SquashAndStretchSpring, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
         Active: 1
-        UniqueID: -369859844
-        Label: Position Spring
+        UniqueID: 1833338625
+        Label: Squash and Stretch Spring
         ChannelMode: 0
         Channel: 0
         MMChannelDefinition: {fileID: 0}
@@ -963,7 +965,7 @@ MonoBehaviour:
           NumberOfRepeats: 0
           RepeatForever: 0
           DelayBetweenRepeats: 1
-          PlayCount: 0
+          PlayCount: 1
           LimitPlayCount: 0
           MaxPlayCount: 3
           SetPlayCountToZeroOnReset: 0
@@ -1016,21 +1018,16 @@ MonoBehaviour:
           ButtonText: 
         Owner: {fileID: 1680366032202337052}
         DebugActive: 0
-        AnimatePositionTarget: {fileID: 6101253797047460483}
-        DeclaredDuration: 0.2
-        Space: 0
-        DampingX: 0.4
-        FrequencyX: 6
-        DampingY: 0.01
-        FrequencyY: 6
-        DampingZ: 0.01
-        FrequencyZ: 6
+        AnimateScaleTarget: {fileID: 8001485717535995727}
+        DeclaredDuration: 0.3
+        Axis: 0
+        Damping: 0.1
+        Frequency: 6
         Mode: 2
-        MoveToPositionMin: {x: 1, y: 1, z: 1}
-        MoveToPositionMax: {x: 2, y: 2, z: 2}
-        BumpPositionMin: {x: 0, y: 20, z: 0}
-        BumpPositionMax: {x: 0, y: 30, z: 0}
-        ForceAbsolute: 0
+        MoveToMin: 1
+        MoveToMax: 2
+        BumpScaleMin: 30
+        BumpScaleMax: 40
 --- !u!1 &4053535215180690090
 GameObject:
   m_ObjectHideFlags: 0

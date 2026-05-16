@@ -41,11 +41,19 @@ public class DamageText : MonoBehaviour
             : null;
     }
 
-    public void ShowDamage(int damage, Vector3 worldPosition, bool isCritical = false)
+    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false,string additionalText="")
     {
         // ������������
         damageText.text = damage.ToString();
-
+        if(isDotDamage)
+        {
+            damageText.color = Color.yellow;
+            damageText.text=$"{additionalText}:{damageText.text} ";
+        }
+        else
+        {
+            damageText.color = Color.white;
+        }
         if (!TrySetCanvasPosition(worldPosition))
         {
             ReturnToPool();
@@ -53,7 +61,7 @@ public class DamageText : MonoBehaviour
         }
 
         // ���Ŷ���
-        PlayAnimation(isCritical);
+        PlayAnimation(isDotDamage);
     }
 
     [Header("跳跃动画参数")]
@@ -65,7 +73,7 @@ public class DamageText : MonoBehaviour
 
     private Coroutine physicsCoroutine;
 
-    private void PlayAnimation(bool isCritical)
+    private void PlayAnimation(bool isDotDamage)
     { 
         // ֹͣ��ǰ����������ģ��
         currentSequence?.Kill();
@@ -80,10 +88,10 @@ public class DamageText : MonoBehaviour
         rectTransform.localScale = Vector3.zero;
         currentSequence = DOTween.Sequence();
         currentSequence.Append(rectTransform.DOScale(originalScale, scaleDuration).SetEase(Ease.OutElastic));
-        physicsCoroutine = StartCoroutine(PhysicsFallCoroutine(isCritical));
+        physicsCoroutine = StartCoroutine(PhysicsFallCoroutine(isDotDamage));
     }
 
-    private IEnumerator PhysicsFallCoroutine(bool isCritical)
+    private IEnumerator PhysicsFallCoroutine(bool isDotDamage)
     {
         // ��ʼλ��
         Vector2 anchoredPosition = rectTransform.anchoredPosition;

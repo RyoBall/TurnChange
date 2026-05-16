@@ -8,7 +8,7 @@ public class CommandButtonManager : MonoBehaviour
     public static CommandButtonManager Instance { get; private set; }
     //[SerializeField] private List<SkillBase> commandSkills;
     public List<CommandButton> commandButtons;
-
+    public RectTransform buttonContainer;
     [Header("动画相关参数")]
     public float buttonMoveSpacing = 0.1f; // 按钮移动的间隔时间
     public float buttonMoveDistance = 50f; // 按钮移动的距离
@@ -46,7 +46,7 @@ public class CommandButtonManager : MonoBehaviour
     }
     public Coroutine FadeInButtons(Character character)
     {
-        ConfigureButtons(character);
+        InitialButtons(character);
         return StartCoroutine(FadeInButtonsAnim());
     }
     public Coroutine FadeOutButtons()
@@ -161,7 +161,7 @@ public class CommandButtonManager : MonoBehaviour
         yield return new WaitForSeconds(buttonMoveSpacing * activeButtonIndex + fadeDuration);
     }
 
-    private void ConfigureButtons(Character character)
+    private void InitialButtons(Character character)
     {
         if (commandButtons == null)
             return;
@@ -180,6 +180,28 @@ public class CommandButtonManager : MonoBehaviour
 
             button.BindSkill(character, skill);
         }
+
+        if (character == null || buttonContainer == null)
+            return;
+
+        var worldCamera = Camera.main;
+        if (worldCamera == null)
+            return;
+
+        var screenPos = worldCamera.WorldToScreenPoint(character.transform.position);
+        var parentRect = buttonContainer.parent as RectTransform;
+        if (parentRect == null)
+            return;
+
+        var canvas = buttonContainer.GetComponentInParent<Canvas>();
+        Camera uiCamera = null;
+        if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+        {
+            uiCamera = canvas.worldCamera != null ? canvas.worldCamera : worldCamera;
+        }
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPos, uiCamera, out Vector2 localPoint);
+        buttonContainer.anchoredPosition = localPoint;
     }
     /*private void ConfigureCommandButtons()
     {

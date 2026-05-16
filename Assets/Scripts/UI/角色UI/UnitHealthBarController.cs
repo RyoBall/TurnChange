@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
-
-public class UnitHealthBarController : MonoBehaviour
+using TMPro;
+public class UnitHealthUIController : MonoBehaviour
 {
     [Header("绑定")]
     [SerializeField] private UnitCombatant targetUnit;
     [SerializeField] private Slider hpSlider;
+    [SerializeField] private TMP_Text hpText;
 
     private void Reset()
     {
@@ -23,7 +24,11 @@ public class UnitHealthBarController : MonoBehaviour
         ConfigureSlider();
         Refresh();
     }
-
+    public void Initialize(UnitCombatant unit)
+    {
+        targetUnit = unit;
+        Refresh();
+    }
     private void OnEnable()
     {
         Refresh();
@@ -55,6 +60,10 @@ public class UnitHealthBarController : MonoBehaviour
 
         float hpPercent = (float)targetUnit.currentHP / targetUnit.maxHP;
         hpSlider.value = Mathf.Clamp01(hpPercent);
+        if (hpText != null)
+        {
+            hpText.text = $"{(targetUnit == null ? 0 : targetUnit.currentHP)}";
+        }
     }
 
     private void ConfigureSlider()

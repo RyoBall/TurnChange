@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class CharacterManager : MonoBehaviour
 {
 	public static CharacterManager Instance { get; private set; }
+	public event System.Action<Character, Character> OnFieldCharacterSwapped;
 
 	[Header("角色列表")]
 	[Tooltip("所有可用角色，通常在 Inspector 中配置后不再改变")]
@@ -172,6 +173,7 @@ public class CharacterManager : MonoBehaviour
 		}
 
 		Debug.Log($"[CharacterManager] 已将场上角色 {oldCharacter.name} 替换为 {newCharacter.name}");
+		OnFieldCharacterSwapped?.Invoke(oldCharacter, newCharacter);
 		yield break;
 	}
 

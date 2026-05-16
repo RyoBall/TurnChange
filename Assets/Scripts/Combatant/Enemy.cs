@@ -32,14 +32,15 @@ public class Enemy : UnitCombatant
 
     public override IEnumerator PerformTurn()
     {
-        ProcessStatesOnTurnStart();
+        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
+        yield return ProcessStatesOnTurnStart();
 
         if (!CanActThisTurn())
         {
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
             yield break;
         }
-        enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
         yield return ActionCoroutine();
         yield return new WaitForSeconds(0.2f);//行动后短暂等待，给玩家一些反馈时间

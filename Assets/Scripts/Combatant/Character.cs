@@ -17,7 +17,7 @@ public class Character : UnitCombatant
     [SerializeField] private bool pendingChaosRecover;
     private const int MaxChaosValue = 5;
     private const int ChaosRecoverValue = 2;
-    public int ChaosValue=> chaosValue;
+    public int ChaosValue => chaosValue;
     public int MaxChaosValueConst => MaxChaosValue;
     bool endTurn = false;
     [Header("选中效果")]
@@ -44,7 +44,9 @@ public class Character : UnitCombatant
         TickSkillCooldowns();
         HandleChaosTurnStart();
         //结算状态
-        ProcessStatesOnTurnStart();
+        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
+        yield return ProcessStatesOnTurnStart();
 
         if (chaosValue >= MaxChaosValue)
         {
@@ -65,7 +67,6 @@ public class Character : UnitCombatant
         {
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}混沌偏高，本回合行动效果减半");
         }
-        enterFeedback?.PlayFeedbacks();
         //展示攻击逻辑
         yield return TurnStateManager.Instance.ChangeState(TurnState.InCharacterTurn, this);
         yield return new WaitUntil(() => endTurn);
@@ -266,6 +267,7 @@ public class Character : UnitCombatant
         currentHP = maxHP;
         attack = levelData.attack;
         defense = levelData.defense;
+        K = levelData.K;
     }
     #endregion
 }
