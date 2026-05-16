@@ -15,7 +15,7 @@ MonoBehaviour:
   durationType: 0
   maxStacks: 1
   stateType: 13
-  isDot: 1
+  isDot: 0
   isDebuff: 1
   atkT: 0
   skillCoefT: 0

@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: "\u9000\u573A\u62801"
   m_EditorClassIdentifier: 
   skillName: "\u51FA\u573A\u6280"
-  description: 
+  description: "\u5207\u51FA\u65F6\uFF0C\u82E5\u573A\u4E0A\u654C\u65B9\u5355\u4F4D\u5904\u4E8E\u6301\u7EED\u4F24\u5BB3\u72B6\u6001\uFF0C\u5176\u5F53\u524D\u654C\u4EBA\u627F\u53D7\u7684\u6240\u6709\u6301\u7EED\u4F24\u5BB3\u7ACB\u5373\u4EA7\u751F\u76F8\u5F53\u4E8E\u539F\u4F24\u5BB3\u7684120%\u7684\u6301\u7EED\u7C7B\u578B\u4F24\u5BB3"
   icon: {fileID: 0}
+  skillBase: 0
+  skillCoef: 1
   skillType: 2
   requiresEnemyTarget: 0
   enemyTargetCount: 1
@@ -22,5 +24,3 @@ MonoBehaviour:
   allyTargetCount: 1
   endTurnAfterUse: 0
   cooldownTurns: 0
-  skillBase: 0
-  skillCoef: 1
