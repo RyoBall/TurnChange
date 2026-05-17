@@ -169,14 +169,22 @@ public class Character : UnitCombatant
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
-            enterFeedback?.PlayFeedbacks();
+            mouseExitFeedback?.StopFeedbacks();
+            mouseEnterFeedback?.PlayFeedbacks();
             SkillDescription.Instance.ChangeDescription(SkillDictionaryManager.GetSkill(exitSkill));
+        }
+        if (SkillManager.Instance.IsSelectingCharacters)
+        {
+            mouseExitFeedback?.StopFeedbacks();
+            mouseEnterFeedback?.PlayFeedbacks();
         }
     }
     private void OnMouseExit()
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
             SkillDescription.Instance.ChangeDescription(null);
+        mouseEnterFeedback?.StopFeedbacks();
+        mouseExitFeedback?.PlayFeedbacks();
     }
     private void OnMouseDown()
     {

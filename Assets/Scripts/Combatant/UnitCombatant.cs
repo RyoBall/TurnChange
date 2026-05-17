@@ -23,6 +23,8 @@ public class UnitCombatant : Combatant
     [SerializeField] protected MMF_Player hitFeedback;
     [SerializeField] protected MMF_Player actionFeedback;
     [SerializeField] protected MMF_Player dieFeedback;
+    [SerializeField] protected MMF_Player mouseEnterFeedback;
+    [SerializeField] protected MMF_Player mouseExitFeedback;
 
     protected virtual void Awake()
     {
