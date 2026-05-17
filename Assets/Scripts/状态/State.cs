@@ -13,7 +13,7 @@ public enum StateDurationType
 
 public enum StateType
 {
-    BloodContract,//血契
+        BloodContract,//血契
     PursuitPunish,//追惩
     PersistentTorment,//持续煎熬
     SeqFlame,//序焰
@@ -30,7 +30,20 @@ public enum StateType
     Poison,//毒
     ChaosHalf,//混沌半效
     ChaosStun,//混沌眩晕
-    None
+    None,
+    BerserkFeast,//狂暴盛宴
+    BurningBlood,//燃血
+    DeadlyArmor,//致命穿甲
+    BloodBath,//浴血
+    Vulnerable,//易伤
+    ArmorBreak,//破甲
+    BloodSurgeHeal,//浴血反哺
+    CriticalGuard,//临界
+    BloodGift,//血赐
+    GiftWeak,//馈赠·弱
+    GiftMid,//馈赠·中
+    GiftStrong//馈赠·强
+
 }
 
 [CreateAssetMenu(fileName = "State", menuName = "状态/新状态")]
@@ -60,11 +73,13 @@ public class State : ScriptableObject
     private int stackCount = 1;
 
     [System.NonSerialized] private IStateBehavior m_behavior;
+    [System.NonSerialized] private float runtimeRecordValue;
 
     public UnitCombatant owner { get; private set; }
     public UnitCombatant giver { get; private set; }
     public int RemainingTurns => remainingTurns;
     public int RemainingActionValue => remainingActionValue;
+    public float RuntimeRecordValue => runtimeRecordValue;
     public int StackCount => stackCount;
     public int Stacks
     {
@@ -271,6 +286,16 @@ public class State : ScriptableObject
         Behavior.DotTrigger(damageMultiplier);
     }
 
+    public void AddRecordedValue(float delta)
+    {
+        runtimeRecordValue += Mathf.Max(0f, delta);
+    }
+
+    public void ResetRecordedValue()
+    {
+        runtimeRecordValue = 0f;
+    }
+
     internal void ChangeStackCount(int count)
     {
         stackCount = Mathf.Clamp(count, 0, Mathf.Max(1, maxStacks));
@@ -355,6 +380,30 @@ public static class StateBehaviorFactory
         {
             case StateType.BloodContract:
                 return new BloodContractStateBehavior();
+            case StateType.BerserkFeast:
+                return new BerserkFeastStateBehavior();
+            case StateType.BurningBlood:
+                return new BurningBloodStateBehavior();
+            case StateType.DeadlyArmor:
+                return new DeadlyArmorStateBehavior();
+            case StateType.BloodBath:
+                return new BloodBathStateBehavior();
+            case StateType.Vulnerable:
+                return new VulnerableStateBehavior();
+            case StateType.ArmorBreak:
+                return new ArmorBreakStateBehavior();
+            case StateType.BloodSurgeHeal:
+                return new BloodSurgeHealStateBehavior();
+            case StateType.CriticalGuard:
+                return new CriticalGuardStateBehavior();
+            case StateType.BloodGift:
+                return new BloodGiftStateBehavior();
+            case StateType.GiftWeak:
+                return new GiftWeakStateBehavior();
+            case StateType.GiftMid:
+                return new GiftMidStateBehavior();
+            case StateType.GiftStrong:
+                return new GiftStrongStateBehavior();
             case StateType.PursuitPunish:
                 return new PursuitPunishStateBehavior();
             case StateType.PersistentTorment:
@@ -399,15 +448,331 @@ public class DefaultStateBehavior : StateBehaviorBase
 
 public class BloodContractStateBehavior : StateBehaviorBase
 {
-    public override IEnumerator OnOwnerTurnStart()
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || state.giver == null || source != state.owner || damage <= 0)
+        {
+            return;
+        }
+
+        int healAmount = Mathf.RoundToInt(damage * 0.2f);
+        state.giver.Heal(healAmount);
+    }
+}
+
+public class BerserkFeastStateBehavior : StateBehaviorBase
+{
+    private float critBonus;
+
+    public override void OnStateApply()
     {
         if (state.owner == null)
+        {
+            return;
+        }
+
+        critBonus = 0.25f;
+        state.owner.critRate += critBonus;
+    }
+
+    public override void OnStateEnd()
+    {
+        if (state.owner == null)
+        {
+            return;
+        }
+
+        state.owner.critRate = Mathf.Max(0f, state.owner.critRate - critBonus);
+    }
+}
+
+public class BurningBloodStateBehavior : StateBehaviorBase
+{
+    private static readonly Dictionary<UnitCombatant, bool> s_killInTurn = new Dictionary<UnitCombatant, bool>();
+
+    public override void OnStateApply()
+    {
+        if (state.owner != null)
+        {
+            s_killInTurn[state.owner] = false;
+        }
+    }
+
+    public override void OnStateEnd()
+    {
+        if (state.owner != null)
+        {
+            s_killInTurn.Remove(state.owner);
+        }
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || source != state.owner || target == null)
+        {
+            return;
+        }
+
+        if (target.currentHP <= 0 && target != source)
+        {
+            s_killInTurn[state.owner] = true;
+        }
+    }
+
+    public static bool ConsumeKillFlag(UnitCombatant owner)
+    {
+        if (owner == null)
+        {
+            return false;
+        }
+
+        if (!s_killInTurn.TryGetValue(owner, out bool killed) || !killed)
+        {
+            return false;
+        }
+
+        s_killInTurn[owner] = false;
+        return true;
+    }
+}
+
+public class DeadlyArmorStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return 1.4f;
+    }
+}
+
+public class DesperationFieldStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        if (state.owner == null || state.owner.maxHP <= 0)
+        {
+            return 1f;
+        }
+
+        float lostHpRatio = (state.owner.maxHP - state.owner.currentHP) / Mathf.Max(1f, state.owner.maxHP);
+        return 1f + Mathf.Clamp01(lostHpRatio) * 0.25f;
+    }
+}
+
+public class BloodBathStateBehavior : StateBehaviorBase
+{
+    public override void OnStateApply()
+    {
+        state.ResetRecordedValue();
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (target == state.owner && damage > 0)
+        {
+            state.AddRecordedValue(damage);
+        }
+    }
+}
+
+public class VulnerableStateBehavior : StateBehaviorBase
+{
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return 1.25f;
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (target != state.owner || damage <= 0)
+        {
+            return;
+        }
+
+        state.ChangeStackCount(state.StackCount - 1);
+    }
+}
+
+public class ArmorBreakStateBehavior : StateBehaviorBase
+{
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || state.owner.K <= 0f)
+        {
+            return 1f;
+        }
+
+        int validStacks = Mathf.Clamp(state.StackCount, 0, 2);
+        if (validStacks <= 0)
+        {
+            return 1f;
+        }
+
+        float def = Mathf.Max(0f, state.owner.defense);
+        float oldFactor = state.owner.K / (state.owner.K + def);
+        float newDef = def * (1f - 0.2f * validStacks);
+        float newFactor = state.owner.K / (state.owner.K + Mathf.Max(0f, newDef));
+        if (oldFactor <= 0f)
+        {
+            return 1f;
+        }
+
+        return newFactor / oldFactor;
+    }
+}
+
+public class BloodSurgeHealStateBehavior : StateBehaviorBase
+{
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || source != state.owner || damage <= 0 || state.StackCount <= 0)
+        {
+            return;
+        }
+
+        int heal = Mathf.RoundToInt(state.owner.maxHP * 0.2f);
+        bool critHeal = UnityEngine.Random.value < Mathf.Clamp01(state.owner.critRate);
+        if (critHeal)
+        {
+            heal += Mathf.RoundToInt(state.owner.maxHP * 0.1f);
+        }
+
+        state.owner.Heal(heal);
+        state.ChangeStackCount(state.StackCount - 1);
+    }
+}
+
+public class CriticalGuardStateBehavior : StateBehaviorBase
+{
+    private bool usedFatalHeal;
+
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        if (state.owner == null || state.owner.maxHP <= 0)
+        {
+            return 1f;
+        }
+
+        return state.owner.currentHP <= Mathf.RoundToInt(state.owner.maxHP * 0.5f) ? 1.2f : 1f;
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (target != state.owner || state.owner == null)
+        {
+            return;
+        }
+
+        if (state.owner.currentHP > 0)
+        {
+            return;
+        }
+
+        if (source == state.owner)
+        {
+            state.owner.currentHP = 1;
+            return;
+        }
+
+        if (usedFatalHeal)
+        {
+            return;
+        }
+
+        int heal = state.giver != null ? Mathf.RoundToInt(state.giver.maxHP * 0.3f) : Mathf.RoundToInt(state.owner.maxHP * 0.3f);
+        state.owner.currentHP = Mathf.Clamp(heal, 1, state.owner.maxHP);
+        usedFatalHeal = true;
+    }
+}
+
+public class BloodGiftStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return 1.2f;
+    }
+
+    public override IEnumerator OnOwnerTurnStart()
+    {
+        if (state.owner == null || state.giver == null)
         {
             yield break;
         }
 
-        int selfDamage = Mathf.CeilToInt(state.owner.maxHP * 0.2f);
-        state.owner.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, state.owner).AsTrueDamage());
+        float healPercent = state.owner.currentHP <= Mathf.RoundToInt(state.owner.maxHP * 0.5f) ? 0.30f : 0.15f;
+        int heal = Mathf.RoundToInt(state.giver.maxHP * healPercent);
+        state.owner.Heal(heal);
+    }
+}
+
+public abstract class GiftStateBehaviorBase : StateBehaviorBase
+{
+    protected void ConsumeActionCount()
+    {
+        state.ChangeStackCount(state.StackCount - 1);
+    }
+}
+
+public class GiftWeakStateBehavior : GiftStateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return 1.2f;
+    }
+
+    public override IEnumerator OnOwnerTurnStart()
+    {
+        ConsumeActionCount();
+        yield break;
+    }
+}
+
+public class GiftMidStateBehavior : GiftStateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return 1.3f;
+    }
+
+    public override IEnumerator OnOwnerTurnStart()
+    {
+        if (state.owner != null)
+        {
+            int heal = Mathf.RoundToInt(state.owner.maxHP * 0.1f);
+            state.owner.Heal(heal);
+        }
+
+        ConsumeActionCount();
+        yield break;
+    }
+}
+
+public class GiftStrongStateBehavior : GiftStateBehaviorBase
+{
+    private bool triggered;
+
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return 1.4f;
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (triggered || source != state.owner || state.owner == null)
+        {
+            return;
+        }
+
+        int heal = state.giver != null
+            ? Mathf.RoundToInt(state.giver.maxHP * 0.2f)
+            : Mathf.RoundToInt(state.owner.maxHP * 0.2f);
+        state.owner.Heal(heal);
+        triggered = true;
+    }
+
+    public override IEnumerator OnOwnerTurnStart()
+    {
+        ConsumeActionCount();
+        yield break;
     }
 }
 

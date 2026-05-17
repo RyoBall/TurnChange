@@ -29,7 +29,12 @@ public class Enemy : UnitCombatant
         enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
         yield return ProcessStatesOnTurnStart();
-
+        //如果死亡了就直接结束回合，等待死亡反馈播放完毕
+        if(dead)
+        {
+            yield return new WaitForSeconds(dieFeedback?.TotalDuration ?? 0f);   
+            yield break;
+        }
         if (!CanActThisTurn())
         {
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");

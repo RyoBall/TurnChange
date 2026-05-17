@@ -1835,7 +1835,7 @@ MonoBehaviour:
   skills: 000000000000000000000000
   enterSkill: 0
   exitSkill: 0
-  chaosValue: 0
+  chaosValue: 1
   pendingChaosRecover: 0
   selectedScale: 1.1
   selectAnimDuration: 0.12

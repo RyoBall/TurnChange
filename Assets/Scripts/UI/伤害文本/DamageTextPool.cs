@@ -91,4 +91,13 @@ public class DamageTextPool : MonoBehaviour
         DamageText damageText = Get();
         damageText.ShowDamage(damage, worldPosition, isDotDamage, additionalText);
     }
+    public void ShowCustomText(string customMessage, Vector3 position, Color color=default)
+    {
+        if(color == default)
+        {
+            color = Color.white;
+        }
+        DamageText damageText = Get();
+        damageText.ShowCustomText(customMessage, position, color);
+    }
 }

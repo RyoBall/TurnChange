@@ -9,6 +9,7 @@ public class CharacterStateUIItem : MonoBehaviour
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private UnitHealthUIController healthBar;
     [SerializeField] private ChaosPointSlotUI chaosPointSlotUI;
+    [SerializeField] private ShieldSlider shieldSlider;
 
     private Character currentCharacter;
 
@@ -67,6 +68,10 @@ public class CharacterStateUIItem : MonoBehaviour
         if(chaosPointSlotUI != null)
         {
             chaosPointSlotUI.InitializeTarget(currentCharacter);
+        }
+        if(shieldSlider != null)
+        {
+            shieldSlider.SetTarget(currentCharacter);
         }
     }
 

@@ -187,7 +187,7 @@ public class TurnManager : MonoBehaviour
         }
 
         RemoveCombatantFromTurnOrder(combatant);
-        InsertCombatantByActionValue(combatant);
+        InsertCombatantByActionValue(combatant,false);
 
         if (TurnImageManager.Instance != null)
         {
@@ -223,7 +223,7 @@ public class TurnManager : MonoBehaviour
         }
     }
     #region 工具
-    private void InsertCombatantByActionValue(Combatant combatant, bool insertAtEnd = true)//插入角色回合
+    private void InsertCombatantByActionValue(Combatant combatant, bool insertAtEnd = true)//插入角色回合，目前默认插入时会排在所有相同行动值角色之前
     {
         if (combatant == null)
         {

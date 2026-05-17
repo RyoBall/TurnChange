@@ -120,6 +120,18 @@ public class UnitCombatant : Combatant
         TurnManager.Instance?.RemoveCombatant(this);
         hitFeedback?.StopFeedbacks();
         dieFeedback?.PlayFeedbacks();
+        StartCoroutine(DieCoroutine());
+    }
+    private IEnumerator DieCoroutine()
+    {
+        // 等待死亡反馈播放完成
+        while (dieFeedback != null && dieFeedback.IsPlaying)
+        {
+            yield return null;
+        }
+
+        // 死亡后逻辑（如销毁对象、掉落物品等）
+        gameObject.SetActive(false);
     }
 
     public virtual void AddShield(int amount)
@@ -128,7 +140,7 @@ public class UnitCombatant : Combatant
         {
             return;
         }
-
+        DamageTextPool.Instance?.ShowCustomText($"获得护盾 {amount}", transform.position, Color.cyan);
         currentShield += amount;
     }
 
@@ -145,9 +157,8 @@ public class UnitCombatant : Combatant
         {
             if (tstate != null && tstate.stateType == stateType)
             {
-
                 tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks);
-
+                DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
                 if (tstate.isDebuff)
                 {
                     NotifyDebuffApplied(this, giver);
@@ -173,6 +184,7 @@ public class UnitCombatant : Combatant
             NotifyDebuffApplied(this, giver);
         }
 
+        DamageTextPool.Instance?.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
         return state;
     }
 

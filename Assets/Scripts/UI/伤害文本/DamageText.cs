@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using DG.Tweening;
 using MoreMountains.Feedbacks;
+using UnityEngine.UI;
 
 /// <summary>
 /// 伤害文本
@@ -20,6 +21,7 @@ public class DamageText : MonoBehaviour
     private Camera uiCamera;
     private Vector3 originalScale;
     private Sequence currentSequence;
+    [SerializeField] private Image backGroundImage;
 
     private void Awake()
     {
@@ -61,7 +63,23 @@ public class DamageText : MonoBehaviour
             return;
         }
 
-        PlayAnimation(isDotDamage);
+        PlayAnimation(true);
+    }
+    public void ShowCustomText(string customMessage, Vector3 position, Color color)
+    {
+        backGroundImage.GetComponent<Image>().enabled = true;
+         // 设置文本内容和颜色
+        damageText.text = customMessage;
+        damageText.color = color;
+
+        Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
+        if (!TrySetCanvasPosition(position + offset/2))
+        {
+            ReturnToPool();
+            return;
+        }
+
+        PlayAnimation(false);
     }
     #region DOTween动画
     [Header("漂浮动画参数")]
@@ -70,22 +88,21 @@ public class DamageText : MonoBehaviour
     [SerializeField] private float floatDuration = 0.6f;
     [SerializeField] private Vector3 positionOffset;
 
-    private void PlayAnimation(bool isDotDamage)
+    private void PlayAnimation(bool isDamage)
     {
-        // ֹͣ��ǰ����
         currentSequence?.Kill();
 
-        // ����״̬
         rectTransform.localScale = originalScale;
         canvasGroup.alpha = 1f;
         Vector2 startPos = rectTransform.anchoredPosition;
 
-        // �볡���Ŷ���
+        float finalFloatDistance = isDamage ? floatDistance : floatDistance * 0.5f;
+
         rectTransform.localScale = Vector3.zero;
         currentSequence = DOTween.Sequence();
         currentSequence.Append(rectTransform.DOScale(originalScale, scaleDuration).SetEase(Ease.OutElastic));
         currentSequence.Join(
-            rectTransform.DOAnchorPosY(startPos.y + floatDistance, floatDuration)
+            rectTransform.DOAnchorPosY(startPos.y + finalFloatDistance, floatDuration)
                 .SetEase(Ease.OutSine)
         );
         currentSequence.Join(
