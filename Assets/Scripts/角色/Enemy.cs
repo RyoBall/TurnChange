@@ -21,7 +21,6 @@ public class Enemy : UnitCombatant
         maxHP*=5;
         currentHP*=5;
         m_defaultScale = transform.localScale;
-        EnemyManager.Instance?.RegisterEnemy(this);
     }
 
     public override IEnumerator PerformTurn()
@@ -54,10 +53,9 @@ public class Enemy : UnitCombatant
     }
     public override void Die()
     {
-        TransferElementalDetonationOnDeath();//传播一个状态，耦合度太高了后面再改
-
-        EnemyManager.Instance?.UnregisterEnemy(this);
         base.Die();
+        EnemyManager.Instance?.UnregisterEnemy(this);
+        TransferElementalDetonationOnDeath();//传播一个状态，耦合度太高了后面再改
     }
     #region 选敌相关
     private void OnMouseDown()

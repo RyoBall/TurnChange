@@ -786,8 +786,7 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
             return;
         }
         int damage = Mathf.RoundToInt(state.owner.attack * 0.6f);
-        target.TakeDamage(new UnitCombatant.DamageInfo(damage, state.owner));
-        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"{state.owner.name}触发追惩，对{target.name}追击");
+        target.TakeDamage(new UnitCombatant.DamageInfo(damage, state.owner).WithState(state.stateType));
     }
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)

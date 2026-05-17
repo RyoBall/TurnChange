@@ -12,6 +12,9 @@ public class TurnManager : MonoBehaviour
     public float turnDelay = 0.1f;
 
     private List<Combatant> combatants = new List<Combatant>();
+    private bool turnLoopStarted;
+    private bool isTurnInitialized = false;
+    public bool IsTurnInitialized => isTurnInitialized;
     // 回合顺序由链表维护，链表头永远表示下一个行动的角色。
     [SerializeField] private readonly LinkedList<Combatant> turnOrder = new LinkedList<Combatant>();
 
@@ -26,6 +29,7 @@ public class TurnManager : MonoBehaviour
             return;
         }
         Instance = this;
+        isTurnInitialized = false;
     }
     void OnDestroy()
     {
@@ -36,14 +40,7 @@ public class TurnManager : MonoBehaviour
     }
     private void Start()
     {
-        if (autoStart)
-        {
-            // 场上角色初始化，构建回合链表，并开始回合循环。
-            InitializeCombatants();
-            BuildTurnOrder();
-            RegisterStateUI();//使初始角色注册状态UI
-            StartCoroutine(StartFight());
-        }
+
     }
     void RegisterStateUI()
     {
@@ -76,8 +73,8 @@ public class TurnManager : MonoBehaviour
 
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
-
         //回合开始
+        isTurnInitialized = true;
         yield return StartCoroutine(RunTurnLoop());
     }
     IEnumerator SetTurnImages()//初始化回合图片
@@ -87,20 +84,50 @@ public class TurnManager : MonoBehaviour
             yield return StartCoroutine(TurnImageManager.Instance.InitializeTurnImages());
         }
     }
-    private void InitializeCombatants()//初始化获取所有应该获取的角色
+    public void InitializeTurnOrder(List<Character> fieldCharacters, List<Enemy> fieldEnemies)
     {
         combatants.Clear();
-        foreach (var combatant in FindObjectsOfType<Combatant>())
+
+        if (fieldCharacters != null)
         {
-            if (combatant != null && combatant.participateInTurnLoopAtStart)
+            for (int i = 0; i < fieldCharacters.Count; i++)
             {
-                combatants.Add(combatant);
+                Character character = fieldCharacters[i];
+                if (character == null || !character.participateInTurnLoopAtStart)
+                {
+                    continue;
+                }
+
+                combatants.Add(character);
+            }
+        }
+
+        if (fieldEnemies != null)
+        {
+            for (int i = 0; i < fieldEnemies.Count; i++)
+            {
+                Enemy enemy = fieldEnemies[i];
+                if (enemy == null || !enemy.participateInTurnLoopAtStart)
+                {
+                    continue;
+                }
+
+                combatants.Add(enemy);
             }
         }
 
         foreach (var combatant in combatants)
         {
             combatant.ChangeActionValue(combatant.BaseActionValue, false);
+        }
+
+        BuildTurnOrder();
+        RegisterStateUI();
+
+        if (autoStart && !turnLoopStarted)
+        {
+            turnLoopStarted = true;
+            StartCoroutine(StartFight());
         }
     }
     private void BuildTurnOrder()////构建回合顺序

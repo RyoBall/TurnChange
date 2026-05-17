@@ -253,7 +253,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 7881096340168173433}
   m_OnClick:
     m_PersistentCalls:
@@ -288,6 +288,8 @@ MonoBehaviour:
   skillDescriptionText: {fileID: 0}
   selectedScale: 1.08
   selectAnimDuration: 0.12
+  pointerEnterFeedback: {fileID: 0}
+  pointerExitFeedback: {fileID: 0}
 --- !u!1 &7003537938853191158
 GameObject:
   m_ObjectHideFlags: 0

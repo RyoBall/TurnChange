@@ -30,7 +30,6 @@ public class Character : UnitCombatant
     [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
     private void Start()
     {
-        LoadDataFromCSV();
         m_defaultScale = transform.localScale;
         foreach (var sr in spriteRenderer)
         {
@@ -262,9 +261,7 @@ public class Character : UnitCombatant
             SkillDictionaryManager.GetSkill(skills[i])?.TickCooldown(this);
         }
     }
-
     #endregion
-    #region   //读取数据
     public void LoadDataFromCSV()
     {
         if (string.IsNullOrEmpty(characterID))
@@ -280,5 +277,4 @@ public class Character : UnitCombatant
         defense = levelData.defense;
         K = levelData.K;
     }
-    #endregion
 }

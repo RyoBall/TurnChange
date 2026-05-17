@@ -1815,7 +1815,7 @@ MonoBehaviour:
   speed: 100
   participateInTurnLoopAtStart: 1
   combatantName: P1
-  level: 0
+  level: 1
   maxHP: 0
   currentHP: 0
   attack: 10

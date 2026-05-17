@@ -286,6 +286,29 @@ public class CharacterManager : MonoBehaviour
 		promptText.gameObject.SetActive(visible);
 	}
 
+	public void InitializeCharacters(List<Character> allRuntimeCharacters, List<Character> fieldRuntimeCharacters)
+	{
+		allCharacters = allRuntimeCharacters != null
+			? new List<Character>(allRuntimeCharacters)
+			: new List<Character>();
+
+		fieldCharacters = fieldRuntimeCharacters != null
+			? new List<Character>(fieldRuntimeCharacters)
+			: new List<Character>();
+
+		reserveCharacters = new List<Character>();
+		for (int i = 0; i < allCharacters.Count; i++)
+		{
+			Character character = allCharacters[i];
+			if (character == null || fieldCharacters.Contains(character))
+			{
+				continue;
+			}
+
+			reserveCharacters.Add(character);
+		}
+	}
+
 	#region 角色相关工具
 	public Character GetCharacterByRand()
 	{

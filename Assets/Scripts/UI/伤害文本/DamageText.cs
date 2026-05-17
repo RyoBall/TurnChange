@@ -46,11 +46,17 @@ public class DamageText : MonoBehaviour
     public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, string additionalText = "")
     {
         // ������������
-        damageText.text = damage.ToString();
+        if (!string.IsNullOrEmpty(additionalText))
+        {
+            damageText.text = $"{additionalText}:{damage}";
+        }
+        else
+        {
+            damageText.text = damage.ToString();
+        }
         if (isDotDamage)
         {
             damageText.color = Color.yellow;
-            damageText.text = $"{additionalText}:{damageText.text} ";
         }
         else
         {
@@ -68,12 +74,12 @@ public class DamageText : MonoBehaviour
     public void ShowCustomText(string customMessage, Vector3 position, Color color)
     {
         backGroundImage.GetComponent<Image>().enabled = true;
-         // 设置文本内容和颜色
+        // 设置文本内容和颜色
         damageText.text = customMessage;
         damageText.color = color;
 
         Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
-        if (!TrySetCanvasPosition(position + offset/2))
+        if (!TrySetCanvasPosition(position + offset / 2))
         {
             ReturnToPool();
             return;

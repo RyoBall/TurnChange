@@ -7,7 +7,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-
 public enum CommandButtonState
 {
     Character,
@@ -38,6 +37,19 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         m_rectTransform = GetComponent<RectTransform>();
         m_defaultScale = m_rectTransform != null ? m_rectTransform.localScale : transform.localScale;
+    }
+    void Start()
+    {
+        StartCoroutine(ReadyTurnInitialization());
+    }
+    IEnumerator ReadyTurnInitialization()
+    {
+        while (!TurnManager.Instance.IsTurnInitialized)
+        {
+            GetComponent<Button>().interactable = false;
+            yield return null;
+        }
+        GetComponent<Button>().interactable = true;
     }
 
     public void OnButtonClicked()

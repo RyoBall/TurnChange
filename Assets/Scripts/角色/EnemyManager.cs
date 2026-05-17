@@ -40,6 +40,21 @@ public class EnemyManager : MonoBehaviour
         m_aliveEnemies.Add(enemy);
     }
 
+    public void InitializeEnemies(List<Enemy> runtimeEnemies)
+    {
+        m_aliveEnemies.Clear();
+
+        if (runtimeEnemies == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < runtimeEnemies.Count; i++)
+        {
+            RegisterEnemy(runtimeEnemies[i]);
+        }
+    }
+
     public void UnregisterEnemy(Enemy enemy)
     {
         if (enemy == null)
