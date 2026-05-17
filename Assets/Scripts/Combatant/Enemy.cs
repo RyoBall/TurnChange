@@ -24,12 +24,6 @@ public class Enemy : UnitCombatant
         EnemyManager.Instance?.RegisterEnemy(this);
     }
 
-    protected override void OnDestroy()
-    {
-        EnemyManager.Instance?.UnregisterEnemy(this);
-        base.OnDestroy();
-    }
-
     public override IEnumerator PerformTurn()
     {
         enterFeedback?.PlayFeedbacks();

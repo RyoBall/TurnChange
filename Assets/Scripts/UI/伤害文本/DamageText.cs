@@ -1,18 +1,18 @@
 using UnityEngine;
 using TMPro;
 using DG.Tweening;
-using System.Collections;
+using MoreMountains.Feedbacks;
 
 /// <summary>
-/// �˺����ֶ���
+/// 伤害文本
 /// </summary>
 public class DamageText : MonoBehaviour
 {
-    [Header("���")]
+    [Header("引用")]
     [SerializeField] private TMP_Text damageText;
     [SerializeField] private CanvasGroup canvasGroup;
 
-    [Header("��������")]
+    [Header("参数引用")]
 
     private RectTransform rectTransform;
     private RectTransform parentRectTransform;
@@ -41,88 +41,60 @@ public class DamageText : MonoBehaviour
             : null;
     }
 
-    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false,string additionalText="")
+    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, string additionalText = "")
     {
         // ������������
         damageText.text = damage.ToString();
-        if(isDotDamage)
+        if (isDotDamage)
         {
             damageText.color = Color.yellow;
-            damageText.text=$"{additionalText}:{damageText.text} ";
+            damageText.text = $"{additionalText}:{damageText.text} ";
         }
         else
         {
-            damageText.color = Color.white;
+            damageText.color = Color.green;
         }
-        if (!TrySetCanvasPosition(worldPosition))
+        Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
+        if (!TrySetCanvasPosition(worldPosition + offset))
         {
             ReturnToPool();
             return;
         }
 
-        // ���Ŷ���
         PlayAnimation(isDotDamage);
     }
-
-    [Header("跳跃动画参数")]
-    [SerializeField] private float jumpVelocity = 8f;    // ��ʼ�����ٶ�
-    [SerializeField] private float gravity = 20f;        // �������ٶ�
-    [SerializeField] private float horizontalRange = 40f; // ˮƽ�����Χ
+    #region DOTween动画
+    [Header("漂浮动画参数")]
+    [SerializeField] private float floatDistance = 60f;
     [SerializeField] private float scaleDuration = 0.2f;   // ����ʱ��
-    [SerializeField] private float fadeDuration = 0.5f;    // ����ʱ��
-
-    private Coroutine physicsCoroutine;
+    [SerializeField] private float floatDuration = 0.6f;
+    [SerializeField] private Vector3 positionOffset;
 
     private void PlayAnimation(bool isDotDamage)
-    { 
-        // ֹͣ��ǰ����������ģ��
+    {
+        // ֹͣ��ǰ����
         currentSequence?.Kill();
-        if (physicsCoroutine != null)
-            StopCoroutine(physicsCoroutine);
 
         // ����״̬
         rectTransform.localScale = originalScale;
         canvasGroup.alpha = 1f;
+        Vector2 startPos = rectTransform.anchoredPosition;
 
         // �볡���Ŷ���
         rectTransform.localScale = Vector3.zero;
         currentSequence = DOTween.Sequence();
         currentSequence.Append(rectTransform.DOScale(originalScale, scaleDuration).SetEase(Ease.OutElastic));
-        physicsCoroutine = StartCoroutine(PhysicsFallCoroutine(isDotDamage));
-    }
-
-    private IEnumerator PhysicsFallCoroutine(bool isDotDamage)
-    {
-        // ��ʼλ��
-        Vector2 anchoredPosition = rectTransform.anchoredPosition;
-        Vector3 velocity = new Vector3(
-            Random.Range(-horizontalRange, horizontalRange), 
-            jumpVelocity,                
-            0
+        currentSequence.Join(
+            rectTransform.DOAnchorPosY(startPos.y + floatDistance, floatDuration)
+                .SetEase(Ease.OutSine)
         );
-
-        float elapsedTime = 0f;
-        float maxDuration = fadeDuration;  
-
-        while (elapsedTime < maxDuration)
-        {
-            velocity.y -= gravity * Time.deltaTime;
-            velocity.y = velocity.y>0?velocity.y:0;
-            velocity.x = velocity.y>0?velocity.x:0;
-
-            anchoredPosition += (Vector2)(velocity * Time.deltaTime);
-            rectTransform.anchoredPosition = anchoredPosition;
-
-            float fadeProgress = elapsedTime / maxDuration;
-            canvasGroup.alpha = Mathf.Lerp(1f, 0f, fadeProgress);
-
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-
-        ReturnToPool();
+        currentSequence.Join(
+            canvasGroup.DOFade(0f, floatDuration)
+                .SetEase(Ease.Linear)
+        );
+        currentSequence.OnComplete(ReturnToPool);
     }
-
+    #endregion
     private void ReturnToPool()
     {
         // ���ص������

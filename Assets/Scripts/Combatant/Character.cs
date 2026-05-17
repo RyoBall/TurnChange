@@ -183,8 +183,11 @@ public class Character : UnitCombatant
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
             SkillDescription.Instance.ChangeDescription(null);
-        mouseEnterFeedback?.StopFeedbacks();
-        mouseExitFeedback?.PlayFeedbacks();
+        if (SkillManager.Instance.IsSelectingCharacters || CharacterManager.Instance.IsSelectingFieldCharacter)
+        {
+            mouseEnterFeedback?.StopFeedbacks();
+            mouseExitFeedback?.PlayFeedbacks();
+        }
     }
     private void OnMouseDown()
     {

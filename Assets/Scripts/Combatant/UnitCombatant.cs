@@ -5,7 +5,8 @@ using System.Linq;
 using MoreMountains.Feedbacks;
 public class UnitCombatant : Combatant
 {
-
+    [Header("标记")]
+    protected bool dead = false;
     [Header("属性")]
     public int level;//先写在这里，理论上应该写在角色管理器
     public int maxHP;
@@ -38,33 +39,37 @@ public class UnitCombatant : Combatant
     {
         return Mathf.RoundToInt(attack);
     }
-    protected virtual void OnDestroy(){}
+    protected virtual void OnDestroy() { }
     public struct DamageInfo
-{
-    public int Damage;
-    public UnitCombatant Source;
-    public bool IsDotDamage;
-    public bool IsTrueDamage;
-    public StateType StateType;
-    
-    // 便捷构造
-    public DamageInfo(int damage, UnitCombatant source = null)
     {
-        Damage = damage;
-        Source = source;
-        IsDotDamage = false;
-        IsTrueDamage = false;
-        StateType = StateType.None;
+        public int Damage;
+        public UnitCombatant Source;
+        public bool IsDotDamage;
+        public bool IsTrueDamage;
+        public StateType StateType;
+
+        // 便捷构造
+        public DamageInfo(int damage, UnitCombatant source = null)
+        {
+            Damage = damage;
+            Source = source;
+            IsDotDamage = false;
+            IsTrueDamage = false;
+            StateType = StateType.None;
+        }
+
+        // 链式配置（流畅接口）
+        public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
+        public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
+        public DamageInfo WithState(StateType state) { StateType = state; return this; }
     }
-    
-    // 链式配置（流畅接口）
-    public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
-    public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
-    public DamageInfo WithState(StateType state) { StateType = state; return this; }
-}
     public virtual void TakeDamage(DamageInfo damageInfo)
     {
-        if(damageInfo.Damage <= 0)
+        if (dead)
+        {
+            return;
+        }
+        if (damageInfo.Damage <= 0)
         {
             damageInfo.Damage = 0;
         }
@@ -99,16 +104,22 @@ public class UnitCombatant : Combatant
         currentHP = Mathf.Min(maxHP, currentHP + amount);
     }
 
-    protected virtual void OnDamaged(int damage,bool isDotDamage=false,StateType stateType=StateType.None)
+    protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None)
     {
         Debug.Log($"[{GetType().Name}] {gameObject.name} 受到 {damage} 点伤害");
-        DamageTextPool.Instance?.ShowDamage(damage, transform.position,isDotDamage,StateDictionaryManager.GetStateName(stateType));
+        DamageTextPool.Instance?.ShowDamage(damage, transform.position, isDotDamage, StateDictionaryManager.GetStateName(stateType));
     }
 
     public virtual void Die()
     {
+        if (dead)
+        {
+            return;
+        }
+        dead = true;
         TurnManager.Instance?.RemoveCombatant(this);
-        Destroy(gameObject);
+        hitFeedback?.StopFeedbacks();
+        dieFeedback?.PlayFeedbacks();
     }
 
     public virtual void AddShield(int amount)
@@ -128,7 +139,7 @@ public class UnitCombatant : Combatant
     [SerializeField] protected List<State> states = new List<State>();
 
     public List<State> States => states;
-    public State AddState(StateType stateType, UnitCombatant giver, int duration,int stacks=1,float skillCoef = 1f)
+    public State AddState(StateType stateType, UnitCombatant giver, int duration, int stacks = 1, float skillCoef = 1f)
     {
         foreach (var tstate in states)
         {
@@ -155,7 +166,7 @@ public class UnitCombatant : Combatant
         State state = Instantiate(stateTemplate);
         state.name = stateTemplate.name;
         states.Add(state);
-        state.Mount(this, giver, skillCoef, duration,stacks);
+        state.Mount(this, giver, skillCoef, duration, stacks);
 
         if (state.isDebuff)
         {
@@ -172,7 +183,7 @@ public class UnitCombatant : Combatant
         {
             return false;
         }
-        
+
         state.EndState();
         return true;
     }
@@ -313,7 +324,7 @@ public class UnitCombatant : Combatant
         }
     }
 
-    public static void NotifyAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage,bool isDotDamage=false,bool isTrueDamage=false)
+    public static void NotifyAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage = false, bool isTrueDamage = false)
     {
         foreach (var com in TurnManager.Instance.CurrentTurnOrder.ToList())
         {
@@ -331,7 +342,7 @@ public class UnitCombatant : Combatant
                     continue;
                 }
 
-                state.OnAnyDamageSettled(source, target, damage,isDotDamage,isTrueDamage);
+                state.OnAnyDamageSettled(source, target, damage, isDotDamage, isTrueDamage);
             }
         }
     }
