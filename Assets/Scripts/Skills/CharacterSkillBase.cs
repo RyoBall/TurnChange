@@ -94,8 +94,6 @@ public class CharacterSkillBase : SkillBase
             yield return SkillManager.Instance.SelectCharactersCoroutine(allyTargetCount, selectedCharacters);
         }
 
-        FloatingTipGenerator.Instance.ShowDefaultTip($"{skillName}");
-
         bool shouldEndTurn = endTurnAfterUse;
 
         switch (skillType)

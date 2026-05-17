@@ -25,8 +25,6 @@ public class Enemy : UnitCombatant
 
     public override IEnumerator PerformTurn()
     {
-        enterFeedback?.PlayFeedbacks();
-        yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
         yield return ProcessStatesOnTurnStart();
         //如果死亡了就直接结束回合，等待死亡反馈播放完毕
         if(dead)
@@ -39,7 +37,11 @@ public class Enemy : UnitCombatant
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
             yield break;
         }
-        yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
+        //执行行动前
+        yield return new WaitForSeconds(1f);
+        enterFeedback?.PlayFeedbacks();
+        FloatingTipGenerator.Instance?.ShowDefaultTip($"单体攻击");
+        yield return new WaitForSeconds(1);//进入回合动画
         yield return ActionCoroutine();
         yield return new WaitForSeconds(0.2f);//行动后短暂等待，给玩家一些反馈时间
     }
@@ -55,6 +57,7 @@ public class Enemy : UnitCombatant
     {
         base.Die();
         EnemyManager.Instance?.UnregisterEnemy(this);
+        //先确认敌人从管理器死亡再调用传播状态的函数，避免在传播状态时还找得到这个敌人了
         TransferElementalDetonationOnDeath();//传播一个状态，耦合度太高了后面再改
     }
     #region 选敌相关
