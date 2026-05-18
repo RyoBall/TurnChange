@@ -100,8 +100,8 @@ public class EnemySkillBase : SkillBase
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        int damage = DamageCounter.CountDamage(self,target,this);
-        target.TakeDamage(new UnitCombatant.DamageInfo(damage, self).AsTrueDamage());
+        int damage = DamageCounter.CountDamage(self,target,this, true);
+        target.TakeDamage(new UnitCombatant.DamageInfo(damage, self));
         target.TryAddChaos(1);
         yield return new WaitForSeconds(0.5f);
     }

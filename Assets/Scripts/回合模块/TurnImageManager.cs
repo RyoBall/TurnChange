@@ -53,13 +53,6 @@ public class TurnImageManager : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
-    {
-        if (autoReorder)
-        {
-            autoReorderCoroutine = StartCoroutine(AutoReorderRoutine());
-        }
-    }
 
     /// 清理单例引用，避免场景切换后遗留引用。
     private void OnDestroy()
@@ -165,18 +158,20 @@ public class TurnImageManager : MonoBehaviour
         }
 
         currentAnimationSequence = DOTween.Sequence();
+        float delay=0;
 
         if (removedImages.Count > 0)
         {
-            currentAnimationSequence.Append(BuildFadeOutSequence(removedImages));
-            currentAnimationSequence.AppendInterval(.5f);
+            currentAnimationSequence.Join(BuildFadeOutSequence(removedImages));
+            delay=.1f;
         }
 
-        currentAnimationSequence.Append(BuildReflowSequence(targetPositions, targetScales));
+        currentAnimationSequence.Insert(delay,BuildReflowSequence(targetPositions, targetScales));
+        delay+=.1f;
 
         if (addedImages.Count > 0)
         {
-            currentAnimationSequence.Append(BuildFadeInSequence(addedImages, targetPositions, targetScales));
+            currentAnimationSequence.Insert(delay,BuildFadeInSequence(addedImages, targetPositions, targetScales));
 
         }
 
@@ -201,18 +196,6 @@ public class TurnImageManager : MonoBehaviour
 
         var uniqueTag = System.Guid.NewGuid().ToString("N").Substring(0, 8);
         Debug.Log($"TurnImageManager: Current turn order after reorder [{uniqueTag}]: {string.Join(", ", orderNames)}");
-    }
-
-    private IEnumerator AutoReorderRoutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(reorderInterval);
-            if (TurnManager.Instance != null)
-            {
-                Reorder();
-            }
-        }
     }
     #region 动画工具
     // 读取 TurnManager 的回合链表，并把图像链表同步成完全一致的顺序。

@@ -93,7 +93,7 @@ public class CharacterManager : MonoBehaviour
 		//第二步:选择候补角色
 		BuildReserveButtons();
 		PlayReserveButtonsEnterAnim();
-		UpdatePromptText($"请选择替换 {m_selectedFieldCharacter.name} 的候补角色");
+		UpdatePromptText($"请选择替换 {m_selectedFieldCharacter.combatantName} 的候补角色");
 
 		yield return new WaitUntil(() => m_selectedReserveCharacter != null);
 
@@ -315,12 +315,28 @@ public class CharacterManager : MonoBehaviour
 		float totalWeight = 0f;
 		foreach (var character in fieldCharacters)
 		{
+			if (character == null || character.IsDead)
+			{
+				continue;
+			}
+
 			totalWeight += character.GetAttractCount();
 		}
+
+		if (totalWeight <= 0f)
+		{
+			return null;
+		}
+
 		float rand = Random.Range(0f, totalWeight);
 		float cumulativeWeight = 0f;
 		foreach (var character in fieldCharacters)
 		{
+			if (character == null || character.IsDead)
+			{
+				continue;
+			}
+
 			cumulativeWeight += character.GetAttractCount();
 			if (rand <= cumulativeWeight)
 			{

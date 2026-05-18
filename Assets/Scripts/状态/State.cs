@@ -251,6 +251,11 @@ public class State : ScriptableObject
         return Behavior.GetOutgoingDamageMultiplier(isDotDamage);
     }
 
+    public bool CausesOutgoingTrueDamage(bool isDotDamage)
+    {
+        return Behavior.CausesOutgoingTrueDamage(isDotDamage);
+    }
+
     public float GetAttractMultiplier(UnitCombatant source)
     {
         return Behavior.GetAttractMultiplier(source);
@@ -347,6 +352,7 @@ public interface IStateBehavior
     void OnStackChange();
     bool TryConsumeResist();
     void DotTrigger(float damageMultiplier);
+    bool CausesOutgoingTrueDamage(bool isDotDamage);
 }
 
 public abstract class StateBehaviorBase : IStateBehavior
@@ -370,6 +376,7 @@ public abstract class StateBehaviorBase : IStateBehavior
     public virtual void OnStackChange() { }
     public virtual bool TryConsumeResist() { return false; }
     public virtual void DotTrigger(float damageMultiplier) { }
+    public virtual bool CausesOutgoingTrueDamage(bool isDotDamage) { return false; }
 }
 
 public static class StateBehaviorFactory
@@ -541,6 +548,11 @@ public class DeadlyArmorStateBehavior : StateBehaviorBase
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
         return 1.4f;
+    }
+
+    public override bool CausesOutgoingTrueDamage(bool isDotDamage)
+    {
+        return true;
     }
 }
 
@@ -781,7 +793,7 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
 
     public override void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
     {
-        if (!(target is Enemy))
+        if (!(target is Enemy) || TurnManager.Instance?.GetCurrentCombatant() == state.owner)
         {
             return;
         }

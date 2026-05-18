@@ -22,6 +22,8 @@ public class Commander : MonoBehaviour
         private set{;}
     }
     private int maxCommandPoints = 5;
+    public int MaxCommandPoints => maxCommandPoints;
+
     public bool UseCommandPoints(int amount)
     {
         if (amount <= commandPoints)

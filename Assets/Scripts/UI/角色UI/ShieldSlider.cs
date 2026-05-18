@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class ShieldSlider : MonoBehaviour
 {
-    Character targetCharacter;
-    public void SetTarget(Character character)
+    UnitCombatant targetCharacter;
+    public void SetTarget(UnitCombatant character)
     {
         targetCharacter = character;
     }

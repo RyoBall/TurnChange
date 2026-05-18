@@ -98,9 +98,6 @@ public class CharacterSkillBase : SkillBase
 
         switch (skillType)
         {
-            case CharacterSkillType.Change:
-                yield return ExcuteChange(character, selectedEnemies);
-                break;
             case CharacterSkillType.AllAttack:
                 yield return ExecuteAllAttack(character);
                 break;
@@ -177,7 +174,6 @@ public class CharacterSkillBase : SkillBase
                 yield return HealerSkillTwo(character, selectedCharacters);
                 break;
         }
-
         StartCooldown(character);
         if (shouldEndTurn)
         {
@@ -188,14 +184,12 @@ public class CharacterSkillBase : SkillBase
     #region 技能具体执行逻辑
     private IEnumerator EnterSkillOne(Character character)
     {
-        yield return new WaitForSeconds(.5f);
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的入场技能触发，获得重力环境");
         EnvironmentManager.Instance.AddEnvironment(EnvironmentType.Gravity, 200);
         yield break;
     }
     private IEnumerator ExitSkillOne(Character character)
     {
-        yield return new WaitForSeconds(.5f);
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的离场技能触发，结算dot伤害");
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         foreach (var enemy in enemies)
@@ -213,13 +207,7 @@ public class CharacterSkillBase : SkillBase
         }
         yield break;
     }
-    private IEnumerator ExcuteChange(Character character, List<Enemy> selectedEnemies)
-    {
-        SkillManager.Instance.changeCharacter.GetComponent<Combatant>().ChangeActionValue(0);
-        TurnManager.Instance.InsertCombatant(SkillManager.Instance.changeCharacter.GetComponent<Combatant>(), false);
-        yield return new WaitForSeconds(.5f);
-    }
-    private IEnumerator ExecuteAllAttack(Character character)
+        private IEnumerator ExecuteAllAttack(Character character)
     {
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         foreach (var enemy in enemies)
@@ -229,7 +217,7 @@ public class CharacterSkillBase : SkillBase
                 int damage = DamageCounter.CountDamage(character,enemy,this);
                 enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
                 bool hadSeqFlame = enemy.HasState(StateType.SeqFlame);
-                State state=enemy.AddState(StateType.SeqFlame, character, 2,1);
+                State state=enemy.AddState(StateType.SeqFlame, character, 2,1,1);
 
                 if (hadSeqFlame)
                 {
@@ -319,7 +307,7 @@ public class CharacterSkillBase : SkillBase
             enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
 
             StateType dotType = PickRandomDotState(enemy);
-            enemy.AddState(dotType, character,3);
+            enemy.AddState(dotType, character,3,1,0.5f);
         }
         GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
         yield break;
@@ -338,7 +326,6 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        target.AddState(StateType.ElementalDetonation, character, 2);
         bool ifAttack=false;
         foreach (var state in target.States)
         {
@@ -348,6 +335,7 @@ public class CharacterSkillBase : SkillBase
                 state.DotTrigger();
             }
         }
+        target.AddState(StateType.ElementalDetonation, character, 2);
         if(ifAttack)
         {
             GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
@@ -519,7 +507,6 @@ public class CharacterSkillBase : SkillBase
         }
 
         character.AddState(StateType.DeadlyArmor, character, 1, 1);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(character.transform, $"{character.name}获得致命穿甲");
         yield break;
     }
 

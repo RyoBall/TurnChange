@@ -20,6 +20,7 @@ public class CommandSkillBase : SkillBase
                     //切换角色的逻辑
                     break;
             }
+        yield return UnitCombatant.WaitForPendingDeaths();
         yield break;
     }
     private IEnumerator ExcuteChange()

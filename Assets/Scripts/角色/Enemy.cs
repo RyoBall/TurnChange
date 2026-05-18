@@ -18,18 +18,19 @@ public class Enemy : UnitCombatant
     private void Start()
     {
         LoadDataFromCSV();
-        maxHP*=5;
-        currentHP*=5;
+        currentHP*=2;
+        maxHP*=2;
         m_defaultScale = transform.localScale;
     }
 
     public override IEnumerator PerformTurn()
     {
+        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(0.5f);
         yield return ProcessStatesOnTurnStart();
-        //如果死亡了就直接结束回合，等待死亡反馈播放完毕
-        if(dead)
+        //如果死亡了就直接结束回合
+        if (dead)
         {
-            yield return new WaitForSeconds(dieFeedback?.TotalDuration ?? 0f);   
             yield break;
         }
         if (!CanActThisTurn())
@@ -38,27 +39,33 @@ public class Enemy : UnitCombatant
             yield break;
         }
         //执行行动前
-        yield return new WaitForSeconds(1f);
-        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(0.5f);
         FloatingTipGenerator.Instance?.ShowDefaultTip($"单体攻击");
-        yield return new WaitForSeconds(1);//进入回合动画
+        yield return new WaitForSeconds(0.5f);//进入回合动画
+        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(0.5f);//进入回合动画
         yield return ActionCoroutine();
-        yield return new WaitForSeconds(0.2f);//行动后短暂等待，给玩家一些反馈时间
     }
     private IEnumerator ActionCoroutine()
     {
         //这里先写个随机攻击的逻辑，后续会替换成更复杂的AI
-        int rand=Random.Range(0, skills.Count);
+        int rand = Random.Range(0, skills.Count);
         EnemySkillType skillType = skills[rand];
-        yield return EnemySkillDictionaryManager.GetEnemySkill(skillType)?.Execute(this);
+        SkillExecuteManager.ExecuteSkill(this, EnemySkillDictionaryManager.GetEnemySkill(skillType));
+        yield return WaitForDeathEvents();
         yield break;
     }
     public override void Die()
     {
         base.Die();
         EnemyManager.Instance?.UnregisterEnemy(this);
-        //先确认敌人从管理器死亡再调用传播状态的函数，避免在传播状态时还找得到这个敌人了
-        TransferElementalDetonationOnDeath();//传播一个状态，耦合度太高了后面再改
+    }
+
+    protected override IEnumerator OnDeathEvent()
+    {
+        yield return base.OnDeathEvent();
+        TransferElementalDetonationOnDeath();
+        gameObject.SetActive(false);
     }
     #region 选敌相关
     private void OnMouseDown()
@@ -69,7 +76,7 @@ public class Enemy : UnitCombatant
     }
     private void OnMouseEnter()
     {
-        if(SkillManager.Instance.IsSelectingEnemies)
+        if (SkillManager.Instance.IsSelectingEnemies)
         {
             mouseExitFeedback?.StopFeedbacks();
             mouseEnterFeedback?.PlayFeedbacks();
@@ -77,7 +84,7 @@ public class Enemy : UnitCombatant
     }
     private void OnMouseExit()
     {
-        if(SkillManager.Instance.IsSelectingEnemies)
+        if (SkillManager.Instance.IsSelectingEnemies)
         {
             mouseEnterFeedback?.StopFeedbacks();
             mouseExitFeedback?.PlayFeedbacks();
@@ -107,7 +114,7 @@ public class Enemy : UnitCombatant
         }
 
         var levelDataDict = LevelDataContainer.EnemyLevelData[enemyID];
-        if(levelDataDict == null || !levelDataDict.ContainsKey(level))
+        if (levelDataDict == null || !levelDataDict.ContainsKey(level))
         {
             Debug.LogError($"未找到敌人数据: {enemyID} 等级: {level}");
             return;
@@ -151,13 +158,12 @@ public class Enemy : UnitCombatant
             return;
         }
 
-        UnitCombatant giver = detonation.giver as UnitCombatant;
+        UnitCombatant giver = detonation.giver;
         if (giver == null)
         {
             giver = this;
         }
 
-        target.AddState(StateType.ElementalDetonation, giver, 2,1, detonation.skillCoefT);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"元素引爆转移至{target.name}");
+        target.AddState(StateType.ElementalDetonation, giver, 2, 1, detonation.skillCoefT);
     }
 }

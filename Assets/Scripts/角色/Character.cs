@@ -69,6 +69,8 @@ public class Character : UnitCombatant
         //展示攻击逻辑
         yield return TurnStateManager.Instance.ChangeState(TurnState.InCharacterTurn, this);
         yield return new WaitUntil(() => endTurn);
+        //等待死亡动画结束
+        yield return WaitForDeathEvents();
         //结束玩家回合的内容
         yield return TurnStateManager.Instance.ChangeState(TurnState.OutCharacterTurn, this);
         yield return new WaitForSeconds(0.2f);
@@ -94,8 +96,10 @@ public class Character : UnitCombatant
     {
         return HasState(StateType.ChaosHalf) ? 0.5f : 1f;
     }
-
-
+    public override void Die()
+    {
+        base.Die();
+    }
     public bool TryAddChaos(int amount)
     {
         if (amount <= 0 || chaosValue >= MaxChaosValue)
@@ -174,6 +178,8 @@ public class Character : UnitCombatant
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
+            if (dead)
+                return;
             mouseExitFeedback?.StopFeedbacks();
             mouseEnterFeedback?.PlayFeedbacks();
         }
@@ -181,9 +187,15 @@ public class Character : UnitCombatant
     private void OnMouseExit()
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
-            SkillDescription.Instance.ChangeDescription(null);
-        if (SkillManager.Instance.IsSelectingCharacters || CharacterManager.Instance.IsSelectingFieldCharacter)
         {
+            mouseEnterFeedback?.StopFeedbacks();
+            mouseExitFeedback?.PlayFeedbacks();
+            SkillDescription.Instance.ChangeDescription(null);
+        }
+        if (SkillManager.Instance.IsSelectingCharacters)
+        {
+            if (dead)
+                return;
             mouseEnterFeedback?.StopFeedbacks();
             mouseExitFeedback?.PlayFeedbacks();
         }
@@ -195,7 +207,12 @@ public class Character : UnitCombatant
             CharacterManager.Instance?.OnFieldCharacterClicked(this);
             SkillDescription.Instance.ChangeDescription(null);
         }
-        SkillManager.Instance?.OnCharacterClicked(this);
+        if (SkillManager.Instance.IsSelectingCharacters)
+        {
+            if (dead)
+                return;
+            SkillManager.Instance?.OnCharacterClicked(this);
+        }
     }
 
     public void SetSelectedVisual(bool selected)

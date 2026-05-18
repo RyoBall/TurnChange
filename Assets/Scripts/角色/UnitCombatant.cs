@@ -5,8 +5,9 @@ using System.Linq;
 using MoreMountains.Feedbacks;
 public class UnitCombatant : Combatant
 {
-    [Header("标记")]
-    protected bool dead = false;
+    [Header("标签")]
+    [SerializeField] protected bool dead=false;
+    public bool IsDead => dead;
     [Header("属性")]
     public int level;//先写在这里，理论上应该写在角色管理器
     public int maxHP;
@@ -29,6 +30,7 @@ public class UnitCombatant : Combatant
 
     protected virtual void Awake()
     {
+        CombatantDeathMonitor.Register(this);
         if (maxHP > 0 && currentHP <= 0)
         {
             currentHP = maxHP;
@@ -39,7 +41,10 @@ public class UnitCombatant : Combatant
     {
         return Mathf.RoundToInt(attack);
     }
-    protected virtual void OnDestroy() { }
+    protected virtual void OnDestroy()
+    {
+        CombatantDeathMonitor.Unregister(this);
+    }
     public struct DamageInfo
     {
         public int Damage;
@@ -69,6 +74,10 @@ public class UnitCombatant : Combatant
         {
             return;
         }
+        if (damageInfo.Source != null && damageInfo.Source.DealsTrueDamage(damageInfo.IsDotDamage))
+        {
+            damageInfo = damageInfo.AsTrueDamage();
+        }
         if (damageInfo.Damage <= 0)
         {
             damageInfo.Damage = 0;
@@ -84,14 +93,9 @@ public class UnitCombatant : Combatant
             NotifyAnyDamageSettled(damageInfo.Source, this, 0, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
             return;
         }
-        //扣血
+        //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
-        //检查血量
-        if (currentHP <= 0)
-        {
-            Die();
-        }
     }
 
     public virtual void Heal(int amount)
@@ -120,18 +124,21 @@ public class UnitCombatant : Combatant
         TurnManager.Instance?.RemoveCombatant(this);
         hitFeedback?.StopFeedbacks();
         dieFeedback?.PlayFeedbacks();
-        StartCoroutine(DieCoroutine());
     }
-    private IEnumerator DieCoroutine()
-    {
-        // 等待死亡反馈播放完成
-        while (dieFeedback != null && dieFeedback.IsPlaying)
-        {
-            yield return null;
-        }
 
-        // 死亡后逻辑（如销毁对象、掉落物品等）
-        gameObject.SetActive(false);
+    public IEnumerator ExecuteDeathEvent()
+    {
+        yield return OnDeathEvent();
+    }
+
+    public static IEnumerator WaitForPendingDeaths()
+    {
+        yield return CombatantDeathMonitor.CheckDeathsAndWait();    
+    }
+
+    protected IEnumerator WaitForDeathEvents()
+    {
+        yield return WaitForPendingDeaths();
     }
 
     public virtual void AddShield(int amount)
@@ -174,7 +181,7 @@ public class UnitCombatant : Combatant
             return null;
         }
 
-        State state = Instantiate(stateTemplate);
+        State state = Instantiate(stateTemplate);   
         state.name = stateTemplate.name;
         states.Add(state);
         state.Mount(this, giver, skillCoef, duration, stacks);
@@ -213,6 +220,8 @@ public class UnitCombatant : Combatant
 
             yield return state.TickOnTurnStart();
         }
+
+        yield return WaitForDeathEvents();
     }
 
     public void ProcessStatesByActionValue(int actionValueCost)
@@ -257,6 +266,30 @@ public class UnitCombatant : Combatant
         }
 
         return Mathf.Max(0f, multiplier);
+    }
+
+    public bool DealsTrueDamage(bool isDotDamage, bool forceTrueDamage = false)
+    {
+        if (forceTrueDamage)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < states.Count; i++)
+        {
+            State state = states[i];
+            if (state == null)
+            {
+                continue;
+            }
+
+            if (state.CausesOutgoingTrueDamage(isDotDamage))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
@@ -356,6 +389,14 @@ public class UnitCombatant : Combatant
 
                 state.OnAnyDamageSettled(source, target, damage, isDotDamage, isTrueDamage);
             }
+        }
+    }
+
+    protected virtual IEnumerator OnDeathEvent()
+    {
+        while (dieFeedback != null && dieFeedback.IsPlaying)
+        {
+            yield return null;
         }
     }
     #endregion

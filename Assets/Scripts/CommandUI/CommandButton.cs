@@ -38,6 +38,17 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_rectTransform = GetComponent<RectTransform>();
         m_defaultScale = m_rectTransform != null ? m_rectTransform.localScale : transform.localScale;
     }
+
+    private void OnEnable()
+    {
+        SkillExecuteManager.OnSkillExecuted += HandleSkillExecuted;
+    }
+
+    private void OnDisable()
+    {
+        SkillExecuteManager.OnSkillExecuted -= HandleSkillExecuted;
+    }
+
     void Start()
     {
         StartCoroutine(ReadyTurnInitialization());
@@ -84,15 +95,28 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         m_owner = owner;
         m_skill = skill;
 
-        InitializeInformation(skill);
+        RefreshInformation();
 
+        if (skill == null)
+        {
+            PlayDeselectAnimation(true);
+        }
+    }
+
+    void RefreshInformation()
+    {
+        if (skillIcon != null)
+        {
+            skillIcon.sprite = m_skill != null ? m_skill.icon : null;
+            skillIcon.enabled = m_skill != null && m_skill.icon != null;
+        }
         var button = GetComponent<Button>();
-        var charaSkill = skill as CharacterSkillBase;
+        var charaSkill = m_skill as CharacterSkillBase;
         if (button != null)
         {
             if (charaSkill != null)
             {
-                int cooldown = charaSkill.GetRemainingCooldown(owner);
+                int cooldown = charaSkill.GetRemainingCooldown(m_owner);
                 button.interactable = cooldown <= 0;
                 if (skillNameText != null)
                 {
@@ -104,34 +128,25 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 button.interactable = true;
                 if (skillNameText != null)
                 {
-                    skillNameText.text = skill.skillName;
+                    skillNameText.text = m_skill.skillName;
                 }
             }
         }
-
-        if (skill == null)
-        {
-            PlayDeselectAnimation(true);
-        }
     }
 
-    public void InitializeInformation(SkillBase skill)//初始化按钮显示信息
+    private void HandleSkillExecuted(UnitCombatant owner, SkillBase skill)
     {
-        if (skillIcon != null)
+        if (m_skill == null || skill != m_skill)
         {
-            skillIcon.sprite = skill != null ? skill.icon : null;
-            skillIcon.enabled = skill != null && skill.icon != null;
+            return;
         }
 
-        if (skillNameText != null)
+        if (m_owner != owner)
         {
-            skillNameText.text = skill != null ? skill.skillName : string.Empty;
+            return;
         }
 
-        if (skillDescriptionText != null)
-        {
-            skillDescriptionText.text = skill != null ? skill.description : string.Empty;
-        }
+        RefreshInformation();
     }
 
     public void PlaySelectAnimation()
