@@ -182,9 +182,7 @@ public class SkillDictionaryManager : MonoBehaviour
 
         if (skillDict.TryGetValue(skillType, out var skill))
         {
-            var skillInstance = Instantiate(skill);
-            skillInstance.name = skill.name;
-            return skillInstance;
+            return skill;
         }
 
         Debug.LogError($"未找到技能: {skillType}");
@@ -245,9 +243,7 @@ public class EnemySkillDictionaryManager : MonoBehaviour
 
         if (enemySkillDict.TryGetValue(skillType, out var skill))
         {
-            var skillInstance = Instantiate(skill);
-            skillInstance.name = skill.name;
-            return skillInstance;
+            return skill;
         }
 
         Debug.LogError($"未找到敌人技能: {skillType}");

@@ -5,6 +5,7 @@ using System.Linq;
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance { get; private set; }
+    public event System.Action OnTurnOrderChanged;
     [Tooltip("是否自动开始回合循环")]
     public bool autoStart = true;
 
@@ -74,6 +75,7 @@ public class TurnManager : MonoBehaviour
 
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
+        yield return StartCoroutine(TriggerOpeningEnterSkills());
         //回合开始
         isTurnInitialized = true;
         yield return StartCoroutine(RunTurnLoop());
@@ -85,6 +87,30 @@ public class TurnManager : MonoBehaviour
             yield return StartCoroutine(TurnImageManager.Instance.InitializeTurnImages());
         }
     }
+
+    IEnumerator TriggerOpeningEnterSkills()
+    {
+        var openingCharacters = combatants
+            .OfType<Character>()
+            .Where(character => character != null && character.participateInTurnLoopAtStart)
+            .OrderBy(character => character.standPosition)
+            .Take(2)
+            .ToList();
+
+        for (int i = 0; i < openingCharacters.Count; i++)
+        {
+            Character character = openingCharacters[i];
+            CharacterSkillBase enterSkill = character.GetEnterSkillInstance();
+            if (enterSkill == null)
+            {
+                continue;
+            }
+
+            SkillExecuteManager.ExecuteSkill(character, enterSkill);
+            yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+        }
+    }
+
     public void InitializeTurnOrder(List<Character> fieldCharacters, List<Enemy> fieldEnemies)
     {
         combatants.Clear();
@@ -143,6 +169,8 @@ public class TurnManager : MonoBehaviour
         {
             turnOrder.AddLast(combatant);
         }
+
+        NotifyTurnOrderChanged();
     }
     #endregion
     private IEnumerator RunTurnLoop()
@@ -230,11 +258,18 @@ public class TurnManager : MonoBehaviour
         {
             TurnImageManager.Instance.Reorder();
         }
+
+        NotifyTurnOrderChanged();
     }
 
     //从外部插入角色回合的接口,在触发时默认进行一次重排
     public void InsertCombatant(Combatant combatant)
     {
+        if (combatant is Changer && HasChangerTurn())
+        {
+            return;
+        }
+
         InsertCombatantByActionValue(combatant);
         if (TurnImageManager.Instance != null)
         {
@@ -245,6 +280,8 @@ public class TurnManager : MonoBehaviour
         {
             UnitStateTextDisplay.Instance.RegisterUnit(unitCombatant);
         }
+
+        NotifyTurnOrderChanged();
     }
     public void RemoveCombatant(Combatant combatant)
     {
@@ -258,6 +295,8 @@ public class TurnManager : MonoBehaviour
         {
             UnitStateTextDisplay.Instance.UnregisterUnit(unitCombatant);
         }
+
+        NotifyTurnOrderChanged();
     }
     #region 工具
     private void InsertCombatantByActionValue(Combatant combatant)//插入角色回合，目前默认插入时会排在所有相同行动值角色之前
@@ -341,6 +380,24 @@ public class TurnManager : MonoBehaviour
 
             node = node.Next;
         }
+    }
+
+    public bool HasChangerTurn()
+    {
+        foreach (var combatant in turnOrder)
+        {
+            if (combatant is Changer)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void NotifyTurnOrderChanged()
+    {
+        OnTurnOrderChanged?.Invoke();
     }
     #endregion
     //获取当前回合的角色

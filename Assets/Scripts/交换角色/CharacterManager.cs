@@ -140,7 +140,7 @@ public class CharacterManager : MonoBehaviour
 			Debug.LogWarning("[CharacterManager] 替换失败：角色为空");
 			yield break;
 		}
-
+	
 		if (!fieldCharacters.Contains(oldCharacter) || !reserveCharacters.Contains(newCharacter))
 		{
 			Debug.LogWarning("[CharacterManager] 替换失败：角色不在正确列表中");
@@ -150,7 +150,7 @@ public class CharacterManager : MonoBehaviour
 		newCharacter.transform.position = oldCharacter.transform.position;
 		newCharacter.standPosition = oldCharacter.standPosition;
 		//执行退场技能
-		SkillExecuteManager.ExecuteSkill(oldCharacter, SkillDictionaryManager.GetSkill(oldCharacter.exitSkill));
+		SkillExecuteManager.ExecuteSkill(oldCharacter, oldCharacter.GetExitSkillInstance());
 		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 		//执行退场动画
 		yield return oldCharacter.PlayExitAnimation();
@@ -161,7 +161,7 @@ public class CharacterManager : MonoBehaviour
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
 		//执行入场技能
-		SkillExecuteManager.ExecuteSkill(newCharacter, SkillDictionaryManager.GetSkill(newCharacter.enterSkill));
+		SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.GetEnterSkillInstance());
 		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 		//执行入场动画
 		yield return newCharacter.PlayEnterAnimation();

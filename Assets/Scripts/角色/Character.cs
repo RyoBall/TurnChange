@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using MoreMountains.Feedbacks;
+using System;
 
 public class Character : UnitCombatant
 
@@ -11,6 +12,10 @@ public class Character : UnitCombatant
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;//入场技能，回合开始时自动触发
     public CharacterSkillType exitSkill;//退场技能，回合结束时自动触发
+    private List<CharacterSkillBase> m_skillInstances = new List<CharacterSkillBase>();
+    private Dictionary<CharacterSkillType, CharacterSkillBase> m_skillInstanceMap = new Dictionary<CharacterSkillType, CharacterSkillBase>();
+    private CharacterSkillBase m_enterSkillInstance;
+    private CharacterSkillBase m_exitSkillInstance;
 
     [Header("混沌值")]
     [SerializeField, Range(0, MaxChaosValue)] private int chaosValue = 0;
@@ -30,6 +35,7 @@ public class Character : UnitCombatant
     [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
     private void Start()
     {
+        InitializeSkill();
         m_defaultScale = transform.localScale;
         foreach (var sr in spriteRenderer)
         {
@@ -174,7 +180,7 @@ public class Character : UnitCombatant
         {
             mouseExitFeedback?.StopFeedbacks();
             mouseEnterFeedback?.PlayFeedbacks();
-            SkillDescription.Instance.ChangeDescription(SkillDictionaryManager.GetSkill(exitSkill));
+            SkillDescription.Instance.ChangeDescription(GetExitSkillInstance());
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
@@ -268,17 +274,118 @@ public class Character : UnitCombatant
     #region 技能相关
     private void TickSkillCooldowns()
     {
-        if (skills == null)
+        if (m_skillInstances == null)
         {
             return;
         }
 
-        for (int i = 0; i < skills.Count; i++)
+        for (int i = 0; i < m_skillInstances.Count; i++)
         {
-            SkillDictionaryManager.GetSkill(skills[i])?.TickCooldown(this);
+            m_skillInstances[i]?.TickCooldown(this);
         }
     }
     #endregion
+    public void InitializeSkill()
+    {
+        CleanupSkillInstances();
+        m_skillInstances.Clear();
+        m_skillInstanceMap.Clear();
+        foreach (var skillType in skills)
+        {
+            var skill = CreateSkillInstance(skillType);
+            if (skill == null)
+            {
+                continue;
+            }
+
+            m_skillInstances.Add(skill);
+            m_skillInstanceMap[skillType] = skill;
+        }
+        m_enterSkillInstance = CreateSkillInstance(enterSkill);
+        m_exitSkillInstance = CreateSkillInstance(exitSkill);
+    }
+
+    public CharacterSkillBase GetSkillInstance(CharacterSkillType skillType)
+    {
+        if (m_skillInstanceMap == null || m_skillInstanceMap.Count == 0)
+        {
+            InitializeSkill();
+        }
+
+        m_skillInstanceMap.TryGetValue(skillType, out CharacterSkillBase skill);
+        return skill;
+    }
+
+    public CharacterSkillBase GetEnterSkillInstance()
+    {
+        if (m_enterSkillInstance == null)
+        {
+            InitializeSkill();
+        }
+
+        return m_enterSkillInstance;
+    }
+
+    public CharacterSkillBase GetExitSkillInstance()
+    {
+        if (m_exitSkillInstance == null)
+        {
+            InitializeSkill();
+        }
+
+        return m_exitSkillInstance;
+    }
+
+    private CharacterSkillBase CreateSkillInstance(CharacterSkillType skillType)
+    {
+        CharacterSkillBase template = SkillDictionaryManager.GetSkill(skillType);
+        if (template == null)
+        {
+            return null;
+        }
+
+        CharacterSkillBase instance = Instantiate(template);
+        instance.name = template.name;
+        return instance;
+    }
+
+    private void CleanupSkillInstances()
+    {
+        DestroySkillInstance(m_enterSkillInstance);
+        DestroySkillInstance(m_exitSkillInstance);
+
+        if (m_skillInstances == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < m_skillInstances.Count; i++)
+        {
+            DestroySkillInstance(m_skillInstances[i]);
+        }
+    }
+
+    private void DestroySkillInstance(CharacterSkillBase skillInstance)
+    {
+        if (skillInstance == null)
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(skillInstance);
+        }
+        else
+        {
+            DestroyImmediate(skillInstance);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        CleanupSkillInstances();
+    }
     public void LoadDataFromCSV()
     {
         if (string.IsNullOrEmpty(characterID))

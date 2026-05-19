@@ -19,11 +19,14 @@ public class Enemy : UnitCombatant
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
     public List<EnemySkillType> skills = new List<EnemySkillType>();
+    private List<EnemySkillBase> m_skillInstances = new List<EnemySkillBase>();
+    private Dictionary<EnemySkillType, EnemySkillBase> m_skillInstanceMap = new Dictionary<EnemySkillType, EnemySkillBase>();
     #region 自爆相关 因为项目比较小 所以先把自爆相关的状态和逻辑写在Enemy类里，后续如果需要的话再重构
     public ExplodeType explodeState = ExplodeType.None;
     #endregion
     private void Start()
     {
+        InitializeSkill();
         LoadDataFromCSV();
         currentHP *= 2;
         maxHP *= 2;
@@ -51,14 +54,29 @@ public class Enemy : UnitCombatant
     private IEnumerator ActionCoroutine()
     {
         //这里先写个随机攻击的逻辑，后续会替换成更复杂的AI
-        int rand = Random.Range(0, skills.Count);
-        EnemySkillType skillType = skills[rand];
+        if (m_skillInstances == null || m_skillInstances.Count == 0)
+        {
+            InitializeSkill();
+        }
+
+        if (m_skillInstances == null || m_skillInstances.Count == 0)
+        {
+            yield break;
+        }
+
+        int rand = Random.Range(0, m_skillInstances.Count);
+        EnemySkillBase skill = m_skillInstances[rand];
+        if (skill == null)
+        {
+            yield break;
+        }
+
         yield return new WaitForSeconds(0.2f);
-        FloatingTipGenerator.Instance?.ShowDefaultTip(EnemySkillDictionaryManager.GetEnemySkillName(skillType));
+        FloatingTipGenerator.Instance?.ShowDefaultTip(skill.skillName);
         yield return new WaitForSeconds(0.5f);//进入回合动画
         enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(0.5f);
-        SkillExecuteManager.ExecuteSkill(this, EnemySkillDictionaryManager.GetEnemySkill(skillType));
+        SkillExecuteManager.ExecuteSkill(this, skill);
         yield return WaitForDeathEvents();
         yield break;
     }
@@ -71,7 +89,6 @@ public class Enemy : UnitCombatant
     protected override IEnumerator OnDeathEvent()
     {
         yield return base.OnDeathEvent();
-        TransferElementalDetonationOnDeath();
         gameObject.SetActive(false);
     }
     #region 选敌相关
@@ -136,41 +153,82 @@ public class Enemy : UnitCombatant
     }
     #endregion
 
-    private void TransferElementalDetonationOnDeath()
+    public void InitializeSkill()
     {
-        State detonation = GetState(StateType.ElementalDetonation);
-        if (detonation == null || EnemyManager.Instance == null)
+        CleanupSkillInstances();
+        m_skillInstances.Clear();
+        m_skillInstanceMap.Clear();
+
+        if (skills == null)
         {
             return;
         }
 
-        Enemy target = null;
-        int minHp = int.MaxValue;
-        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        foreach (var skillType in skills)
         {
-            if (enemy == null || enemy == this)
+            EnemySkillBase skill = CreateSkillInstance(skillType);
+            if (skill == null)
             {
                 continue;
             }
 
-            if (enemy.currentHP < minHp)
-            {
-                minHp = enemy.currentHP;
-                target = enemy;
-            }
+            m_skillInstances.Add(skill);
+            m_skillInstanceMap[skillType] = skill;
+        }
+    }
+
+    public EnemySkillBase GetSkillInstance(EnemySkillType skillType)
+    {
+        if (m_skillInstanceMap == null || m_skillInstanceMap.Count == 0)
+        {
+            InitializeSkill();
         }
 
-        if (target == null)
+        m_skillInstanceMap.TryGetValue(skillType, out EnemySkillBase skill);
+        return skill;
+    }
+
+    private EnemySkillBase CreateSkillInstance(EnemySkillType skillType)
+    {
+        EnemySkillBase template = EnemySkillDictionaryManager.GetEnemySkill(skillType);
+        if (template == null)
+        {
+            return null;
+        }
+
+        EnemySkillBase instance = Instantiate(template);
+        instance.name = template.name;
+        return instance;
+    }
+
+    private void CleanupSkillInstances()
+    {
+        if (m_skillInstances == null)
         {
             return;
         }
 
-        UnitCombatant giver = detonation.giver;
-        if (giver == null)
+        for (int i = 0; i < m_skillInstances.Count; i++)
         {
-            giver = this;
-        }
+            if (m_skillInstances[i] == null)
+            {
+                continue;
+            }
 
-        target.AddState(StateType.ElementalDetonation, giver, 2, 1, detonation.skillCoefT);
+            if (Application.isPlaying)
+            {
+                Destroy(m_skillInstances[i]);
+            }
+            else
+            {
+                DestroyImmediate(m_skillInstances[i]);
+            }
+        }
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        CleanupSkillInstances();
     }
 }

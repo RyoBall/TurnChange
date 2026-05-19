@@ -42,11 +42,19 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private void OnEnable()
     {
         SkillExecuteManager.OnSkillExecuted += HandleSkillExecuted;
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.OnTurnOrderChanged += HandleTurnOrderChanged;
+        }
     }
 
     private void OnDisable()
     {
         SkillExecuteManager.OnSkillExecuted -= HandleSkillExecuted;
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.OnTurnOrderChanged -= HandleTurnOrderChanged;
+        }
     }
 
     void Start()
@@ -60,7 +68,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             GetComponent<Button>().interactable = false;
             yield return null;
         }
-        GetComponent<Button>().interactable = true;
+        RefreshInformation();
     }
 
     public void OnButtonClicked()
@@ -125,8 +133,17 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             }
             else
             {
-                button.interactable = true;
-                if (skillNameText != null)
+                var commandSkill = m_skill as CommandSkillBase;
+                if (commandSkill != null && commandSkill.commandSkillType == CommandSkillType.Change)
+                {
+                    button.interactable = TurnManager.Instance == null || !TurnManager.Instance.HasChangerTurn();
+                }
+                else
+                {
+                    button.interactable = true;
+                }
+
+                if (skillNameText != null&& m_skill != null)
                 {
                     skillNameText.text = m_skill.skillName;
                 }
@@ -146,6 +163,11 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             return;
         }
 
+        RefreshInformation();
+    }
+
+    private void HandleTurnOrderChanged()
+    {
         RefreshInformation();
     }
 

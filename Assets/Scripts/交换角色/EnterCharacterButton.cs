@@ -24,7 +24,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
             var targetCharacter = character != null ? character : GetComponentInParent<Character>();
             if (targetCharacter != null)
             {
-                SkillDescription.Instance.ChangeDescription(SkillDictionaryManager.GetSkill(targetCharacter.enterSkill));
+                SkillDescription.Instance.ChangeDescription(targetCharacter.GetEnterSkillInstance());
             }
             enterFeedback?.PlayFeedbacks();
         }

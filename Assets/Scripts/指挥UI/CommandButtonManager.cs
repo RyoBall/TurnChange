@@ -175,7 +175,7 @@ public class CommandButtonManager : MonoBehaviour
             CharacterSkillBase skill = null;
             if (character != null && character.skills != null && i < character.skills.Count)
             {
-                skill = SkillDictionaryManager.GetSkill(character.skills[i]);
+                skill = character.GetSkillInstance(character.skills[i]);
             }
 
             button.BindSkill(character, skill);

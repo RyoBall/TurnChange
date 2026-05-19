@@ -25,6 +25,12 @@ public class CommandSkillBase : SkillBase
     }
     private IEnumerator ExcuteChange()
     {
+        if (TurnManager.Instance != null && TurnManager.Instance.HasChangerTurn())
+        {
+            FloatingTipGenerator.Instance.ShowDefaultTip("换人回合已存在");
+            yield break;
+        }
+
         if(!Commander.GetInstance().UseCommandPoints(1))
         {
             FloatingTipGenerator.Instance.ShowDefaultTip("指挥点不足，无法使用技能");

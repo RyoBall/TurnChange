@@ -956,13 +956,20 @@ public class ElementalDetonationStateBehavior : StateBehaviorBase
 {
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
     {
-        if (!isDotDamage || EnemyManager.Instance == null)
+        if (!isDotDamage || damage <= 0 || target != state.owner || target.currentHP > 0 || EnemyManager.Instance == null)
         {
             return;
         }
 
-        int finalDamage = (int)(damage * 0.25f);
+        int finalDamage = GetTotalDotDetonationDamage(target);
+        if (finalDamage <= 0)
+        {
+            return;
+        }
+
+        UnitCombatant damageSource = source != null ? source : state.giver != null ? state.giver : state.owner;
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+
         foreach (var enemy in enemies)
         {
             if (enemy == null || enemy == target)
@@ -970,13 +977,30 @@ public class ElementalDetonationStateBehavior : StateBehaviorBase
                 continue;
             }
 
-            enemy.TakeDamage(new UnitCombatant.DamageInfo(finalDamage, source).AsTrueDamage());
+            enemy.TakeDamage(new UnitCombatant.DamageInfo(finalDamage, damageSource).AsTrueDamage());
         }
+    }
+
+    private int GetTotalDotDetonationDamage(UnitCombatant target)
+    {
+        int totalDamage = 0;
+        var targetStates = new List<State>(target.States);
+        foreach (var targetState in targetStates)
+        {
+            if (targetState == null || !targetState.isDot)
+            {
+                continue;
+            }
+
+            totalDamage += Mathf.Max(0, DamageCounter.CountDotDamage(targetState, targetState.giver, target).Damage);
+        }
+
+        return totalDamage;
     }
 
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
-        return isDotDamage ? 1.25f : 1f;
+        return isDotDamage ? 1.3f : 1f;
     }
 }
 
