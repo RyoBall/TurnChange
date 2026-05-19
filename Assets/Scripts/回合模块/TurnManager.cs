@@ -196,6 +196,7 @@ public class TurnManager : MonoBehaviour
             }
 
             State.TickAllStatesByActionValue(advanceValue);
+            Commander.GetInstance().NotifyActionValueAdvanced(advanceValue);
 
             if (EnvironmentManager.Instance != null)
             {

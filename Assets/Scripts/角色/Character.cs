@@ -135,6 +135,27 @@ public class Character : UnitCombatant
         chaosValue = Mathf.Clamp(value, 0, MaxChaosValue);
         UpdateChaosStates();
     }
+
+    public int ReduceChaos(int amount)
+    {
+        if (amount <= 0 || dead)
+        {
+            return 0;
+        }
+
+        int before = chaosValue;
+        chaosValue = Mathf.Clamp(chaosValue - amount, 0, MaxChaosValue);
+        int reducedValue = before - chaosValue;
+        if (reducedValue <= 0)
+        {
+            return 0;
+        }
+
+        FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"混沌-{reducedValue} ({chaosValue}/{MaxChaosValue})");
+        UpdateChaosStates();
+        return reducedValue;
+    }
+
     /// <summary>
     /// 根据当前混沌值自动添加/移除混沌半效和眩晕状态
     /// </summary>

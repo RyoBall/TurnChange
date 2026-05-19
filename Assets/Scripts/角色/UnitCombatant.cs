@@ -96,6 +96,10 @@ public class UnitCombatant : Combatant
         //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
+        if (currentHP <= 0)
+        {
+            Commander.GetInstance().NotifyEnemyKilled(damageInfo.Source, this);
+        }
     }
 
     public virtual void Heal(int amount)

@@ -157,6 +157,7 @@ public class CharacterManager : MonoBehaviour
 		//交换角色列表中的角色
 		int fieldIndex = fieldCharacters.IndexOf(oldCharacter);
 		fieldCharacters[fieldIndex] = newCharacter;
+		oldCharacter.ReduceChaos(3);
 
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
@@ -171,7 +172,7 @@ public class CharacterManager : MonoBehaviour
 			Debug.Log($"[CharacterManager] 更新 TurnManager 中的角色引用，将 {oldCharacter.name} 替换为 {newCharacter.name}");
 			float oldActionValue = oldCharacter.currentActionValue;
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
-			newCharacter.ChangeActionValue(0f); //换入角色立即插入回合
+			newCharacter.ChangeActionValue(newCharacter.BaseActionValue); //换入角色立即跑行动条
 			TurnManager.Instance.InsertCombatant(newCharacter);
 		}
 

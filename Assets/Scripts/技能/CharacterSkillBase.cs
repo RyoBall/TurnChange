@@ -416,7 +416,8 @@ public class CharacterSkillBase : SkillBase
         int shield = Mathf.RoundToInt(target.maxHP * 0.4f + 2f * character.attack);
         target.AddShield(shield);
         //缺少增加伤害的buff
-        target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * 0.5f);
+        
+        target.ChangeActionValue(target.currentActionValue - target.currentActionValue * 0.5f);
         yield break;
     }
 
