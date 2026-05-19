@@ -356,7 +356,7 @@ public class UnitStateTextDisplay : MonoBehaviour
             case StateDurationType.ActionValue:
                 return $"{state.RemainingActionValue}AV";
             default:
-                return "Special";
+                return "";
         }
     }
 }

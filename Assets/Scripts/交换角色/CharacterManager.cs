@@ -108,6 +108,8 @@ public class CharacterManager : MonoBehaviour
 		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter));
 		//第四步:清理UI
 		SetPromptVisible(false);
+		m_selectedFieldCharacter = null;
+		m_selectedReserveCharacter = null;
 	}
 
 	public void OnFieldCharacterClicked(Character character)//处理场上角色被点击的逻辑
@@ -146,6 +148,7 @@ public class CharacterManager : MonoBehaviour
 		}
 		//设置入场角色位置
 		newCharacter.transform.position = oldCharacter.transform.position;
+		newCharacter.standPosition = oldCharacter.standPosition;
 		//执行退场技能
 		SkillExecuteManager.ExecuteSkill(oldCharacter, SkillDictionaryManager.GetSkill(oldCharacter.exitSkill));
 		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
@@ -169,7 +172,7 @@ public class CharacterManager : MonoBehaviour
 			float oldActionValue = oldCharacter.currentActionValue;
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
 			newCharacter.ChangeActionValue(0f); //换入角色立即插入回合
-			TurnManager.Instance.InsertCombatant(newCharacter, false);
+			TurnManager.Instance.InsertCombatant(newCharacter);
 		}
 
 		Debug.Log($"[CharacterManager] 已将场上角色 {oldCharacter.name} 替换为 {newCharacter.name}");
@@ -310,6 +313,32 @@ public class CharacterManager : MonoBehaviour
 	}
 
 	#region 角色相关工具
+	public Character GetPendingSwapInCharacter(Character swappingOutCharacter = null)
+	{
+		if (m_selectedReserveCharacter == null)
+		{
+			return null;
+		}
+
+		if (swappingOutCharacter != null && m_selectedFieldCharacter != null && m_selectedFieldCharacter != swappingOutCharacter)
+		{
+			return null;
+		}
+
+		return m_selectedReserveCharacter;
+	}
+
+	public Character GetAnotherFieldCharacter(Character character)
+	{
+		foreach (var c in fieldCharacters)
+		{
+			if (c != null && c != character)
+			{
+				return c;
+			}
+		}
+		return null;
+	}
 	public Character GetCharacterByRand()
 	{
 		float totalWeight = 0f;

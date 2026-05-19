@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class LevelCharacterSpawner : MonoBehaviour
 {
+    private const int EnemyStandPositionStart = 3;
+
     [Header("Spawn Points")]
     [SerializeField] private Transform[] playerFieldSpawnPoints;
     [SerializeField] private Transform[] playerReserveSpawnPoints;
@@ -122,6 +124,7 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
+        int assignedStandPosition = isFieldCharacter ? fieldIndex + 1 : int.MaxValue;
         Transform spawnPoint = isFieldCharacter
             ? GetSpawnPoint(playerFieldSpawnPoints, fieldIndex++)
             : GetSpawnPoint(playerReserveSpawnPoints, reserveIndex++);
@@ -136,7 +139,7 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        ConfigureCharacter(instance, data, isFieldCharacter);
+        ConfigureCharacter(instance, data, isFieldCharacter, assignedStandPosition);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -166,12 +169,12 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        ConfigureEnemy(instance, data);
+        ConfigureEnemy(instance, data, EnemyStandPositionStart + index);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
 
-    private void ConfigureCharacter(Character instance, CharacterRosterData data, bool participateInTurnLoop)
+    private void ConfigureCharacter(Character instance, CharacterRosterData data, bool participateInTurnLoop, int standPosition)
     {
         if (instance == null || data == null)
         {
@@ -184,10 +187,11 @@ public class LevelCharacterSpawner : MonoBehaviour
         instance.enterSkill = data.enterSkill;
         instance.exitSkill = data.exitSkill;
         instance.participateInTurnLoopAtStart = participateInTurnLoop;
+        instance.standPosition = standPosition;
         instance.LoadDataFromCSV();
     }
 
-    private void ConfigureEnemy(Enemy instance, EnemyRosterData data)
+    private void ConfigureEnemy(Enemy instance, EnemyRosterData data, int standPosition)
     {
         if (instance == null || data == null)
         {
@@ -198,6 +202,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         instance.combatantName = string.IsNullOrEmpty(data.enemyName) ? data.enemyID : data.enemyName;
         instance.skills = new List<EnemySkillType>(data.skills);
         instance.participateInTurnLoopAtStart = true;
+        instance.standPosition = standPosition;
         instance.LoadDataFromCSV();
     }
 

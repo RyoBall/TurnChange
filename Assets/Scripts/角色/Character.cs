@@ -102,7 +102,7 @@ public class Character : UnitCombatant
     }
     public bool TryAddChaos(int amount)
     {
-        if (amount <= 0 || chaosValue >= MaxChaosValue)
+        if (amount <= 0 || chaosValue >= MaxChaosValue||dead)
         {
             return false;
         }

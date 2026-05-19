@@ -60,10 +60,11 @@ public class TurnManager : MonoBehaviour
             if (extraCombatant != null)
             {
                 extraCombatant.Initialize(character);
+                extraCombatant.standPosition = character.standPosition;
             }
             extraCombatant.combatantName = character.combatantName;
             extraCombatant.ChangeActionValue(0f, false);
-            InsertCombatant(extraCombatant, false);
+            InsertCombatant(extraCombatant);
         }
     }
     #region 回合开始的函数
@@ -134,7 +135,10 @@ public class TurnManager : MonoBehaviour
     {
         turnOrder.Clear();
 
-        combatants = combatants.OrderBy(c => c.currentActionValue).ToList();
+        combatants = combatants
+            .OrderBy(c => c.currentActionValue)
+            .ThenBy(c => c.standPosition)
+            .ToList();
         foreach (var combatant in combatants)
         {
             turnOrder.AddLast(combatant);
@@ -177,6 +181,13 @@ public class TurnManager : MonoBehaviour
 
             ////// 回合开始。
             yield return StartCoroutine(nextCombatant.PerformTurn());
+
+            if (EnvironmentManager.Instance != null && nextCombatant is UnitCombatant actedUnit)
+            {
+                actedUnit.ProcessStatesOnTurnEnd();
+                EnvironmentManager.Instance.NotifyCombatantActed(actedUnit);
+            }
+
             ////// 回合结束
             // 回合结束后重新计算当前角色的下一次行动值。
             if (nextCombatant != null)
@@ -213,7 +224,7 @@ public class TurnManager : MonoBehaviour
         }
 
         RemoveCombatantFromTurnOrder(combatant);
-        InsertCombatantByActionValue(combatant,false);
+        InsertCombatantByActionValue(combatant);
 
         if (TurnImageManager.Instance != null)
         {
@@ -222,9 +233,9 @@ public class TurnManager : MonoBehaviour
     }
 
     //从外部插入角色回合的接口,在触发时默认进行一次重排
-    public void InsertCombatant(Combatant combatant, bool insertAtEnd = true)
+    public void InsertCombatant(Combatant combatant)
     {
-        InsertCombatantByActionValue(combatant, insertAtEnd);
+        InsertCombatantByActionValue(combatant);
         if (TurnImageManager.Instance != null)
         {
             TurnImageManager.Instance.Reorder();
@@ -249,7 +260,7 @@ public class TurnManager : MonoBehaviour
         }
     }
     #region 工具
-    private void InsertCombatantByActionValue(Combatant combatant, bool insertAtEnd = true)//插入角色回合，目前默认插入时会排在所有相同行动值角色之前
+    private void InsertCombatantByActionValue(Combatant combatant)//插入角色回合，目前默认插入时会排在所有相同行动值角色之前
     {
         if (combatant == null)
         {
@@ -271,7 +282,7 @@ public class TurnManager : MonoBehaviour
         }
 
         var node = turnOrder.First.Next;
-        while (node != null && (insertAtEnd ? node.Value.currentActionValue <= combatant.currentActionValue : node.Value.currentActionValue < combatant.currentActionValue))
+        while (node != null && !ShouldInsertBefore(combatant, node.Value))
         {
             node = node.Next;
         }
@@ -284,6 +295,31 @@ public class TurnManager : MonoBehaviour
         {
             turnOrder.AddBefore(node, combatant);
         }
+    }
+
+    private bool ShouldInsertBefore(Combatant candidate, Combatant existing)
+    {
+        if (candidate.currentActionValue < existing.currentActionValue)
+        {
+            return true;
+        }
+
+        if (candidate.currentActionValue > existing.currentActionValue)
+        {
+            return false;
+        }
+
+        if (candidate.standPosition < existing.standPosition)
+        {
+            return true;
+        }
+
+        if (candidate.standPosition > existing.standPosition)
+        {
+            return false;
+        }
+        //如果行动值和站位都相同，默认插在最前方
+        return true;
     }
     private void RemoveCombatantFromTurnOrder(Combatant combatant)//移除角色回合
     {

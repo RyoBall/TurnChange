@@ -21,23 +21,23 @@ namespace MoreMountains.Feedbacks
 		/// a static bool used to disable all feedbacks of this type at once
 		public static bool FeedbackTypeAuthorized = true;
 		/// sets the inspector color for this feedback
-		#if UNITY_EDITOR
+#if UNITY_EDITOR
 		public override Color FeedbackColor { get { return MMFeedbacksInspectorColors.TransformColor; } }
 		public override bool EvaluateRequiresSetup() { return (AnimateScaleTarget == null); }
-		public override string RequiredTargetText { get { return AnimateScaleTarget != null ? AnimateScaleTarget.name : "";  } }
+		public override string RequiredTargetText { get { return AnimateScaleTarget != null ? AnimateScaleTarget.name : ""; } }
 		public override string RequiresSetupText { get { return "This feedback requires that an AnimateScaleTarget be set to be able to work properly. You can set one below."; } }
 		public override bool HasCustomInspectors { get { return true; } }
-		#endif
+#endif
 		public override bool HasAutomatedTargetAcquisition => true;
 		public override bool CanForceInitialValue => true;
 		protected override void AutomateTargetAcquisition() => AnimateScaleTarget = FindAutomatedTarget<Transform>();
 		/// the duration of this feedback is the duration of the scale animation
-		public override float FeedbackDuration { get { return ApplyTimeMultiplier(DeclaredDuration); } set { DeclaredDuration = value;  } }
+		public override float FeedbackDuration { get { return ApplyTimeMultiplier(DeclaredDuration); } set { DeclaredDuration = value; } }
 		public override bool HasRandomness => true;
 
 		public enum Modes { MoveTo, MoveToAdditive, Bump }
 		public enum PossibleAxis { XtoYZ, XtoY, XtoZ, YtoXZ, YtoX, YtoZ, ZtoXZ, ZtoX, ZtoY }
-		
+
 		[MMFInspectorGroup("Target", true, 12, true)]
 		/// the object to animate
 		[Tooltip("the object to animate")]
@@ -48,7 +48,7 @@ namespace MoreMountains.Feedbacks
 		/// the axis on which to operate squashing and stretching
 		[Tooltip("the axis on which to operate squashing and stretching")]
 		public PossibleAxis Axis = PossibleAxis.XtoYZ;
-		
+
 		[MMFInspectorGroup("Spring Settings", true, 18)]
 		/// the dumping ratio determines how fast the spring will evolve after a disturbance. At a low value, it'll oscillate for a long time, while closer to 1 it'll stop oscillating quickly
 		[Tooltip("the dumping ratio determines how fast the spring will evolve after a disturbance. At a low value, it'll oscillate for a long time, while closer to 1 it'll stop oscillating quickly")]
@@ -57,7 +57,7 @@ namespace MoreMountains.Feedbacks
 		/// the frequency determines how fast the spring will oscillate when disturbed, low frequency means less oscillations per second, high frequency means more oscillations per second
 		[Tooltip("the frequency determines how fast the spring will oscillate when disturbed, low frequency means less oscillations per second, high frequency means more oscillations per second")]
 		public float Frequency = 6f;
-		
+
 		[MMFInspectorGroup("Spring Mode", true, 19)]
 		/// the chosen mode for this spring. MoveTo will move the target the specified scale (randomized between min and max). MoveToAdditive will add the specified scale (randomized between min and max) to the target's current scale. Bump will bump the target's scale by the specified power (randomized between min and max)
 		[Tooltip("the chosen mode for this spring. MoveTo will move the target the specified scale (randomized between min and max). MoveToAdditive will add the specified scale (randomized between min and max) to the target's current scale. Bump will bump the target's scale by the specified power (randomized between min and max)")]
@@ -84,11 +84,11 @@ namespace MoreMountains.Feedbacks
 		protected float _currentValue = 0f;
 		protected float _targetValue = 0f;
 		protected float _velocity = 0f;
-		
+
 		protected virtual bool LowVelocity => Mathf.Abs(_velocity) < _velocityLowThreshold;
 		protected Coroutine _coroutine;
 		protected float _velocityLowThreshold = 0.001f;
-		
+
 		protected Vector3 _newScale;
 		protected Vector3 _initialScale;
 
@@ -127,7 +127,7 @@ namespace MoreMountains.Feedbacks
 				return;
 			}
 
-			if (_coroutine != null)	{ Owner.StopCoroutine(_coroutine); }
+			if (_coroutine != null) { Owner.StopCoroutine(_coroutine); }
 
 			switch (Mode)
 			{
@@ -158,11 +158,11 @@ namespace MoreMountains.Feedbacks
 				UpdateSpring();
 				ApplyValue();
 			}
-			
+
 			_velocity = 0f;
 			_currentValue = _targetValue;
 			ApplyValue();
-			
+
 			IsPlaying = false;
 		}
 
@@ -181,6 +181,10 @@ namespace MoreMountains.Feedbacks
 		protected virtual void ApplyValue()
 		{
 			float newValue = _currentValue;
+			if (newValue <= 0.001f)
+			{
+				newValue = 0.001f;
+			}
 			float invertScale = 1 / Mathf.Sqrt(newValue);
 			switch (Axis)
 			{
@@ -256,7 +260,7 @@ namespace MoreMountains.Feedbacks
 			_targetValue = _currentValue;
 			ApplyValue();
 		}
-		
+
 		/// <summary>
 		/// Skips to the end, matching the target value
 		/// </summary>
@@ -276,8 +280,8 @@ namespace MoreMountains.Feedbacks
 				ApplyValue();
 			}
 		}
-		
-		
+
+
 		/// <summary>
 		/// On restore, we restore our initial state
 		/// </summary>

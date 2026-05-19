@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public enum CharacterSkillType
@@ -36,6 +37,12 @@ public enum CharacterSkillType
 public class CharacterSkillBase : SkillBase
 {
     public CharacterSkillType skillType;
+    [Header("额外参数")]
+    public float extraData1;
+    public float extraData2;
+    public float extraData3;
+    public float extraData4;
+
     [Header("目标选择设置")]
     public bool requiresEnemyTarget = false;
     [Min(1)]
@@ -161,7 +168,7 @@ public class CharacterSkillBase : SkillBase
                 yield return SubDpsSkillTwo(character);
                 break;
             case CharacterSkillType.HealerEnter:
-                yield return HealerEnter(character, selectedCharacters);
+                yield return HealerEnter(character);
                 break;
             case CharacterSkillType.HealerExit:
                 yield return HealerExit(character);
@@ -177,7 +184,6 @@ public class CharacterSkillBase : SkillBase
         StartCooldown(character);
         if (shouldEndTurn)
         {
-            HandleBurningBloodOnTurnEnd(character);
             character.EndTurn();
         }
     }
@@ -207,17 +213,17 @@ public class CharacterSkillBase : SkillBase
         }
         yield break;
     }
-        private IEnumerator ExecuteAllAttack(Character character)
+    private IEnumerator ExecuteAllAttack(Character character)
     {
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         foreach (var enemy in enemies)
         {
             if (enemy != null)
             {
-                int damage = DamageCounter.CountDamage(character,enemy,this);
-                enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
+                var damageInfo = DamageCounter.CountDamage(character, enemy, this);
+                enemy.TakeDamage(damageInfo);
                 bool hadSeqFlame = enemy.HasState(StateType.SeqFlame);
-                State state=enemy.AddState(StateType.SeqFlame, character, 2,1,1);
+                State state = enemy.AddState(StateType.SeqFlame, character, 2, 1, 1);
 
                 if (hadSeqFlame)
                 {
@@ -253,7 +259,7 @@ public class CharacterSkillBase : SkillBase
                 continue;
             }
 
-            enemy.AddState(StateType.PersistentTorment, character,300);
+            enemy.AddState(StateType.PersistentTorment, character, 300);
         }
 
         yield break;
@@ -303,11 +309,11 @@ public class CharacterSkillBase : SkillBase
                 continue;
             }
 
-            int damage = DamageCounter.CountDamage(character,enemy,this);
-            enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
+            var damageInfo = DamageCounter.CountDamage(character, enemy, this);
+            enemy.TakeDamage(damageInfo);
 
             StateType dotType = PickRandomDotState(enemy);
-            enemy.AddState(dotType, character,3,1,0.5f);
+            enemy.AddState(dotType, character, 3, 1, 0.5f);
         }
         GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
         yield break;
@@ -326,7 +332,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        bool ifAttack=false;
+        bool ifAttack = false;
         foreach (var state in target.States)
         {
             if (state != null && state.isDot)
@@ -336,7 +342,7 @@ public class CharacterSkillBase : SkillBase
             }
         }
         target.AddState(StateType.ElementalDetonation, character, 2);
-        if(ifAttack)
+        if (ifAttack)
         {
             GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
         }
@@ -350,7 +356,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        character.AddState(StateType.CounterCharge, character,99,1);
+        character.AddState(StateType.CounterCharge, character, 99, 1);
         yield break;
     }
 
@@ -368,8 +374,8 @@ public class CharacterSkillBase : SkillBase
                 continue;
             }
 
-            ally.AddState(StateType.Resist, character, 99,1);
-            ally.ChangeActionValue(ally.currentActionValue-ally.BaseActionValue * 0.25f);
+            ally.AddState(StateType.Resist, character, 99, 1);
+            ally.ChangeActionValue(ally.currentActionValue - ally.BaseActionValue * 0.25f);
         }
 
         yield break;
@@ -410,18 +416,7 @@ public class CharacterSkillBase : SkillBase
         int shield = Mathf.RoundToInt(target.maxHP * 0.4f + 2f * character.attack);
         target.AddShield(shield);
         //缺少增加伤害的buff
-        target.ChangeActionValue(target.currentActionValue-target.BaseActionValue * 0.5f);
-        yield break;
-    }
-    private IEnumerator EnemyAttack(Character character)
-    {
-        if (EnemyManager.Instance == null || CharacterManager.Instance == null)
-        {
-            yield break;
-        }
-
-                
-
+        target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * 0.5f);
         yield break;
     }
 
@@ -434,7 +429,6 @@ public class CharacterSkillBase : SkillBase
 
         character.AddState(StateType.BerserkFeast, character, 200);
         character.AddState(StateType.BurningBlood, character, 99);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(character.transform, $"{character.name}进入狂暴盛宴");
         yield break;
     }
 
@@ -454,18 +448,17 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        //斩杀
         float executeThreshold = IsBoss(target) ? 0.2f : 0.4f;
         if (target.currentHP <= Mathf.RoundToInt(target.maxHP * executeThreshold))
         {
             target.TakeDamage(new UnitCombatant.DamageInfo(target.currentHP + target.currentShield + 99999, character).AsTrueDamage());
-            FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"{target.name}被斩杀");
             yield break;
         }
-
+        //伤害计算
         float hpCoef = IsBoss(target) ? 0.10f : 0.20f;
-        int trueDamage = Mathf.RoundToInt(target.maxHP * hpCoef + character.attack * 1.6f);
-        trueDamage = Mathf.RoundToInt(trueDamage * target.GetIncomingDamageMultiplier(false, true));
-        target.TakeDamage(new UnitCombatant.DamageInfo(trueDamage, character).AsTrueDamage());
+        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef,this.skillBase+Mathf.RoundToInt(target.maxHP * hpCoef), true,false,true);
+        target.TakeDamage(damageInfo);
         yield break;
     }
 
@@ -478,23 +471,11 @@ public class CharacterSkillBase : SkillBase
         }
 
         float coef = HasAnyDebuff(target) ? 2.0f : 1.5f;
-        bool hasDeadlyArmor = character.HasState(StateType.DeadlyArmor);
 
         bool isCrit;
-        int damage = CalculateDirectDamage(character, target, coef, 0f, true, hasDeadlyArmor, 0f, out isCrit);
-        var damageInfo = new UnitCombatant.DamageInfo(damage, character);
-        if (hasDeadlyArmor)
-        {
-            damageInfo = damageInfo.AsTrueDamage();
-        }
+        var damageInfo = DamageCounter.CountDamage(character, target, coef, 0f, false, true, true, out isCrit);
 
         target.TakeDamage(damageInfo);
-
-        if (isCrit)
-        {
-            TryDoCritPursuit(character, target, coef * 0.5f, hasDeadlyArmor);
-        }
-
         GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
         yield break;
     }
@@ -517,18 +498,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        if (CharacterManager.Instance != null)
-        {
-            foreach (var ally in CharacterManager.Instance.fieldCharacters)
-            {
-                if (ally == null)
-                {
-                    continue;
-                }
-
-                //ally.AddState(StateType.DesperationField, character, 300);
-            }
-        }
+        EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.DesperationField, 300);
 
         character.AddState(StateType.BloodBath, character, 300);
         FloatingTipGenerator.Instance?.ShowTipAtObject(character.transform, $"{character.name}展开绝境域场");
@@ -587,10 +557,8 @@ public class CharacterSkillBase : SkillBase
             {
                 continue;
             }
-
-            bool isCrit;
-            int damage = CalculateDirectDamage(character, enemy, coef, 0f, true, false, 0f, out isCrit);
-            enemy.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
+            var damageInfo = DamageCounter.CountDamage(character, enemy, skillCoef, skillBase, false, true, true);
+            enemy.TakeDamage(damageInfo);
         }
 
         yield break;
@@ -605,9 +573,8 @@ public class CharacterSkillBase : SkillBase
         }
 
         target.AddState(StateType.ArmorBreak, character, 99, 1);
-        bool isCrit;
-        int damage = CalculateDirectDamage(character, target, 1.5f, 0f, true, false, 0f, out isCrit);
-        target.TakeDamage(new UnitCombatant.DamageInfo(damage, character));
+        var damageInfo = DamageCounter.CountDamage(character, target, this);
+        target.TakeDamage(damageInfo);
         yield break;
     }
 
@@ -618,10 +585,11 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        //不走常规伤害流程，直接根据当前HP和即将受到的伤害来判断是否触发斩杀效果
         int selfDamage = Mathf.RoundToInt(character.maxHP * 0.5f);
         if (character.currentHP <= selfDamage)
         {
-            character.currentHP = Mathf.Max(1, character.currentHP);
+            character.TakeDamage(new UnitCombatant.DamageInfo(character.currentHP - 1, character).AsTrueDamage());
         }
         else
         {
@@ -633,9 +601,9 @@ public class CharacterSkillBase : SkillBase
         yield break;
     }
 
-    private IEnumerator HealerEnter(Character character, List<Character> selectedCharacters)
+    private IEnumerator HealerEnter(Character character)
     {
-        Character target = GetPrimaryAlly(selectedCharacters, character);
+        Character target = CharacterManager.Instance?.GetAnotherFieldCharacter(character);
         if (character == null || target == null)
         {
             yield break;
@@ -653,15 +621,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        Character target = null;
-        foreach (var ally in CharacterManager.Instance.fieldCharacters)
-        {
-            if (ally != null && ally != character)
-            {
-                target = ally;
-                break;
-            }
-        }
+        Character target = CharacterManager.Instance.GetPendingSwapInCharacter(character);
 
         if (target == null)
         {
@@ -700,7 +660,6 @@ public class CharacterSkillBase : SkillBase
         }
 
         target.Heal(healAmount);
-        target.GetState(StateType.BloodBath)?.AddRecordedValue(healAmount);
 
         int selfDamage = Mathf.RoundToInt(healAmount * 0.6f);
         character.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, character).AsTrueDamage());
@@ -724,7 +683,7 @@ public class CharacterSkillBase : SkillBase
     }
     #endregion
 
-    private Enemy GetPrimaryEnemy(List<Enemy> selectedEnemies)
+    private Enemy GetPrimaryEnemy(List<Enemy> selectedEnemies)//获取第一个敌人
     {
         if (selectedEnemies == null || selectedEnemies.Count <= 0)
         {
@@ -786,80 +745,6 @@ public class CharacterSkillBase : SkillBase
             && enemy.enemyID.IndexOf("boss", System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    private int CalculateDirectDamage(
-        UnitCombatant attacker,
-        UnitCombatant defender,
-        float atkCoef,
-        float baseDamage,
-        bool canCrit,
-        bool asTrueDamage,
-        float extraDamageMultiplier,
-        out bool isCrit)
-    {
-        isCrit = false;
-        if (attacker == null || defender == null)
-        {
-            return 0;
-        }
-
-        float random = UnityEngine.Random.Range(0.85f, 1.15f);
-        isCrit = canCrit && UnityEngine.Random.value < attacker.critRate;
-
-        float critMul = isCrit ? attacker.critDamage : 1f;
-        float outgoing = attacker.GetOutgoingDamageMultiplier(false);
-        float incoming = defender.GetIncomingDamageMultiplier(false, asTrueDamage);
-
-        float raw = (attacker.attack * atkCoef + baseDamage) * random * critMul;
-        raw *= outgoing;
-        raw *= incoming;
-
-        if (!asTrueDamage)
-        {
-            float defenseFactor = defender.K / (defender.K + Mathf.Max(0f, defender.defense));
-            raw *= defenseFactor;
-        }
-
-        if (attacker.HasState(StateType.BerserkFeast))
-        {
-            float missingHpRatio = attacker.maxHP > 0 ? (float)(attacker.maxHP - attacker.currentHP) / attacker.maxHP : 0f;
-            raw *= 1f + Mathf.Clamp01(missingHpRatio) * 0.4f;
-        }
-
-        if (extraDamageMultiplier > 0f)
-        {
-            raw *= extraDamageMultiplier;
-        }
-
-        return Mathf.Max(0, Mathf.RoundToInt(raw));
-    }
-
-    private void TryDoCritPursuit(Character attacker, Enemy target, float atkCoef, bool asTrueDamage)
-    {
-        if (attacker == null || target == null || target.currentHP <= 0)
-        {
-            return;
-        }
-
-        int safety = 0;
-        while (target.currentHP > 0 && safety < 50)
-        {
-            safety++;
-            bool isCrit;
-            int damage = CalculateDirectDamage(attacker, target, atkCoef, 0f, true, asTrueDamage, 1f, out isCrit);
-            var damageInfo = new UnitCombatant.DamageInfo(damage, attacker);
-            if (asTrueDamage)
-            {
-                damageInfo = damageInfo.AsTrueDamage();
-            }
-
-            target.TakeDamage(damageInfo);
-
-            if (!isCrit)
-            {
-                break;
-            }
-        }
-    }
 
     private void RemoveStateIfExists(UnitCombatant target, StateType stateType)
     {
@@ -873,22 +758,6 @@ public class CharacterSkillBase : SkillBase
         {
             target.RemoveState(state);
         }
-    }
-
-    private void HandleBurningBloodOnTurnEnd(Character character)
-    {
-        if (character == null || !character.HasState(StateType.BurningBlood))
-        {
-            return;
-        }
-
-        if (BurningBloodStateBehavior.ConsumeKillFlag(character))
-        {
-            return;
-        }
-
-        int selfDamage = Mathf.RoundToInt(character.maxHP * 0.25f);
-        character.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, character).AsTrueDamage());
     }
 
     private StateType PickRandomDotState(Enemy enemy)

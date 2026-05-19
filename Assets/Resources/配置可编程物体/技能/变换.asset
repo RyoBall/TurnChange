@@ -10,14 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: "\u6362\u4EBA"
+  m_Name: "\u53D8\u6362"
   m_EditorClassIdentifier: 
-  skillName: "\u6362\u4EBA"
-  description: "\u7ACB\u5373\u63D2\u5165\u4E00\u4E2A\u989D\u5916\u56DE\u5408\uFF0C\u5C06\u573A\u4E0A\u89D2\u8272\u4E0E\u540E\u53F0\u89D2\u8272\u8FDB\u884C\u4EA4\u6362\uFF0C\u5E76\u89E6\u53D1\u5BF9\u5E94\u7684\u5165\u573A\u6280\u4E0E\u9000\u573A\u6280"
+  skillName: "\u53D8\u6362"
+  description: 
   icon: {fileID: 0}
-  skillBase: 0
+  skillBase: 1
   skillCoef: 1
   skillType: 0
+  extraData1: 1
+  extraData2: 1
+  extraData3: 1
+  extraData4: 1
   requiresEnemyTarget: 0
   enemyTargetCount: 1
   requiresAllyTarget: 0

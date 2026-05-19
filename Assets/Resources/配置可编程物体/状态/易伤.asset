@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   durationType: 2
   maxStacks: 100
-  stateType: 23
+  stateType: 22
   isDot: 0
   isDebuff: 1
   atkT: 0

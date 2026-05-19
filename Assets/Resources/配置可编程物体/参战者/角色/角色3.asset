@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\u89D2\u82723"
   m_EditorClassIdentifier: 
   characterName: "\u8F85\u52A9"
-  characterID: "\u89D2\u82721"
+  characterID: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9"
   skills: 0b0000000c000000
   enterSkill: 9
   exitSkill: 10

@@ -119,7 +119,9 @@ public class EnvironmentDictionaryManager : MonoBehaviour
 
         if (environmentDict.TryGetValue(environmentType, out var environment))
         {
-            return environment;
+            var environmentInstance = Instantiate(environment);
+            environmentInstance.name = environment.name;
+            return environmentInstance;
         }
 
         Debug.LogError($"未找到环境: {environmentType}");
@@ -180,7 +182,9 @@ public class SkillDictionaryManager : MonoBehaviour
 
         if (skillDict.TryGetValue(skillType, out var skill))
         {
-            return skill;
+            var skillInstance = Instantiate(skill);
+            skillInstance.name = skill.name;
+            return skillInstance;
         }
 
         Debug.LogError($"未找到技能: {skillType}");
@@ -241,10 +245,21 @@ public class EnemySkillDictionaryManager : MonoBehaviour
 
         if (enemySkillDict.TryGetValue(skillType, out var skill))
         {
-            return skill;
+            var skillInstance = Instantiate(skill);
+            skillInstance.name = skill.name;
+            return skillInstance;
         }
 
         Debug.LogError($"未找到敌人技能: {skillType}");
+        return null;
+    }
+    public static string GetEnemySkillName(EnemySkillType skillType)
+    {
+        if (enemySkillDict.TryGetValue(skillType, out var skill))
+            return skill.skillName;
+        else if(skillType == EnemySkillType.NoneNone)
+            return "";
+        Debug.Log($"未找到敌人技能: {skillType}");
         return null;
     }
 }

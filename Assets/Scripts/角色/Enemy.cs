@@ -3,6 +3,13 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using MoreMountains.Feedbacks;
+public enum ExplodeType
+{
+    None,
+    Normal,
+    hasStarted,
+    ReadyToBurst
+}
 public class Enemy : UnitCombatant
 {
     public string enemyID;
@@ -13,20 +20,20 @@ public class Enemy : UnitCombatant
     private Tween m_scaleTween;
     public List<EnemySkillType> skills = new List<EnemySkillType>();
     #region 自爆相关 因为项目比较小 所以先把自爆相关的状态和逻辑写在Enemy类里，后续如果需要的话再重构
-    public bool hasStartExploded = false;
+    public ExplodeType explodeState = ExplodeType.None;
     #endregion
     private void Start()
     {
         LoadDataFromCSV();
-        currentHP*=2;
-        maxHP*=2;
+        currentHP *= 2;
+        maxHP *= 2;
         m_defaultScale = transform.localScale;
     }
 
     public override IEnumerator PerformTurn()
     {
         enterFeedback?.PlayFeedbacks();
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.2f);
         yield return ProcessStatesOnTurnStart();
         //如果死亡了就直接结束回合
         if (dead)
@@ -38,12 +45,7 @@ public class Enemy : UnitCombatant
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
             yield break;
         }
-        //执行行动前
-        yield return new WaitForSeconds(0.5f);
-        FloatingTipGenerator.Instance?.ShowDefaultTip($"单体攻击");
-        yield return new WaitForSeconds(0.5f);//进入回合动画
-        enterFeedback?.PlayFeedbacks();
-        yield return new WaitForSeconds(0.5f);//进入回合动画
+        //执行行动
         yield return ActionCoroutine();
     }
     private IEnumerator ActionCoroutine()
@@ -51,6 +53,11 @@ public class Enemy : UnitCombatant
         //这里先写个随机攻击的逻辑，后续会替换成更复杂的AI
         int rand = Random.Range(0, skills.Count);
         EnemySkillType skillType = skills[rand];
+        yield return new WaitForSeconds(0.2f);
+        FloatingTipGenerator.Instance?.ShowDefaultTip(EnemySkillDictionaryManager.GetEnemySkillName(skillType));
+        yield return new WaitForSeconds(0.5f);//进入回合动画
+        enterFeedback?.PlayFeedbacks();
+        yield return new WaitForSeconds(0.5f);
         SkillExecuteManager.ExecuteSkill(this, EnemySkillDictionaryManager.GetEnemySkill(skillType));
         yield return WaitForDeathEvents();
         yield break;

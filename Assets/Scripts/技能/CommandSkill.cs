@@ -31,7 +31,9 @@ public class CommandSkillBase : SkillBase
             yield break;
         }
         SkillManager.Instance.changeCharacter.GetComponent<Combatant>().ChangeActionValue(0);
-        TurnManager.Instance.InsertCombatant(Instantiate(SkillManager.Instance.changeCharacter.GetComponent<Combatant>()), false);
+        var changer = Instantiate(SkillManager.Instance.changeCharacter.GetComponent<Combatant>());
+        changer.standPosition = 0;
+        TurnManager.Instance.InsertCombatant(changer);
         yield return new WaitForSeconds(.5f);
     }
 }

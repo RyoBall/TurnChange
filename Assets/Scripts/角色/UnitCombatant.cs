@@ -66,7 +66,7 @@ public class UnitCombatant : Combatant
         // 链式配置（流畅接口）
         public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
         public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
-        public DamageInfo WithState(StateType state) { StateType = state; return this; }
+        public DamageInfo WithState(StateType state) { StateType = state; return this; }//用于注明伤害来自于哪个状态
     }
     public virtual void TakeDamage(DamageInfo damageInfo)
     {
@@ -151,7 +151,14 @@ public class UnitCombatant : Combatant
         currentShield += amount;
     }
 
-
+    public override void ChangeActionValue(float delta, bool ifChangePos = true)
+    {
+        if(dead)
+        {
+            return;
+        }
+        base.ChangeActionValue(delta, ifChangePos);
+    }
 
     #region 状态相关
     [Header("状态列表")]
@@ -222,6 +229,21 @@ public class UnitCombatant : Combatant
         }
 
         yield return WaitForDeathEvents();
+    }
+
+    public void ProcessStatesOnTurnEnd()
+    {
+        for (int i = states.Count - 1; i >= 0; i--)
+        {
+            State state = states[i];
+            if (state == null)
+            {
+                states.RemoveAt(i);
+                continue;
+            }
+
+            state.OnOwnerTurnEnd();
+        }
     }
 
     public void ProcessStatesByActionValue(int actionValueCost)

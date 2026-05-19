@@ -42,7 +42,8 @@ public enum StateType
     BloodGift,//血赐
     GiftWeak,//馈赠·弱
     GiftMid,//馈赠·中
-    GiftStrong//馈赠·强
+    GiftStrong,//馈赠·强
+    ExploderProcess//自爆流程
 
 }
 
@@ -124,7 +125,7 @@ public class State : ScriptableObject
         m_behavior = null;
     }
 
-    public void Mount(UnitCombatant owner, UnitCombatant giver, float skillCoef, int duration = -1, int overrideStacks = -1)
+    public void Mount(UnitCombatant owner, UnitCombatant giver, float skillCoef, int duration = -1, int stacks = -1)
     {
         atkT = giver != null ? giver.attack : 0f;
         skillCoefT = skillCoef;
@@ -141,11 +142,11 @@ public class State : ScriptableObject
                 break;
         }
 
-        ChangeStackCount(overrideStacks > 0 ? overrideStacks : 1);
+        ChangeStackCount(stacks > 0 ? stacks : 1);
         Behavior.OnStateApply();
     }
 
-    public void UpdateState(int atkT, int extraDuration, int stacks)
+    public void UpdateState(int atkT, int extraDuration, int extraStacks)
     {
         if (this.atkT < atkT)
         {
@@ -163,7 +164,7 @@ public class State : ScriptableObject
             remainingActionValue = Mathf.Max(remainingActionValue, targetActionValue);
         }
 
-        ChangeStackCount(stackCount + stacks);
+        ChangeStackCount(stackCount + extraStacks);
     }
 
     public Coroutine TickOnTurnStart()
@@ -177,6 +178,11 @@ public class State : ScriptableObject
 
         ChangeDuration(Mathf.Max(0, remainingTurns - 1));
         return coroutine;
+    }
+
+    public void OnOwnerTurnEnd()
+    {
+        Behavior.OnOwnerTurnEnd();
     }
 
     public void TickByActionValue(int actionValueCost)
@@ -342,6 +348,7 @@ public interface IStateBehavior
     void Initialize(State state);
     void OnStateApply();
     IEnumerator OnOwnerTurnStart();
+    void OnOwnerTurnEnd();
     void OnStateEnd();
     void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage);
     void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver);
@@ -366,6 +373,7 @@ public abstract class StateBehaviorBase : IStateBehavior
 
     public virtual void OnStateApply() { }
     public virtual IEnumerator OnOwnerTurnStart() { yield break; }//由于这是回合开始的行为，最好支持协程，以便实现一些需要等待的效果
+    public virtual void OnOwnerTurnEnd() { }
     public virtual void OnStateEnd() { }
     public virtual void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage) { }
     public virtual void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver) { }
@@ -411,6 +419,8 @@ public static class StateBehaviorFactory
                 return new GiftMidStateBehavior();
             case StateType.GiftStrong:
                 return new GiftStrongStateBehavior();
+            case StateType.ExploderProcess:
+                return new ExploderProcessStateBehavior();
             case StateType.PursuitPunish:
                 return new PursuitPunishStateBehavior();
             case StateType.PersistentTorment:
@@ -451,6 +461,25 @@ public static class StateBehaviorFactory
 
 public class DefaultStateBehavior : StateBehaviorBase
 {
+}
+
+public class ExploderProcessStateBehavior : StateBehaviorBase
+{
+    public override void OnStateApply()
+    {
+        if (state.owner is Enemy enemy)
+        {
+            enemy.explodeState = ExplodeType.hasStarted;
+        }
+    }
+
+    public override void OnStateEnd()
+    {
+        if (state.owner is Enemy enemy)
+        {
+            enemy.explodeState = ExplodeType.ReadyToBurst;
+        }
+    }
 }
 
 public class BloodContractStateBehavior : StateBehaviorBase
@@ -526,6 +555,22 @@ public class BurningBloodStateBehavior : StateBehaviorBase
         }
     }
 
+    public override void OnOwnerTurnEnd()
+    {
+        if (state.owner == null)
+        {
+            return;
+        }
+
+        if (ConsumeKillFlag(state.owner))
+        {
+            return;
+        }
+
+        int selfDamage = Mathf.RoundToInt(state.owner.maxHP * 0.25f);
+        state.owner.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, state.owner).AsTrueDamage());
+    }
+
     public static bool ConsumeKillFlag(UnitCombatant owner)
     {
         if (owner == null)
@@ -549,10 +594,14 @@ public class DeadlyArmorStateBehavior : StateBehaviorBase
     {
         return 1.4f;
     }
-
     public override bool CausesOutgoingTrueDamage(bool isDotDamage)
     {
         return true;
+    }
+
+    public override void OnOwnerTurnEnd()
+    {
+        state.ChangeStackCount(state.StackCount - 1);
     }
 }
 
@@ -797,8 +846,9 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
         {
             return;
         }
-        int damage = Mathf.RoundToInt(state.owner.attack * 0.6f);
-        target.TakeDamage(new UnitCombatant.DamageInfo(damage, state.owner).WithState(state.stateType));
+        var damageInfo = DamageCounter.CountDamage(state.owner, target, 0.6f, 0f, false, false, false)
+            .WithState(state.stateType);
+        target.TakeDamage(damageInfo);
     }
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
@@ -865,9 +915,9 @@ public abstract class DotStateBehaviorBase : StateBehaviorBase
             case StateType.Ice:
             case StateType.Corrosion:
             case StateType.Wind:
-                int damage = DamageCounter.CountDotDamage(state, state.giver, state.owner);
-                damage = Mathf.RoundToInt(damage * damageMultiplier);
-                state.owner.TakeDamage(new UnitCombatant.DamageInfo(damage, state.giver).AsDot().WithState(state.stateType));
+                var damageInfo = DamageCounter.CountDotDamage(state, state.giver, state.owner);
+                damageInfo.Damage = Mathf.RoundToInt(damageInfo.Damage * damageMultiplier);
+                state.owner.TakeDamage(damageInfo);
                 break;
         }
     }

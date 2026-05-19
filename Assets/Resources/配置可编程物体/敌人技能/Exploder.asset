@@ -9,11 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd6ccd37a27804c419c77f2b4318c1d5, type: 3}
-  m_Name: "\u89D2\u82724"
+  m_Script: {fileID: 11500000, guid: fa1f07fb98d28ff4c9daafb355c0f2b8, type: 3}
+  m_Name: Exploder
   m_EditorClassIdentifier: 
-  characterName: "\u76F4\u4F24"
-  characterID: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B"
-  skills: 1000000011000000
-  enterSkill: 14
-  exitSkill: 15
+  skillName: "\u7206"
+  description: 
+  icon: {fileID: 0}
+  skillBase: 0
+  skillCoef: 1
+  enemySkillType: 6

@@ -1318,7 +1318,7 @@ RectTransform:
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &227283892
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4662,13 +4662,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1363633584}
+  - component: {fileID: 1363633585}
   m_Layer: 5
   m_Name: "\u73AF\u5883"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1363633584
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4684,11 +4685,27 @@ RectTransform:
   - {fileID: 227283891}
   m_Father: {fileID: 3200452}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -50}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 50, y: -50}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1363633585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1363633583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72ebb050643d694f94d2b7198ac765a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textMesh: {fileID: 227283892}
+  title: "\u73AF\u5883"
+  noEnvironmentText: "\u65E0"
+  refreshInterval: 0.1
 --- !u!1 &1373496143
 GameObject:
   m_ObjectHideFlags: 0
@@ -4772,6 +4789,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 100
   participateInTurnLoopAtStart: 0
+  standPosition: 2147483647
   combatantName: "\u6362\u4EBA"
 --- !u!1 &1398089158
 GameObject:
@@ -5767,6 +5785,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 100
   participateInTurnLoopAtStart: 0
+  standPosition: 2147483647
   combatantName: 
   dead: 0
   level: 0
@@ -5824,12 +5843,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f37433189d2a024498c265ff06a95888, type: 2}
   - {fileID: 11400000, guid: d2a09ca80264f3d429c0297df363f2e1, type: 2}
   fieldPlayerCharacters:
-  - {fileID: 11400000, guid: 511beaf3365619041b59f31e4bc10c52, type: 2}
-  - {fileID: 11400000, guid: a7f0b46fa2265ec499f0c713cef66195, type: 2}
+  - {fileID: 11400000, guid: 303896a6f716db74581636b248f968e1, type: 2}
+  - {fileID: 11400000, guid: f37433189d2a024498c265ff06a95888, type: 2}
   fieldEnemies:
-  - {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-  - {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-  - {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+  - {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+  - {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+  - {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
   characterSpawner: {fileID: 1938414816}
 --- !u!114 &1938414816
 MonoBehaviour:

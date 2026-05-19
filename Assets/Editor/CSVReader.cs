@@ -38,6 +38,8 @@ public class CSVReader
                 var dict = new Dictionary<string, string>();
                 for (int i = 0; i < headers.Length && i < values.Length; i++)
                 {
+                    if(string.IsNullOrEmpty(headers[i]))
+                    continue; // 跳过空表头
                     dict[headers[i]] = values[i];
                 }
                 result.Add(dict);

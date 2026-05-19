@@ -10,8 +10,8 @@ public enum EnemySkillType
     SingleAttack,    // 单体攻击手
     Debuff_1,        // 负面手技能一
     Debuff_2,        // 负面手技能二
-    Exploder_1,      // 群体自爆手技能一
-    Exploder_2,      // 群体自爆手技能二
+    Exploder,      // 群体自爆手技能一
+    NoneNone,      // 群体自爆手技能二
     DotMaster_1,     // 持续伤害Dot施加手技能一
     DotMaster_2      // 持续伤害Dot施加手技能二
 }
@@ -25,8 +25,6 @@ public class EnemySkillBase : SkillBase
         if (unitCombatant == null) yield break;
         Enemy self = unitCombatant as Enemy;
         if (self == null) yield break;
-
-
 
         switch (enemySkillType)
         {
@@ -48,11 +46,8 @@ public class EnemySkillBase : SkillBase
             case EnemySkillType.Debuff_2:
                 yield return Debuff_2(self);
                 break;
-            case EnemySkillType.Exploder_1:
-                yield return Exploder_1(self);
-                break;
-            case EnemySkillType.Exploder_2:
-                yield return Exploder_2(self);
+            case EnemySkillType.Exploder:
+                yield return ExploderSkill(self);
                 break;
             case EnemySkillType.DotMaster_1:
                 yield return DotMaster_1(self);
@@ -61,6 +56,7 @@ public class EnemySkillBase : SkillBase
                 yield return DotMaster_2(self);
                 break;
         }
+        yield return new WaitForSeconds(0.5f); // 技能执行后的小间隔
     }
 
     // 1.护盾手 技能一
@@ -78,9 +74,8 @@ public class EnemySkillBase : SkillBase
         {
             int shield = Mathf.RoundToInt(self.maxHP * 0.1f);
             target.AddShield(shield);
-            FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"获得护盾 {shield}");
         }
-        yield return new WaitForSeconds(0.5f);
+        yield break;
     }
     // 1.护盾手 技能二
     private IEnumerator ShieldSupport_2(Enemy self)
@@ -89,21 +84,21 @@ public class EnemySkillBase : SkillBase
         foreach (var ally in allies)
         {
             if (ally == null) continue;
-            int damage = DamageCounter.CountDamage(self,ally,this);
-            ally.TakeDamage(new UnitCombatant.DamageInfo(damage, self));
+            var damageInfo = DamageCounter.CountDamage(self, ally, this);
+            ally.TakeDamage(damageInfo);
             ally.ChangeActionValue(ally.currentActionValue + ally.BaseActionValue * 0.2f);
         }
-        yield return new WaitForSeconds(0.5f);
+        yield break;
     }
     // 2.单体攻击手
     private IEnumerator SingleAttack(Enemy self)
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        int damage = DamageCounter.CountDamage(self,target,this, true);
-        target.TakeDamage(new UnitCombatant.DamageInfo(damage, self));
+        var damageInfo = DamageCounter.CountDamage(self, target, this, true);
+        target.TakeDamage(damageInfo);
         target.TryAddChaos(1);
-        yield return new WaitForSeconds(0.5f);
+        yield break;
     }
     // 3.负面手 技能一
     private IEnumerator Debuff_1(Enemy self)
@@ -114,7 +109,7 @@ public class EnemySkillBase : SkillBase
             if (ally == null) continue;
             ally.TryAddChaos(1);
         }
-        yield return new WaitForSeconds(0.5f);
+        yield break;
     }
     // 3.负面手 技能二
     private IEnumerator Debuff_2(Enemy self)
@@ -122,37 +117,67 @@ public class EnemySkillBase : SkillBase
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
         target.AddState(StateType.Attract, self, 1);
-        yield return new WaitForSeconds(0.5f);
+        yield break;
     }
-    // 4.群体自爆手 技能一
-    private IEnumerator Exploder_1(Enemy self)
+    // 4.群体自爆手
+    private IEnumerator ExploderSkill(Enemy self)
     {
-        if (self.hasStartExploded) yield break;
-        yield return new WaitForSeconds(0.5f);
+        if (self == null)
+        {
+            yield break;
+        }
+
+        if (self.explodeState == ExplodeType.Normal || self.explodeState == ExplodeType.None)
+        {
+            if (Random.value < 0.5f)
+            {
+                yield return StartExploder(self);
+                yield break;
+            }
+            FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动失败...");
+        }
+        else if (self.explodeState == ExplodeType.hasStarted)
+        {
+            yield break;
+        }
+        else if (self.explodeState == ExplodeType.ReadyToBurst)
+        {
+            yield return ExploderBurst(self);
+        }
     }
-    // 4.群体自爆手 技能二（倒计时为零时自爆）
-    private IEnumerator Exploder_2(Enemy self)
+
+    private IEnumerator StartExploder(Enemy self)
     {
-        if (self.hasStartExploded) yield break;
+        if (self.explodeState == ExplodeType.hasStarted || self.explodeState == ExplodeType.ReadyToBurst)
+        {
+            yield break;
+        }
+
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动自爆");
+        self.AddState(StateType.ExploderProcess, self, 2);
+        yield break;
+    }
+
+    private IEnumerator ExploderBurst(Enemy self)
+    {
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         foreach (var ally in allies)
         {
             if (ally == null) continue;
-            int damage = Mathf.RoundToInt(self.attack * 0.6f);
-            ally.TakeDamage(new UnitCombatant.DamageInfo(damage, self).AsTrueDamage());
+            var damageInfo = DamageCounter.CountDamage(self, ally, 0.6f, 0f, true, false, false);
+            ally.TakeDamage(damageInfo);
             ally.TryAddChaos(1);
         }
-        yield return new WaitForSeconds(0.5f);
+        self.TakeDamage(new UnitCombatant.DamageInfo(self.maxHP,self).AsTrueDamage());
+        yield break;
     }
     // 5.Dot施加手 技能一
     private IEnumerator DotMaster_1(Enemy self)
     {
-        var targets = CharacterManager.Instance.fieldCharacters;
-        if (targets == null || targets.Count == 0) yield break;
-        var target = targets[Random.Range(0, targets.Count)];
+        var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        target.AddState(StateType.Poison, self, 2, 2);
-        yield return new WaitForSeconds(0.5f);
+        target.AddState(StateType.Poison, self, 99, 2, 0.2f);
+        yield break;
     }
     // 5.Dot施加手 技能二
     private IEnumerator DotMaster_2(Enemy self)
@@ -172,9 +197,9 @@ public class EnemySkillBase : SkillBase
             }
             else if (poisonStacks > 0)
             {
-                ally.AddState(StateType.Poison, self, 1);
+                ally.AddState(StateType.Poison, self,99, 2,0.2f);
             }
         }
-        yield return new WaitForSeconds(0.5f);
+        yield break;
     }
 }

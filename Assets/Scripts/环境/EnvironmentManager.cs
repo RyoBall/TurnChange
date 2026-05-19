@@ -28,11 +28,24 @@ public class EnvironmentManager : MonoBehaviour
             Instance = null;
         }
     }
-    public void AddEnvironment(EnvironmentType type, int durationActionValue = -1)
+
+    public void AddEnvironment(EnvironmentType type, int durationActionValue = -1, UnitCombatant applier = null)
     {
-        BattleEnvironment newEnvironment = ScriptableObject.CreateInstance<BattleEnvironment>();
+        BattleEnvironment existing = GetActiveEnvironment(type);
+        if (existing != null)
+        {
+            existing.RefreshDuration(durationActionValue);
+            existing.SetApplier(applier);
+            return;
+        }
+
+        BattleEnvironment environmentTemplate = EnvironmentDictionaryManager.GetEnvironment(type);
+        BattleEnvironment newEnvironment = environmentTemplate != null
+            ? Instantiate(environmentTemplate)
+            : ScriptableObject.CreateInstance<BattleEnvironment>();
+        newEnvironment.name = environmentTemplate != null ? environmentTemplate.name : type.ToString();
         newEnvironment.environmentType = type;
-        newEnvironment.ApplyEnvironment(durationActionValue);
+        newEnvironment.ApplyEnvironment(applier, durationActionValue);
     }
 
     public void RegisterEnvironment(BattleEnvironment environment)
@@ -78,15 +91,90 @@ public class EnvironmentManager : MonoBehaviour
 
     public bool HasEnvironment(EnvironmentType type)
     {
+        return GetActiveEnvironment(type) != null;
+    }
+
+    public float GetCritRateBonus(UnitCombatant unit)
+    {
+        float bonus = 0f;
+        for (int i = 0; i < activeEnvironments.Count; i++)
+        {
+            BattleEnvironment environment = activeEnvironments[i];
+            if (environment == null || !environment.IsApplied)
+            {
+                continue;
+            }
+
+            bonus += environment.GetCritRateBonus(unit);
+        }
+
+        return bonus;
+    }
+
+    public float GetCritDamageBonus(UnitCombatant unit)
+    {
+        float bonus = 0f;
+        for (int i = 0; i < activeEnvironments.Count; i++)
+        {
+            BattleEnvironment environment = activeEnvironments[i];
+            if (environment == null || !environment.IsApplied)
+            {
+                continue;
+            }
+
+            bonus += environment.GetCritDamageBonus(unit);
+        }
+
+        return bonus;
+    }
+
+    public float GetIncomingDamageMultiplier(UnitCombatant attacker, UnitCombatant defender, bool isDotDamage, bool isTrueDamage)
+    {
+        float multiplier = 1f;
+        for (int i = 0; i < activeEnvironments.Count; i++)
+        {
+            BattleEnvironment environment = activeEnvironments[i];
+            if (environment == null || !environment.IsApplied)
+            {
+                continue;
+            }
+
+            multiplier *= environment.GetIncomingDamageMultiplier(attacker, defender, isDotDamage, isTrueDamage);
+        }
+
+        return multiplier;
+    }
+
+    public void NotifyCombatantActed(UnitCombatant combatant)
+    {
+        if (combatant == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < activeEnvironments.Count; i++)
+        {
+            BattleEnvironment environment = activeEnvironments[i];
+            if (environment == null || !environment.IsApplied)
+            {
+                continue;
+            }
+
+            environment.OnCombatantActed(combatant);
+        }
+    }
+
+    private BattleEnvironment GetActiveEnvironment(EnvironmentType type)
+    {
         for (int i = 0; i < activeEnvironments.Count; i++)
         {
             BattleEnvironment environment = activeEnvironments[i];
             if (environment != null && environment.environmentType == type && environment.IsApplied)
             {
-                return true;
+                return environment;
             }
         }
 
-        return false;
+        return null;
     }
 }
