@@ -25,9 +25,9 @@ public class CommandSkillBase : SkillBase
     }
     private IEnumerator ExcuteChange()
     {
-        if (CharacterManager.Instance == null)
+        if (TurnManager.Instance != null && TurnManager.Instance.HasChangerTurn())
         {
-            FloatingTipGenerator.Instance.ShowDefaultTip("缺少换人管理器，无法执行换人");
+            FloatingTipGenerator.Instance.ShowDefaultTip("换人回合已存在");
             yield break;
         }
 
@@ -36,7 +36,10 @@ public class CommandSkillBase : SkillBase
             FloatingTipGenerator.Instance.ShowDefaultTip("指挥点不足，无法使用技能");
             yield break;
         }
-
-        yield return CharacterManager.Instance.SelectAndSwapCoroutine();
+        SkillManager.Instance.changeCharacter.GetComponent<Combatant>().ChangeActionValue(0);
+        var changer = Instantiate(SkillManager.Instance.changeCharacter.GetComponent<Combatant>());
+        changer.standPosition = 0;
+        TurnManager.Instance.InsertCombatant(changer);
+        yield return new WaitForSeconds(.5f);
     }
 }
