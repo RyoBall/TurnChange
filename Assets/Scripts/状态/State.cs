@@ -43,7 +43,9 @@ public enum StateType
     GiftWeak,//馈赠·弱
     GiftMid,//馈赠·中
     GiftStrong,//馈赠·强
-    ExploderProcess//自爆流程
+    ExploderProcess,//自爆流程
+    NextActionDamageBoost,//下次行动增伤
+    ActionWeakened//单回合减攻
 
 }
 
@@ -55,10 +57,12 @@ public class State : ScriptableObject
 
     [Tooltip("默认持续回合数")]
     [Min(1)]
+    [SerializeField]
     private int defaultTurns = 1;
 
     [Tooltip("默认持续行动值")]
     [Min(1)]
+    [SerializeField]
     private int defaultActionValue = 100;
 
     [Tooltip("剩余回合数（运行时）")]
@@ -82,6 +86,7 @@ public class State : ScriptableObject
     public int RemainingActionValue => remainingActionValue;
     public float RuntimeRecordValue => runtimeRecordValue;
     public int StackCount => stackCount;
+    public int MaxStacks => maxStacks;
     public int Stacks
     {
         get => stackCount;
@@ -93,6 +98,13 @@ public class State : ScriptableObject
     public StateType stateType;
     public bool isDot;
     public bool isDebuff;
+
+    [Header("显示与基础配置")]
+    [TextArea(2, 5)] public string description;
+    public float baseMultiplier;
+    public float baseExtraData1;
+    public float baseExtraData2;
+    public float baseExtraData3;
 
     [Header("Dot:快照属性")]
     [InspectorReadOnly] public float atkT;
@@ -125,10 +137,15 @@ public class State : ScriptableObject
         m_behavior = null;
     }
 
-    public void Mount(UnitCombatant owner, UnitCombatant giver, float skillCoef, int duration = -1, int stacks = -1)
+    public void Mount(
+        UnitCombatant owner,
+        UnitCombatant giver,
+        float skillCoef,
+        int duration = -1,
+        int stacks = -1)
     {
         atkT = giver != null ? giver.attack : 0f;
-        skillCoefT = skillCoef;
+        skillCoefT = skillCoef > 0f ? skillCoef : baseMultiplier;
         this.owner = owner;
         this.giver = giver;
 
@@ -146,11 +163,20 @@ public class State : ScriptableObject
         Behavior.OnStateApply();
     }
 
-    public void UpdateState(int atkT, int extraDuration, int extraStacks)
+    public void UpdateState(
+        int atkT,
+        int extraDuration,
+        int extraStacks,
+        float skillCoef = 0f)
     {
         if (this.atkT < atkT)
         {
             this.atkT = atkT;
+        }
+
+        if (skillCoef > this.skillCoefT)
+        {
+            this.skillCoefT = skillCoef;
         }
 
         if (durationType == StateDurationType.Turn)
@@ -167,16 +193,18 @@ public class State : ScriptableObject
         ChangeStackCount(stackCount + extraStacks);
     }
 
-    public Coroutine TickOnTurnStart()
+    public void TickOnTurnEnd()
     {
-        var coroutine = CoroutineHelper.GetHelper().StartCoroutine(Behavior.OnOwnerTurnStart());
-
         if (durationType != StateDurationType.Turn)
         {
-            return null;
+            return;
         }
 
         ChangeDuration(Mathf.Max(0, remainingTurns - 1));
+    }
+    public Coroutine OnOwnerTurnStart()
+    {
+        var coroutine = CoroutineHelper.GetHelper().StartCoroutine(Behavior.OnOwnerTurnStart());
         return coroutine;
     }
 
@@ -421,6 +449,10 @@ public static class StateBehaviorFactory
                 return new GiftStrongStateBehavior();
             case StateType.ExploderProcess:
                 return new ExploderProcessStateBehavior();
+            case StateType.NextActionDamageBoost:
+                return new NextActionDamageBoostStateBehavior();
+            case StateType.ActionWeakened:
+                return new ActionWeakenedStateBehavior();
             case StateType.PursuitPunish:
                 return new PursuitPunishStateBehavior();
             case StateType.PersistentTorment:
@@ -491,7 +523,8 @@ public class BloodContractStateBehavior : StateBehaviorBase
             return;
         }
 
-        int healAmount = Mathf.RoundToInt(damage * 0.2f);
+        float healRatio = state.skillCoefT > 0f ? state.skillCoefT : 0.2f;
+        int healAmount = Mathf.RoundToInt(damage * healRatio);
         state.giver.Heal(healAmount);
     }
 }
@@ -507,7 +540,7 @@ public class BerserkFeastStateBehavior : StateBehaviorBase
             return;
         }
 
-        critBonus = 0.25f;
+        critBonus = state.skillCoefT > 0f ? state.skillCoefT : 0.25f;
         state.owner.critRate += critBonus;
     }
 
@@ -567,7 +600,8 @@ public class BurningBloodStateBehavior : StateBehaviorBase
             return;
         }
 
-        int selfDamage = Mathf.RoundToInt(state.owner.maxHP * 0.25f);
+        float selfDamageRatio = state.skillCoefT > 0f ? state.skillCoefT : 0.25f;
+        int selfDamage = Mathf.RoundToInt(state.owner.maxHP * selfDamageRatio);
         state.owner.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, state.owner).AsTrueDamage());
     }
 
@@ -592,7 +626,7 @@ public class DeadlyArmorStateBehavior : StateBehaviorBase
 {
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 1.4f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.4f;
     }
     public override bool CausesOutgoingTrueDamage(bool isDotDamage)
     {
@@ -602,6 +636,30 @@ public class DeadlyArmorStateBehavior : StateBehaviorBase
     public override void OnOwnerTurnEnd()
     {
         state.ChangeStackCount(state.StackCount - 1);
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || source != state.owner || target == null || damage <= 0 || target.currentHP > 0)
+        {
+            return;
+        }
+
+        float teamAdvanceRatio = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0f;
+        if (teamAdvanceRatio <= 0f || CharacterManager.Instance == null)
+        {
+            return;
+        }
+
+        foreach (var ally in CharacterManager.Instance.fieldCharacters)
+        {
+            if (ally == null || ally.IsDead)
+            {
+                continue;
+            }
+
+            ally.ChangeActionValue(Mathf.Max(0f, ally.currentActionValue - ally.BaseActionValue * teamAdvanceRatio));
+        }
     }
 }
 
@@ -639,7 +697,7 @@ public class VulnerableStateBehavior : StateBehaviorBase
 {
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
-        return 1.25f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.25f;
     }
 
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
@@ -670,7 +728,8 @@ public class ArmorBreakStateBehavior : StateBehaviorBase
 
         float def = Mathf.Max(0f, state.owner.defense);
         float oldFactor = state.owner.K / (state.owner.K + def);
-        float newDef = def * (1f - 0.2f * validStacks);
+        float reductionPerStack = state.skillCoefT > 0f ? state.skillCoefT : 0.2f;
+        float newDef = def * (1f - reductionPerStack * validStacks);
         float newFactor = state.owner.K / (state.owner.K + Mathf.Max(0f, newDef));
         if (oldFactor <= 0f)
         {
@@ -690,11 +749,13 @@ public class BloodSurgeHealStateBehavior : StateBehaviorBase
             return;
         }
 
-        int heal = Mathf.RoundToInt(state.owner.maxHP * 0.2f);
+        float healRatio = state.skillCoefT > 0f ? state.skillCoefT : 0.2f;
+        float critBonusRatio = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.1f;
+        int heal = Mathf.RoundToInt(state.owner.maxHP * healRatio);
         bool critHeal = UnityEngine.Random.value < Mathf.Clamp01(state.owner.critRate);
         if (critHeal)
         {
-            heal += Mathf.RoundToInt(state.owner.maxHP * 0.1f);
+            heal += Mathf.RoundToInt(state.owner.maxHP * critBonusRatio);
         }
 
         state.owner.Heal(heal);
@@ -713,7 +774,9 @@ public class CriticalGuardStateBehavior : StateBehaviorBase
             return 1f;
         }
 
-        return state.owner.currentHP <= Mathf.RoundToInt(state.owner.maxHP * 0.5f) ? 1.2f : 1f;
+        float hpThreshold = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.5f;
+        float damageMultiplier = state.skillCoefT > 0f ? state.skillCoefT : 1.2f;
+        return state.owner.currentHP <= Mathf.RoundToInt(state.owner.maxHP * hpThreshold) ? damageMultiplier : 1f;
     }
 
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
@@ -739,7 +802,8 @@ public class CriticalGuardStateBehavior : StateBehaviorBase
             return;
         }
 
-        int heal = state.giver != null ? Mathf.RoundToInt(state.giver.maxHP * 0.3f) : Mathf.RoundToInt(state.owner.maxHP * 0.3f);
+        float healRatio = state.baseExtraData2 > 0f ? state.baseExtraData2 : 0.3f;
+        int heal = state.giver != null ? Mathf.RoundToInt(state.giver.maxHP * healRatio) : Mathf.RoundToInt(state.owner.maxHP * healRatio);
         state.owner.currentHP = Mathf.Clamp(heal, 1, state.owner.maxHP);
         usedFatalHeal = true;
     }
@@ -749,7 +813,7 @@ public class BloodGiftStateBehavior : StateBehaviorBase
 {
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 1.2f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.2f;
     }
 
     public override IEnumerator OnOwnerTurnStart()
@@ -759,7 +823,10 @@ public class BloodGiftStateBehavior : StateBehaviorBase
             yield break;
         }
 
-        float healPercent = state.owner.currentHP <= Mathf.RoundToInt(state.owner.maxHP * 0.5f) ? 0.30f : 0.15f;
+        float lowHpThreshold = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.5f;
+        float lowHpHealPercent = state.baseExtraData2 > 0f ? state.baseExtraData2 : 0.30f;
+        float normalHealPercent = state.baseExtraData3 > 0f ? state.baseExtraData3 : 0.15f;
+        float healPercent = state.owner.currentHP <= Mathf.RoundToInt(state.owner.maxHP * lowHpThreshold) ? lowHpHealPercent : normalHealPercent;
         int heal = Mathf.RoundToInt(state.giver.maxHP * healPercent);
         state.owner.Heal(heal);
     }
@@ -777,7 +844,7 @@ public class GiftWeakStateBehavior : GiftStateBehaviorBase
 {
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 1.2f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.2f;
     }
 
     public override IEnumerator OnOwnerTurnStart()
@@ -791,14 +858,15 @@ public class GiftMidStateBehavior : GiftStateBehaviorBase
 {
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 1.3f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.3f;
     }
 
     public override IEnumerator OnOwnerTurnStart()
     {
         if (state.owner != null)
         {
-            int heal = Mathf.RoundToInt(state.owner.maxHP * 0.1f);
+            float healRatio = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.1f;
+            int heal = Mathf.RoundToInt(state.owner.maxHP * healRatio);
             state.owner.Heal(heal);
         }
 
@@ -813,7 +881,7 @@ public class GiftStrongStateBehavior : GiftStateBehaviorBase
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 1.4f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.4f;
     }
 
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
@@ -823,9 +891,10 @@ public class GiftStrongStateBehavior : GiftStateBehaviorBase
             return;
         }
 
+        float healRatio = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.2f;
         int heal = state.giver != null
-            ? Mathf.RoundToInt(state.giver.maxHP * 0.2f)
-            : Mathf.RoundToInt(state.owner.maxHP * 0.2f);
+            ? Mathf.RoundToInt(state.giver.maxHP * healRatio)
+            : Mathf.RoundToInt(state.owner.maxHP * healRatio);
         state.owner.Heal(heal);
         triggered = true;
     }
@@ -846,7 +915,8 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
         {
             return;
         }
-        var damageInfo = DamageCounter.CountDamage(state.owner, target, 0.6f, 0f, false, false, false)
+        float pursuitCoef = state.skillCoefT > 0f ? state.skillCoefT : 0.6f;
+        var damageInfo = DamageCounter.CountDamage(state.owner, target, pursuitCoef, 0f, false, false, false)
             .WithState(state.stateType);
         target.TakeDamage(damageInfo);
     }
@@ -855,7 +925,8 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
     {
         if (TurnManager.Instance != null && TurnManager.Instance.GetCurrentCombatant() != state.owner)
         {
-            return 1.15f;
+            float bonus = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.15f;
+            return 1f + bonus;
         }
 
         return 1f;
@@ -872,18 +943,23 @@ public class PersistentTormentStateBehavior : StateBehaviorBase
             yield break;
         }
 
-        int validLayer = Mathf.Clamp(state.StackCount, 0, 5);
-        float chance = Mathf.Min(0.5f, validLayer * 0.1f);
+        int maxStacks = Mathf.Max(1, state.MaxStacks);
+        float chancePerStack = state.baseExtraData2 > 0f ? state.baseExtraData2 : 0.1f;
+        int stunDuration = state.baseExtraData3 > 0f ? Mathf.RoundToInt(state.baseExtraData3) : 1;
+        int validLayer = Mathf.Clamp(state.StackCount, 0, maxStacks);
+        float chance = Mathf.Min(maxStacks * chancePerStack, validLayer * chancePerStack);
         if (Random.value <= chance)
         {
-            state.owner.AddState(StateType.Daze, state.giver != null ? state.giver : state.owner, 1, 1);
+            state.owner.AddState(StateType.Daze, state.giver != null ? state.giver : state.owner, stunDuration, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}受到震慑");
         }
     }
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 1f - Mathf.Min(0.25f, 0.05f * state.StackCount);
+        int maxStacks = Mathf.Max(1, state.MaxStacks);
+        float reductionPerStack = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.05f;
+        return 1f - Mathf.Min(maxStacks * reductionPerStack, reductionPerStack * state.StackCount);
     }
 }
 
@@ -943,7 +1019,7 @@ public class DazeStateBehavior : StateBehaviorBase
 {
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
-        return 1.4f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.4f;
     }
 
     public override bool CanActThisTurn()
@@ -1000,7 +1076,7 @@ public class ElementalDetonationStateBehavior : StateBehaviorBase
 
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
-        return isDotDamage ? 1.3f : 1f;
+        return isDotDamage ? (state.skillCoefT > 0f ? state.skillCoefT : 1.3f) : 1f;
     }
 }
 
@@ -1008,12 +1084,15 @@ public class CounterChargeStateBehavior : StateBehaviorBase
 {
     public override void OnStateApply()
     {
-        state.owner.AddState(StateType.Charge, state.owner, 99, 4);
+        int initialCharge = state.skillCoefT > 0f ? Mathf.RoundToInt(state.skillCoefT) : (state.baseExtraData1 > 0f ? Mathf.RoundToInt(state.baseExtraData1) : 4);
+        state.owner.AddState(StateType.Charge, state.owner, 99, initialCharge);
     }
 
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
     {
-        int count = target == state.owner ? 3 : 1;
+        int selfGain = state.baseExtraData2 > 0f ? Mathf.RoundToInt(state.baseExtraData2) : 3;
+        int otherGain = state.baseExtraData3 > 0f ? Mathf.RoundToInt(state.baseExtraData3) : 1;
+        int count = target == state.owner ? selfGain : otherGain;
         AddOrUpdateChargeState(count);
     }
 
@@ -1045,7 +1124,7 @@ public class ResistStateBehavior : StateBehaviorBase
 {
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
-        return 0.2f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 0.2f;
     }
 
     public override bool TryConsumeResist()
@@ -1064,11 +1143,38 @@ public class TauntStateBehavior : StateBehaviorBase
 {
 }
 
+public class NextActionDamageBoostStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.2f;
+    }
+
+    public override void OnOwnerTurnEnd()
+    {
+        state.ChangeStackCount(state.StackCount - 1);
+    }
+}
+
+public class ActionWeakenedStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return state.skillCoefT > 0f ? state.skillCoefT : 0.4f;
+    }
+
+    public override void OnOwnerTurnEnd()
+    {
+        state.ChangeStackCount(state.StackCount - 1);
+    }
+}
+
 public class ChargeStateBehavior : StateBehaviorBase
 {
     public override void OnStackChange()
     {
-        if (state.StackCount >= 8)
+        int threshold = state.baseExtraData2 > 0f ? Mathf.RoundToInt(state.baseExtraData2) : 8;
+        if (state.StackCount >= threshold)
         {
             TriggerCounterCharge();
             state.ChangeStackCount(0);
@@ -1084,7 +1190,8 @@ public class ChargeStateBehavior : StateBehaviorBase
 
         if (state.owner is Character && CharacterManager.Instance != null)
         {
-            int shieldValue = Mathf.RoundToInt(state.owner.maxHP * 0.2f + state.skillCoefT * 100f);
+            float shieldHpRatio = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.2f;
+            int shieldValue = Mathf.RoundToInt(state.owner.maxHP * shieldHpRatio + state.skillCoefT * 100f);
             foreach (var ally in CharacterManager.Instance.fieldCharacters)
             {
                 if (ally == null)
@@ -1105,11 +1212,11 @@ public class AttractStateBehavior : StateBehaviorBase
 {
     public override float GetAttractMultiplier(UnitCombatant source)
     {
-        return 1.5f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 1.5f;
     }
 }
 
-public class PoisonStateBehavior : StateBehaviorBase
+public class PoisonStateBehavior : DotStateBehaviorBase
 {
 }
 
@@ -1117,7 +1224,7 @@ public class ChaosHalfStateBehavior : StateBehaviorBase
 {
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return 0.5f;
+        return state.skillCoefT > 0f ? state.skillCoefT : 0.5f;
     }
 }
 
@@ -1134,7 +1241,8 @@ public class ChaosStunStateBehavior : StateBehaviorBase
         if (hasStunned)
         {
             var cha = state.owner as Character;
-            cha?.SetChaos(2);
+            int recoverChaosValue = state.baseExtraData1 > 0f ? Mathf.RoundToInt(state.baseExtraData1) : 2;
+            cha?.SetChaos(recoverChaosValue);
             state.EndState();
         }
         yield break;

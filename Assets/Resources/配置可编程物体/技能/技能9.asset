@@ -16,8 +16,12 @@ MonoBehaviour:
   description: "\u6307\u5B9A\u654C\u65B9\u5355\u4F4D\uFF0C\u5BF9\u5176\u65BD\u52A0\u4E00\u5C42\u7834\u7532\uFF0C\u5E76\u5BF9\u5176\u9020\u6210\u7B49\u540C\u4E8E\u81EA\u8EAB\u653B\u51FB\u529B150%\u7684\u76F4\u4F24"
   icon: {fileID: 0}
   skillBase: 0
-  skillCoef: 1
+  skillCoef: 1.5
   skillType: 20
+  extraData1: 1
+  extraData2: 0
+  extraData3: 0
+  extraData4: 0
   requiresEnemyTarget: 1
   enemyTargetCount: 1
   requiresAllyTarget: 0

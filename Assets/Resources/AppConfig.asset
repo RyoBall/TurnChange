@@ -13,3 +13,8 @@ MonoBehaviour:
   m_Name: AppConfig
   m_EditorClassIdentifier: 
   CharacterDataCSVPath: Assets/Data/CharacterData.csv
+  EnemyDataCSVPath: Assets/Data/EnemyData.csv
+  CharacterSkillCSVPath: Assets/Data/CharacterSkillData.csv
+  StateDataCSVPath: Assets/Data/StateData.csv
+  CharacterSkillAssetOutputPath: "Assets/Resources/\u914D\u7F6E\u53EF\u7F16\u7A0B\u7269\u4F53/\u6280\u80FD"
+  StateAssetOutputPath: "Assets/Resources/\u914D\u7F6E\u53EF\u7F16\u7A0B\u7269\u4F53/\u72B6\u6001"

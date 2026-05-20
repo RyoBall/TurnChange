@@ -19,8 +19,12 @@ MonoBehaviour:
     \u82E5\u5976\u5988\u5269\u4F59\u751F\u547D\u503C < 30%\uFF1A\u83B7\u5F97\u9988\u8D60\xB7\u5F3A\uFF0C\u9020\u6210\u7684\u4F24\u5BB3\u63D0\u534740%\uFF0C\u9996\u6B21\u9020\u6210\u4F24\u5BB3\u65F6\u989D\u5916\u56DE\u590D\u5976\u5988\u6700\u5927\u751F\u547D\u503C20%\u7684\u751F\u547D\u503C\uFF0C\u6301\u7EED2\u6B21\u884C\u52A8\u3002"
   icon: {fileID: 0}
   skillBase: 0
-  skillCoef: 1
+  skillCoef: 0
   skillType: 23
+  extraData1: 0.7
+  extraData2: 0.3
+  extraData3: 3
+  extraData4: 2
   requiresEnemyTarget: 0
   enemyTargetCount: 1
   requiresAllyTarget: 0

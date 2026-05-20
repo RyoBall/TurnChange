@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: "\u4E34\u754C"
   m_EditorClassIdentifier: 
   durationType: 1
+  defaultTurns: 1
+  defaultActionValue: 250
   maxStacks: 1
   stateType: 25
   isDot: 0
   isDebuff: 0
+  description: "\u4F4E\u8840\u91CF\u65F6\u63D0\u5347\u8F93\u51FA\uFF0C\u5E76\u5728\u6FD2\u6B7B\u65F6\u89E6\u53D1\u4E00\u6B21\u6025\u6551\u56DE\u590D\u3002"
+  baseMultiplier: 1.2
+  baseExtraData1: 0.5
+  baseExtraData2: 0.3
+  baseExtraData3: 0
   atkT: 0
   skillCoefT: 0
   buffMultiplier: 0

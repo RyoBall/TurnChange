@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dd9b37d48325a6429f7b9a47e9ac998, type: 3}
+  m_Name: 单回合减攻
+  m_EditorClassIdentifier: 
+  durationType: 2
+  defaultTurns: 1
+  defaultActionValue: 100
+  maxStacks: 1
+  stateType: 32
+  isDot: 0
+  isDebuff: 1
+  description: 使目标本次行动造成的伤害降低，行动结束后移除。
+  baseMultiplier: 0.4
+  baseExtraData1: 0
+  baseExtraData2: 0
+  baseExtraData3: 0
+  atkT: 0
+  skillCoefT: 0
+  buffMultiplier: 0

@@ -113,6 +113,13 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     void RefreshInformation()
     {
+        if (skillDescriptionText != null)
+        {
+            skillDescriptionText.text = m_skill != null
+                ? (!string.IsNullOrWhiteSpace(m_skill.shortDescription) ? m_skill.shortDescription : m_skill.description)
+                : string.Empty;
+        }
+
         if (skillIcon != null)
         {
             skillIcon.sprite = m_skill != null ? m_skill.icon : null;

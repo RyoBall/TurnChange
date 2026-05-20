@@ -8,7 +8,9 @@ public class AppConfig : ScriptableObject
     public string CharacterDataCSVPath = "Assets/Data/CharacterData.csv";
     public string EnemyDataCSVPath = "Assets/Data/EnemyData.csv";
     public string CharacterSkillCSVPath = "Assets/Data/CharacterSkillData.csv";
-    public string CharacterSkillAssetOutputPath = "Assets/Resources/配置可编程物体/技能";
+    public string StateDataCSVPath = "Assets/Data/StateData.csv";
+    public string CharacterSkillAssetOutputPath = "Assets/Resources/配置可编程物体/角色技能";
+    public string StateAssetOutputPath = "Assets/Resources/配置可编程物体/状态";
 }
 
 // 全局访问

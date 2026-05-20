@@ -12,15 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
   m_Name: "\u8FDB\u573A\u62803"
   m_EditorClassIdentifier: 
-  skillName: "\u8FDB\u573A\u6280"
+  skillName: "\u8FDB\u573A\u62803"
+  shortDescription: "\u8F85\u52A9\u5207\u5165\u51CF\u4F24\u59FF\u6001"
   description: "\u89D2\u8272\u81EA\u8EAB\u83B7\u5F97\u56DB\u5C42\u84C4\u52BF\u9006\u51FB\u5C42\u6570\uFF0C\u8BE5\u6548\u679C\u5728\u5207\u51FA\u540E\u5C42\u6570\u6E05\u96F6\u3002"
   icon: {fileID: 0}
   skillBase: 0
-  skillCoef: 1
+  skillCoef: 0
   skillType: 9
+  extraData1: 4
+  extraData2: 0
+  extraData3: 0
+  extraData4: 0
   requiresEnemyTarget: 0
   enemyTargetCount: 1
   requiresAllyTarget: 0
   allyTargetCount: 1
-  endTurnAfterUse: 0
+  endTurnAfterUse: 1
   cooldownTurns: 0

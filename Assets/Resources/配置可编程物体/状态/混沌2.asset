@@ -12,11 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dd9b37d48325a6429f7b9a47e9ac998, type: 3}
   m_Name: "\u6DF7\u6C8C2"
   m_EditorClassIdentifier: 
-  durationType: 0
+  durationType: 2
+  defaultTurns: 1
+  defaultActionValue: 100
   maxStacks: 1
   stateType: 16
   isDot: 0
   isDebuff: 1
+  description: "\u65E0\u6CD5\u884C\u52A8\u4E00\u6B21\uFF0C\u5E76\u5728\u7ED3\u7B97\u540E\u5C06\u6DF7\u6C8C\u503C\u56DE\u843D\u5230\u6307\u5B9A\u6C34\u5E73\u3002"
+  baseMultiplier: 0
+  baseExtraData1: 2
+  baseExtraData2: 0
+  baseExtraData3: 0
   atkT: 0
   skillCoefT: 0
   buffMultiplier: 0

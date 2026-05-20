@@ -21,10 +21,18 @@ public class BattleEnvironment:ScriptableObject
     private bool isApplied;
     private UnitCombatant applier;
     [System.NonSerialized] private IEnvironmentBehavior m_behavior;
+    [System.NonSerialized] private float runtimeData1;
+    [System.NonSerialized] private float runtimeData2;
+    [System.NonSerialized] private float runtimeData3;
+    [System.NonSerialized] private float runtimeData4;
 
     public int RemainingActionValue => remainingActionValue;
     public bool IsApplied => isApplied;
     public UnitCombatant Applier => applier;
+    public float RuntimeData1 => runtimeData1;
+    public float RuntimeData2 => runtimeData2;
+    public float RuntimeData3 => runtimeData3;
+    public float RuntimeData4 => runtimeData4;
 
     private IEnvironmentBehavior Behavior
     {
@@ -45,7 +53,7 @@ public class BattleEnvironment:ScriptableObject
         m_behavior = null;
     }
 
-    public void ApplyEnvironment(UnitCombatant source = null, int overrideActionValue = -1)
+    public void ApplyEnvironment(UnitCombatant source = null, int overrideActionValue = -1, float extraData1 = 0f, float extraData2 = 0f, float extraData3 = 0f, float extraData4 = 0f)
     {
         if (isApplied)
         {
@@ -53,6 +61,7 @@ public class BattleEnvironment:ScriptableObject
         }
 
         applier = source;
+        SetRuntimeData(extraData1, extraData2, extraData3, extraData4);
         remainingActionValue = overrideActionValue > 0 ? overrideActionValue : defaultDurationActionValue;
         isApplied = true;
 
@@ -64,14 +73,23 @@ public class BattleEnvironment:ScriptableObject
         OnEnvironmentApply();
     }
 
-    public void RefreshDuration(int overrideActionValue = -1)
+    public void RefreshDuration(int overrideActionValue = -1, float extraData1 = 0f, float extraData2 = 0f, float extraData3 = 0f, float extraData4 = 0f)
     {
+        SetRuntimeData(extraData1, extraData2, extraData3, extraData4);
         remainingActionValue = overrideActionValue > 0 ? overrideActionValue : defaultDurationActionValue;
     }
 
     public void SetApplier(UnitCombatant source)
     {
         applier = source;
+    }
+
+    public void SetRuntimeData(float extraData1, float extraData2, float extraData3, float extraData4)
+    {
+        runtimeData1 = extraData1;
+        runtimeData2 = extraData2;
+        runtimeData3 = extraData3;
+        runtimeData4 = extraData4;
     }
 
     public bool TickByActionValue(int actionValueCost)
@@ -249,7 +267,7 @@ public class GravityEnvironmentBehavior : EnvironmentBehaviorBase
             return 1f;
         }
 
-        return 2f;
+        return environment.RuntimeData1 > 0f ? environment.RuntimeData1 : 2f;
     }
 }
 
@@ -259,7 +277,7 @@ public class CutdownEnvironmentBehavior : EnvironmentBehaviorBase
 
     public override void OnEnvironmentApply()
     {
-        m_currentDotBonus = 0.45f;
+        m_currentDotBonus = environment.RuntimeData2 > 0f ? environment.RuntimeData2 : 0.45f;
     }
 
     public override float GetIncomingDamageMultiplier(UnitCombatant attacker, UnitCombatant defender, bool isDotDamage, bool isTrueDamage)
@@ -271,7 +289,7 @@ public class CutdownEnvironmentBehavior : EnvironmentBehaviorBase
 
         if (!isDotDamage)
         {
-            return 0.7f;
+            return environment.RuntimeData1 > 0f ? environment.RuntimeData1 : 0.7f;
         }
 
         return 1f + m_currentDotBonus;
@@ -284,6 +302,7 @@ public class CutdownEnvironmentBehavior : EnvironmentBehaviorBase
             return;
         }
 
-        m_currentDotBonus = Mathf.Max(0f, m_currentDotBonus - 0.15f);
+        float decayStep = environment.RuntimeData3 > 0f ? environment.RuntimeData3 : 0.15f;
+        m_currentDotBonus = Mathf.Max(0f, m_currentDotBonus - decayStep);
     }
 }

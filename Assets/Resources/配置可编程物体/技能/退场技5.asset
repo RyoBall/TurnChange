@@ -21,6 +21,10 @@ MonoBehaviour:
   skillBase: 0
   skillCoef: 1
   skillType: 19
+  extraData1: 2
+  extraData2: 1
+  extraData3: 2
+  extraData4: 2
   requiresEnemyTarget: 0
   enemyTargetCount: 1
   requiresAllyTarget: 0

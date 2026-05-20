@@ -169,13 +169,18 @@ public class UnitCombatant : Combatant
     [SerializeField] protected List<State> states = new List<State>();
 
     public List<State> States => states;
-    public State AddState(StateType stateType, UnitCombatant giver, int duration, int stacks = 1, float skillCoef = 1f)
+    public State AddState(
+        StateType stateType,
+        UnitCombatant giver,
+        int duration,
+        int stacks = 1,
+        float skillCoef = 0f)
     {
         foreach (var tstate in states)
         {
             if (tstate != null && tstate.stateType == stateType)
             {
-                tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks);
+                tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, skillCoef);
                 DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
                 if (tstate.isDebuff)
                 {
@@ -228,8 +233,7 @@ public class UnitCombatant : Combatant
                 states.RemoveAt(i);
                 continue;
             }
-
-            yield return state.TickOnTurnStart();
+            yield return state.OnOwnerTurnStart();
         }
 
         yield return WaitForDeathEvents();
@@ -245,7 +249,7 @@ public class UnitCombatant : Combatant
                 states.RemoveAt(i);
                 continue;
             }
-
+            state.TickOnTurnEnd();
             state.OnOwnerTurnEnd();
         }
     }

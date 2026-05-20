@@ -59,6 +59,8 @@ public static class CharacterSkillImporter
 
             skillAsset.name = skillName;
             skillAsset.skillName = skillName;
+            skillAsset.shortDescription = GetString(row, "Description_Simple", skillAsset.shortDescription);
+            skillAsset.description = GetString(row, "Description", skillAsset.description);
             skillAsset.skillType = skillType;
             skillAsset.skillCoef = GetFloat(row, "SkillCoef", 1f);
             skillAsset.skillBase = Mathf.RoundToInt(GetFloat(row, "SkillBase", 0f));
@@ -66,6 +68,8 @@ public static class CharacterSkillImporter
             skillAsset.enemyTargetCount = Mathf.Max(1, GetInt(row, "RequireEnemyNum", 1));
             skillAsset.requiresAllyTarget = GetBool(row, "IfRequireCharacter");
             skillAsset.allyTargetCount = Mathf.Max(1, GetInt(row, "RequireCharacterNum", 1));
+            skillAsset.endTurnAfterUse = GetBool(row, "EndTurnAfterUse", skillAsset.endTurnAfterUse);
+            skillAsset.cooldownTurns = Mathf.Max(0, GetInt(row, "CoolDown", skillAsset.cooldownTurns));
             skillAsset.extraData1 = GetFloat(row, "Extra_Data_1", 0f);
             skillAsset.extraData2 = GetFloat(row, "Extra_Data_2", 0f);
             skillAsset.extraData3 = GetFloat(row, "Extra_Data_3", 0f);

@@ -19,15 +19,15 @@ MonoBehaviour:
     30%\u3002"
   icon: {fileID: 0}
   skillBase: 0
-  skillCoef: 1
+  skillCoef: 0
   skillType: 24
-  extraData1: 0
-  extraData2: 0
-  extraData3: 0
+  extraData1: 0.25
+  extraData2: 0.6
+  extraData3: 0.3
   extraData4: 0
   requiresEnemyTarget: 0
   enemyTargetCount: 1
-  requiresAllyTarget: 0
+  requiresAllyTarget: 1
   allyTargetCount: 1
   endTurnAfterUse: 0
   cooldownTurns: 0

@@ -29,12 +29,19 @@ public class EnvironmentManager : MonoBehaviour
         }
     }
 
-    public void AddEnvironment(EnvironmentType type, int durationActionValue = -1, UnitCombatant applier = null)
+    public void AddEnvironment(
+        EnvironmentType type,
+        int durationActionValue = -1,
+        UnitCombatant applier = null,
+        float extraData1 = 0f,
+        float extraData2 = 0f,
+        float extraData3 = 0f,
+        float extraData4 = 0f)
     {
         BattleEnvironment existing = GetActiveEnvironment(type);
         if (existing != null)
         {
-            existing.RefreshDuration(durationActionValue);
+            existing.RefreshDuration(durationActionValue, extraData1, extraData2, extraData3, extraData4);
             existing.SetApplier(applier);
             return;
         }
@@ -45,7 +52,7 @@ public class EnvironmentManager : MonoBehaviour
             : ScriptableObject.CreateInstance<BattleEnvironment>();
         newEnvironment.name = environmentTemplate != null ? environmentTemplate.name : type.ToString();
         newEnvironment.environmentType = type;
-        newEnvironment.ApplyEnvironment(applier, durationActionValue);
+        newEnvironment.ApplyEnvironment(applier, durationActionValue, extraData1, extraData2, extraData3, extraData4);
     }
 
     public void RegisterEnvironment(BattleEnvironment environment)
