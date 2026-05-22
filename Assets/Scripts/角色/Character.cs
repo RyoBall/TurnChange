@@ -8,6 +8,7 @@ using System;
 public class Character : UnitCombatant
 
 {
+    public Transform spriteTransform;
     public string characterID;
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;//入场技能，回合开始时自动触发
@@ -33,6 +34,10 @@ public class Character : UnitCombatant
     [Header("动画精灵")]
     [SerializeField] private List<SpriteRenderer> spriteRenderer;
     [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
+    [Header("位移动画")]
+    [SerializeField] private float moveAnimDuration = 0.5f;
+    [SerializeField] private Ease moveAnimEase = Ease.InOutSine;
+    private Vector3 m_originalPosition;
     private void Start()
     {
         InitializeSkill();
@@ -49,9 +54,9 @@ public class Character : UnitCombatant
         TickSkillCooldowns();
         HandleChaosTurnStart();
         //结算状态
-        enterFeedback?.PlayFeedbacks();
-        yield return new WaitForSeconds(enterFeedback?.TotalDuration ?? 0f);
         yield return ProcessStatesOnTurnStart();
+        EnterMoveDOT();
+        yield return new WaitForSeconds(moveAnimDuration);
 
         if (chaosValue >= MaxChaosValue)
         {
@@ -78,8 +83,8 @@ public class Character : UnitCombatant
         //等待死亡动画结束
         yield return WaitForDeathEvents();
         //结束玩家回合的内容
-        yield return TurnStateManager.Instance.ChangeState(TurnState.OutCharacterTurn, this);
-        yield return new WaitForSeconds(0.2f);
+        ExitMoveDOT();
+        yield return new WaitForSeconds(moveAnimDuration + 0.2f); 
     }
     public void EndTurn()
     {
@@ -155,7 +160,16 @@ public class Character : UnitCombatant
         UpdateChaosStates();
         return reducedValue;
     }
-
+    private void EnterMoveDOT()
+    {
+        m_originalPosition = transform.position;
+        transform.DOMove(new Vector3(0,0,-7), moveAnimDuration).SetEase(moveAnimEase);
+    }
+    private void ExitMoveDOT()
+    {
+        transform.DOMove(m_originalPosition, moveAnimDuration).SetEase(moveAnimEase);
+        m_originalPosition = Vector3.zero;
+    }
     /// <summary>
     /// 根据当前混沌值自动添加/移除混沌半效和眩晕状态
     /// </summary>
@@ -420,6 +434,8 @@ public class Character : UnitCombatant
         currentHP = maxHP;
         attack = levelData.attack;
         defense = levelData.defense;
+        critRate = levelData.critRate;
+        critDamage = levelData.critDamage;
         K = levelData.K;
     }
 }

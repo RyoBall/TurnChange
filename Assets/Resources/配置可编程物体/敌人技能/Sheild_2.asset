@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Sheild_2
   m_EditorClassIdentifier: 
   skillName: "\u76FE\u51FB"
+  shortDescription: 
   description: 
   icon: {fileID: 0}
   skillBase: 0
-  skillCoef: 1
+  skillCoef: 0.2
   enemySkillType: 2

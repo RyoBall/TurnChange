@@ -20,10 +20,10 @@ MonoBehaviour:
   isDot: 0
   isDebuff: 0
   description: "\u9020\u6210\u4F24\u5BB3\u65F6\u56DE\u590D\u751F\u547D\u5E76\u6D88\u8017\u5C42\u6570\uFF1B\u66B4\u51FB\u65F6\u83B7\u5F97\u989D\u5916\u56DE\u590D\u3002"
-  baseMultiplier: 0.2
+  skillCoef: 0
   baseExtraData1: 0.1
-  baseExtraData2: 0
+  baseExtraData2: 0.2
   baseExtraData3: 0
+  baseExtraData4: 0
   atkT: 0
-  skillCoefT: 0
   buffMultiplier: 0

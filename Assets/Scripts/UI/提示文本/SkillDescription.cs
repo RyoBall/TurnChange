@@ -40,7 +40,7 @@ public class SkillDescription : MonoBehaviour
         currentSequence = DOTween.Sequence();
         if (skill != null)
         {
-            skillDesText.text = skill.description;
+            skillDesText.text = skill.shortDescription;
             currentSequence.Join(canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
             currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
         }

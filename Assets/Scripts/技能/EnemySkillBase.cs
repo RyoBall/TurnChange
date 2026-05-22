@@ -20,6 +20,11 @@ public class EnemySkillBase : SkillBase
 {
     public EnemySkillType enemySkillType;
 
+    private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
+    {
+        State.NotifyCombatEvent(unitCombatant, StateCombatEventType.DamageSkillUsed);
+    }
+
     public override IEnumerator Execute(UnitCombatant unitCombatant)
     {
         if (unitCombatant == null) yield break;
@@ -80,6 +85,7 @@ public class EnemySkillBase : SkillBase
     // 1.护盾手 技能二
     private IEnumerator ShieldSupport_2(Enemy self)
     {
+        NotifyDamageSkillUsed(self);
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         foreach (var ally in allies)
         {
@@ -95,6 +101,7 @@ public class EnemySkillBase : SkillBase
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
+        NotifyDamageSkillUsed(self);
         var damageInfo = DamageCounter.CountDamage(self, target, this, true);
         target.TakeDamage(damageInfo);
         target.TryAddChaos(1);
@@ -134,7 +141,7 @@ public class EnemySkillBase : SkillBase
                 yield return StartExploder(self);
                 yield break;
             }
-            FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动失败...");
+            FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动失败...",true);
         }
         else if (self.explodeState == ExplodeType.hasStarted)
         {
@@ -160,6 +167,7 @@ public class EnemySkillBase : SkillBase
 
     private IEnumerator ExploderBurst(Enemy self)
     {
+        NotifyDamageSkillUsed(self);
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         foreach (var ally in allies)
         {

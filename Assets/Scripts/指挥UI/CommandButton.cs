@@ -78,8 +78,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             Debug.LogWarning($"[CommandButton] {name} 未绑定技能或角色");
             return;
         }
-
-        SkillExecuteManager.ExecuteSkill(m_owner, m_skill);
+        SkillExecuteManager.ExecuteSkill(m_owner, m_skill, m_skill is CommandSkillBase);
     }
 
     public void OnPointerEnter(PointerEventData eventData)

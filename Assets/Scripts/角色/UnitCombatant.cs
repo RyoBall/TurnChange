@@ -6,7 +6,7 @@ using MoreMountains.Feedbacks;
 public class UnitCombatant : Combatant
 {
     [Header("标签")]
-    [SerializeField] protected bool dead=false;
+    [SerializeField] protected bool dead = false;
     public bool IsDead => dead;
     [Header("属性")]
     public int level;//先写在这里，理论上应该写在角色管理器
@@ -22,6 +22,7 @@ public class UnitCombatant : Combatant
     public int currentShield;
     [Header("MMF引用")]
     [SerializeField] protected MMF_Player enterFeedback;
+    [SerializeField] protected MMF_Player exitFeedback;
     [SerializeField] protected MMF_Player hitFeedback;
     [SerializeField] protected MMF_Player actionFeedback;
     [SerializeField] protected MMF_Player dieFeedback;
@@ -82,6 +83,7 @@ public class UnitCombatant : Combatant
         {
             damageInfo.Damage = 0;
         }
+        State.RecordCombatDamage(damageInfo.Source, this, damageInfo.IsDotDamage);
         int finalDamage = damageInfo.Damage;
         //结算盾值
         finalDamage = ConsumeShield(finalDamage);
@@ -137,7 +139,7 @@ public class UnitCombatant : Combatant
 
     public static IEnumerator WaitForPendingDeaths()
     {
-        yield return CombatantDeathMonitor.CheckDeathsAndWait();    
+        yield return CombatantDeathMonitor.CheckDeathsAndWait();
     }
 
     protected IEnumerator WaitForDeathEvents()
@@ -157,7 +159,7 @@ public class UnitCombatant : Combatant
 
     public override void ChangeActionValue(float delta, bool ifChangePos = true)
     {
-        if(dead)
+        if (dead)
         {
             return;
         }
@@ -197,7 +199,7 @@ public class UnitCombatant : Combatant
             return null;
         }
 
-        State state = Instantiate(stateTemplate);   
+        State state = Instantiate(stateTemplate);
         state.name = stateTemplate.name;
         states.Add(state);
         state.Mount(this, giver, skillCoef, duration, stacks);
@@ -225,18 +227,26 @@ public class UnitCombatant : Combatant
 
     public IEnumerator ProcessStatesOnTurnStart()
     {
-        for (int i = states.Count - 1; i >= 0; i--)
+        State.BeginTurnStartStateSettlement(this);
+        try
         {
-            State state = states[i];
-            if (state == null)
+            for (int i = states.Count - 1; i >= 0; i--)
             {
-                states.RemoveAt(i);
-                continue;
+                State state = states[i];
+                if (state == null)
+                {
+                    states.RemoveAt(i);
+                    continue;
+                }
+                yield return state.OnOwnerTurnStart();
             }
-            yield return state.OnOwnerTurnStart();
-        }
 
-        yield return WaitForDeathEvents();
+            yield return WaitForDeathEvents();
+        }
+        finally
+        {
+            State.EndTurnStartStateSettlement(this);
+        }
     }
 
     public void ProcessStatesOnTurnEnd()

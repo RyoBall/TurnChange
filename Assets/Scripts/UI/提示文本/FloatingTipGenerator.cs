@@ -76,10 +76,12 @@ public class FloatingTipGenerator : MonoBehaviour
     }
     public void ShowDefaultTip(string message) 
     {
-        ShowTipAtObject(pos, message);
+        ShowTipAtObject(pos, message,true);
     }
-    public void ShowTipAtObject(Transform targetTransform, string message)
+    public void ShowTipAtObject(Transform targetTransform, string message,bool ifUse=false)
     {
+        if(!ifUse)
+        return;
         if (targetTransform == null)
         {
             Debug.LogError("目标Transform为空，无法生成提示文本。");

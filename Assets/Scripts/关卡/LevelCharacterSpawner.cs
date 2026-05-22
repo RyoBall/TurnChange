@@ -34,7 +34,8 @@ public class LevelCharacterSpawner : MonoBehaviour
         spawnedFieldCharacters = new List<Character>();
         spawnedEnemies = new List<Enemy>();
 
-        var fieldIdSet = new HashSet<string>();
+        var fieldOrderByData = new Dictionary<CharacterRosterData, int>();
+        var fieldOrderByTag = new Dictionary<string, Queue<int>>();
         if (fieldPlayerCharacters != null)
         {
             for (int i = 0; i < fieldPlayerCharacters.Count; i++)
@@ -45,30 +46,33 @@ public class LevelCharacterSpawner : MonoBehaviour
                     continue;
                 }
 
-                string fieldTag = string.IsNullOrEmpty(fieldData.characterName)
-                    ? fieldData.characterID
-                    : fieldData.characterName;
+                fieldOrderByData[fieldData] = i;
+
+                string fieldTag = GetCharacterTag(fieldData);
                 if (!string.IsNullOrEmpty(fieldTag))
                 {
-                    fieldIdSet.Add(fieldTag);
+                    if (!fieldOrderByTag.TryGetValue(fieldTag, out Queue<int> orderQueue))
+                    {
+                        orderQueue = new Queue<int>();
+                        fieldOrderByTag[fieldTag] = orderQueue;
+                    }
+
+                    orderQueue.Enqueue(i);
                 }
             }
         }
 
-        int fieldIndex = 0;
         int reserveIndex = 0;
+        var consumedFieldOrders = new HashSet<int>();
         if (allPlayerCharacters != null)
         {
             for (int i = 0; i < allPlayerCharacters.Count; i++)
             {
                 CharacterRosterData data = allPlayerCharacters[i];
-                string characterTag = data == null
-                    ? string.Empty
-                    : (string.IsNullOrEmpty(data.characterName) ? data.characterID : data.characterName);
+                int fieldOrderIndex = ResolveFieldOrderIndex(data, fieldOrderByData, fieldOrderByTag, consumedFieldOrders);
                 Character character = SpawnCharacter(
                     data,
-                    fieldIdSet.Contains(characterTag),
-                    ref fieldIndex,
+                    fieldOrderIndex,
                     ref reserveIndex);
 
                 if (character == null)
@@ -110,7 +114,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         m_spawnedObjects.Clear();
     }
 
-    private Character SpawnCharacter(CharacterRosterData data, bool isFieldCharacter, ref int fieldIndex, ref int reserveIndex)
+    private Character SpawnCharacter(CharacterRosterData data, int fieldOrderIndex, ref int reserveIndex)
     {
         if (data == null)
         {
@@ -124,9 +128,10 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        int assignedStandPosition = isFieldCharacter ? fieldIndex + 1 : int.MaxValue;
+        bool isFieldCharacter = fieldOrderIndex >= 0;
+        int assignedStandPosition = isFieldCharacter ? fieldOrderIndex + 1 : int.MaxValue;
         Transform spawnPoint = isFieldCharacter
-            ? GetSpawnPoint(playerFieldSpawnPoints, fieldIndex++)
+            ? GetSpawnPoint(playerFieldSpawnPoints, fieldOrderIndex)
             : GetSpawnPoint(playerReserveSpawnPoints, reserveIndex++);
         Transform parent = isFieldCharacter ? playerRoot : reserveRoot;
 
@@ -172,6 +177,50 @@ public class LevelCharacterSpawner : MonoBehaviour
         ConfigureEnemy(instance, data, EnemyStandPositionStart + index);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
+    }
+
+    private int ResolveFieldOrderIndex(
+        CharacterRosterData data,
+        Dictionary<CharacterRosterData, int> fieldOrderByData,
+        Dictionary<string, Queue<int>> fieldOrderByTag,
+        HashSet<int> consumedFieldOrders)
+    {
+        if (data == null)
+        {
+            return -1;
+        }
+
+        if (fieldOrderByData.TryGetValue(data, out int directOrder) && consumedFieldOrders.Add(directOrder))
+        {
+            return directOrder;
+        }
+
+        string characterTag = GetCharacterTag(data);
+        if (string.IsNullOrEmpty(characterTag) || !fieldOrderByTag.TryGetValue(characterTag, out Queue<int> orderQueue))
+        {
+            return -1;
+        }
+
+        while (orderQueue.Count > 0)
+        {
+            int queuedOrder = orderQueue.Dequeue();
+            if (consumedFieldOrders.Add(queuedOrder))
+            {
+                return queuedOrder;
+            }
+        }
+
+        return -1;
+    }
+
+    private string GetCharacterTag(CharacterRosterData data)
+    {
+        if (data == null)
+        {
+            return string.Empty;
+        }
+
+        return string.IsNullOrEmpty(data.characterName) ? data.characterID : data.characterName;
     }
 
     private void ConfigureCharacter(Character instance, CharacterRosterData data, bool participateInTurnLoop, int standPosition)

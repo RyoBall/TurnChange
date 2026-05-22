@@ -12,13 +12,17 @@ public class TurnImage : MonoBehaviour
 
     public float CurrentLayoutScale { get; private set; } = 1f;
 
-    private RectTransform rectTransform;
+    [SerializeField] private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
     private Tween moveTween;
-
+    [SerializeField] private Sprite enemySprite;
+    [SerializeField] private Sprite playerSprite;
     private void Awake()
     {
-        rectTransform = transform as RectTransform;
+        if (rectTransform == null)
+        {
+            rectTransform = transform as RectTransform;
+        }
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
         {
@@ -39,7 +43,14 @@ public class TurnImage : MonoBehaviour
         {
             canvasGroup.alpha = 0f;
         }
-
+        if(combatant is Enemy)
+        {
+            GetComponent<Image>().sprite = enemySprite;
+        }
+        else
+        {
+            GetComponent<Image>().sprite = playerSprite;    
+        }
         CurrentLayoutScale = initialScale;
         transform.localScale = Vector3.one;
     }
@@ -106,11 +117,11 @@ public class TurnImage : MonoBehaviour
         transform.localScale = Vector3.one * scale;
     }
 
-    // 使用尺寸变化驱动布局缩放，而不是直接缩放 transform，避免列表间距在动画中失真。
+    // 直接缩放Scale
     public void SetLayoutScale(Vector2 baseSize, float scale)
     {
         CurrentLayoutScale = scale;
-        rectTransform.sizeDelta = baseSize * Mathf.Max(0f, scale);
+        rectTransform.localScale = Vector3.one * scale;
     }
 
     public Tween MoveTo(Vector2 position, float duration)

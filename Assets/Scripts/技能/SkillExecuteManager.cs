@@ -8,14 +8,14 @@ public static class SkillExecuteManager
     public static event System.Action<UnitCombatant, SkillBase> OnSkillExecuted;
 
 
-    public static void ExecuteSkill(UnitCombatant unit, SkillBase skill)
+    public static void ExecuteSkill(UnitCombatant unit, SkillBase skill,bool ifCouldInsert=false)
     {
-        CoroutineHelper.GetHelper().StartCoroutine(ExecuteSkillCoroutine(unit, skill));
+        CoroutineHelper.GetHelper().StartCoroutine(ExecuteSkillCoroutine(unit, skill,ifCouldInsert));
     }
 
-    private static IEnumerator ExecuteSkillCoroutine(UnitCombatant unit, SkillBase skill)
+    private static IEnumerator ExecuteSkillCoroutine(UnitCombatant unit, SkillBase skill,bool ifCouldInsert=false)
     {
-        if (s_isExecutingSkill)
+        if (s_isExecutingSkill&&!ifCouldInsert)
         {
             FloatingTipGenerator.Instance.ShowDefaultTip("正在执行技能，请稍后...");
             yield break;

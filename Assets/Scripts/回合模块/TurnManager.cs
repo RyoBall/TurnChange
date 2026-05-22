@@ -72,7 +72,7 @@ public class TurnManager : MonoBehaviour
     IEnumerator StartFight()
     {
         //在此处插入需要在回合进行前进行的事情
-
+        yield return new WaitUntil(() => CinemachineCameraManager.Instance == null || CinemachineCameraManager.Instance.HasCompletedOpeningIntro);
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
         yield return StartCoroutine(TriggerOpeningEnterSkills());

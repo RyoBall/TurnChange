@@ -159,7 +159,7 @@ public class CommandPointSlotUI : MonoBehaviour
                 continue;
             }
 
-            image.color = currentValue <= i ? Color.white : Color.black;
+            image.color = currentValue <= i ? Color.black : Color.grey;
         }
     }
 }

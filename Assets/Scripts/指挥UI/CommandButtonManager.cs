@@ -13,8 +13,10 @@ public class CommandButtonManager : MonoBehaviour
     public float buttonMoveSpacing = 0.1f; // 按钮移动的间隔时间
     public float buttonMoveDistance = 50f; // 按钮移动的距离
     public float fadeDuration = 0.25f; // 单个按钮淡入/淡出时间
+    public Vector2 buttonFinalPos; // 按钮容器最终落位偏移
 
     private List<Vector2> m_initialAnchoredPositions;//所有按钮的起始位置(显示的位置)
+    private RectTransform m_defaultContainerParent;
 
     private void Awake()
     {
@@ -24,7 +26,7 @@ public class CommandButtonManager : MonoBehaviour
             return;
         }
 
-        Instance = this;    
+        Instance = this;
     }
 
     void Start()
@@ -182,26 +184,16 @@ public class CommandButtonManager : MonoBehaviour
         }
 
         if (character == null || buttonContainer == null)
-            return;
-
-        var worldCamera = Camera.main;
-        if (worldCamera == null)
-            return;
-
-        var screenPos = worldCamera.WorldToScreenPoint(character.transform.position);
-        var parentRect = buttonContainer.parent as RectTransform;
-        if (parentRect == null)
-            return;
-
-        var canvas = buttonContainer.GetComponentInParent<Canvas>();
-        Camera uiCamera = null;
-        if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
         {
-            uiCamera = canvas.worldCamera != null ? canvas.worldCamera : worldCamera;
+            RestoreDefaultContainerParent();
+            return;
         }
 
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPos, uiCamera, out Vector2 localPoint);
-        buttonContainer.anchoredPosition = localPoint;
+        if (TryAttachToCharacterCanvas(character))
+        {
+            buttonContainer.anchoredPosition = buttonFinalPos;
+            return;
+        }
     }
     /*private void ConfigureCommandButtons()
     {
@@ -238,6 +230,45 @@ public class CommandButtonManager : MonoBehaviour
 
             var rect = button.GetComponent<RectTransform>();
             m_initialAnchoredPositions.Add(rect != null ? rect.anchoredPosition : Vector2.zero);
+        }
+    }
+
+    private bool TryAttachToCharacterCanvas(Character character)
+    {
+        var characterCanvasRect = ResolveCharacterCanvasRect(character);
+        if (characterCanvasRect == null || buttonContainer == null)
+            return false;
+
+        if (buttonContainer.parent != characterCanvasRect)
+        {
+            buttonContainer.SetParent(characterCanvasRect, false);
+        }
+
+        return true;
+    }
+
+    private RectTransform ResolveCharacterCanvasRect(Character character)
+    {
+        if (character == null)
+            return null;
+
+        var canvas = character.GetComponentInChildren<Canvas>(true);
+        if (canvas == null && character.spriteTransform != null)
+        {
+            canvas = character.spriteTransform.GetComponentInChildren<Canvas>(true);
+        }
+
+        return canvas != null ? canvas.GetComponent<RectTransform>() : null;
+    }
+
+    private void RestoreDefaultContainerParent()
+    {
+        if (buttonContainer == null || m_defaultContainerParent == null)
+            return;
+
+        if (buttonContainer.parent != m_defaultContainerParent)
+        {
+            buttonContainer.SetParent(m_defaultContainerParent, false);
         }
     }
 

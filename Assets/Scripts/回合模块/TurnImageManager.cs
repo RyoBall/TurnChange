@@ -280,7 +280,7 @@ public class TurnImageManager : MonoBehaviour
                 targetScale = normalScale;
             }
             sequence.Join(TweenAlpha(turnImage, 0f, 1f, moveDuration, fadeEase)).SetDelay(enterDelay * c);
-            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase,0)).SetDelay(enterDelay * c).OnUpdate(() => Debug.Log($"Updating layout scale for {turnImage.combatant.combatantName} to {turnImage.CurrentLayoutScale}"));
+            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase,0)).SetDelay(enterDelay * c);
             sequence.Join(turnImage.MoveTo(targetPositions[turnImage], moveDuration).SetEase(moveEase).SetDelay(enterDelay * c));
             c++;
         }
@@ -342,6 +342,7 @@ public class TurnImageManager : MonoBehaviour
         sequence.Join(TweenAlpha(turnImage, startAlpha, endAlpha, fadeDuration, fadeEase));
         sequence.Join(turnImage.MoveTo(new Vector2(endX, turnImage.GetAnchoredPosition().y), moveDuration).SetEase(moveEase));
         sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
+        
 
         turnImage.SetAlpha(startAlpha);
         turnImage.SetLayoutScale(cellSize, startScale);

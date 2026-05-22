@@ -60,10 +60,11 @@ public static class StateImporter
             stateAsset.name = stateName;
             stateAsset.stateType = stateType;
             stateAsset.description = GetString(row, "Description", stateAsset.description);
-            stateAsset.baseMultiplier = GetFloat(row, "BaseMultiplier", 0f);
+            stateAsset.skillCoef = GetFloat(row, "BaseMultiplier", 0f);
             stateAsset.baseExtraData1 = GetFloat(row, "Extra_Data_1", 0f);
             stateAsset.baseExtraData2 = GetFloat(row, "Extra_Data_2", 0f);
             stateAsset.baseExtraData3 = GetFloat(row, "Extra_Data_3", 0f);
+            stateAsset.baseExtraData4 = GetFloat(row, "Extra_Data_4", 0f);
             stateAsset.isDebuff = GetBool(row, "IsDebuff");
             stateAsset.isDot = GetBool(row, "IsDot");
 

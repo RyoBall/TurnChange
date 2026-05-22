@@ -1,8 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEngine;
-
+public enum SkillTargetType
+{
+    Enemy,
+    Ally,
+    Other
+}
 public enum CharacterSkillType
 {
     Change,
@@ -36,6 +42,7 @@ public enum CharacterSkillType
 [CreateAssetMenu(fileName = "NewSkill", menuName = "技能/CharacterSkill"), System.Serializable]
 public class CharacterSkillBase : SkillBase
 {
+    public SkillTargetType skillTargetType;
     public CharacterSkillType skillType;
     [Header("额外参数")]
     public float extraData1;
@@ -57,6 +64,11 @@ public class CharacterSkillBase : SkillBase
     public int cooldownTurns = 0;
 
     private readonly Dictionary<Character, int> m_runtimeCooldown = new Dictionary<Character, int>();
+
+    private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
+    {
+        State.NotifyCombatEvent(unitCombatant, StateCombatEventType.DamageSkillUsed);
+    }
 
     public override IEnumerator Execute(UnitCombatant unitCombatant)
     {
@@ -102,6 +114,29 @@ public class CharacterSkillBase : SkillBase
         }
 
         bool shouldEndTurn = endTurnAfterUse;
+        //技能镜头过渡
+        CinemachineCameraManager cameraManager = CinemachineCameraManager.Instance;
+        bool useSkillCameraTransition = cameraManager != null;
+        if (useSkillCameraTransition && shouldEndTurn)
+        {
+            //使按钮取消
+            TurnStateManager.Instance.ChangeState(TurnState.OutCharacterTurn, unitCombatant as Character);
+            if (skillTargetType == SkillTargetType.Enemy)
+            {
+                yield return cameraManager.TransitionIntoSkillCamera(ManagedCameraType.Attack);
+            }
+            else if (skillTargetType == SkillTargetType.Ally)
+            {
+                yield return cameraManager.TransitionIntoSkillCamera(ManagedCameraType.Help);
+            }
+            FloatingTipGenerator.Instance.ShowDefaultTip(SkillDictionaryManager.GetSkillName(skillType));
+            //动画占位
+            yield return new WaitForSeconds(0.5f);
+        }
+        else
+        {
+            FloatingTipGenerator.Instance.ShowDefaultTip(SkillDictionaryManager.GetSkillName(skillType));
+        }
 
         switch (skillType)
         {
@@ -181,6 +216,14 @@ public class CharacterSkillBase : SkillBase
                 yield return HealerSkillTwo(character, selectedCharacters);
                 break;
         }
+        //受击动画占位
+        yield return new WaitForSeconds(0.5f);
+
+        if (useSkillCameraTransition && shouldEndTurn)
+        {
+            yield return cameraManager.TransitionOutOfSkillCamera();
+        }
+
         StartCooldown(character);
         if (shouldEndTurn)
         {
@@ -202,43 +245,51 @@ public class CharacterSkillBase : SkillBase
     private IEnumerator ExitSkillOne(Character character)
     {
         float dotTriggerMultiplier = extraData1;
+        NotifyDamageSkillUsed(character);
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的离场技能触发，结算dot伤害");
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
-        foreach (var enemy in enemies)
+        State.RunDotTriggerEvent(character, () =>
         {
-            if (enemy != null)
+            foreach (var enemy in enemies)
             {
-                foreach (var state in enemy.States)
+                if (enemy != null)
                 {
-                    if (state.isDot)
+                    foreach (var state in enemy.States)
                     {
-                        state.DotTrigger(dotTriggerMultiplier);
+                        if (state.isDot)
+                        {
+                            state.DotTrigger(dotTriggerMultiplier);
+                        }
                     }
                 }
             }
-        }
+        });
         yield break;
     }
     private IEnumerator ExecuteAllAttack(Character character)
     {
         int dotDuration = Mathf.RoundToInt(extraData1);
         float refreshMultiplier = extraData2;
+        NotifyDamageSkillUsed(character);
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
-        foreach (var enemy in enemies)
+        State.RunDotTriggerEvent(character, () =>
         {
-            if (enemy != null)
+            foreach (var enemy in enemies)
             {
-                var damageInfo = DamageCounter.CountDamage(character, enemy, this);
-                enemy.TakeDamage(damageInfo);
-                bool hadSeqFlame = enemy.HasState(StateType.SeqFlame);
-                State state = enemy.AddState(StateType.SeqFlame, character, dotDuration, 1);
-
-                if (hadSeqFlame)
+                if (enemy != null)
                 {
-                    state.DotTrigger(refreshMultiplier);
+                    var damageInfo = DamageCounter.CountDamage(character, enemy, this);
+                    enemy.TakeDamage(damageInfo);
+                    bool hadSeqFlame = enemy.HasState(StateType.SeqFlame);
+                    State state = enemy.AddState(StateType.SeqFlame, character, dotDuration, 1);
+
+                    if (hadSeqFlame)
+                    {
+                        state.DotTrigger(refreshMultiplier);
+                    }
                 }
             }
-        }
+        });
         GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
         yield break;
     }
@@ -316,26 +367,30 @@ public class CharacterSkillBase : SkillBase
         int dotDuration = Mathf.RoundToInt(extraData2);
         float dotSkillCoef = extraData1;
         float refreshMultiplier = extraData3;
+        NotifyDamageSkillUsed(character);
 
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
-        foreach (var enemy in enemies)
+        State.RunDotTriggerEvent(character, () =>
         {
-            if (enemy == null)
+            foreach (var enemy in enemies)
             {
-                continue;
-            }
+                if (enemy == null)
+                {
+                    continue;
+                }
 
-            var damageInfo = DamageCounter.CountDamage(character, enemy, this);
-            enemy.TakeDamage(damageInfo);
+                var damageInfo = DamageCounter.CountDamage(character, enemy, this);
+                enemy.TakeDamage(damageInfo);
 
-            StateType dotType = PickRandomDotState(enemy);
-            bool hadDot = enemy.HasState(dotType);
-            State state = enemy.AddState(dotType, character, dotDuration, 1, dotSkillCoef);
-            if (hadDot && state != null)
-            {
-                state.DotTrigger(refreshMultiplier);
+                StateType dotType = PickRandomDotState(enemy);
+                bool hadDot = enemy.HasState(dotType);
+                State state = enemy.AddState(dotType, character, dotDuration, 1, dotSkillCoef);
+                if (hadDot && state != null)
+                {
+                    state.DotTrigger(refreshMultiplier);
+                }
             }
-        }
+        });
         GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
         yield break;
     }
@@ -353,15 +408,19 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
         bool ifAttack = false;
-        foreach (var state in target.States)
+        State.RunDotTriggerEvent(character, () =>
         {
-            if (state != null && state.isDot)
+            foreach (var state in target.States)
             {
-                ifAttack = true;
-                state.DotTrigger();
+                if (state != null && state.isDot)
+                {
+                    ifAttack = true;
+                    state.DotTrigger();
+                }
             }
-        }
+        });
         target.AddState(StateType.ElementalDetonation, character, Mathf.RoundToInt(extraData1));
         if (ifAttack)
         {
@@ -455,7 +514,7 @@ public class CharacterSkillBase : SkillBase
         {
             target.AddState(StateType.NextActionDamageBoost, character, 1, 1, 1f + nextActionDamageBoost);
         }
-        
+
         target.ChangeActionValue(target.currentActionValue - target.currentActionValue * advanceRatio);
         yield break;
     }
@@ -494,6 +553,8 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
+
         //斩杀
         float normalExecuteThreshold = extraData1;
         float bossExecuteThreshold = extraData2;
@@ -507,7 +568,7 @@ public class CharacterSkillBase : SkillBase
         float normalHpCoef = extraData3;
         float bossHpCoef = extraData4;
         float hpCoef = IsBoss(target) ? bossHpCoef : normalHpCoef;
-        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef,this.skillBase+Mathf.RoundToInt(target.maxHP * hpCoef), true,false,true);
+        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), true, false, true);
         target.TakeDamage(damageInfo);
         yield break;
     }
@@ -520,6 +581,8 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
+
         float normalCoef = skillCoef;
         float debuffCoef = extraData1;
         float coef = HasAnyDebuff(target) ? debuffCoef : normalCoef;
@@ -528,7 +591,7 @@ public class CharacterSkillBase : SkillBase
         var damageInfo = DamageCounter.CountDamage(character, target, coef, skillBase, false, true, true, out isCrit);
 
         target.TakeDamage(damageInfo);
-
+        //在这里添加额外伤害的逻辑，基于暴击与否以及目标身上的状态
         State berserkState = character.GetState(StateType.BerserkFeast);
         if (berserkState != null && isCrit && target.currentHP > 0)
         {
@@ -568,7 +631,6 @@ public class CharacterSkillBase : SkillBase
         int durationActionValue = Mathf.RoundToInt(extraData1);
         EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.DesperationField, durationActionValue, character);
         character.AddState(StateType.BloodBath, character, durationActionValue);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(character.transform, $"{character.name}展开绝境域场");
         yield break;
     }
 
@@ -620,6 +682,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
         foreach (var enemy in enemies)
         {
             if (enemy == null)
@@ -641,6 +704,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
         int armorBreakStacks = Mathf.Max(1, Mathf.RoundToInt(extraData1));
         target.AddState(StateType.ArmorBreak, character, 99, armorBreakStacks);
         var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, false, true, true);
@@ -655,6 +719,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
         int selfDamage = Mathf.RoundToInt(character.maxHP * extraData1);
         if (character.currentHP <= selfDamage)
         {
@@ -732,6 +797,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
         int healAmount = Mathf.RoundToInt(character.maxHP * extraData1);
         if (target.HasState(StateType.BurningBlood) || target.HasState(StateType.BloodBath))
         {
@@ -753,6 +819,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        NotifyDamageSkillUsed(character);
         int selfDamage = Mathf.RoundToInt(character.maxHP * extraData1);
         character.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, character).AsTrueDamage());
 
@@ -795,7 +862,7 @@ public class CharacterSkillBase : SkillBase
             target.TakeDamage(chainDamage);
             previousHitCrit = isCrit;
             chainCount++;
-            yield return null;
+            yield return new WaitForSeconds(0.1f);
         }
     }
 
