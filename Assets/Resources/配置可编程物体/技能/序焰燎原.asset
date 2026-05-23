@@ -1,31 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: "\u5E8F\u7130\u71CE\u539F"
-  m_EditorClassIdentifier: 
-  skillName: "\u5E8F\u7130\u71CE\u539F"
-  shortDescription: "\u5BF9\u654C\u65B9\u5168\u4F53\u9020\u6210\u4E2D\u91CF\u76F4\u63A5\u4F24\u5BB3\uFF0C\u5E76\u65BD\u52A0\u5E8F\u7130\uFF0C\u6301\u7EED2\u56DE\u5408\u3002\u82E5\u76EE\u6807\u5DF2\u6301\u6709\u5E8F\u7130\uFF0C\u5219\u7ACB\u5373\u8FFD\u52A0\u4E00\u6B21\u4E2D\u91CF\u4F24\u5BB3\u5E76\u5237\u65B0\u72B6\u6001\u3002"
-  description: "\u5BF9\u5168\u4F53\u654C\u65B9\u5355\u4F4D\u9020\u6210\u5927\u91CF\u7684\u76F4\u63A5\u4F24\u5BB3\uFF0C\u5E76\u4F7F\u5404\u5355\u4F4D\u83B7\u5F97\u5E8F\u7130\u7684\u8D1F\u9762\u6301\u7EED\u4F24\u5BB3\u72B6\u6001\uFF0C\u6301\u7EED\u4E24\u56DE\u5408\u3002\u82E5\u5DF2\u6709\u8BE5\u72B6\u6001\u6548\u679C\uFF0C\u5219\u7ACB\u5373\u89E6\u53D1\u4E00\u6B21\u8BE5\u6548\u679C\u539F\u4F24\u5BB3\u768460%\u7ED3\u7B97\uFF0C\u5E76\u7ACB\u5373\u5237\u65B0\u72B6\u6001\u6548\u679C\u3002"
-  icon: {fileID: 0}
-  skillBase: 15
-  skillCoef: 0.12
-  skillType: 3
-  extraData1: 2
-  extraData2: 0.6
-  extraData3: 0
-  extraData4: 0
-  requiresEnemyTarget: 0
-  enemyTargetCount: 1
-  requiresAllyTarget: 0
-  allyTargetCount: 1
-  endTurnAfterUse: 1
-  cooldownTurns: 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:612a6d4fa04398633ad72b54d2bd0942c12b16512c73848d42c8c226c336590d
+size 1541

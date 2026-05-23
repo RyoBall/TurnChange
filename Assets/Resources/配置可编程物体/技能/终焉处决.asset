@@ -1,31 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 818e96c1b92a9ea4d8fa357816e34ff4, type: 3}
-  m_Name: "\u7EC8\u7109\u5904\u51B3"
-  m_EditorClassIdentifier: 
-  skillName: "\u7EC8\u7109\u5904\u51B3"
-  shortDescription: "\u5BF9\u654C\u65B9\u5355\u4F53\u9020\u6210\u5176\u6700\u5927\u751F\u547D\u503C6%\uFF08\u5BF9\u9996\u9886\u4E3A3%\uFF09\u7684\u771F\u5B9E\u4F24\u5BB3\uFF0C\u5E76\u9644\u52A0\u5DE8\u989D\u989D\u5916\u771F\u5B9E\u4F24\u5BB3\u3002\u82E5\u91CA\u653E\u524D\u76EE\u6807\u751F\u547D\u503C\u4F4E\u4E8E30%\uFF08\u5BF9\u9996\u9886\u4E3A15%\uFF09\uFF0C\u5219\u76F4\u63A5\u65A9\u6740\u3002"
-  description: "\u5BF9\u6307\u5B9A\u654C\u65B9\u5355\u4F53\u9020\u6210\u7B49\u540C\u4E8E\u5176\u6700\u5927\u751F\u547D\u503C\u768420%\uFF08Boss\u60C5\u51B510%\uFF09+\u7B49\u540C\u4E8E\u653B\u51FB\u8005\u653B\u51FB\u529B\u7684160%\u7684\u771F\u5B9E\u4F24\u5BB3\uFF08\u5207\u51FA\u6280\u4E0D\u53EF\u66B4\u51FB\uFF09\uFF0C\u82E5\u653B\u51FB\u524D\u5176\u8840\u91CF\u4F4E\u4E8E\u6700\u5927\u751F\u547D\u503C\u768440%\uFF08Boss\u60C5\u51B520%\uFF09\uFF0C\u5219\u76F4\u63A5\u5C06\u5176\u65A9\u6740\u3002"
-  icon: {fileID: 0}
-  skillBase: 25
-  skillCoef: 0.4
-  skillType: 15
-  extraData1: 0.3
-  extraData2: 0.15
-  extraData3: 0.06
-  extraData4: 0.03
-  requiresEnemyTarget: 1
-  enemyTargetCount: 1
-  requiresAllyTarget: 0
-  allyTargetCount: 1
-  endTurnAfterUse: 0
-  cooldownTurns: 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:895b367b604d75ef1056dc8b3448a49fb50353ee8f0da0416c0763a9dc2cac32
+size 1629

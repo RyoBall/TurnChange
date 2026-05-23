@@ -1,22 +1,3 @@
-fileFormatVersion: 2
-guid: 3258cbeb41f23b545a323883d7b047b9
-TrueTypeFontImporter:
-  externalObjects: {}
-  serializedVersion: 4
-  fontSize: 16
-  forceTextureCase: -2
-  characterSpacing: 0
-  characterPadding: 1
-  includeFontData: 1
-  fontName: Big John
-  fontNames:
-  - Big John
-  fallbackFontReferences: []
-  customCharacters: 
-  fontRenderingMode: 0
-  ascentCalculationMode: 1
-  useLegacyBoundsCalculation: 0
-  shouldRoundAdvanceValue: 1
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+version https://git-lfs.github.com/spec/v1
+oid sha256:6db373997e73e49a4cf561a484779f93453257041ad38ec3e9acb89f636fb741
+size 516

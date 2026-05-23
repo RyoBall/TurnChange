@@ -1,20 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 335f68e38fbe6a94fb31a16176912c95, type: 3}
-  m_Name: AppConfig
-  m_EditorClassIdentifier: 
-  CharacterDataCSVPath: Assets/Data/CharacterData.csv
-  EnemyDataCSVPath: Assets/Data/EnemyData.csv
-  CharacterSkillCSVPath: Assets/Data/CharacterSkillData.csv
-  StateDataCSVPath: Assets/Data/StateData.csv
-  CharacterSkillAssetOutputPath: "Assets/Resources/\u914D\u7F6E\u53EF\u7F16\u7A0B\u7269\u4F53/\u6280\u80FD"
-  StateAssetOutputPath: "Assets/Resources/\u914D\u7F6E\u53EF\u7F16\u7A0B\u7269\u4F53/\u72B6\u6001"
+version https://git-lfs.github.com/spec/v1
+oid sha256:254d65084f641ee4ee590049cf972ad7f84da79bb6ff8f78289b0b9a99e86a3c
+size 811

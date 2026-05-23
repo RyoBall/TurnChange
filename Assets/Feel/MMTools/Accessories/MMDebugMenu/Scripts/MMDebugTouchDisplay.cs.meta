@@ -1,14 +1,3 @@
-fileFormatVersion: 2
-guid: e41826a58ab20124eab7cfc4d79a1eaa
-MonoImporter:
-  externalObjects: {}
-  serializedVersion: 2
-  defaultReferences:
-  - TargetCanvas: {instanceID: 0}
-  - TouchPrefab: {fileID: 5958022166018464836, guid: 626a9fe06209d574da486d5d818915f2,
-      type: 3}
-  executionOrder: 0
-  icon: {instanceID: 0}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+version https://git-lfs.github.com/spec/v1
+oid sha256:690116c1f9e846aee66cd00ea148fff91f8d07aa23de5c1c252e3fb738769d02
+size 390

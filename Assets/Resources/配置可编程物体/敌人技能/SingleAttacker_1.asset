@@ -1,20 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa1f07fb98d28ff4c9daafb355c0f2b8, type: 3}
-  m_Name: SingleAttacker_1
-  m_EditorClassIdentifier: 
-  skillName: "\u523A\u51FB"
-  description: 
-  icon: {fileID: 0}
-  skillBase: 0
-  skillCoef: 1
-  enemySkillType: 3
+version https://git-lfs.github.com/spec/v1
+oid sha256:2731406c8e404ab87ed41f548564ecad3040ca59dd841d9e310466c5e81c7121
+size 519

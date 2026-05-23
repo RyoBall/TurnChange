@@ -1,0 +1,437 @@
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+[DisallowMultipleComponent]
+public class CharacterPanelView : MonoBehaviour
+{
+    [Header("数据")]
+    [SerializeField] private Datas dataSource;
+
+    [Header("左侧角色列表")]
+    [SerializeField] private Transform characterButtonRoot;
+    [SerializeField] private CharacterSelectButtonUI characterButtonPrefab;
+    [SerializeField] private List<RectTransform> characterButtonPositions = new List<RectTransform>();
+
+    [Header("顶部页签")]
+    [SerializeField] private Button statsTabButton;
+    [SerializeField] private Button skillsTabButton;
+    [SerializeField] private GameObject statsPanel;
+    [SerializeField] private GameObject skillsPanel;
+
+    [Header("角色基础信息")]
+    [SerializeField] private Image characterIconImage;
+    [SerializeField] private TMP_Text characterNameText;
+    [SerializeField] private TMP_Text levelText;
+    [SerializeField] private TMP_Text experienceText;
+    [SerializeField] private TMP_Text attackText;
+    [SerializeField] private TMP_Text hpText;
+    [SerializeField] private TMP_Text critRateText;
+    [SerializeField] private TMP_Text critDamageText;
+    [SerializeField] private TMP_Text defenseText;
+    [SerializeField] private TMP_Text speedText;
+
+    [Header("技能列表")]
+    [SerializeField] private Transform skillButtonRoot;
+    [SerializeField] private CharacterSkillButtonUI skillButtonPrefab;
+    [SerializeField] private List<RectTransform> skillButtonPositions = new List<RectTransform>();
+    [SerializeField] private TMP_Text emptySkillText;
+
+    [Header("技能介绍")]
+    [SerializeField] private GameObject skillDescriptionPanel;
+    [SerializeField] private TMP_Text skillDescriptionTitleText;
+    [SerializeField] private TMP_Text skillDescriptionContentText;
+
+    private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
+    private readonly List<CharacterSkillButtonUI> m_skillButtons = new List<CharacterSkillButtonUI>();
+
+    private CharacterData m_currentCharacter;
+    private Canvas m_parentCanvas;
+
+    private void Awake()
+    {
+        m_parentCanvas = GetComponentInParent<Canvas>();
+
+        if (statsTabButton != null)
+        {
+            statsTabButton.onClick.AddListener(ShowStatsPanel);
+        }
+
+        if (skillsTabButton != null)
+        {
+            skillsTabButton.onClick.AddListener(ShowSkillsPanel);
+        }
+
+        HideSkillDescription();
+    }
+
+    private void Start()
+    {
+        ResolveDataSource();
+        RebuildCharacterButtons();
+        ShowStatsPanel();
+    }
+
+    private void Update()
+    {
+        if (skillDescriptionPanel == null || !skillDescriptionPanel.activeSelf)
+        {
+            return;
+        }
+
+        if (!Input.GetMouseButtonDown(0))
+        {
+            return;
+        }
+
+        Vector2 pointerPosition = Input.mousePosition;
+        if (IsPointerInside(skillDescriptionPanel.transform as RectTransform, pointerPosition))
+        {
+            return;
+        }
+
+        for (int i = 0; i < m_skillButtons.Count; i++)
+        {
+            if (IsPointerInside(m_skillButtons[i].RectTransform, pointerPosition))
+            {
+                return;
+            }
+        }
+
+        HideSkillDescription();
+    }
+
+    private void ResolveDataSource()//解析数据来源
+    {
+        if (dataSource == null)
+        {
+            dataSource = Datas.Instance;
+        }
+    }
+
+    private void RebuildCharacterButtons()//重建角色选择按钮
+    {
+        ClearSpawnedButtons(m_characterButtons);
+        //安全检查
+        if (dataSource == null || characterButtonRoot == null || characterButtonPrefab == null)
+        {
+            RefreshCharacterDisplay(null);
+            return;
+        }
+
+        for (int i = 0; i < dataSource.characterDatas.Count; i++)
+        {
+            CharacterData data = dataSource.characterDatas[i];
+            CharacterSelectButtonUI button = Instantiate(characterButtonPrefab, characterButtonRoot);
+            ApplyCharacterButtonPosition(button.RectTransform, i);
+            m_characterButtons.Add(button);
+            button.Bind(data, SelectCharacter, false);
+        }
+        //默认选择第一个角色
+        SelectCharacter(dataSource.characterDatas.Count > 0 ? dataSource.characterDatas[0] : null);
+    }
+
+    private void SelectCharacter(CharacterData data)
+    {
+        m_currentCharacter = data;
+        RefreshCharacterButtons();
+        RefreshCharacterDisplay(data);
+        RefreshSkillButtons(data);
+        HideSkillDescription();
+    }
+
+    private void RefreshCharacterButtons()
+    {
+        for (int i = 0; i < m_characterButtons.Count; i++)
+        {
+            bool selected = dataSource != null
+                && i < dataSource.characterDatas.Count
+                && dataSource.characterDatas[i] == m_currentCharacter;
+            m_characterButtons[i].SetSelected(selected);
+        }
+    }
+
+    private void RefreshCharacterDisplay(CharacterData data)
+    {
+        bool hasData = data != null;
+        CharacterRosterData rosterData = hasData ? data.GetRosterData() : null;
+        bool hasLevelData = TryGetCharacterLevelData(data, out CharacterLevelData levelData);
+
+        if (characterIconImage != null)
+        {
+            characterIconImage.sprite = null;
+            characterIconImage.enabled = characterIconImage.sprite != null;
+        }
+
+        if (characterNameText != null)
+        {
+            characterNameText.text = hasData ? data.GetCharacterName() : "未选择角色";
+        }
+
+        if (levelText != null)
+        {
+            levelText.text = hasData ? $"等级 {data.GetLevel()}" : "等级 -";
+        }
+
+        if (experienceText != null)
+        {
+            experienceText.text = hasData ? $"Exp: {data.GetCurrentExp()}/{data.GetExpToNextLevel()}" : "经验 -";
+        }
+
+        if (attackText != null)
+        {
+            attackText.text = hasLevelData ? $"ATK:{levelData.attack}" : "-";
+        }
+
+        if (hpText != null)
+        {
+            hpText.text = hasLevelData ? $"HP:{levelData.maxHP}" : "-";
+        }
+
+        if (critRateText != null)
+        {
+            critRateText.text = hasLevelData ? $"暴击率:{levelData.critRate * 100f:0.#}%" : "-";
+        }
+
+        if (critDamageText != null)
+        {
+            critDamageText.text = hasLevelData ? $"暴击伤害:{levelData.critDamage * 100f:0.#}%" : "-";
+        }
+
+        if (defenseText != null)
+        {
+            defenseText.text = hasLevelData ? $"防御:{levelData.defense}" : "-";
+        }
+
+        if (speedText != null)
+        {
+            speedText.text = hasLevelData ? $"速度:{levelData.speed}" : "-";
+        }
+    }
+
+    private void RefreshSkillButtons(CharacterData data)
+    {
+        ClearSpawnedButtons(m_skillButtons);
+
+        if (skillButtonRoot == null || skillButtonPrefab == null)
+        {
+            return;
+        }
+
+        int createdCount = 0;
+        CharacterRosterData rosterData = data != null ? data.GetRosterData() : null;
+        if (rosterData != null)
+        {
+            for (int i = 0; i < rosterData.skills.Count; i++)
+            {
+                SkillBase skill = SkillDictionaryManager.GetSkill(rosterData.skills[i]);
+                if (skill == null)
+                {
+                    continue;
+                }
+
+                CharacterSkillButtonUI button = Instantiate(skillButtonPrefab, skillButtonRoot);
+                button.Bind(skill, ShowSkillDescription);
+                m_skillButtons.Add(button);
+                createdCount++;
+                ApplySkillButtonPosition(button.RectTransform, i);
+            }
+            //出场技能
+            var enterSkill = SkillDictionaryManager.GetSkill(rosterData.enterSkill);
+            CharacterSkillButtonUI enterButton = Instantiate(skillButtonPrefab, skillButtonRoot);
+            enterButton.Bind(enterSkill, ShowSkillDescription);
+            m_skillButtons.Add(enterButton);
+            createdCount++;
+            ApplySkillButtonPosition(enterButton.RectTransform, createdCount - 1);
+            //退场技能
+            var exitSkill = SkillDictionaryManager.GetSkill(rosterData.exitSkill);
+            CharacterSkillButtonUI exitButton = Instantiate(skillButtonPrefab, skillButtonRoot);
+            exitButton.Bind(exitSkill, ShowSkillDescription);
+            m_skillButtons.Add(exitButton);
+            createdCount++;
+            ApplySkillButtonPosition(exitButton.RectTransform, createdCount - 1);
+        }
+        if (emptySkillText != null)
+        {
+            emptySkillText.gameObject.SetActive(createdCount == 0);
+            if (createdCount == 0)
+            {
+                if (statsPanel != null)
+                {
+                    statsPanel.SetActive(true);
+                }
+
+                if (skillsPanel != null)
+                {
+                    skillsPanel.SetActive(false);
+                }
+
+                HideSkillDescription();
+            }
+        }
+    }
+    private void ShowStatsPanel()
+    {
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(true);
+        }
+
+        if (skillsPanel != null)
+        {
+            skillsPanel.SetActive(false);
+        }
+    }
+    private void ShowSkillsPanel()
+    {
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(false);
+        }
+
+        if (skillsPanel != null)
+        {
+            skillsPanel.SetActive(true);
+        }
+    }
+
+    private void ShowSkillDescription(SkillBase skill)
+    {
+        if (skillDescriptionPanel == null)
+        {
+            return;
+        }
+
+        skillDescriptionPanel.SetActive(skill != null);
+        if (skill == null)
+        {
+            return;
+        }
+
+        if (skillDescriptionTitleText != null)
+        {
+            skillDescriptionTitleText.text = string.IsNullOrWhiteSpace(skill.skillName) ? "技能介绍" : skill.skillName;
+        }
+
+        if (skillDescriptionContentText != null)
+        {
+            string description = !string.IsNullOrWhiteSpace(skill.description)
+                ? skill.description
+                : skill.shortDescription;
+            skillDescriptionContentText.text = string.IsNullOrWhiteSpace(description) ? "暂无技能说明" : description;
+        }
+    }
+
+    private void HideSkillDescription()
+    {
+        if (skillDescriptionPanel != null)
+        {
+            skillDescriptionPanel.SetActive(false);
+        }
+    }
+
+    private void ApplyCharacterButtonPosition(RectTransform buttonRectTransform, int index)//应用角色选择按钮的位置
+    {
+        if (buttonRectTransform == null)
+        {
+            return;
+        }
+
+        if (characterButtonPositions == null || index < 0 || index >= characterButtonPositions.Count)
+        {
+            return;
+        }
+
+        RectTransform targetRectTransform = characterButtonPositions[index];
+        if (targetRectTransform == null)
+        {
+            return;
+        }
+        buttonRectTransform.anchoredPosition = targetRectTransform.anchoredPosition;
+    }
+
+    private void ApplySkillButtonPosition(RectTransform buttonRectTransform, int index)//应用技能按钮的位置
+    {
+        if (buttonRectTransform == null)
+        {
+            return;
+        }
+
+        if (skillButtonPositions == null || index < 0 || index >= skillButtonPositions.Count)
+        {
+            return;
+        }
+
+        RectTransform targetRectTransform = skillButtonPositions[index];
+        if (targetRectTransform == null)
+        {
+            return;
+        }
+
+        buttonRectTransform.anchoredPosition = targetRectTransform.anchoredPosition;
+    }
+
+    private bool TryGetCharacterLevelData(CharacterData data, out CharacterLevelData levelData)
+    {
+        levelData = default;
+        if (data == null)
+        {
+            return false;
+        }
+
+        string characterId = data.GetCharacterID();
+        if (string.IsNullOrWhiteSpace(characterId))
+        {
+            return false;
+        }
+
+        var allLevelData = LevelDataContainer.CharacterLevelData;
+        if (allLevelData == null)
+        {
+            return false;
+        }
+
+        if (!allLevelData.TryGetValue(characterId, out Dictionary<int, CharacterLevelData> levelDataByLevel))
+        {
+            return false;
+        }
+
+        return levelDataByLevel.TryGetValue(data.GetLevel(), out levelData);
+    }
+
+    private bool IsPointerInside(RectTransform rectTransform, Vector2 screenPosition)
+    {
+        if (rectTransform == null)
+        {
+            return false;
+        }
+
+        Camera eventCamera = m_parentCanvas != null && m_parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? m_parentCanvas.worldCamera
+            : null;
+        return RectTransformUtility.RectangleContainsScreenPoint(rectTransform, screenPosition, eventCamera);
+    }
+
+    private void ClearSpawnedButtons<T>(List<T> buttonList) where T : Component
+    {
+        for (int i = buttonList.Count - 1; i >= 0; i--)
+        {
+            if (buttonList[i] == null)
+            {
+                continue;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(buttonList[i].gameObject);
+            }
+            else
+            {
+                DestroyImmediate(buttonList[i].gameObject);
+            }
+        }
+
+        buttonList.Clear();
+    }
+}

@@ -1,29 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5dd9b37d48325a6429f7b9a47e9ac998, type: 3}
-  m_Name: "\u8FFD\u60E9"
-  m_EditorClassIdentifier: 
-  durationType: 0
-  defaultTurns: 2
-  defaultActionValue: 100
-  maxStacks: 1
-  stateType: 1
-  isDot: 0
-  isDebuff: 0
-  description: "\u654C\u65B9\u83B7\u5F97\u51CF\u76CA\u65F6\u5728\u56DE\u5408\u5916\u8FFD\u52A0\u4E00\u6B21\u653B\u51FB\uFF0C\u5E76\u63D0\u5347\u56DE\u5408\u5916\u4F24\u5BB3\u3002"
-  skillCoef: 0.6
-  baseExtraData1: 0.15
-  baseExtraData2: 0
-  baseExtraData3: 0
-  baseExtraData4: 0
-  atkT: 0
-  buffMultiplier: 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:e3f6350442ea69fd4ea4b97a3107449347a4c77c7af22d7c8a46a33e1829acc5
+size 830

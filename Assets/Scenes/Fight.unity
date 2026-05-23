@@ -6654,7 +6654,7 @@ MonoBehaviour:
   fontSize: 36
   textSize: {x: 260, y: 120}
   noStateText: 
-  defaultFont: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  defaultFont: {fileID: 11400000, guid: 19e5bec3e141584489238093ad8b19f0, type: 2}
   refreshInterval: 0.1
 --- !u!1 &1722247578
 GameObject:
@@ -7041,7 +7041,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d2a09ca80264f3d429c0297df363f2e1, type: 2}
   fieldPlayerCharacters:
   - {fileID: 11400000, guid: 511beaf3365619041b59f31e4bc10c52, type: 2}
-  - {fileID: 11400000, guid: a7f0b46fa2265ec499f0c713cef66195, type: 2}
+  - {fileID: 11400000, guid: d2a09ca80264f3d429c0297df363f2e1, type: 2}
   fieldEnemies:
   - {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
   - {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}

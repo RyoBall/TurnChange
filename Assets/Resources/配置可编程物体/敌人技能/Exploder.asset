@@ -1,20 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa1f07fb98d28ff4c9daafb355c0f2b8, type: 3}
-  m_Name: Exploder
-  m_EditorClassIdentifier: 
-  skillName: "\u7206"
-  description: 
-  icon: {fileID: 0}
-  skillBase: 0
-  skillCoef: 1
-  enemySkillType: 6
+version https://git-lfs.github.com/spec/v1
+oid sha256:65c53ed22590f81a2975623ee23626f5eb501eb19f137f053d976f7e4f61dbe6
+size 505
