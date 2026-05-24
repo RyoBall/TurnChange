@@ -1166,7 +1166,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 100
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6,
     type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
@@ -1866,7 +1866,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 15, y: 0, z: -10.96}
-  m_LocalScale: {x: 0.6, y: 0.6, z: 1}
+  m_LocalScale: {x: 6, y: 6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8001485717535995727}
@@ -1909,6 +1909,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 100
   participateInTurnLoopAtStart: 1
+  standPosition: 2147483647
   combatantName: Enemy
   dead: 0
   level: 1
@@ -1921,6 +1922,7 @@ MonoBehaviour:
   K: 0
   currentShield: 0
   enterFeedback: {fileID: 3195374147485118276}
+  exitFeedback: {fileID: 0}
   hitFeedback: {fileID: 1680366032202337052}
   actionFeedback: {fileID: 0}
   dieFeedback: {fileID: 2465436172603443479}
@@ -1931,7 +1933,7 @@ MonoBehaviour:
   selectedScale: 1.1
   selectAnimDuration: 0.12
   skills: 
-  hasStartExploded: 0
+  explodeState: 0
 --- !u!1 &3176342309017625078
 GameObject:
   m_ObjectHideFlags: 0
@@ -2004,7 +2006,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -2838,7 +2840,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!114 &4193570487836496302
 MonoBehaviour:

@@ -41,6 +41,7 @@ public class Character : UnitCombatant
     [Header("位移动画")]
     [SerializeField] private float moveAnimDuration = 0.5f;
     [SerializeField] private Ease moveAnimEase = Ease.InOutSine;
+    [SerializeField] private Vector3 targetPos = new Vector3(0, 0, -7);
     private Vector3 m_originalPosition;
     private void Start()
     {
@@ -223,7 +224,7 @@ public class Character : UnitCombatant
     private void EnterMoveDOT()
     {
         m_originalPosition = transform.position;
-        transform.DOMove(new Vector3(0, 0, -7), moveAnimDuration).SetEase(moveAnimEase);
+        transform.DOMove(targetPos, moveAnimDuration).SetEase(moveAnimEase);
     }
     private void ExitMoveDOT()
     {
