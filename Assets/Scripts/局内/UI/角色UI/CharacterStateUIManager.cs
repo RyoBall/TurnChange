@@ -19,11 +19,10 @@ public class CharacterStateUIManager : MonoBehaviour
         }
 
         characterManager.OnFieldCharacterSwapped += OnFieldCharacterSwapped;
+        characterManager.OnFieldCharactersReordered += RefreshBindings;
 
-        for (int i = 0; i < characterUIs.Count; i++)
-        {
-            characterUIs[i].Initialize(characterManager.fieldCharacters.Count > i ? characterManager.fieldCharacters[i] : null);
-        }
+        RefreshBindings();
+        Debug.Log("[CharacterStateUIManager] 角色UI初始化完成,当前场上角色数量: " + characterManager.fieldCharacters.Count);
     }
 
     private void OnDestroy()
@@ -32,6 +31,21 @@ public class CharacterStateUIManager : MonoBehaviour
         if (characterManager != null)
         {
             characterManager.OnFieldCharacterSwapped -= OnFieldCharacterSwapped;
+            characterManager.OnFieldCharactersReordered -= RefreshBindings;
+        }
+    }
+
+    private void RefreshBindings()
+    {
+        var characterManager = CharacterManager.Instance;
+        if (characterManager == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < characterUIs.Count; i++)
+        {
+            characterUIs[i].Initialize(characterManager.fieldCharacters.Count > i ? characterManager.fieldCharacters[i] : null);
         }
     }
 

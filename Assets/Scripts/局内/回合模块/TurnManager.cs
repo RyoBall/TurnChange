@@ -221,8 +221,9 @@ public class TurnManager : MonoBehaviour
             // 回合结束后重新计算当前角色的下一次行动值。
             if (nextCombatant != null)
             {   
-                nextCombatant.ChangeActionValue(nextCombatant.BaseActionValue);
-                Debug.Log($"[TurnManager] 结束回合: {nextCombatant.name}，重置行动值到 {nextCombatant.BaseActionValue:F0}");
+                float nextActionValue = nextCombatant.ConsumeTurnEndActionValue();
+                nextCombatant.ChangeActionValue(nextActionValue);
+                Debug.Log($"[TurnManager] 结束回合: {nextCombatant.name}，重置行动值到 {nextActionValue:F0}");
             }
             else
             {

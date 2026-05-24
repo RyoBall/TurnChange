@@ -10,6 +10,7 @@ public enum ExplodeType
     hasStarted,
     ReadyToBurst
 }
+
 public class Enemy : UnitCombatant
 {
     public string enemyID;
@@ -21,20 +22,85 @@ public class Enemy : UnitCombatant
     public List<EnemySkillType> skills = new List<EnemySkillType>();
     private List<EnemySkillBase> m_skillInstances = new List<EnemySkillBase>();
     private Dictionary<EnemySkillType, EnemySkillBase> m_skillInstanceMap = new Dictionary<EnemySkillType, EnemySkillBase>();
+    protected bool m_runtimeInitialized;
+    private bool m_isBattleVisible = true;
+    public virtual bool ShouldRegisterAtBattleStart => true;
+    protected bool IsBattleVisible => m_isBattleVisible;
+
     #region 自爆相关 因为项目比较小 所以先把自爆相关的状态和逻辑写在Enemy类里，后续如果需要的话再重构
     public ExplodeType explodeState = ExplodeType.None;
     #endregion
-    private void Start()
+    protected virtual void Start()
     {
+        InitializeEnemyRuntime();
+    }
+
+    public virtual void ConfigureFromBattleSpawnData(BattleEnemySpawnData spawnData, int standPosition)
+    {
+        if (spawnData == null)
+        {
+            return;
+        }
+
+        OnConfigureFromBattleSpawnData(spawnData);
+        ConfigureFromRosterData(spawnData.enemyData, standPosition, spawnData.level);
+    }
+
+    protected virtual void OnConfigureFromBattleSpawnData(BattleEnemySpawnData spawnData)
+    {
+    }
+
+    public virtual void ConfigureFromRosterData(EnemyRosterData data, int standPosition, int level)
+    {
+        if (data == null)
+        {
+            return;
+        }
+
+        enemyID = data.enemyID;
+        combatantName = string.IsNullOrEmpty(data.enemyName) ? data.enemyID : data.enemyName;
+        skills = new List<EnemySkillType>(data.skills);
+        this.standPosition = standPosition;
+        this.level = Mathf.Max(1, level);
+        participateInTurnLoopAtStart = ShouldRegisterAtBattleStart;
+        InitializeEnemyRuntime();
+    }
+
+    protected virtual void InitializeEnemyRuntime()
+    {
+        if (m_runtimeInitialized)
+        {
+            return;
+        }
+
+        if (!ShouldRegisterAtBattleStart)
+        {
+            participateInTurnLoopAtStart = false;
+        }
+
         InitializeSkill();
         LoadDataFromCSV();
         currentHP *= 2;
         maxHP *= 2;
+        currentHP = Mathf.Min(currentHP, maxHP);
         m_defaultScale = transform.localScale;
+        SetBattleVisibility(ShouldRegisterAtBattleStart);
+        m_runtimeInitialized = true;
+    }
+
+    public virtual void InitializeFromPendingLevelData(PendingBattleLevelData pendingData, IReadOnlyList<Enemy> spawnedEnemies)
+    {
     }
 
     public override IEnumerator PerformTurn()
     {
+        if (!m_isBattleVisible || dead)
+        {
+            yield break;
+        }
+
+        TickSkillCooldowns();
+        OnTurnStartBeforeStateSettlement();
         enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(0.2f);
         yield return ProcessStatesOnTurnStart();
@@ -51,9 +117,13 @@ public class Enemy : UnitCombatant
         //执行行动
         yield return ActionCoroutine();
     }
+
+    protected virtual void OnTurnStartBeforeStateSettlement()
+    {
+    }
+
     private IEnumerator ActionCoroutine()
     {
-        //这里先写个随机攻击的逻辑，后续会替换成更复杂的AI
         if (m_skillInstances == null || m_skillInstances.Count == 0)
         {
             InitializeSkill();
@@ -64,10 +134,10 @@ public class Enemy : UnitCombatant
             yield break;
         }
 
-        int rand = Random.Range(0, m_skillInstances.Count);
-        EnemySkillBase skill = m_skillInstances[rand];
+        EnemySkillBase skill = SelectSkillForTurn();
         if (skill == null)
         {
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}暂无可用技能");
             yield break;
         }
 
@@ -77,9 +147,11 @@ public class Enemy : UnitCombatant
         enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(0.5f);
         SkillExecuteManager.ExecuteSkill(this, skill);
+        yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
         yield return WaitForDeathEvents();
         yield break;
     }
+
     public override void Die()
     {
         base.Die();
@@ -94,13 +166,18 @@ public class Enemy : UnitCombatant
     #region 选敌相关
     private void OnMouseDown()
     {
+        if (!m_isBattleVisible)
+        {
+            return;
+        }
+
         // OnMouseDown 默认响应鼠标左键，这里把点击事件转发给选敌系统。
         SkillManager.Instance?.OnEnemyClicked(this);
         mouseExitFeedback?.PlayFeedbacks();
     }
     private void OnMouseEnter()
     {
-        if (SkillManager.Instance.IsSelectingEnemies)
+        if (m_isBattleVisible && SkillManager.Instance != null && SkillManager.Instance.IsSelectingEnemies)
         {
             mouseExitFeedback?.StopFeedbacks();
             mouseEnterFeedback?.PlayFeedbacks();
@@ -108,7 +185,7 @@ public class Enemy : UnitCombatant
     }
     private void OnMouseExit()
     {
-        if (SkillManager.Instance.IsSelectingEnemies)
+        if (m_isBattleVisible && SkillManager.Instance != null && SkillManager.Instance.IsSelectingEnemies)
         {
             mouseEnterFeedback?.StopFeedbacks();
             mouseExitFeedback?.PlayFeedbacks();
@@ -230,5 +307,81 @@ public class Enemy : UnitCombatant
     {
         base.OnDestroy();
         CleanupSkillInstances();
+    }
+
+    public virtual bool CanUseEnemySkill(EnemySkillBase skill)
+    {
+        return skill != null && m_isBattleVisible && !dead;
+    }
+
+    protected virtual EnemySkillBase SelectSkillForTurn()
+    {
+        EnemySkillBase forcedSkill = GetForcedSkillForTurn();
+        if (forcedSkill != null)
+        {
+            return forcedSkill;
+        }
+
+        List<EnemySkillBase> availableSkills = new List<EnemySkillBase>();
+        for (int i = 0; i < m_skillInstances.Count; i++)
+        {
+            EnemySkillBase skill = m_skillInstances[i];
+            if (skill == null || !skill.CanUse(this))
+            {
+                continue;
+            }
+
+            availableSkills.Add(skill);
+        }
+
+        if (availableSkills.Count == 0)
+        {
+            return null;
+        }
+
+        return availableSkills[Random.Range(0, availableSkills.Count)];
+    }
+
+    protected virtual EnemySkillBase GetForcedSkillForTurn()
+    {
+        return null;
+    }
+
+    protected void TickSkillCooldowns()
+    {
+        if (m_skillInstances == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < m_skillInstances.Count; i++)
+        {
+            if (m_skillInstances[i] != null)
+            {
+                m_skillInstances[i].TickCooldown();
+            }
+        }
+    }
+
+    protected void SetBattleVisibility(bool visible)
+    {
+        m_isBattleVisible = visible;
+        Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            renderers[i].enabled = visible;
+        }
+
+        Collider[] colliders = GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].enabled = visible;
+        }
+
+        Canvas[] canvases = GetComponentsInChildren<Canvas>(true);
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            canvases[i].enabled = visible;
+        }
     }
 }

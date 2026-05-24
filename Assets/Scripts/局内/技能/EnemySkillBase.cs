@@ -13,16 +13,54 @@ public enum EnemySkillType
     Exploder,      // 群体自爆手技能一
     NoneNone,      // 群体自爆手技能二
     DotMaster_1,     // 持续伤害Dot施加手技能一
-    DotMaster_2      // 持续伤害Dot施加手技能二
+    DotMaster_2,      // 持续伤害Dot施加手技能二
+    ChessPawnAction,
+    ChessQueenChaosCharge,
+    ChessQueenSummonPawn,
+    ChessQueenThroneAssault,
+    ChessQueenCoronation
 }
 [CreateAssetMenu(fileName = "NewEnemySkill", menuName = "技能/EnemySkill"), System.Serializable]
 public class EnemySkillBase : SkillBase
 {
     public EnemySkillType enemySkillType;
+    [Header("额外参数")]
+    public float extraData1;
+    public float extraData2;
+    public float extraData3;
+    public float extraData4;
+    [Header("冷却回合")]
+    [Min(0)]
+    public int cooldownTurns;
+
+    private int m_remainingCooldown;
+
+    public int RemainingCooldown => m_remainingCooldown;
 
     private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
     {
         State.NotifyCombatEvent(unitCombatant, StateCombatEventType.DamageSkillUsed);
+    }
+
+    public bool CanUse(Enemy owner)
+    {
+        return m_remainingCooldown <= 0 && (owner == null || owner.CanUseEnemySkill(this));
+    }
+
+    public void TickCooldown()
+    {
+        if (m_remainingCooldown > 0)
+        {
+            m_remainingCooldown--;
+        }
+    }
+
+    private void StartCooldown()
+    {
+        if (cooldownTurns > 0)
+        {
+            m_remainingCooldown = Mathf.Max(m_remainingCooldown, cooldownTurns);
+        }
     }
 
     public override IEnumerator Execute(UnitCombatant unitCombatant)
@@ -30,6 +68,7 @@ public class EnemySkillBase : SkillBase
         if (unitCombatant == null) yield break;
         Enemy self = unitCombatant as Enemy;
         if (self == null) yield break;
+        if (!CanUse(self)) yield break;
 
         switch (enemySkillType)
         {
@@ -60,7 +99,23 @@ public class EnemySkillBase : SkillBase
             case EnemySkillType.DotMaster_2:
                 yield return DotMaster_2(self);
                 break;
+            case EnemySkillType.ChessPawnAction:
+                yield return ChessPawnAction(self);
+                break;
+            case EnemySkillType.ChessQueenChaosCharge:
+                yield return ChessQueenChaosCharge(self);
+                break;
+            case EnemySkillType.ChessQueenSummonPawn:
+                yield return ChessQueenSummonPawn(self);
+                break;
+            case EnemySkillType.ChessQueenThroneAssault:
+                yield return ChessQueenThroneAssault(self);
+                break;
+            case EnemySkillType.ChessQueenCoronation:
+                yield return ChessQueenCoronation(self);
+                break;
         }
+        StartCooldown();
         yield return new WaitForSeconds(0.5f); // 技能执行后的小间隔
     }
 
@@ -209,5 +264,61 @@ public class EnemySkillBase : SkillBase
             }
         }
         yield break;
+    }
+
+    private IEnumerator ChessPawnAction(Enemy self)
+    {
+        ChessBossEnemy chessBoss = self as ChessBossEnemy;
+        if (chessBoss != null)
+        {
+            yield return chessBoss.ExecuteChessPawnAction(this);
+        }
+    }
+
+    private IEnumerator ChessQueenChaosCharge(Enemy self)
+    {
+        int chaosAmount = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 2f));
+        NotifyDamageSkillUsed(self);
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        foreach (var ally in allies)
+        {
+            if (ally == null || ally.IsDead)
+            {
+                continue;
+            }
+
+            var damageInfo = DamageCounter.CountDamage(self, ally, skillCoef, skillBase, true, false, false);
+            ally.TakeDamage(damageInfo);
+            ally.TryAddChaos(chaosAmount);
+        }
+
+        yield break;
+    }
+
+    private IEnumerator ChessQueenSummonPawn(Enemy self)
+    {
+        ChessBossEnemy chessBoss = self as ChessBossEnemy;
+        if (chessBoss != null)
+        {
+            yield return chessBoss.ExecuteChessQueenSummonPawn(this);
+        }
+    }
+
+    private IEnumerator ChessQueenThroneAssault(Enemy self)
+    {
+        ChessBossEnemy chessBoss = self as ChessBossEnemy;
+        if (chessBoss != null)
+        {
+            yield return chessBoss.ExecuteChessQueenThroneAssault(this);
+        }
+    }
+
+    private IEnumerator ChessQueenCoronation(Enemy self)
+    {
+        ChessBossEnemy chessBoss = self as ChessBossEnemy;
+        if (chessBoss != null)
+        {
+            yield return chessBoss.ExecuteChessQueenCoronation(this);
+        }
     }
 }

@@ -49,7 +49,6 @@ public class ChaosPointSlotUI : MonoBehaviour
     private void Initialize()
     {
         EnsureContainer();
-        EnsureLayoutGroup();
         slotImages.AddRange(slotContainer.GetComponentsInChildren<Image>());
     }
     #endregion 
@@ -62,22 +61,6 @@ public class ChaosPointSlotUI : MonoBehaviour
             slotContainer = transform as RectTransform;
         }
     }
-
-    private void EnsureLayoutGroup()
-    {
-        if (slotContainer == null)
-        {
-            return;
-        }
-
-        bool hasHorizontal = slotContainer.GetComponent<HorizontalLayoutGroup>() != null;
-        bool hasVertical = slotContainer.GetComponent<VerticalLayoutGroup>() != null;
-        if (!hasHorizontal && !hasVertical)
-        {
-            slotContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-        }
-    }
-
     private void RebuildSlots()
     {
         if (slotContainer == null)
@@ -151,7 +134,7 @@ public class ChaosPointSlotUI : MonoBehaviour
                 continue;
             }
 
-            image.color = currentValue <= i ? Color.white : Color.black;
+            image.color = currentValue < i ? Color.black : Color.white;
         }
     }
     #endregion

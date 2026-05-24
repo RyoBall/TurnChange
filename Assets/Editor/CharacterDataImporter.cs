@@ -16,12 +16,14 @@ public class CharacterDataImporter
             LevelDataContainer.CharacterLevelData = new Dictionary<string, Dictionary<int, CharacterLevelData>>();
         List<Dictionary<string, string>> csvData = CSVReader.ReadCSV(Config.Instance.CharacterDataCSVPath);
         string characterName = null;
+        int ID=0;
         foreach (var row in csvData)
         {
             if (GetInt(row, "Level") == -1)
             {
                 characterName = row["Level"];
-                Debug.Log($"正在导入角色: {characterName}");
+                ID++;
+                Debug.Log($"正在导入角色: {characterName},ID: {ID}");
                 continue;
             }
             int level = GetInt(row, "Level");
@@ -35,11 +37,11 @@ public class CharacterDataImporter
                 GetInt(row, "Speed"),
                 GetInt(row, "K")
             );
-            if (!LevelDataContainer.CharacterLevelData.ContainsKey(characterName))
-                LevelDataContainer.CharacterLevelData[characterName] = new Dictionary<int, CharacterLevelData>();
-            LevelDataContainer.CharacterLevelData[characterName][level] = levelData;
+            if (!LevelDataContainer.CharacterLevelData.ContainsKey(ID.ToString()))
+                LevelDataContainer.CharacterLevelData[ID.ToString()] = new Dictionary<int, CharacterLevelData>();
+            LevelDataContainer.CharacterLevelData[ID.ToString()][level] = levelData;
         }
-        Debug.Log("角色数据导入完成！");
+        Debug.Log($"角色数据导入完成！");
     }
 
     static int GetInt(Dictionary<string, string> dict, string key, int defaultValue = -1)

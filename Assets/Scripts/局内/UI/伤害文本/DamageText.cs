@@ -45,22 +45,14 @@ public class DamageText : MonoBehaviour
 
     public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, string additionalText = "")
     {
-        // ������������
-        if (!string.IsNullOrEmpty(additionalText))
-        {
-            damageText.text = $"{additionalText}:{damage}";
-        }
-        else
-        {
-            damageText.text = damage.ToString();
-        }
+        damageText.text = damage.ToString();
         if (isDotDamage)
         {
             damageText.color = Color.yellow;
         }
         else
         {
-            damageText.color = Color.green;
+            damageText.color = Color.red;
         }
         Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
         if (!TrySetCanvasPosition(worldPosition + offset))
@@ -70,6 +62,20 @@ public class DamageText : MonoBehaviour
         }
 
         PlayAnimation(true);
+    }
+    public void ShowHeal(int healAmount, Vector3 worldPosition)
+    {
+        damageText.text = healAmount.ToString();
+        damageText.color = Color.green;
+
+        Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
+        if (!TrySetCanvasPosition(worldPosition + offset))
+        {
+            ReturnToPool();
+            return;
+        }
+
+        PlayAnimation(false);
     }
     public void ShowCustomText(string customMessage, Vector3 position, Color color)
     {

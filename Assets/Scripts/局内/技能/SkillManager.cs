@@ -125,13 +125,13 @@ public class SkillManager : MonoBehaviour
         UpdatePromptText();
     }
 
-    public IEnumerator SelectCharactersCoroutine(int requiredCount, List<Character> selectedResult)
+    public IEnumerator SelectCharactersCoroutine(int requiredCount, List<Character> selectedResult, Character sourceCharacter = null)
     {
         int aliveCount = CharacterManager.Instance != null ? CharacterManager.Instance.fieldCharacters.Count : 0;
         int safeRequiredCount = Mathf.Max(1, requiredCount);
-        if (aliveCount <= 0)
+        if (aliveCount <= 1)
         {
-            Debug.LogWarning("[SkillManager] 当前场上没有我方角色，无法进行选友");
+            Debug.LogWarning("[SkillManager] 当前场上没有可作用的我方角色，无法进行选友");
             selectedResult?.Clear();
             yield break;
         }
@@ -146,7 +146,6 @@ public class SkillManager : MonoBehaviour
         m_isSelectingCharacters = true;
         UpdatePromptText($"请选择技能作用的我方角色:{m_selectedCharacters.Count}/{m_requiredCharacterCount}");
         SetPromptVisible(true);
-
         yield return new WaitUntil(() => m_selectedCharacters.Count >= m_requiredCharacterCount);
 
         selectedResult?.Clear();
@@ -156,6 +155,7 @@ public class SkillManager : MonoBehaviour
         }
 
         ClearSelectionState();
+
     }
 
     public void OnCharacterClicked(Character character)

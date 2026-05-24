@@ -110,14 +110,14 @@ public class UnitCombatant : Combatant
         {
             return;
         }
-
+        DamageTextPool.Instance?.ShowHeal(amount, transform.position);
         currentHP = Mathf.Min(maxHP, currentHP + amount);
     }
 
     protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None)
     {
         Debug.Log($"[{GetType().Name}] {gameObject.name} 受到 {damage} 点伤害");
-        DamageTextPool.Instance?.ShowDamage(damage, transform.position, isDotDamage, StateDictionaryManager.GetStateName(stateType));
+        DamageTextPool.Instance?.ShowDamage(damage, transform.position, isDotDamage);
     }
 
     public virtual void Die()
@@ -178,6 +178,11 @@ public class UnitCombatant : Combatant
         int stacks = 1,
         float skillCoef = 0f)
     {
+        if (!CanReceiveState(stateType, giver))
+        {
+            return null;
+        }
+
         foreach (var tstate in states)
         {
             if (tstate != null && tstate.stateType == stateType)
@@ -384,6 +389,11 @@ public class UnitCombatant : Combatant
         }
 
         return null;
+    }
+
+    protected virtual bool CanReceiveState(StateType stateType, UnitCombatant giver)
+    {
+        return true;
     }
 
     public static void NotifyDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)

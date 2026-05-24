@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 [Serializable]
-public class LevelEnemyEntry
+public class LevelEnemyEntry//关卡数据单元
 {
     public EnemyRosterData enemyData;
     public int level = 1;
-
-    public string EnemyId => enemyData != null ? enemyData.enemyID : string.Empty;
-    public string EnemyName => enemyData != null ? enemyData.enemyName : string.Empty;
+    public bool isChessSeriesEnemy;
+    public ChessBossPendingData chessBossData = new ChessBossPendingData();
 }
 
 [Serializable]
-public class LevelSelectionData
+public class LevelSelectionData//关卡数据
 {
     public string levelId;
     public string levelName;
@@ -69,16 +69,21 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     public void OnPrepareButtonClicked()
     {
+        StartCoroutine(SwitchPanelCoroutine());
+    }
+    private IEnumerator SwitchPanelCoroutine()
+    {
+        // 在这里可以添加切换动画或过渡效果
+        yield return ScreenTransition.Instance.EnterTransition(); // 等待转场完成
         if (preparationPanel != null)
         {
             preparationPanel.OpenWithLevelData(levelData);
-            return;
         }
-
-        if (preparationPanelRoot != null)
+        else if (preparationPanelRoot != null)
         {
             preparationPanelRoot.SetActive(true);
         }
+        yield return ScreenTransition.Instance.ExitTransition(); // 等待转场完成
     }
 
     public void SetLevelData(LevelSelectionData data)

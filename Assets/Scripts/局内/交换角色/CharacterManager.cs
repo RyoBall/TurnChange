@@ -9,6 +9,7 @@ public class CharacterManager : MonoBehaviour
 {
 	public static CharacterManager Instance { get; private set; }
 	public event System.Action<Character, Character> OnFieldCharacterSwapped;
+	public event System.Action OnFieldCharactersReordered;
 
 	[Header("角色列表")]
 	[Tooltip("所有可用角色，通常在 Inspector 中配置后不再改变")]
@@ -131,6 +132,52 @@ public class CharacterManager : MonoBehaviour
 
 		m_selectedFieldCharacter = character;
 		m_selectedFieldCharacter.SetSelectedVisual(true);
+	}
+
+	public Character GetFieldCharacterByStandPosition(int standPosition)
+	{
+		for (int i = 0; i < fieldCharacters.Count; i++)
+		{
+			Character character = fieldCharacters[i];
+			if (character != null && character.standPosition == standPosition)
+			{
+				return character;
+			}
+		}
+
+		return null;
+	}
+
+	public bool SwapFieldCharacters(Character first, Character second)
+	{
+		if (first == null || second == null || first == second)
+		{
+			return false;
+		}
+
+		int firstIndex = fieldCharacters.IndexOf(first);
+		int secondIndex = fieldCharacters.IndexOf(second);
+		if (firstIndex < 0 || secondIndex < 0)
+		{
+			return false;
+		}
+
+		Vector3 firstPosition = first.transform.position;
+		int firstStandPosition = first.standPosition;
+
+		first.transform.position = second.transform.position;
+		second.transform.position = firstPosition;
+
+		first.standPosition = second.standPosition;
+		second.standPosition = firstStandPosition;
+
+		fieldCharacters[firstIndex] = second;
+		fieldCharacters[secondIndex] = first;
+
+		first.ChangeActionValue(first.currentActionValue);
+		second.ChangeActionValue(second.currentActionValue);
+		OnFieldCharactersReordered?.Invoke();
+		return true;
 	}
 
 	private IEnumerator ReplaceCharacter(Character oldCharacter, Character newCharacter)//执行角色替换

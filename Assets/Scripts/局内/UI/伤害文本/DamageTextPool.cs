@@ -86,10 +86,15 @@ public class DamageTextPool : MonoBehaviour
         damageText.gameObject.SetActive(false);
         pool.Enqueue(damageText);
     }
-    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, string additionalText = "")
+    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false)
     {
         DamageText damageText = Get();
-        damageText.ShowDamage(damage, worldPosition, isDotDamage, additionalText);
+        damageText.ShowDamage(damage, worldPosition, isDotDamage);
+    }
+    public void ShowHeal(int healAmount, Vector3 worldPosition)
+    {
+        DamageText damageText = Get();
+        damageText.ShowHeal(healAmount, worldPosition);
     }
     public void ShowCustomText(string customMessage, Vector3 position, Color color=default)
     {

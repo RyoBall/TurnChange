@@ -7,6 +7,7 @@ public class EnemyManager : MonoBehaviour
     public static EnemyManager Instance { get; private set; }
 
     private readonly List<Enemy> m_aliveEnemies = new List<Enemy>();
+    private readonly List<Enemy> m_pendingEnemies = new List<Enemy>();
     [Header("胜利回调")]
     [SerializeField] private UnityEvent onVictory;
 
@@ -34,15 +35,28 @@ public class EnemyManager : MonoBehaviour
 
     public void RegisterEnemy(Enemy enemy)
     {
-        if (enemy == null || m_aliveEnemies.Contains(enemy))
+        if (enemy == null)
+            return;
+
+        m_pendingEnemies.Remove(enemy);
+        if (m_aliveEnemies.Contains(enemy))
             return;
 
         m_aliveEnemies.Add(enemy);
     }
 
+    public void RegisterPendingEnemy(Enemy enemy)
+    {
+        if (enemy == null || m_pendingEnemies.Contains(enemy) || m_aliveEnemies.Contains(enemy))
+            return;
+
+        m_pendingEnemies.Add(enemy);
+    }
+
     public void InitializeEnemies(List<Enemy> runtimeEnemies)
     {
         m_aliveEnemies.Clear();
+        m_pendingEnemies.Clear();
 
         if (runtimeEnemies == null)
         {
@@ -51,7 +65,20 @@ public class EnemyManager : MonoBehaviour
 
         for (int i = 0; i < runtimeEnemies.Count; i++)
         {
-            RegisterEnemy(runtimeEnemies[i]);
+            Enemy enemy = runtimeEnemies[i];
+            if (enemy == null)
+            {
+                continue;
+            }
+
+            if (enemy.ShouldRegisterAtBattleStart)
+            {
+                RegisterEnemy(enemy);
+            }
+            else
+            {
+                RegisterPendingEnemy(enemy);
+            }
         }
     }
 
@@ -61,6 +88,7 @@ public class EnemyManager : MonoBehaviour
             return;
 
         bool removed = m_aliveEnemies.Remove(enemy);
+        removed = m_pendingEnemies.Remove(enemy) || removed;
         if (!removed)
             return;
 
@@ -77,7 +105,15 @@ public class EnemyManager : MonoBehaviour
             }
         }
 
-        if (m_aliveEnemies.Count > 0)
+        for (int i = m_pendingEnemies.Count - 1; i >= 0; i--)
+        {
+            if (m_pendingEnemies[i] == null)
+            {
+                m_pendingEnemies.RemoveAt(i);
+            }
+        }
+
+        if (m_aliveEnemies.Count > 0 || m_pendingEnemies.Count > 0)
             return;
 
         Victory();

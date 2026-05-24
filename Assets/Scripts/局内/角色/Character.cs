@@ -10,6 +10,9 @@ public class Character : UnitCombatant
 {
     public Transform spriteTransform;
     public string characterID;
+    [Header("动画覆盖")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private CharacterAnimationOverrideDatabase animationOverrideDatabase;
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;//入场技能，回合开始时自动触发
     public CharacterSkillType exitSkill;//退场技能，回合结束时自动触发
@@ -17,6 +20,7 @@ public class Character : UnitCombatant
     private Dictionary<CharacterSkillType, CharacterSkillBase> m_skillInstanceMap = new Dictionary<CharacterSkillType, CharacterSkillBase>();
     private CharacterSkillBase m_enterSkillInstance;
     private CharacterSkillBase m_exitSkillInstance;
+    private AnimatorOverrideController m_animatorOverrideController;
 
     [Header("混沌值")]
     [SerializeField, Range(0, MaxChaosValue)] private int chaosValue = 0;
@@ -32,7 +36,7 @@ public class Character : UnitCombatant
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
     [Header("动画精灵")]
-    [SerializeField] private List<SpriteRenderer> spriteRenderer;
+    [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
     [Header("位移动画")]
     [SerializeField] private float moveAnimDuration = 0.5f;
@@ -40,12 +44,68 @@ public class Character : UnitCombatant
     private Vector3 m_originalPosition;
     private void Start()
     {
+        InitializeAnimatorOverrides();
         InitializeSkill();
         m_defaultScale = transform.localScale;
-        foreach (var sr in spriteRenderer)
+    }
+
+    private void InitializeAnimatorOverrides()
+    {
+        if (animator == null)
         {
-            sr.color = new Color(sr.color.r, sr.color.g, sr.color.b, participateInTurnLoopAtStart ? 1f : 0f);
+            animator = GetComponentInChildren<Animator>();
         }
+
+        if (animator == null || animationOverrideDatabase == null)
+        {
+            return;
+        }
+
+        if (!animationOverrideDatabase.TryGetCharacterOverrides(characterID, out List<AnimationClipOverrideEntry> clipOverrides))
+        {
+            return;
+        }
+
+        RuntimeAnimatorController runtimeController = animator.runtimeAnimatorController;
+        if (runtimeController == null)
+        {
+            return;
+        }
+
+        m_animatorOverrideController = new AnimatorOverrideController(runtimeController);
+        List<KeyValuePair<AnimationClip, AnimationClip>> overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>(m_animatorOverrideController.overridesCount);
+        m_animatorOverrideController.GetOverrides(overrides);
+
+        Dictionary<AnimationClip, AnimationClip> overrideLookup = new Dictionary<AnimationClip, AnimationClip>();
+        for (int i = 0; i < clipOverrides.Count; i++)
+        {
+            AnimationClipOverrideEntry entry = clipOverrides[i];
+            if (entry == null || entry.OriginalClip == null || entry.overrideClip == null)
+            {
+                continue;
+            }
+
+            overrideLookup[entry.OriginalClip] = entry.overrideClip;
+        }
+
+        if (overrideLookup.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < overrides.Count; i++)
+        {
+            KeyValuePair<AnimationClip, AnimationClip> currentOverride = overrides[i];
+            if (!overrideLookup.TryGetValue(currentOverride.Key, out AnimationClip overrideClip))
+            {
+                continue;
+            }
+
+            overrides[i] = new KeyValuePair<AnimationClip, AnimationClip>(currentOverride.Key, overrideClip);
+        }
+
+        m_animatorOverrideController.ApplyOverrides(overrides);
+        animator.runtimeAnimatorController = m_animatorOverrideController;
     }
 
     public override IEnumerator PerformTurn()
@@ -84,7 +144,7 @@ public class Character : UnitCombatant
         yield return WaitForDeathEvents();
         //结束玩家回合的内容
         ExitMoveDOT();
-        yield return new WaitForSeconds(moveAnimDuration + 0.2f); 
+        yield return new WaitForSeconds(moveAnimDuration + 0.2f);
     }
     public void EndTurn()
     {
@@ -113,7 +173,7 @@ public class Character : UnitCombatant
     }
     public bool TryAddChaos(int amount)
     {
-        if (amount <= 0 || chaosValue >= MaxChaosValue||dead)
+        if (amount <= 0 || chaosValue >= MaxChaosValue || dead)
         {
             return false;
         }
@@ -163,7 +223,7 @@ public class Character : UnitCombatant
     private void EnterMoveDOT()
     {
         m_originalPosition = transform.position;
-        transform.DOMove(new Vector3(0,0,-7), moveAnimDuration).SetEase(moveAnimEase);
+        transform.DOMove(new Vector3(0, 0, -7), moveAnimDuration).SetEase(moveAnimEase);
     }
     private void ExitMoveDOT()
     {
@@ -247,12 +307,16 @@ public class Character : UnitCombatant
         {
             CharacterManager.Instance?.OnFieldCharacterClicked(this);
             SkillDescription.Instance.ChangeDescription(null);
+            mouseEnterFeedback?.StopFeedbacks();
+            mouseExitFeedback?.PlayFeedbacks();
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
             if (dead)
                 return;
             SkillManager.Instance?.OnCharacterClicked(this);
+            mouseEnterFeedback?.StopFeedbacks();
+            mouseExitFeedback?.PlayFeedbacks(); 
         }
     }
 
@@ -269,6 +333,14 @@ public class Character : UnitCombatant
     }
     #endregion
     #region 切换动画
+    public void PlayATKAnimation()
+    {
+        animator.SetTrigger("ATK");
+    }
+    public void EndATKAnimation()
+    {
+        animator.SetTrigger("Idle");
+    }
     public IEnumerator PlayExitAnimation()
     {
         //简单的退场动画：向右移动并淡出
@@ -276,14 +348,7 @@ public class Character : UnitCombatant
         float duration = 0.5f;
         Sequence exitSequence = DOTween.Sequence();
         exitSequence.Append(transform.DOMove(targetPosition, duration).SetEase(Ease.InBack));
-        foreach (var sr in spriteRenderer)
-        {
-            exitSequence.Join(sr.DOFade(0, duration));
-        }
-        foreach (var cg in slidersCanvasGroups)
-        {
-            exitSequence.Join(cg.DOFade(0, duration));
-        }
+        exitSequence.Join(spriteRenderer.DOFade(0, duration));
         yield return exitSequence.WaitForCompletion();
     }
     public IEnumerator PlayEnterAnimation()
@@ -295,10 +360,7 @@ public class Character : UnitCombatant
         float duration = 0.5f;
         Sequence enterSequence = DOTween.Sequence();
         enterSequence.Append(transform.DOMove(targetPosition, duration).SetEase(Ease.OutBack));
-        foreach (var sr in spriteRenderer)
-        {
-            enterSequence.Join(sr.DOFade(1, duration));
-        }
+        enterSequence.Join(spriteRenderer.DOFade(1, duration));
         foreach (var cg in slidersCanvasGroups)
         {
             enterSequence.Join(cg.DOFade(1, duration));
@@ -417,9 +479,10 @@ public class Character : UnitCombatant
         }
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
         CleanupSkillInstances();
+        base.OnDestroy();
     }
     public void LoadDataFromCSV()
     {

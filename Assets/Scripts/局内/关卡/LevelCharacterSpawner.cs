@@ -168,16 +168,15 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        GameObject prefabToSpawn = enemyPrefab != null ? enemyPrefab.gameObject : null;
+        GameObject prefabToSpawn = ResolveEnemyPrefab(data);
         if (prefabToSpawn == null)
         {
             Debug.LogWarning("[LevelCharacterSpawner] 敌人预制体为空，无法生成敌人。", this);
             return null;
         }
 
-        Transform spawnPoint = GetSpawnPoint(enemySpawnPoints, index);
-
-        GameObject spawnedObject = Instantiate(prefabToSpawn, GetSpawnPosition(spawnPoint), GetSpawnRotation(spawnPoint), enemyRoot);
+        ResolveEnemySpawnPose(prefabToSpawn, null, index, out Vector3 spawnPosition, out Quaternion spawnRotation);
+        GameObject spawnedObject = Instantiate(prefabToSpawn, spawnPosition, spawnRotation, enemyRoot);
         Enemy instance = spawnedObject.GetComponent<Enemy>();
         if (instance == null)
         {
@@ -198,16 +197,15 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        GameObject prefabToSpawn = enemyPrefab != null ? enemyPrefab.gameObject : null;
+        GameObject prefabToSpawn = ResolveEnemyPrefab(data.enemyData);
         if (prefabToSpawn == null)
         {
             Debug.LogWarning("[LevelCharacterSpawner] 敌人预制体为空，无法生成敌人。", this);
             return null;
         }
 
-        Transform spawnPoint = GetSpawnPoint(enemySpawnPoints, index);
-
-        GameObject spawnedObject = Instantiate(prefabToSpawn, GetSpawnPosition(spawnPoint), GetSpawnRotation(spawnPoint), enemyRoot);
+        ResolveEnemySpawnPose(prefabToSpawn, data, index, out Vector3 spawnPosition, out Quaternion spawnRotation);
+        GameObject spawnedObject = Instantiate(prefabToSpawn, spawnPosition, spawnRotation, enemyRoot);
         Enemy instance = spawnedObject.GetComponent<Enemy>();
         if (instance == null)
         {
@@ -216,7 +214,7 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        ConfigureEnemy(instance, data.enemyData, EnemyStandPositionStart + index, data.level);
+        ConfigureEnemy(instance, data, EnemyStandPositionStart + index);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -287,6 +285,16 @@ public class LevelCharacterSpawner : MonoBehaviour
         ConfigureEnemy(instance, data, standPosition, instance != null ? instance.level : 1);
     }
 
+    private void ConfigureEnemy(Enemy instance, BattleEnemySpawnData data, int standPosition)
+    {
+        if (instance == null || data == null)
+        {
+            return;
+        }
+
+        instance.ConfigureFromBattleSpawnData(data, standPosition);
+    }
+
     private void ConfigureEnemy(Enemy instance, EnemyRosterData data, int standPosition, int level)
     {
         if (instance == null || data == null)
@@ -294,13 +302,46 @@ public class LevelCharacterSpawner : MonoBehaviour
             return;
         }
 
-        instance.enemyID = data.enemyID;
-        instance.combatantName = string.IsNullOrEmpty(data.enemyName) ? data.enemyID : data.enemyName;
-        instance.skills = new List<EnemySkillType>(data.skills);
-        instance.participateInTurnLoopAtStart = true;
-        instance.standPosition = standPosition;
-        instance.level = Mathf.Max(1, level);
-        instance.LoadDataFromCSV();
+        instance.ConfigureFromRosterData(data, standPosition, level);
+    }
+
+    private GameObject ResolveEnemyPrefab(EnemyRosterData data)
+    {
+        if (data != null && data.PrefabOverride != null)
+        {
+            return data.PrefabOverride;
+        }
+
+        return enemyPrefab != null ? enemyPrefab.gameObject : null;
+    }
+
+    private void ResolveEnemySpawnPose(
+        GameObject prefabToSpawn,
+        BattleEnemySpawnData battleSpawnData,
+        int index,
+        out Vector3 position,
+        out Quaternion rotation)
+    {
+        if (ShouldUseChessPieceSpawnPoints(prefabToSpawn, battleSpawnData)
+            && ChessPieceSpawnPointManager.Instance != null
+            && ChessPieceSpawnPointManager.Instance.TryGetSpawnPose(index, out position, out rotation))
+        {
+            return;
+        }
+
+        Transform spawnPoint = GetSpawnPoint(enemySpawnPoints, index);
+        position = GetSpawnPosition(spawnPoint);
+        rotation = GetSpawnRotation(spawnPoint);
+    }
+
+    private static bool ShouldUseChessPieceSpawnPoints(GameObject prefabToSpawn, BattleEnemySpawnData battleSpawnData)
+    {
+        if (battleSpawnData != null && battleSpawnData.chessBossData != null)
+        {
+            return true;
+        }
+
+        return prefabToSpawn != null && prefabToSpawn.GetComponent<ChessBossEnemy>() != null;
     }
 
     private Transform GetSpawnPoint(Transform[] spawnPoints, int index)

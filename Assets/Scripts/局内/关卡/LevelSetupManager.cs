@@ -58,9 +58,30 @@ public class LevelSetupManager : MonoBehaviour
             out List<Character> spawnedFieldCharacters,
             out List<Enemy> spawnedEnemies);
 
+        InitializeSpawnedEnemies(spawnedEnemies);
+
         CharacterManager.Instance?.InitializeCharacters(spawnedAllCharacters, spawnedFieldCharacters);
         EnemyManager.Instance?.InitializeEnemies(spawnedEnemies);
         TurnManager.Instance?.InitializeTurnOrder(spawnedFieldCharacters, spawnedEnemies);
         m_initialized = true;
+    }
+
+    private void InitializeSpawnedEnemies(List<Enemy> spawnedEnemies)
+    {
+        if (spawnedEnemies == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<Enemy> readonlyEnemies = spawnedEnemies;
+        for (int i = 0; i < spawnedEnemies.Count; i++)
+        {
+            if (spawnedEnemies[i] == null)
+            {
+                continue;
+            }
+
+            spawnedEnemies[i].InitializeFromPendingLevelData(m_pendingBattleLevelData, readonlyEnemies);
+        }
     }
 }

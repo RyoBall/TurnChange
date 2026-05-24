@@ -992,6 +992,7 @@ GameObject:
   - component: {fileID: 270865252}
   - component: {fileID: 270865251}
   - component: {fileID: 270865254}
+  - component: {fileID: 270865255}
   m_Layer: 5
   m_Name: "\u6A21\u5757"
   m_TagString: Untagged
@@ -1126,6 +1127,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panel: {fileID: 710542394}
+--- !u!114 &270865255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 270865249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffectController: {fileID: 0}
 --- !u!1 &301964692
 GameObject:
   m_ObjectHideFlags: 0
@@ -3452,6 +3474,8 @@ GameObject:
   - component: {fileID: 744623422}
   - component: {fileID: 744623421}
   - component: {fileID: 744623424}
+  - component: {fileID: 744623425}
+  - component: {fileID: 744623426}
   m_Layer: 5
   m_Name: "\u5546\u5E97"
   m_TagString: Untagged
@@ -3548,7 +3572,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3586,6 +3610,178 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panel: {fileID: 366367846}
+--- !u!114 &744623425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744623419}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffectController: {fileID: 0}
+--- !u!114 &744623426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744623419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 938fce054c42f40a3969e27a88d9bdd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ToneFilter: 0
+  m_ToneIntensity: 1
+  m_ColorFilter: 0
+  m_ColorIntensity: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_ColorGlow: 0
+  m_SamplingFilter: 0
+  m_SamplingIntensity: 0.5
+  m_SamplingWidth: 1
+  m_SamplingScale: 1
+  m_TransitionFilter: 0
+  m_TransitionRate: 0.5
+  m_TransitionReverse: 0
+  m_TransitionTex: {fileID: 0}
+  m_TransitionTexScale: {x: 1, y: 1}
+  m_TransitionTexOffset: {x: 0, y: 0}
+  m_TransitionTexSpeed: {x: 0, y: 0}
+  m_TransitionRotation: 0
+  m_TransitionKeepAspectRatio: 1
+  m_TransitionWidth: 0.2
+  m_TransitionSoftness: 0.2
+  m_TransitionRange:
+    m_Min: 0
+    m_Max: 1
+  m_TransitionColorFilter: 6
+  m_TransitionColor: {r: 0, g: 0.5, b: 1, a: 1}
+  m_TransitionColorGlow: 0
+  m_TransitionPatternReverse: 0
+  m_TransitionAutoPlaySpeed: 0
+  m_TransitionGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  m_TargetMode: 0
+  m_TargetColor: {r: 1, g: 1, b: 1, a: 1}
+  m_TargetRange: 0.1
+  m_TargetSoftness: 0.5
+  m_BlendType: 1
+  m_SrcBlendMode: 1
+  m_DstBlendMode: 10
+  m_ShadowMode: 0
+  m_ShadowDistance: {x: 1, y: -1}
+  m_ShadowIteration: 1
+  m_ShadowFade: 0.9
+  m_ShadowMirrorScale: 0.5
+  m_ShadowBlurIntensity: 1
+  m_ShadowColorFilter: 4
+  m_ShadowColor: {r: 1, g: 1, b: 1, a: 1}
+  m_ShadowColorGlow: 0
+  m_GradationMode: 0
+  m_GradationIntensity: 1
+  m_GradationColorFilter: 1
+  m_GradationColor1: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationColor2: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationColor3: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationColor4: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  m_GradationOffset: 0
+  m_GradationScale: 1
+  m_GradationRotation: 0
+  m_GradationWrapMode: 0
+  m_GradationReverse: 0
+  m_AllowToModifyMeshShape: 1
+  m_EdgeMode: 2
+  m_EdgeWidth: 0.35
+  m_EdgeColorFilter: 4
+  m_EdgeColor: {r: 1, g: 1, b: 1, a: 1}
+  m_EdgeColorGlow: 0
+  m_EdgeShinyRate: 0.5
+  m_EdgeShinyWidth: 0.5
+  m_EdgeShinyAutoPlaySpeed: 1.2
+  m_PatternArea: 1
+  m_DetailFilter: 0
+  m_DetailIntensity: 1
+  m_DetailThreshold:
+    m_Min: 0
+    m_Max: 1
+  m_DetailColor: {r: 1, g: 1, b: 1, a: 1}
+  m_DetailTex: {fileID: 0}
+  m_DetailTexScale: {x: 1, y: 1}
+  m_DetailTexOffset: {x: 0, y: 0}
+  m_DetailTexSpeed: {x: 0, y: 0}
+  m_CustomRoot: {fileID: 0}
+  m_Flip: 0
 --- !u!1 &784171835
 GameObject:
   m_ObjectHideFlags: 0
@@ -5053,8 +5249,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -6088,6 +6284,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1222036208
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1222036209}
+  - component: {fileID: 1222036210}
+  m_Layer: 0
+  m_Name: ScreenTranstion
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1222036209
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222036208}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 184.46869, y: 35.83444, z: 215.61253}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1222036210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222036208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5aa74b13327f644395fe0a1bdc8cfea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  phase1Color: {r: 0, g: 0, b: 0, a: 1}
+  phase2Color: {r: 0, g: 0, b: 0, a: 0}
+  fadeToPhase1Duration: 0.5
+  holdPhase1Duration: 0
+  transitionPhase1To2Duration: 0.6
+  fadeOutDuration: 0.25
+  createOverlayIfMissing: 1
+  overlayImage: {fileID: 0}
 --- !u!1 &1230434903
 GameObject:
   m_ObjectHideFlags: 0
@@ -6977,8 +7225,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
-  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -8712,6 +8960,7 @@ GameObject:
   - component: {fileID: 1697916958}
   - component: {fileID: 1697916957}
   - component: {fileID: 1697916960}
+  - component: {fileID: 1697916961}
   m_Layer: 5
   m_Name: "\u89D2\u8272"
   m_TagString: Untagged
@@ -8846,6 +9095,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panel: {fileID: 9879195}
+--- !u!114 &1697916961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1697916955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffectController: {fileID: 0}
 --- !u!1 &1699391189
 GameObject:
   m_ObjectHideFlags: 0
@@ -8859,6 +9129,7 @@ GameObject:
   - component: {fileID: 1699391192}
   - component: {fileID: 1699391191}
   - component: {fileID: 1699391194}
+  - component: {fileID: 1699391195}
   m_Layer: 5
   m_Name: "\u5F00\u59CB"
   m_TagString: Untagged
@@ -8955,14 +9226,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.72156864}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.72156864}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cecdbf60b0c9d47c9a26b99a41425de0, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e802b29e86b4ef74abe728250ecaf37c, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8995,6 +9266,27 @@ MonoBehaviour:
   startButton: {fileID: 1699391191}
   preparationPanel: {fileID: 505091965}
   battleSceneName: Fight
+--- !u!114 &1699391195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1699391189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffectController: {fileID: 0}
 --- !u!1 &1727432550
 GameObject:
   m_ObjectHideFlags: 0
@@ -9146,6 +9438,7 @@ GameObject:
   - component: {fileID: 1743576566}
   - component: {fileID: 1743576565}
   - component: {fileID: 1743576568}
+  - component: {fileID: 1743576569}
   m_Layer: 5
   m_Name: "\u79BB\u5F00"
   m_TagString: Untagged
@@ -9242,14 +9535,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.72156864}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.72156864}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cecdbf60b0c9d47c9a26b99a41425de0, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e802b29e86b4ef74abe728250ecaf37c, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9279,6 +9572,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fde9a2e4a1bb7d40bc3e557e5fede64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1743576569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1743576563}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffectController: {fileID: 0}
 --- !u!1 &1776988290
 GameObject:
   m_ObjectHideFlags: 0
@@ -9901,8 +10215,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -10557,33 +10871,248 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levels:
-  - levelId: "\u5173\u53611"
+  - levelId: 1
     levelName: "\u5173\u53611"
     enemies:
     - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-      level: 1
+      level: 0
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
     - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-      level: 1
-    - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
-      level: 1
-  - levelId: "\u5173\u53611"
-    levelName: "\u5173\u53611"
+      level: 0
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
+  - levelId: 2
+    levelName: "\u5173\u53612"
     enemies:
     - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
       level: 1
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
     - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
       level: 1
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
     - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
       level: 1
-  - levelId: "\u5173\u53611"
-    levelName: "\u5173\u53611"
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
+  - levelId: 3
+    levelName: "\u5173\u53613"
     enemies:
-    - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+    - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
       level: 1
-    - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
       level: 1
-    - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
       level: 1
+      isChessSeriesEnemy: 0
+      chessBossData:
+        enabled: 0
+        bossGroupId: chess-boss
+        unitRole: 0
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 0}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
+        pawnAdvanceDuration: 0.2
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0.03
+        immuneToDaze: 1
+        immuneToTaunt: 1
+  - levelId: 4
+    levelName: "Boss\u5173\u53611"
+    enemies:
+    - enemyData: {fileID: 11400000, guid: ba3c4b9d8f1771b46945f5fcbc705263, type: 2}
+      level: 0
+      isChessSeriesEnemy: 1
+      chessBossData:
+        enabled: 1
+        bossGroupId: chess_queen_01
+        unitRole: 2
+        startHiddenUntilPhaseTwo: 1
+        summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094,
+          type: 2}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+        pawnAdvanceDuration: 0
+        pawnPromotionSteps: 0
+        summonedPawnHealRatio: 0
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: dc369b35f1798a44a931b686139d7d64, type: 2}
+      level: 1
+      isChessSeriesEnemy: 1
+      chessBossData:
+        enabled: 1
+        bossGroupId: chess_queen_01
+        unitRole: 1
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094,
+          type: 2}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: -1, y: 0, z: 0}
+        pawnAdvanceDuration: 0.5
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: dc369b35f1798a44a931b686139d7d64, type: 2}
+      level: 1
+      isChessSeriesEnemy: 1
+      chessBossData:
+        enabled: 1
+        bossGroupId: chess_queen_01
+        unitRole: 1
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094,
+          type: 2}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: -1, y: 0, z: 0}
+        pawnAdvanceDuration: 0.5
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: dc369b35f1798a44a931b686139d7d64, type: 2}
+      level: 1
+      isChessSeriesEnemy: 1
+      chessBossData:
+        enabled: 1
+        bossGroupId: chess_queen_01
+        unitRole: 1
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094,
+          type: 2}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: -1, y: 0, z: 0}
+        pawnAdvanceDuration: 0.5
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: dc369b35f1798a44a931b686139d7d64, type: 2}
+      level: 1
+      isChessSeriesEnemy: 1
+      chessBossData:
+        enabled: 1
+        bossGroupId: chess_queen_01
+        unitRole: 1
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094,
+          type: 2}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: -1, y: 0, z: 0}
+        pawnAdvanceDuration: 0.5
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0
+        immuneToDaze: 1
+        immuneToTaunt: 1
+    - enemyData: {fileID: 11400000, guid: dc369b35f1798a44a931b686139d7d64, type: 2}
+      level: 1
+      isChessSeriesEnemy: 1
+      chessBossData:
+        enabled: 1
+        bossGroupId: chess_queen_01
+        unitRole: 1
+        startHiddenUntilPhaseTwo: 0
+        summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094,
+          type: 2}
+        summonPawnLevel: 1
+        pawnAdvanceOffset: {x: -1, y: 0, z: 0}
+        pawnAdvanceDuration: 0.5
+        pawnPromotionSteps: 5
+        summonedPawnHealRatio: 0
+        immuneToDaze: 1
+        immuneToTaunt: 1
   itemsRoot: {fileID: 1147383442}
   carousel: {fileID: 140247126}
   populateOnStart: 1
@@ -11398,8 +11927,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -11874,6 +12403,7 @@ GameObject:
   - component: {fileID: 2136942194}
   - component: {fileID: 2136942193}
   - component: {fileID: 2136942196}
+  - component: {fileID: 2136942197}
   m_Layer: 5
   m_Name: "\u914D\u7F6E"
   m_TagString: Untagged
@@ -11970,15 +12500,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.72156864}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.72156864}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: cecdbf60b0c9d47c9a26b99a41425de0, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 82c9d5c8726c57249b51c39e76eee072, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -12008,6 +12538,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panel: {fileID: 710542394}
+--- !u!114 &2136942197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136942191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffectController: {fileID: 0}
 --- !u!1 &2139047893
 GameObject:
   m_ObjectHideFlags: 0
@@ -12276,3 +12827,4 @@ SceneRoots:
   - {fileID: 1220007940}
   - {fileID: 964294950}
   - {fileID: 1978627446}
+  - {fileID: 1222036209}

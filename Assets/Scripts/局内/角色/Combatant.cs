@@ -23,6 +23,11 @@ public class Combatant : MonoBehaviour
         TurnManager.Instance?.NotifyCombatantActionValueChanged(this);
     }
 
+    public virtual float ConsumeTurnEndActionValue()
+    {
+        return BaseActionValue;
+    }
+
     public virtual IEnumerator PerformTurn()
     {
         yield break;

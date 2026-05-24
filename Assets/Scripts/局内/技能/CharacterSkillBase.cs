@@ -131,6 +131,7 @@ public class CharacterSkillBase : SkillBase
             }
             FloatingTipGenerator.Instance.ShowDefaultTip(SkillDictionaryManager.GetSkillName(skillType));
             //动画占位
+            character.PlayATKAnimation();
             yield return new WaitForSeconds(0.5f);
         }
         else
@@ -217,10 +218,10 @@ public class CharacterSkillBase : SkillBase
                 break;
         }
         //受击动画占位
-        yield return new WaitForSeconds(0.5f);
-
         if (useSkillCameraTransition && shouldEndTurn)
         {
+            yield return new WaitForSeconds(0.5f);
+            character.EndATKAnimation();
             yield return cameraManager.TransitionOutOfSkillCamera();
         }
 
