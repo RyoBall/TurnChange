@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEditor;
 #endif
 using System.Collections.Generic;
-using System.IO;
-using System;
 public class CharacterDataImporter
 {
 
@@ -12,11 +10,16 @@ public class CharacterDataImporter
     public static void ImportCharacterDatas()
     {
         Debug.Log("正在导入角色数据...");
-        if (LevelDataContainer.CharacterLevelData == null)
-            LevelDataContainer.CharacterLevelData = new Dictionary<string, Dictionary<int, CharacterLevelData>>();
+        if (Config.Instance == null)
+        {
+            Debug.LogError("[CharacterDataImporter] 未找到 AppConfig，无法导入角色数据");
+            return;
+        }
+
+        var importedData = new Dictionary<string, Dictionary<int, CharacterLevelData>>();
         List<Dictionary<string, string>> csvData = CSVReader.ReadCSV(Config.Instance.CharacterDataCSVPath);
         string characterName = null;
-        int ID=0;
+        int ID = 0;
         foreach (var row in csvData)
         {
             if (GetInt(row, "Level") == -1)
@@ -37,11 +40,22 @@ public class CharacterDataImporter
                 GetInt(row, "Speed"),
                 GetInt(row, "K")
             );
-            if (!LevelDataContainer.CharacterLevelData.ContainsKey(ID.ToString()))
-                LevelDataContainer.CharacterLevelData[ID.ToString()] = new Dictionary<int, CharacterLevelData>();
-            LevelDataContainer.CharacterLevelData[ID.ToString()][level] = levelData;
+            if (string.IsNullOrWhiteSpace(characterName))
+            {
+                continue;
+            }
+
+            if (!importedData.ContainsKey(characterName))
+                importedData[characterName] = new Dictionary<int, CharacterLevelData>();
+            importedData[characterName][level] = levelData;
         }
-        Debug.Log($"角色数据导入完成！");
+
+        CharacterLevelDataContainer dataContainer = CharacterLevelDataContainer.GetOrCreateAsset();
+        dataContainer.ImportCharacterData(importedData);
+        EditorUtility.SetDirty(dataContainer);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log($"角色数据导入完成！已更新资产: {CharacterLevelDataContainer.AssetPath}");
     }
 
     static int GetInt(Dictionary<string, string> dict, string key, int defaultValue = -1)
@@ -78,9 +92,4 @@ public class CharacterDataImporter
         EditorApplication.projectChanged += ImportCharacterDatas; // 项目发生变化时重新导入数据
     }
 #endif
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void RuntimeInitialize()
-    {
-        ImportCharacterDatas();
-    }
 }

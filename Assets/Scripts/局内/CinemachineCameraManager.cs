@@ -11,7 +11,8 @@ public enum ManagedCameraType
 	None = 0,
 	Main = 1,
 	Attack = 2,
-	Help = 3, 
+	Help = 3,
+	Settlement = 4,
 }
 
 public class CinemachineCameraManager : MonoBehaviour
@@ -32,6 +33,7 @@ public class CinemachineCameraManager : MonoBehaviour
 	[SerializeField] private bool enableMainCameraSway = true;
 	[SerializeField] private float mainCameraSwayAmplitude = 0.15f;
 	[SerializeField] private float mainCameraSwayFrequency = 0.35f;
+	[SerializeField] [Min(0f)] private float mainCameraSwayEdgeHoldDuration = 0.12f;
 	[SerializeField] [Range(0f, 1f)] private float mainCameraSwayBreathBlend = 0.2f;
 	[SerializeField] private bool enableMainCameraVerticalFloat = true;
 	[SerializeField] private float mainCameraVerticalFloatAmplitude = 0.03f;
@@ -40,6 +42,8 @@ public class CinemachineCameraManager : MonoBehaviour
 	[Header("Main 相机 Vignette 联动")]
 	[SerializeField] private bool enableMainCameraVignettePulse = true;
 	[SerializeField] private Volume globalVolume;
+	[SerializeField] [Range(0f, 1f)] private float mainCameraVignetteBaseIntensity = 0f;
+	[SerializeField] private float mainCameraVignettePulseMinimum = 0f;
 	[SerializeField] private float mainCameraVignettePulseAmplitude = 0.08f;
 	[Header("开场镜头过渡")]
 	[SerializeField] private bool playOpeningIntroOnStart = true;
@@ -50,6 +54,10 @@ public class CinemachineCameraManager : MonoBehaviour
 	[SerializeField] private bool enableSkillCameraVignetteTransition = true;
 	[SerializeField] [Min(0f)] private float skillCameraTransitionDuration = 0.35f;
 	[SerializeField] [Range(0f, 1f)] private float skillCameraVignetteIntensity = 0.32f;
+	[Header("结算镜头 Vignette 过渡")]
+	[SerializeField] private bool enableSettlementCameraVignetteTransition = true;
+	[SerializeField] [Min(0f)] private float settlementCameraTransitionDuration = 0.45f;
+	[SerializeField] [Range(0f, 1f)] private float settlementCameraVignetteIntensity = 0.4f;
 
 	private readonly Dictionary<ManagedCameraType, CinemachineVirtualCameraBase> m_cameraMap =
 		new Dictionary<ManagedCameraType, CinemachineVirtualCameraBase>();
@@ -59,8 +67,6 @@ public class CinemachineCameraManager : MonoBehaviour
 		new Dictionary<ManagedCameraType, Quaternion>();
 
 	private Vignette m_mainCameraVignette;
-	private float m_initialVignetteIntensity;
-	private bool m_hasInitialVignetteIntensity;
 	private bool m_skillVignetteOverrideActive;
 	private float m_mainCameraSwayCycleStartTime;
 	private bool m_isPlayingOpeningIntro;
@@ -164,14 +170,25 @@ public class CinemachineCameraManager : MonoBehaviour
 	{
 		Debug.Log("[CinemachineCameraManager] 过渡进入技能镜头");
 		SwitchCamera(skillCameraType);
-		yield return AnimateSkillCameraVignette(skillCameraVignetteIntensity);
+		yield return AnimateSkillCameraVignette(skillCameraVignetteIntensity, true);
 	}
 
 	public IEnumerator TransitionOutOfSkillCamera()
 	{
+		CacheVignetteReference();
 		SwitchCamera(ManagedCameraType.Main);
-		yield return AnimateSkillCameraVignette(m_initialVignetteIntensity);
+		yield return AnimateSkillCameraVignette(GetMainCameraMinimumVignetteIntensity(), false);
 		RestartMainCameraSwayCycle();
+	}
+
+	public IEnumerator TransitionIntoSettlementCamera(ManagedCameraType settlementCameraType)
+	{
+		SwitchCamera(settlementCameraType);
+		yield return AnimateVignetteOverride(
+			settlementCameraVignetteIntensity,
+			settlementCameraTransitionDuration,
+			enableSettlementCameraVignetteTransition,
+			true);
 	}
 
 	public CinemachineVirtualCameraBase GetCamera(ManagedCameraType cameraType)
@@ -233,9 +250,9 @@ public class CinemachineCameraManager : MonoBehaviour
 		if (duration <= Mathf.Epsilon)
 		{
 			mainCamera.transform.SetLocalPositionAndRotation(targetLocalPosition, targetLocalRotation);
-			if (m_mainCameraVignette != null && m_hasInitialVignetteIntensity)
+			if (m_mainCameraVignette != null)
 			{
-				m_mainCameraVignette.intensity.Override(m_initialVignetteIntensity);
+				m_mainCameraVignette.intensity.Override(GetMainCameraMinimumVignetteIntensity());
 			}
 			m_skillVignetteOverrideActive = false;
 			RestartMainCameraSwayCycle();
@@ -245,7 +262,7 @@ public class CinemachineCameraManager : MonoBehaviour
 		}
 
 		startVignette = m_mainCameraVignette != null ? startVignette : 0f;
-		float targetVignette = m_hasInitialVignetteIntensity ? m_initialVignetteIntensity : 0f;
+		float targetVignette = GetMainCameraMinimumVignetteIntensity();
 		float elapsed = 0f;
 		while (elapsed < duration)
 		{
@@ -266,9 +283,9 @@ public class CinemachineCameraManager : MonoBehaviour
 		}
 
 		mainCamera.transform.SetLocalPositionAndRotation(targetLocalPosition, targetLocalRotation);
-		if (m_mainCameraVignette != null && m_hasInitialVignetteIntensity)
+		if (m_mainCameraVignette != null)
 		{
-			m_mainCameraVignette.intensity.Override(m_initialVignetteIntensity);
+			m_mainCameraVignette.intensity.Override(GetMainCameraMinimumVignetteIntensity());
 		}
 
 		m_skillVignetteOverrideActive = false;
@@ -360,7 +377,7 @@ public class CinemachineCameraManager : MonoBehaviour
 		}
 
 		float elapsed = Mathf.Max(0f, Time.time - m_mainCameraSwayCycleStartTime);
-		ApplyMainCameraSway(mainCamera, initialLocalPosition, initialLocalRotation, elapsed);
+		ApplyMainCameraSwayNormally(mainCamera, initialLocalPosition, elapsed);
 	}
 
 	private void ApplyMainCameraSway(
@@ -390,6 +407,59 @@ public class CinemachineCameraManager : MonoBehaviour
 		mainCamera.transform.localRotation = initialLocalRotation * Quaternion.Euler(0f, 0f, rotationOffset);
 		UpdateMainCameraVignette(1f - breathValue);
 	}
+	private void ApplyMainCameraSwayNormally(CinemachineVirtualCameraBase mainCamera, Vector3 initialLocalPosition,float elapsed)
+	{
+		float normalizedOffset = EvaluateHeldSineOffset(elapsed);
+		float swayOffset = normalizedOffset * mainCameraSwayAmplitude;
+		Vector3 positionOffset = Vector3.right * swayOffset; 
+		mainCamera.transform.localPosition = initialLocalPosition + positionOffset;
+		UpdateMainCameraVignette(0.5f - 0.5f * normalizedOffset);
+	}
+
+	private float EvaluateHeldSineOffset(float elapsed)
+	{
+		float safeFrequency = Mathf.Max(0.0001f, mainCameraSwayFrequency);
+		float moveDuration = 2f / safeFrequency;
+		float halfEdgeMoveDuration = moveDuration * 0.25f;
+		float fullEdgeMoveDuration = moveDuration * 0.5f;
+		float holdDuration = Mathf.Max(0f, mainCameraSwayEdgeHoldDuration);
+		float totalDuration = moveDuration + holdDuration * 2f;
+		float cycleTime = Mathf.Repeat(elapsed, totalDuration);
+
+		if (cycleTime < halfEdgeMoveDuration)
+		{
+			float progress = cycleTime / halfEdgeMoveDuration;
+			return Mathf.Sin(progress * Mathf.PI * 0.5f);
+		}
+
+		cycleTime -= halfEdgeMoveDuration;
+		if (cycleTime < holdDuration)
+		{
+			return 1f;
+		}
+
+		cycleTime -= holdDuration;
+		if (cycleTime < fullEdgeMoveDuration)
+		{
+			float progress = cycleTime / fullEdgeMoveDuration;
+			return Mathf.Cos(progress * Mathf.PI);
+		}
+
+		cycleTime -= fullEdgeMoveDuration;
+		if (cycleTime < holdDuration)
+		{
+			return -1f;
+		}
+
+		cycleTime -= holdDuration;
+		if (halfEdgeMoveDuration <= Mathf.Epsilon)
+		{
+			return 0f;
+		}
+
+		float finalProgress = cycleTime / halfEdgeMoveDuration;
+		return -Mathf.Cos(finalProgress * Mathf.PI * 0.5f);
+	}
 
 	private void RestartMainCameraSwayCycle()
 	{
@@ -417,7 +487,7 @@ public class CinemachineCameraManager : MonoBehaviour
 			ResetMainCameraTransform();
 			if (!m_skillVignetteOverrideActive)
 			{
-				ResetMainCameraVignette();
+				ApplyMainCameraMinimumVignette();
 			}
 			return;
 		}
@@ -426,7 +496,7 @@ public class CinemachineCameraManager : MonoBehaviour
 		mainCamera.transform.localRotation = initialLocalRotation;
 		if (!m_skillVignetteOverrideActive)
 		{
-			ResetMainCameraVignette();
+			ApplyMainCameraMinimumVignette();
 		}
 	}
 
@@ -484,18 +554,57 @@ public class CinemachineCameraManager : MonoBehaviour
 
 		horizontalProgress = Mathf.Clamp01(horizontalProgress);
 		float leftWeightedProgress = 1f - horizontalProgress;
-		float targetIntensity = m_initialVignetteIntensity + leftWeightedProgress * mainCameraVignettePulseAmplitude;
+		float pulseMinimum = GetMainCameraVignettePulseMinimum();
+		float pulseMaximum = GetMainCameraVignettePulseMaximum();
+		float pulseValue = Mathf.Lerp(pulseMinimum, pulseMaximum, leftWeightedProgress);
+		float targetIntensity = GetMainCameraBaseVignetteIntensity() + pulseValue;
 		m_mainCameraVignette.intensity.Override(Mathf.Clamp01(targetIntensity));
 	}
 
-	private void ResetMainCameraVignette()//重置主摄像机的晕影参数
+	private float GetMainCameraBaseVignetteIntensity()
 	{
-		if (m_mainCameraVignette == null || !m_hasInitialVignetteIntensity)
+		return Mathf.Clamp01(mainCameraVignetteBaseIntensity);
+	}
+
+	private float GetMainCameraVignettePulseMinimum()
+	{
+		return Mathf.Max(0f, Mathf.Min(mainCameraVignettePulseMinimum, mainCameraVignettePulseAmplitude));
+	}
+
+	private float GetMainCameraVignettePulseMaximum()
+	{
+		float pulseMinimum = GetMainCameraVignettePulseMinimum();
+		return Mathf.Max(pulseMinimum, mainCameraVignettePulseAmplitude);
+	}
+
+	private float GetMainCameraMinimumVignetteIntensity()
+	{
+		if (!enableMainCameraVignettePulse)
+		{
+			return GetMainCameraBaseVignetteIntensity();
+		}
+
+		return Mathf.Clamp01(GetMainCameraBaseVignetteIntensity() + GetMainCameraVignettePulseMinimum());
+	}
+
+	private void ApplyMainCameraMinimumVignette()
+	{
+		if (m_mainCameraVignette == null)
 		{
 			return;
 		}
 
-		m_mainCameraVignette.intensity.Override(m_initialVignetteIntensity);
+		m_mainCameraVignette.intensity.Override(GetMainCameraMinimumVignetteIntensity());
+	}
+
+	private void ResetMainCameraVignette()//重置主摄像机的晕影参数
+	{
+		if (m_mainCameraVignette == null)
+		{
+			return;
+		}
+
+		m_mainCameraVignette.intensity.Override(GetMainCameraBaseVignetteIntensity());
 	}
 
 	private void CacheVignetteReference()//获取引用
@@ -508,7 +617,6 @@ public class CinemachineCameraManager : MonoBehaviour
 		if (globalVolume == null)
 		{
 			m_mainCameraVignette = null;
-			m_hasInitialVignetteIntensity = false;
 			return;
 		}
 
@@ -516,23 +624,29 @@ public class CinemachineCameraManager : MonoBehaviour
 		if (profile == null || !profile.TryGet(out Vignette vignette) || vignette == null)
 		{
 			m_mainCameraVignette = null;
-			m_hasInitialVignetteIntensity = false;
 			return;
 		}
 
-		if (m_mainCameraVignette != vignette || !m_hasInitialVignetteIntensity)
+		if (m_mainCameraVignette != vignette)
 		{
 			m_mainCameraVignette = vignette;
-			m_initialVignetteIntensity = vignette.intensity.value;
-			m_hasInitialVignetteIntensity = true;
 		}
 	}
 
-	private IEnumerator AnimateSkillCameraVignette(float targetIntensity)//技能镜头晕影动画
+	private IEnumerator AnimateSkillCameraVignette(float targetIntensity, bool keepOverrideAfterFinish)//技能镜头晕影动画
+	{
+		yield return AnimateVignetteOverride(
+			targetIntensity,
+			skillCameraTransitionDuration,
+			enableSkillCameraVignetteTransition,
+			keepOverrideAfterFinish);
+	}
+
+	private IEnumerator AnimateVignetteOverride(float targetIntensity, float duration, bool enableTransition, bool keepOverrideAfterFinish)
 	{
 		CacheVignetteReference();
-		float duration = Mathf.Max(0f, skillCameraTransitionDuration);
-		if (!enableSkillCameraVignetteTransition || m_mainCameraVignette == null)
+		duration = Mathf.Max(0f, duration);
+		if (!enableTransition || m_mainCameraVignette == null)
 		{
 			if (duration > 0f)
 			{
@@ -548,7 +662,7 @@ public class CinemachineCameraManager : MonoBehaviour
 		if (duration <= Mathf.Epsilon)
 		{
 			m_mainCameraVignette.intensity.Override(targetIntensity);
-			m_skillVignetteOverrideActive = !Mathf.Approximately(targetIntensity, m_initialVignetteIntensity);
+			m_skillVignetteOverrideActive = keepOverrideAfterFinish;
 			yield break;
 		}
 
@@ -564,7 +678,7 @@ public class CinemachineCameraManager : MonoBehaviour
 		}
 
 		m_mainCameraVignette.intensity.Override(targetIntensity);
-		m_skillVignetteOverrideActive = !Mathf.Approximately(targetIntensity, m_initialVignetteIntensity);
+		m_skillVignetteOverrideActive = keepOverrideAfterFinish;
 	}
 
 	private float EvaluateBreathingEase(float value)//计算呼吸缓动值

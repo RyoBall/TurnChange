@@ -126,6 +126,27 @@ public class LevelCharacterSpawner : MonoBehaviour
         m_spawnedObjects.Clear();
     }
 
+    public void SpawnEnemyWave(
+        IReadOnlyList<BattleEnemySpawnData> runtimeFieldEnemies,
+        out List<Enemy> spawnedEnemies,
+        int standPositionStart = EnemyStandPositionStart)
+    {
+        spawnedEnemies = new List<Enemy>();
+        if (runtimeFieldEnemies == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < runtimeFieldEnemies.Count; i++)
+        {
+            Enemy enemy = SpawnEnemy(runtimeFieldEnemies[i], i, standPositionStart);
+            if (enemy != null)
+            {
+                spawnedEnemies.Add(enemy);
+            }
+        }
+    }
+
     private Character SpawnCharacter(CharacterRosterData data, int fieldOrderIndex, ref int reserveIndex)
     {
         if (data == null)
@@ -190,7 +211,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         return instance;
     }
 
-    private Enemy SpawnEnemy(BattleEnemySpawnData data, int index)
+    private Enemy SpawnEnemy(BattleEnemySpawnData data, int index, int standPositionStart = EnemyStandPositionStart)
     {
         if (data == null || data.enemyData == null)
         {
@@ -214,7 +235,7 @@ public class LevelCharacterSpawner : MonoBehaviour
             return null;
         }
 
-        ConfigureEnemy(instance, data, EnemyStandPositionStart + index);
+        ConfigureEnemy(instance, data, standPositionStart + index);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -277,6 +298,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         instance.exitSkill = data.exitSkill;
         instance.participateInTurnLoopAtStart = participateInTurnLoop;
         instance.standPosition = standPosition;
+        instance.level = Datas.Instance != null ? Datas.Instance.GetTeamLevel() : Mathf.Max(1, instance.level);
         instance.LoadDataFromCSV();
     }
 

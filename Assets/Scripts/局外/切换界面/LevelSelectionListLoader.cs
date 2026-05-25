@@ -31,9 +31,11 @@ public class LevelSelectionListLoader : MonoBehaviour
     {
         ResolveReferences();
 
+        List<LevelSelectionData> sourceLevels = GetSourceLevels();
+
         if (carousel != null)
         {
-            carousel.RegenerateItems(levels.Count);
+            carousel.RegenerateItems(sourceLevels.Count);
             itemsRoot = carousel.ItemsRoot;
         }
 
@@ -52,7 +54,7 @@ public class LevelSelectionListLoader : MonoBehaviour
                 continue;
             }
 
-            bool shouldEnable = appliedCount < levels.Count;
+            bool shouldEnable = appliedCount < sourceLevels.Count;
             item.gameObject.SetActive(shouldEnable || !disableExtraItems);
 
             if (!shouldEnable)
@@ -60,11 +62,25 @@ public class LevelSelectionListLoader : MonoBehaviour
                 continue;
             }
 
-            item.SetLevelData(levels[appliedCount]);
+            LevelSelectionData levelData = sourceLevels[appliedCount];
+            bool isCompleted = Datas.Instance != null && Datas.Instance.IsLevelCompleted(levelData != null ? levelData.levelId : string.Empty);
+            item.SetLevelData(levelData);
+            item.SetCompletedState(isCompleted);
             appliedCount++;
         }
 
         carousel?.RefreshItems();
+    }
+
+    private List<LevelSelectionData> GetSourceLevels()
+    {
+        if (Datas.Instance != null)
+        {
+            Datas.Instance.SetAllLevels(levels);
+            return new List<LevelSelectionData>(Datas.Instance.GetAllLevels());
+        }
+
+        return levels != null ? new List<LevelSelectionData>(levels) : new List<LevelSelectionData>();
     }
 
     private void ResolveReferences()

@@ -13,6 +13,32 @@ public class EnemyManager : MonoBehaviour
 
 
     public IReadOnlyList<Enemy> AliveEnemies => m_aliveEnemies;
+    public int AliveEnemyCount
+    {
+        get
+        {
+            CleanupNullEnemies();
+            return m_aliveEnemies.Count;
+        }
+    }
+
+    public int PendingEnemyCount
+    {
+        get
+        {
+            CleanupNullEnemies();
+            return m_pendingEnemies.Count;
+        }
+    }
+
+    public bool HasRemainingEnemies
+    {
+        get
+        {
+            CleanupNullEnemies();
+            return m_aliveEnemies.Count > 0 || m_pendingEnemies.Count > 0;
+        }
+    }
 
     private void Awake()
     {
@@ -82,6 +108,31 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
+    public void RegisterEnemies(IEnumerable<Enemy> runtimeEnemies)
+    {
+        if (runtimeEnemies == null)
+        {
+            return;
+        }
+
+        foreach (Enemy enemy in runtimeEnemies)
+        {
+            if (enemy == null)
+            {
+                continue;
+            }
+
+            if (enemy.ShouldRegisterAtBattleStart)
+            {
+                RegisterEnemy(enemy);
+            }
+            else
+            {
+                RegisterPendingEnemy(enemy);
+            }
+        }
+    }
+
     public void UnregisterEnemy(Enemy enemy)
     {
         if (enemy == null)
@@ -96,6 +147,14 @@ public class EnemyManager : MonoBehaviour
     }
 
     private void CheckAllEnemiesDefeated()
+    {
+        CleanupNullEnemies();
+
+        if (m_aliveEnemies.Count > 0 || m_pendingEnemies.Count > 0)
+            return;
+    }
+
+    private void CleanupNullEnemies()
     {
         for (int i = m_aliveEnemies.Count - 1; i >= 0; i--)
         {
@@ -112,15 +171,5 @@ public class EnemyManager : MonoBehaviour
                 m_pendingEnemies.RemoveAt(i);
             }
         }
-
-        if (m_aliveEnemies.Count > 0 || m_pendingEnemies.Count > 0)
-            return;
-
-        Victory();
-    }
-
-    private void Victory()
-    {
-        FloatingTipGenerator.Instance?.ShowDefaultTip("所有敌人已清空");
     }
 }

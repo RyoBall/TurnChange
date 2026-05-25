@@ -229,6 +229,7 @@ RectTransform:
   - {fileID: 1720563549}
   - {fileID: 700564561}
   - {fileID: 1363633584}
+  - {fileID: 1058072080}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -319,7 +320,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -24.1875, y: 12.1762}
+  m_AnchoredPosition: {x: -24.1875, y: 12.1762085}
   m_SizeDelta: {x: -121.9024, y: -124.3524}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &53602676
@@ -591,37 +592,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &95796462
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 95796463}
-  m_Layer: 0
-  m_Name: "\u52A8\u753B\u5217\u8868"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &95796463
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 95796462}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1036003880}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &115546820
 GameObject:
   m_ObjectHideFlags: 0
@@ -718,753 +688,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 115546820}
   m_CullTransparentMesh: 1
---- !u!1 &125223967
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 125223969}
-  - component: {fileID: 125223968}
-  m_Layer: 0
-  m_Name: "\u6570\u636E\u5B57\u5178"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &125223968
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 125223967}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0e46fffe9b62894ba1762f1ef4e9116, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  characterLevelEntriesList:
-  - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B"
-    characterId: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B"
-    levelEntries:
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 1"
-      level: 1
-      data:
-        maxHP: 160
-        attack: 185
-        defense: 81
-        critRate: 0.2
-        critDamage: 1.5
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 2"
-      level: 2
-      data:
-        maxHP: 276
-        attack: 403
-        defense: 100
-        critRate: 0.2
-        critDamage: 1.5
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 3"
-      level: 3
-      data:
-        maxHP: 346
-        attack: 533
-        defense: 114
-        critRate: 0.2
-        critDamage: 1.5
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 4"
-      level: 4
-      data:
-        maxHP: 400
-        attack: 635
-        defense: 126
-        critRate: 0.2
-        critDamage: 1.9
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 5"
-      level: 5
-      data:
-        maxHP: 447
-        attack: 723
-        defense: 136
-        critRate: 0.2
-        critDamage: 1.9
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 6"
-      level: 6
-      data:
-        maxHP: 488
-        attack: 800
-        defense: 146
-        critRate: 0.25
-        critDamage: 1.9
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 7"
-      level: 7
-      data:
-        maxHP: 526
-        attack: 871
-        defense: 155
-        critRate: 0.25
-        critDamage: 2.2
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 8"
-      level: 8
-      data:
-        maxHP: 560
-        attack: 935
-        defense: 163
-        critRate: 0.25
-        critDamage: 2.2
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 9"
-      level: 9
-      data:
-        maxHP: 593
-        attack: 996
-        defense: 171
-        critRate: 0.3
-        critDamage: 2.2
-        speed: 40
-        K: 100
-    - descrip: "\u76F4\u4F24\u5355\u4F53\u8F93\u51FA\u624B Level 10"
-      level: 10
-      data:
-        maxHP: 623
-        attack: 1053
-        defense: 178
-        critRate: 0.3
-        critDamage: 2.5
-        speed: 40
-        K: 100
-  - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B"
-    characterId: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B"
-    levelEntries:
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 1"
-      level: 1
-      data:
-        maxHP: 330
-        attack: 135
-        defense: 104
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 2"
-      level: 2
-      data:
-        maxHP: 423
-        attack: 288
-        defense: 126
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 3"
-      level: 3
-      data:
-        maxHP: 494
-        attack: 379
-        defense: 143
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 4"
-      level: 4
-      data:
-        maxHP: 554
-        attack: 450
-        defense: 157
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 5"
-      level: 5
-      data:
-        maxHP: 606
-        attack: 512
-        defense: 169
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 6"
-      level: 6
-      data:
-        maxHP: 654
-        attack: 566
-        defense: 180
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 7"
-      level: 7
-      data:
-        maxHP: 698
-        attack: 615
-        defense: 191
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 8"
-      level: 8
-      data:
-        maxHP: 739
-        attack: 660
-        defense: 200
-        critRate: 0.3
-        critDamage: 1.5
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 9"
-      level: 9
-      data:
-        maxHP: 777
-        attack: 703
-        defense: 209
-        critRate: 0.3
-        critDamage: 1.5
-        speed: 50
-        K: 100
-    - descrip: "\u6301\u7EED\u4F24\u5BB3\u8F93\u51FA\u624B Level 10"
-      level: 10
-      data:
-        maxHP: 814
-        attack: 743
-        defense: 218
-        critRate: 0.3
-        critDamage: 1.5
-        speed: 50
-        K: 100
-  - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005"
-    characterId: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005"
-    levelEntries:
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 1"
-      level: 1
-      data:
-        maxHP: 240
-        attack: 100
-        defense: 85
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 2"
-      level: 2
-      data:
-        maxHP: 400
-        attack: 216
-        defense: 122
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 3"
-      level: 3
-      data:
-        maxHP: 495
-        attack: 286
-        defense: 143
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 4"
-      level: 4
-      data:
-        maxHP: 570
-        attack: 340
-        defense: 160
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 5"
-      level: 5
-      data:
-        maxHP: 635
-        attack: 387
-        defense: 175
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 6"
-      level: 6
-      data:
-        maxHP: 691
-        attack: 428
-        defense: 188
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 7"
-      level: 7
-      data:
-        maxHP: 743
-        attack: 466
-        defense: 200
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 8"
-      level: 8
-      data:
-        maxHP: 790
-        attack: 500
-        defense: 210
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 9"
-      level: 9
-      data:
-        maxHP: 835
-        attack: 533
-        defense: 221
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u8D1F\u9762\u72B6\u6001\u91CA\u653E\u8005 Level 10"
-      level: 10
-      data:
-        maxHP: 877
-        attack: 563
-        defense: 230
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-  - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9"
-    characterId: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9"
-    levelEntries:
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 1"
-      level: 1
-      data:
-        maxHP: 215
-        attack: 55
-        defense: 100
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 2"
-      level: 2
-      data:
-        maxHP: 353
-        attack: 113
-        defense: 144
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 3"
-      level: 3
-      data:
-        maxHP: 436
-        attack: 148
-        defense: 170
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 4"
-      level: 4
-      data:
-        maxHP: 500
-        attack: 175
-        defense: 190
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 5"
-      level: 5
-      data:
-        maxHP: 556
-        attack: 199
-        defense: 208
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 6"
-      level: 6
-      data:
-        maxHP: 605
-        attack: 219
-        defense: 223
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 7"
-      level: 7
-      data:
-        maxHP: 649
-        attack: 238
-        defense: 238
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 8"
-      level: 8
-      data:
-        maxHP: 690
-        attack: 255
-        defense: 250
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 9"
-      level: 9
-      data:
-        maxHP: 729
-        attack: 272
-        defense: 263
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-    - descrip: "\u52A0\u901F\u4E0A\u76FE\u8F85\u52A9 Level 10"
-      level: 10
-      data:
-        maxHP: 765
-        attack: 287
-        defense: 274
-        critRate: 0.2
-        critDamage: 1.25
-        speed: 45
-        K: 100
-  - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC"
-    characterId: "\u7EDD\u5883\u5355\u4F53\u526FC"
-    levelEntries:
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 1"
-      level: 1
-      data:
-        maxHP: 215
-        attack: 109
-        defense: 77
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 2"
-      level: 2
-      data:
-        maxHP: 360
-        attack: 239
-        defense: 109
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 3"
-      level: 3
-      data:
-        maxHP: 447
-        attack: 316
-        defense: 128
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 4"
-      level: 4
-      data:
-        maxHP: 515
-        attack: 376
-        defense: 143
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 5"
-      level: 5
-      data:
-        maxHP: 574
-        attack: 428
-        defense: 156
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 6"
-      level: 6
-      data:
-        maxHP: 625
-        attack: 474
-        defense: 168
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 7"
-      level: 7
-      data:
-        maxHP: 672
-        attack: 516
-        defense: 178
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 8"
-      level: 8
-      data:
-        maxHP: 715
-        attack: 554
-        defense: 187
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 9"
-      level: 9
-      data:
-        maxHP: 756
-        attack: 590
-        defense: 196
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-    - descrip: "\u7EDD\u5883\u5355\u4F53\u526FC Level 10"
-      level: 10
-      data:
-        maxHP: 794
-        attack: 624
-        defense: 205
-        critRate: 0.002
-        critDamage: 0.015
-        speed: 45
-        K: 100
-  - descrip: "\u589E\u4F24\u5976\u5988"
-    characterId: "\u589E\u4F24\u5976\u5988"
-    levelEntries:
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 1"
-      level: 1
-      data:
-        maxHP: 275
-        attack: 55
-        defense: 73
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 2"
-      level: 2
-      data:
-        maxHP: 457
-        attack: 113
-        defense: 107
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 3"
-      level: 3
-      data:
-        maxHP: 565
-        attack: 148
-        defense: 127
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 4"
-      level: 4
-      data:
-        maxHP: 650
-        attack: 175
-        defense: 142
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 5"
-      level: 5
-      data:
-        maxHP: 723
-        attack: 199
-        defense: 156
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 6"
-      level: 6
-      data:
-        maxHP: 788
-        attack: 219
-        defense: 168
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 7"
-      level: 7
-      data:
-        maxHP: 846
-        attack: 238
-        defense: 179
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 8"
-      level: 8
-      data:
-        maxHP: 900
-        attack: 255
-        defense: 188
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 9"
-      level: 9
-      data:
-        maxHP: 951
-        attack: 272
-        defense: 198
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-    - descrip: "\u589E\u4F24\u5976\u5988 Level 10"
-      level: 10
-      data:
-        maxHP: 998
-        attack: 287
-        defense: 206
-        critRate: 0.002
-        critDamage: 0.0125
-        speed: 45
-        K: 100
-  enemyLevelEntriesList:
-  - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA"
-    enemyId: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA"
-    levelEntries:
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 1"
-      level: 1
-      data:
-        maxHP: 232
-        attack: 132
-        defense: 0
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 2"
-      level: 2
-      data:
-        maxHP: 395
-        attack: 251
-        defense: 60
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 3"
-      level: 3
-      data:
-        maxHP: 492
-        attack: 322
-        defense: 70
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 4"
-      level: 4
-      data:
-        maxHP: 568
-        attack: 378
-        defense: 75
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 5"
-      level: 5
-      data:
-        maxHP: 634
-        attack: 426
-        defense: 79
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 6"
-      level: 6
-      data:
-        maxHP: 692
-        attack: 469
-        defense: 81
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 7"
-      level: 7
-      data:
-        maxHP: 744
-        attack: 507
-        defense: 83
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 8"
-      level: 8
-      data:
-        maxHP: 792
-        attack: 542
-        defense: 84
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 9"
-      level: 9
-      data:
-        maxHP: 838
-        attack: 576
-        defense: 85
-        speed: 65
-        K: 100
-    - descrip: "\u6807\u51C6\u4E2D\u7532\u654C\u4EBA Level 10"
-      level: 10
-      data:
-        maxHP: 880
-        attack: 607
-        defense: 86
-        speed: 65
-        K: 100
---- !u!4 &125223969
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 125223967}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -46.28994, y: 14.457138, z: -7.4701066}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1036003880}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &142896148
 GameObject:
   m_ObjectHideFlags: 0
@@ -2250,17 +1473,22 @@ MonoBehaviour:
     virtualCamera: {fileID: 1276981817}
   - cameraType: 0
     virtualCamera: {fileID: 470811355}
+  - cameraType: 4
+    virtualCamera: {fileID: 1868481170}
   defaultCamera: 1
   enableMainCameraSway: 1
-  mainCameraSwayAmplitude: 10
-  mainCameraSwayFrequency: 0.3
-  mainCameraSwayBreathBlend: 0.5
+  mainCameraSwayAmplitude: 6
+  mainCameraSwayFrequency: 0.1
+  mainCameraSwayEdgeHoldDuration: 0.12
+  mainCameraSwayBreathBlend: 0
   enableMainCameraVerticalFloat: 1
   mainCameraVerticalFloatAmplitude: 0.03
   enableMainCameraRotation: 0
   mainCameraRotationAmplitude: 0.5
   enableMainCameraVignettePulse: 1
   globalVolume: {fileID: 832575518}
+  mainCameraVignetteBaseIntensity: 0
+  mainCameraVignettePulseMinimum: 0.3
   mainCameraVignettePulseAmplitude: 0.5
   playOpeningIntroOnStart: 1
   openingStartCamera: {fileID: 470811355}
@@ -2269,6 +1497,9 @@ MonoBehaviour:
   enableSkillCameraVignetteTransition: 1
   skillCameraTransitionDuration: 0.35
   skillCameraVignetteIntensity: 0.5
+  enableSettlementCameraVignetteTransition: 1
+  settlementCameraTransitionDuration: 0.45
+  settlementCameraVignetteIntensity: 0.4
 --- !u!1 &344545790
 GameObject:
   m_ObjectHideFlags: 0
@@ -2836,6 +2067,141 @@ Transform:
   m_Children: []
   m_Father: {fileID: 255204669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &376314205
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 376314206}
+  - component: {fileID: 376314208}
+  - component: {fileID: 376314207}
+  m_Layer: 5
+  m_Name: "\u91D1\u5E01"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &376314206
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 376314205}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1127674857}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -31}
+  m_SizeDelta: {x: 450, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &376314207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 376314205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u83B7\u53D6\u91D1\u5E01\uFF1A100"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &376314208
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 376314205}
+  m_CullTransparentMesh: 1
 --- !u!1 &377289008
 GameObject:
   m_ObjectHideFlags: 0
@@ -3078,6 +2444,149 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 429908882}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &466117120
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 466117121}
+  - component: {fileID: 466117124}
+  - component: {fileID: 466117123}
+  - component: {fileID: 466117122}
+  - component: {fileID: 466117125}
+  m_Layer: 5
+  m_Name: "\u9000\u51FA"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &466117121
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466117120}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2042583274}
+  m_Father: {fileID: 1127674857}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -152}
+  m_SizeDelta: {x: 160, y: 100}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &466117122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466117120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 466117123}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &466117123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466117120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &466117124
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466117120}
+  m_CullTransparentMesh: 1
+--- !u!114 &466117125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466117120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 1
+  vibrato: 3
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
+  uiEffect: {fileID: 0}
 --- !u!1 &470811352
 GameObject:
   m_ObjectHideFlags: 0
@@ -3178,6 +2687,141 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!1 &472540309
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 472540310}
+  - component: {fileID: 472540312}
+  - component: {fileID: 472540311}
+  m_Layer: 5
+  m_Name: "\u7ECF\u9A8C"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &472540310
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472540309}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1127674857}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 28.99997}
+  m_SizeDelta: {x: 450, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &472540311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472540309}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u83B7\u53D6\u7ECF\u9A8C\uFF1A100"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &472540312
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472540309}
+  m_CullTransparentMesh: 1
 --- !u!1 &509479069
 GameObject:
   m_ObjectHideFlags: 0
@@ -4514,6 +4158,63 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &713058148
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 713058150}
+  - component: {fileID: 713058149}
+  m_Layer: 0
+  m_Name: "\u7ED3\u7B97\u7BA1\u7406\u5668"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &713058149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713058148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51dd4b08ca7a16a40aac36e14ec01e6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelRoot: {fileID: 1058072079}
+  rootCanvasGroup: {fileID: 1058072081}
+  rewardPanelGroup: {fileID: 1127674860}
+  experienceText: {fileID: 472540311}
+  goldText: {fileID: 376314207}
+  exitButton: {fileID: 466117122}
+  settlementCameraType: 4
+  cameraLeadDuration: 0.35
+  panelFadeDuration: 0.25
+  exitSceneName: Main
+  onExitRequested:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &713058150
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713058148}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1938414817}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &716681095
 GameObject:
   m_ObjectHideFlags: 0
@@ -5169,8 +4870,6 @@ Transform:
   - {fileID: 1293485009}
   - {fileID: 832575519}
   - {fileID: 272817713}
-  - {fileID: 125223969}
-  - {fileID: 95796463}
   - {fileID: 365404394}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5182,11 +4881,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1985519489}
     m_Modifications:
-    - target: {fileID: 3207555847263050971, guid: e0bfa140c59fd1a47a8e900090e68049,
-        type: 3}
-      propertyPath: m_SortingOrder
-      value: 1340
-      objectReference: {fileID: 0}
     - target: {fileID: 6689001972961165070, guid: e0bfa140c59fd1a47a8e900090e68049,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -5289,6 +4983,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 413351380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1058072079
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1058072080}
+  - component: {fileID: 1058072081}
+  m_Layer: 5
+  m_Name: "\u7ED3\u7B97"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1058072080
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058072079}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1127674857}
+  m_Father: {fileID: 3200452}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &1058072081
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058072079}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1090474452
 GameObject:
   m_ObjectHideFlags: 0
@@ -5475,6 +5218,98 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 5.87}
   m_SizeDelta: {x: 1162.9999, y: 654}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1127674856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1127674857}
+  - component: {fileID: 1127674860}
+  - component: {fileID: 1127674859}
+  - component: {fileID: 1127674858}
+  m_Layer: 5
+  m_Name: "\u5956\u52B1\u9762\u677F"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1127674857
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127674856}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1434841949}
+  - {fileID: 472540310}
+  - {fileID: 376314206}
+  - {fileID: 466117121}
+  m_Father: {fileID: 1058072080}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 600, y: 1080}
+  m_Pivot: {x: 1, y: 0.5}
+--- !u!114 &1127674858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127674856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.20125782, g: 0.20125782, b: 0.20125782, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1127674859
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127674856}
+  m_CullTransparentMesh: 1
+--- !u!225 &1127674860
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127674856}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1135070674
 GameObject:
   m_ObjectHideFlags: 0
@@ -6598,6 +6433,141 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ba078ad4a361aa4c9bc46e2ad36ee01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1434841948
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1434841949}
+  - component: {fileID: 1434841951}
+  - component: {fileID: 1434841950}
+  m_Layer: 5
+  m_Name: "\u7ED3\u675F\u8BED"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1434841949
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1434841948}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1127674857}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 355}
+  m_SizeDelta: {x: 450, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1434841950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1434841948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u80DC\u5229!"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 75
+  m_fontSizeBase: 75
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1434841951
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1434841948}
+  m_CullTransparentMesh: 1
 --- !u!1 &1436325568
 GameObject:
   m_ObjectHideFlags: 0
@@ -7111,6 +7081,7 @@ Transform:
   - {fileID: 654612322}
   - {fileID: 1568574697}
   - {fileID: 1276981815}
+  - {fileID: 1868481168}
   m_Father: {fileID: 1436325569}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1688359389
@@ -7823,6 +7794,106 @@ Transform:
   - {fileID: 509479070}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1868481167
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1868481168}
+  - component: {fileID: 1868481170}
+  - component: {fileID: 1868481169}
+  m_Layer: 0
+  m_Name: Exit
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1868481168
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1868481167}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -55.9, y: 5.8, z: 104.9}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1688148561}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1868481169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1868481167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00b2d199b96b516448144ab30fb26aed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ApplyAfter: 2
+  ChannelMask: 1
+  Gain: 1
+  Use2DDistance: 0
+  UseCameraSpace: 1
+  SignalCombinationMode: 0
+  ReactionSettings:
+    m_SecondaryNoise: {fileID: 11400000, guid: 28fdf569e655f8e448fb0cada032d5fe, type: 2}
+    AmplitudeGain: 1
+    FrequencyGain: 1
+    Duration: 1
+    m_NoiseOffsets: {x: 194.84744, y: 598.8152, z: 143.76367}
+--- !u!114 &1868481170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1868481167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Priority:
+    Enabled: 0
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 1050596385}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 40
+    OrthographicSize: 10
+    NearClipPlane: 0.1
+    FarClipPlane: 5000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
 --- !u!1 &1878868957
 GameObject:
   m_ObjectHideFlags: 0
@@ -8015,6 +8086,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
   - {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
   characterSpawner: {fileID: 1938414816}
+  settlementView: {fileID: 713058149}
+  enemyWaveEnterDelay: 0.75
 --- !u!114 &1938414816
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8060,7 +8133,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 713058150}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1985519488
@@ -8126,6 +8200,141 @@ Transform:
   m_Children: []
   m_Father: {fileID: 683464552}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2042583273
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2042583274}
+  - component: {fileID: 2042583276}
+  - component: {fileID: 2042583275}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2042583274
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042583273}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 466117121}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2042583275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042583273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u9000\u51FA"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4281479730
+  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &2042583276
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042583273}
+  m_CullTransparentMesh: 1
 --- !u!1 &2069035616
 GameObject:
   m_ObjectHideFlags: 0

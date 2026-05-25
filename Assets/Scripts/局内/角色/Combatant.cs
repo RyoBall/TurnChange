@@ -6,7 +6,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class Combatant : MonoBehaviour
 {
-    [Tooltip("角色速度，值越大意味着越快")]
+    [Tooltip("角色行动力，值越小意味着越快")]
     public int speed = 100;
     [Tooltip("是否在游戏开始时参与 TurnManager 的行动循环")]
     public bool participateInTurnLoopAtStart = true;
@@ -15,7 +15,7 @@ public class Combatant : MonoBehaviour
     public string combatantName;
 
     public float currentActionValue{get; private set;}
-    public float BaseActionValue => 10000f / Mathf.Max(1, speed);
+    public float BaseActionValue => speed;
     public virtual void ChangeActionValue(float delta,bool ifChangePos=true)
     {
         currentActionValue = Mathf.Max(0, delta);

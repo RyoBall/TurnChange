@@ -492,8 +492,13 @@ public class Character : UnitCombatant
             Debug.Log("CharacterID is null or empty for " + gameObject.name);
             return;
         }
-        var levelDataDict = LevelDataContainer.CharacterLevelData[characterID];
-        var levelData = levelDataDict[level];
+
+        if (!LevelDataContainer.TryGetCharacterLevelData(characterID, level, out CharacterLevelData levelData))
+        {
+            Debug.LogError($"未找到角色数据: {characterID} 等级: {level}");
+            return;
+        }
+
         maxHP = levelData.maxHP;
         currentHP = maxHP;
         attack = levelData.attack;

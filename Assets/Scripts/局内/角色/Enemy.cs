@@ -122,6 +122,16 @@ public class Enemy : UnitCombatant
     {
     }
 
+    public virtual void PlaySpawnEnterFeedback()
+    {
+        if (!m_isBattleVisible || dead)
+        {
+            return;
+        }
+
+        enterFeedback?.PlayFeedbacks();
+    }
+
     private IEnumerator ActionCoroutine()
     {
         if (m_skillInstances == null || m_skillInstances.Count == 0)
@@ -214,13 +224,12 @@ public class Enemy : UnitCombatant
             return;
         }
 
-        var levelDataDict = LevelDataContainer.EnemyLevelData[enemyID];
-        if (levelDataDict == null || !levelDataDict.ContainsKey(level))
+        if (!LevelDataContainer.TryGetEnemyLevelData(enemyID, level, out EnemyLevelData levelData))
         {
             Debug.LogError($"未找到敌人数据: {enemyID} 等级: {level}");
             return;
         }
-        var levelData = levelDataDict[level];
+
         maxHP = levelData.maxHP;
         currentHP = maxHP;
         attack = levelData.attack;

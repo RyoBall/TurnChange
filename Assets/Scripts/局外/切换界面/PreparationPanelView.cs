@@ -28,14 +28,18 @@ public class PreparationPanelView : MonoBehaviour
     {
         get
         {
-            if (CurrentLevelData == null || CurrentLevelData.enemies == null)
+            if (CurrentLevelData == null)
             {
                 return System.Array.Empty<LevelEnemyEntry>();
             }
 
-            return CurrentLevelData.enemies;
+            return CurrentLevelData.GetWaveEnemies(0);
         }
     }
+
+    public IReadOnlyList<LevelEnemyWaveData> CurrentEnemyWaves => CurrentLevelData != null
+        ? CurrentLevelData.GetEnemyWaves()
+        : System.Array.Empty<LevelEnemyWaveData>();
 
     public IReadOnlyList<CharacterRosterData> SelectedFieldCharacters
     {

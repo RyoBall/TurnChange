@@ -3,40 +3,54 @@ using UnityEngine;
 using UnityEditor;
 #endif
 using System.Collections.Generic;
-using System.IO;
-using System;
 public class EnemyDataImporter
 {
-   [MenuItem("Tools/")]
+    [MenuItem("Tools/ImportEnemyDatas")]
     public static void ImportEnemyDatas()
     {
         Debug.Log("正在导入敌人数据...");
-        if(LevelDataContainer.EnemyLevelData==null)
-            LevelDataContainer.EnemyLevelData = new Dictionary<string, Dictionary<int, EnemyLevelData>>();
+        if (Config.Instance == null)
+        {
+            Debug.LogError("[EnemyDataImporter] 未找到 AppConfig，无法导入敌人数据");
+            return;
+        }
+
+        var importedData = new Dictionary<string, Dictionary<int, EnemyLevelData>>();
         List<Dictionary<string, string>> csvData = CSVReader.ReadCSV(Config.Instance.EnemyDataCSVPath);
-        string enemyName=null;
+        string enemyName = null;
         foreach (var row in csvData)
         {
-            if(GetInt(row,"Level")==-1)
+            if (GetInt(row, "Level") == -1)
             {
                 enemyName = row["Level"];
                 Debug.Log($"正在导入敌人: {enemyName}");
                 continue;
             }
-            int level= GetInt(row, "Level");
+            int level = GetInt(row, "Level");
             EnemyLevelData levelData = new EnemyLevelData
             (
                 GetInt(row, "MaxHP"),
                 GetInt(row, "Attack"),
                 GetInt(row, "Defense"), 
                 GetInt(row, "Speed"),
-                GetFloat(row,"K")
+                GetFloat(row, "K")
             );
-            if (!LevelDataContainer.EnemyLevelData.ContainsKey(enemyName))
-                LevelDataContainer.EnemyLevelData[enemyName] = new Dictionary<int, EnemyLevelData>();
-            LevelDataContainer.EnemyLevelData[enemyName][level] = levelData;
+            if (string.IsNullOrWhiteSpace(enemyName))
+            {
+                continue;
+            }
+
+            if (!importedData.ContainsKey(enemyName))
+                importedData[enemyName] = new Dictionary<int, EnemyLevelData>();
+            importedData[enemyName][level] = levelData;
         }
-        Debug.Log("敌人数据导入完成！");
+
+        CharacterLevelDataContainer dataContainer = CharacterLevelDataContainer.GetOrCreateAsset();
+        dataContainer.ImportEnemyData(importedData);
+        EditorUtility.SetDirty(dataContainer);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log($"敌人数据导入完成！已更新资产: {CharacterLevelDataContainer.AssetPath}");
     }
 
     static int GetInt(Dictionary<string, string> dict, string key, int defaultValue = -1)
@@ -61,9 +75,4 @@ public class EnemyDataImporter
         EditorApplication.projectChanged += ImportEnemyDatas; // 项目发生变化时重新导入数据
     }
     #endif
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void RuntimeInitialize()
-    {
-        ImportEnemyDatas();
-    }
 }

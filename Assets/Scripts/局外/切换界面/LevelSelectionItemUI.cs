@@ -15,11 +15,41 @@ public class LevelEnemyEntry//关卡数据单元
 }
 
 [Serializable]
+public class LevelEnemyWaveData//关卡敌人波次
+{
+    public string waveId = "Wave 1";
+    public List<LevelEnemyEntry> enemies = new List<LevelEnemyEntry>();
+}
+
+[Serializable]
 public class LevelSelectionData//关卡数据
 {
     public string levelId;
     public string levelName;
-    public List<LevelEnemyEntry> enemies = new List<LevelEnemyEntry>();
+    public List<LevelEnemyWaveData> enemyWaves = new List<LevelEnemyWaveData>();
+    [Min(0)] public int rewardExperience;
+    [Min(0)] public int rewardGold;
+
+    public IReadOnlyList<LevelEnemyWaveData> GetEnemyWaves()
+    {
+        return enemyWaves != null ? enemyWaves : Array.Empty<LevelEnemyWaveData>();
+    }
+
+    public IReadOnlyList<LevelEnemyEntry> GetWaveEnemies(int waveIndex)
+    {
+        if (enemyWaves == null || waveIndex < 0 || waveIndex >= enemyWaves.Count)
+        {
+            return Array.Empty<LevelEnemyEntry>();
+        }
+
+        LevelEnemyWaveData waveData = enemyWaves[waveIndex];
+        if (waveData == null || waveData.enemies == null)
+        {
+            return Array.Empty<LevelEnemyEntry>();
+        }
+
+        return waveData.enemies;
+    }
 }
 
 [DisallowMultipleComponent]
@@ -36,6 +66,10 @@ public class LevelSelectionItemUI : MonoBehaviour
     [Header("显示")]
     [SerializeField] private TMP_Text levelNameText;
     [SerializeField] private Text levelNameLegacyText;
+    [SerializeField] private TMP_Text completedText;
+    [SerializeField] private Text completedLegacyText;
+
+    private bool m_isCompleted;
 
     public LevelSelectionData LevelData => levelData;
 
@@ -69,6 +103,11 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     public void OnPrepareButtonClicked()
     {
+        if (m_isCompleted)
+        {
+            return;
+        }
+
         StartCoroutine(SwitchPanelCoroutine());
     }
     private IEnumerator SwitchPanelCoroutine()
@@ -89,6 +128,12 @@ public class LevelSelectionItemUI : MonoBehaviour
     public void SetLevelData(LevelSelectionData data)
     {
         levelData = data ?? new LevelSelectionData();
+        RefreshView();
+    }
+
+    public void SetCompletedState(bool isCompleted)
+    {
+        m_isCompleted = isCompleted;
         RefreshView();
     }
 
@@ -133,6 +178,29 @@ public class LevelSelectionItemUI : MonoBehaviour
         if (levelNameLegacyText != null)
         {
             levelNameLegacyText.text = displayName;
+        }
+
+        if (prepareButton != null)
+        {
+            prepareButton.interactable = !m_isCompleted;
+        }
+
+        if (completedText != null)
+        {
+            completedText.gameObject.SetActive(m_isCompleted);
+            if (m_isCompleted)
+            {
+                completedText.text = "已通过";
+            }
+        }
+
+        if (completedLegacyText != null)
+        {
+            completedLegacyText.gameObject.SetActive(m_isCompleted);
+            if (m_isCompleted)
+            {
+                completedLegacyText.text = "已通过";
+            }
         }
     }
 

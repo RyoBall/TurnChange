@@ -12,8 +12,6 @@ public class ModulePlacementController : MonoBehaviour
     [SerializeField] private ModulePlacementBoard placementBoard;
     [SerializeField] private TMP_Text selectionText;
 
-    [Header("初始背包")]
-    [SerializeField] private List<GridModuleDefinition> startingModules = new List<GridModuleDefinition>();
 
     [Header("鼠标预览")]
     [SerializeField] private Vector2 cursorPreviewCellSize;
@@ -26,6 +24,8 @@ public class ModulePlacementController : MonoBehaviour
     private readonly HashSet<GridModuleDefinition> m_loadedModules = new HashSet<GridModuleDefinition>();
     private readonly List<Vector2Int> m_shapeBuffer = new List<Vector2Int>();
     private readonly List<Image> m_cursorCells = new List<Image>();
+    private readonly List<PlacedModuleData> m_savedPlacementBuffer = new List<PlacedModuleData>();
+    private readonly List<ModulePlacementBoard.PlacedModuleState> m_placedModuleBuffer = new List<ModulePlacementBoard.PlacedModuleState>();
 
     private GridModuleDefinition m_selectedModule;
     private RectTransform m_cursorRoot;
@@ -53,9 +53,6 @@ public class ModulePlacementController : MonoBehaviour
             placementBoard = GetComponentInChildren<ModulePlacementBoard>();
         }
 
-        BuildRuntimeInventory();
-        EnsureCursorRoot();
-
         if (inventoryView != null)
         {
             inventoryView.ModuleClicked += HandleModuleClicked;
@@ -65,7 +62,13 @@ public class ModulePlacementController : MonoBehaviour
         {
             placementBoard.InitializeBoard();
         }
+        EnsureCursorRoot();
+    }
 
+    private void Start()
+    {
+        BuildRuntimeInventory();
+        RestorePlacedModulesFromData();
         RefreshViews();
         SetSelection(null);
     }
@@ -84,6 +87,8 @@ public class ModulePlacementController : MonoBehaviour
 
     private void Update()
     {
+        UpdateHoveredBoardCell();
+
         if (m_selectedModule != null)
         {
             UpdateCursorPreviewPosition();
@@ -128,6 +133,7 @@ public class ModulePlacementController : MonoBehaviour
             if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
             {
                 m_loadedModules.Remove(pickedModule);
+                SyncModuleStateToData();
 
                 SetSelection(pickedModule);
                 if (selectionText != null)
@@ -150,6 +156,7 @@ public class ModulePlacementController : MonoBehaviour
         }
 
         m_loadedModules.Add(m_selectedModule);
+        SyncModuleStateToData();
         SetSelection(null);
         RefreshViews();
 
@@ -162,6 +169,11 @@ public class ModulePlacementController : MonoBehaviour
     private void SetSelection(GridModuleDefinition module)
     {
         m_selectedModule = module;
+        if (m_selectedModule == null)
+        {
+            m_hoveredBoardCell = null;
+        }
+
         m_selectionChangedFrame = Time.frameCount;
         RefreshViews();
         RefreshCursorPreview();
@@ -174,6 +186,22 @@ public class ModulePlacementController : MonoBehaviour
         selectionText.text = m_selectedModule == null
             ? "点击背包中的模块后，再点击右侧 5x5 网格进行放置"
             : "已选中：" + m_selectedModule.moduleName + "，点击网格尝试放置";
+    }
+
+    private void UpdateHoveredBoardCell()
+    {
+        m_hoveredBoardCell = null;
+
+        if (placementBoard == null || targetCanvas == null)
+        {
+            return;
+        }
+
+        Camera uiCamera = targetCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : targetCanvas.worldCamera;
+        if (placementBoard.TryGetCellFromScreenPoint(Input.mousePosition, uiCamera, out Vector2Int hoveredCell))
+        {
+            m_hoveredBoardCell = hoveredCell;
+        }
     }
 
     private void RefreshViews()
@@ -189,13 +217,21 @@ public class ModulePlacementController : MonoBehaviour
         m_runtimeModules.Clear();
         m_loadedModules.Clear();
 
-        for (int i = 0; i < startingModules.Count; i++)
+        if (Datas.Instance != null && Datas.Instance.HasModuleState())
         {
-            if (startingModules[i] != null)
+            List<GridModuleDefinition> savedModules = Datas.Instance.CreateOwnedModuleDefinitions();
+            for (int i = 0; i < savedModules.Count; i++)
             {
-                m_runtimeModules.Add(startingModules[i].Clone());
+                if (savedModules[i] != null)
+                {
+                    m_runtimeModules.Add(savedModules[i]);
+                }
             }
+
+            return;
         }
+
+        SyncModuleStateToData();
     }
 
     public void AddModuleToInventory(GridModuleDefinition module, bool autoSelect = false)
@@ -207,6 +243,7 @@ public class ModulePlacementController : MonoBehaviour
 
         GridModuleDefinition runtimeModule = module.Clone();
         m_runtimeModules.Add(runtimeModule);
+        SyncModuleStateToData();
         RefreshViews();
 
         if (autoSelect)
@@ -219,6 +256,71 @@ public class ModulePlacementController : MonoBehaviour
         {
             selectionText.text = "已加入背包：" + runtimeModule.moduleName;
         }
+    }
+
+    private void RestorePlacedModulesFromData()
+    {
+        if (placementBoard == null || Datas.Instance == null || !Datas.Instance.HasModuleState())
+        {
+            return;
+        }
+
+        placementBoard.ClearBoard();
+        m_loadedModules.Clear();
+        Datas.Instance.GetPlacedModuleData(m_savedPlacementBuffer);
+
+        for (int i = 0; i < m_savedPlacementBuffer.Count; i++)
+        {
+            PlacedModuleData placedModule = m_savedPlacementBuffer[i];
+            if (placedModule == null)
+            {
+                continue;
+            }
+
+            int moduleIndex = placedModule.ModuleIndex;
+            if (moduleIndex < 0 || moduleIndex >= m_runtimeModules.Count)
+            {
+                continue;
+            }
+
+            GridModuleDefinition module = m_runtimeModules[moduleIndex];
+            if (module == null)
+            {
+                continue;
+            }
+
+            if (placementBoard.TryPlace(module, placedModule.AnchorCell))
+            {
+                m_loadedModules.Add(module);
+            }
+        }
+
+        SyncModuleStateToData();
+    }
+
+    private void SyncModuleStateToData()
+    {
+        if (Datas.Instance == null)
+        {
+            return;
+        }
+
+        m_savedPlacementBuffer.Clear();
+        if (placementBoard != null)
+        {
+            placementBoard.GetPlacedModules(m_placedModuleBuffer);
+            for (int i = 0; i < m_placedModuleBuffer.Count; i++)
+            {
+                ModulePlacementBoard.PlacedModuleState placedModule = m_placedModuleBuffer[i];
+                int moduleIndex = m_runtimeModules.IndexOf(placedModule.module);
+                if (moduleIndex >= 0)
+                {
+                    m_savedPlacementBuffer.Add(new PlacedModuleData(moduleIndex, placedModule.anchorCell));
+                }
+            }
+        }
+
+        Datas.Instance.SaveModuleState(m_runtimeModules, m_savedPlacementBuffer);
     }
 
     private void EnsureCursorRoot()
@@ -309,18 +411,17 @@ public class ModulePlacementController : MonoBehaviour
             return;
         }
 
-        m_hoveredBoardCell = null;
         bool canPlace = false;
         bool isHoveringBoard = false;
 
-        if (placementBoard != null && placementBoard.TryGetCellFromScreenPoint(Input.mousePosition, uiCamera, out Vector2Int hoveredCell))
+        if (m_hoveredBoardCell.HasValue)
         {
-            m_hoveredBoardCell = hoveredCell;
             isHoveringBoard = true;
-            canPlace = placementBoard.CanPlace(m_selectedModule, hoveredCell);
+            Vector2Int hoveredCell = m_hoveredBoardCell.Value;
+            canPlace = placementBoard != null && placementBoard.CanPlace(m_selectedModule, hoveredCell);
             ApplyCursorPreviewLayout(true);
 
-            if (placementBoard.TryGetCellCenterInRect(canvasRect, hoveredCell, out Vector2 snappedPoint))
+            if (placementBoard != null && placementBoard.TryGetCellCenterInRect(canvasRect, hoveredCell, out Vector2 snappedPoint))
             {
                 Vector2 moduleCenter = m_selectedModule.GetNormalizedCenter();
                 localPoint = snappedPoint + new Vector2(moduleCenter.x * m_currentPreviewStep.x, -moduleCenter.y * m_currentPreviewStep.y);

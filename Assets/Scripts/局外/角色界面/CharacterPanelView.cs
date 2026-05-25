@@ -386,18 +386,7 @@ public class CharacterPanelView : MonoBehaviour
             return false;
         }
 
-        var allLevelData = LevelDataContainer.CharacterLevelData;
-        if (allLevelData == null)
-        {
-            return false;
-        }
-
-        if (!allLevelData.TryGetValue(characterId, out Dictionary<int, CharacterLevelData> levelDataByLevel))
-        {
-            return false;
-        }
-
-        return levelDataByLevel.TryGetValue(data.GetLevel(), out levelData);
+        return LevelDataContainer.TryGetCharacterLevelData(characterId, data.GetLevel(), out levelData);
     }
 
     private bool IsPointerInside(RectTransform rectTransform, Vector2 screenPosition)

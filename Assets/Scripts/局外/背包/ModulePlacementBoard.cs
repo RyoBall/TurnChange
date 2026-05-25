@@ -8,6 +8,12 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RectTransform))]
 public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
 {
+    public struct PlacedModuleState
+    {
+        public GridModuleDefinition module;
+        public Vector2Int anchorCell;
+    }
+
     private class PlacedModuleEntry
     {
         public GridModuleDefinition module;
@@ -188,6 +194,39 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
                 m_occupied[x, y] = false;
                 m_placedEntries[x, y] = null;
                 m_cells[x, y].color = emptyCellColor;
+            }
+        }
+    }
+
+    public void GetPlacedModules(List<PlacedModuleState> results)
+    {
+        if (results == null)
+        {
+            return;
+        }
+
+        results.Clear();
+        if (m_placedEntries == null)
+        {
+            return;
+        }
+
+        HashSet<PlacedModuleEntry> visitedEntries = new HashSet<PlacedModuleEntry>();
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                PlacedModuleEntry entry = m_placedEntries[x, y];
+                if (entry == null || !visitedEntries.Add(entry))
+                {
+                    continue;
+                }
+
+                results.Add(new PlacedModuleState
+                {
+                    module = entry.module,
+                    anchorCell = entry.anchorCell
+                });
             }
         }
     }

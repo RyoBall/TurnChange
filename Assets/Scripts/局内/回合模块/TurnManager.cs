@@ -15,7 +15,9 @@ public class TurnManager : MonoBehaviour
     private List<Combatant> combatants = new List<Combatant>();
     private bool turnLoopStarted;
     private bool isTurnInitialized = false;
+    private bool turnLoopPaused;
     public bool IsTurnInitialized => isTurnInitialized;
+    public bool IsTurnLoopPaused => turnLoopPaused;
     // 回合顺序由链表维护，链表头永远表示下一个行动的角色。
     [SerializeField] private readonly LinkedList<Combatant> turnOrder = new LinkedList<Combatant>();
 
@@ -108,6 +110,7 @@ public class TurnManager : MonoBehaviour
 
             SkillExecuteManager.ExecuteSkill(character, enterSkill);
             yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+            yield return new WaitForSeconds(0.5f);
         }
     }
 
@@ -177,6 +180,12 @@ public class TurnManager : MonoBehaviour
     {
         while (true)
         {
+            if (turnLoopPaused)
+            {
+                yield return null;
+                continue;
+            }
+
             ////// 回合开始前
             // 直接读取链表头，链表头就是下一位行动者。
             var nextNode = turnOrder.First;
@@ -210,14 +219,23 @@ public class TurnManager : MonoBehaviour
 
             ////// 回合开始。
             yield return StartCoroutine(nextCombatant.PerformTurn());
-
+            ////// 回合结束
+            //检查是否全部敌人死亡
+            if (LevelSetupManager.Instance != null)
+            {
+                yield return LevelSetupManager.Instance.ResolveBattleProgressAfterTurn();
+                if (LevelSetupManager.Instance.IsBattleResolved)
+                {
+                    yield break;
+                }
+            }
+            //结算回合状态
             if (EnvironmentManager.Instance != null && nextCombatant is UnitCombatant actedUnit)
             {
                 actedUnit.ProcessStatesOnTurnEnd();
                 EnvironmentManager.Instance.NotifyCombatantActed(actedUnit);
             }
 
-            ////// 回合结束
             // 回合结束后重新计算当前角色的下一次行动值。
             if (nextCombatant != null)
             {   
@@ -229,6 +247,8 @@ public class TurnManager : MonoBehaviour
             {
                 Debug.Log($"[TurnManager] 角色死亡");
             }
+
+
             //回合转换延迟
             if (turnDelay > 0f)
             {
@@ -238,6 +258,7 @@ public class TurnManager : MonoBehaviour
             {
                 yield return null;
             }
+
         }
     }
 
