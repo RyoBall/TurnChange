@@ -7963,6 +7963,11 @@ MonoBehaviour:
   dieFeedback: {fileID: 0}
   mouseEnterFeedback: {fileID: 0}
   mouseExitFeedback: {fileID: 0}
+  selectFeedback: {fileID: 0}
+  healFeedback: {fileID: 0}
+  shieldFeedback: {fileID: 0}
+  buffAppliedFeedback: {fileID: 0}
+  debuffAppliedFeedback: {fileID: 0}
   states: []
   character: {fileID: 0}
 --- !u!1 &1938414814

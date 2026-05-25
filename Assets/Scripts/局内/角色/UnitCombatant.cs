@@ -28,6 +28,11 @@ public class UnitCombatant : Combatant
     [SerializeField] protected MMF_Player dieFeedback;
     [SerializeField] protected MMF_Player mouseEnterFeedback;
     [SerializeField] protected MMF_Player mouseExitFeedback;
+    [SerializeField] protected MMF_Player selectFeedback;
+    [SerializeField] protected MMF_Player healFeedback;
+    [SerializeField] protected MMF_Player shieldFeedback;
+    [SerializeField] protected MMF_Player buffAppliedFeedback;
+    [SerializeField] protected MMF_Player debuffAppliedFeedback;
 
     protected virtual void Awake()
     {
@@ -112,6 +117,7 @@ public class UnitCombatant : Combatant
         }
         DamageTextPool.Instance?.ShowHeal(amount, transform.position);
         currentHP = Mathf.Min(maxHP, currentHP + amount);
+        healFeedback?.PlayFeedbacks();
     }
 
     protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None)
@@ -154,6 +160,7 @@ public class UnitCombatant : Combatant
             return;
         }
         DamageTextPool.Instance?.ShowCustomText($"获得护盾 {amount}", transform.position, Color.cyan);
+        shieldFeedback?.PlayFeedbacks();
         currentShield += amount;
     }
 
@@ -212,6 +219,11 @@ public class UnitCombatant : Combatant
         if (state.isDebuff)
         {
             NotifyDebuffApplied(this, giver);
+            debuffAppliedFeedback?.PlayFeedbacks();
+        }
+        else
+        {
+            buffAppliedFeedback?.PlayFeedbacks();
         }
 
         DamageTextPool.Instance?.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
