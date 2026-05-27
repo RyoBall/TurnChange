@@ -278,32 +278,28 @@ public class Character : UnitCombatant
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
-            mouseExitFeedback?.StopFeedbacks();
-            mouseEnterFeedback?.PlayFeedbacks();
+            PlayMouseHoverEffect();
             SkillDescription.Instance.ChangeDescription(null);
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
             if (dead)
                 return;
-            mouseExitFeedback?.StopFeedbacks();
-            mouseEnterFeedback?.PlayFeedbacks();
+            PlayMouseHoverEffect();
         }
     }
     private void OnMouseExit()
     {
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
-            mouseEnterFeedback?.StopFeedbacks();
-            mouseExitFeedback?.PlayFeedbacks();
+            StopMouseHoverEffect();
             SkillDescription.Instance.ChangeDescription(null);
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
             if (dead)
                 return;
-            mouseEnterFeedback?.StopFeedbacks();
-            mouseExitFeedback?.PlayFeedbacks();
+            StopMouseHoverEffect();
         }
     }
     private void OnMouseDown()
@@ -312,16 +308,14 @@ public class Character : UnitCombatant
         {
             CharacterManager.Instance?.OnFieldCharacterClicked(this);
             SkillDescription.Instance.ChangeDescription(null);
-            mouseEnterFeedback?.StopFeedbacks();
-            mouseExitFeedback?.PlayFeedbacks();
+            StopMouseHoverEffect();
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
             if (dead)
                 return;
             SkillManager.Instance?.OnCharacterClicked(this);
-            mouseEnterFeedback?.StopFeedbacks();
-            mouseExitFeedback?.PlayFeedbacks(); 
+            StopMouseHoverEffect(); 
         }
     }
 

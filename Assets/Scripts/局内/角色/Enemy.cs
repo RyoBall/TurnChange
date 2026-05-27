@@ -183,22 +183,20 @@ public class Enemy : UnitCombatant
 
         // OnMouseDown 默认响应鼠标左键，这里把点击事件转发给选敌系统。
         SkillManager.Instance?.OnEnemyClicked(this);
-        mouseExitFeedback?.PlayFeedbacks();
+        StopMouseHoverEffect();
     }
     private void OnMouseEnter()
     {
         if (m_isBattleVisible && SkillManager.Instance != null && SkillManager.Instance.IsSelectingEnemies)
         {
-            mouseExitFeedback?.StopFeedbacks();
-            mouseEnterFeedback?.PlayFeedbacks();
+            PlayMouseHoverEffect();
         }
     }
     private void OnMouseExit()
     {
         if (m_isBattleVisible && SkillManager.Instance != null && SkillManager.Instance.IsSelectingEnemies)
         {
-            mouseEnterFeedback?.StopFeedbacks();
-            mouseExitFeedback?.PlayFeedbacks();
+            StopMouseHoverEffect();
         }
     }
 

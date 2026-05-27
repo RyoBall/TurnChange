@@ -33,6 +33,8 @@ public class UnitCombatant : Combatant
     [SerializeField] protected MMF_Player shieldFeedback;
     [SerializeField] protected MMF_Player buffAppliedFeedback;
     [SerializeField] protected MMF_Player debuffAppliedFeedback;
+    [Header("悬停特效")]
+    [SerializeField] protected ParticleSystem mouseHoverParticle;
 
     protected virtual void Awake()
     {
@@ -133,9 +135,33 @@ public class UnitCombatant : Combatant
             return;
         }
         dead = true;
+        StopMouseHoverEffect();
         TurnManager.Instance?.RemoveCombatant(this);
         hitFeedback?.StopFeedbacks();
         dieFeedback?.PlayFeedbacks();
+    }
+
+    protected void PlayMouseHoverEffect()
+    {
+        if (mouseHoverParticle == null)
+        {
+            return;
+        }
+
+        if (!mouseHoverParticle.isPlaying)
+        {
+            mouseHoverParticle.Play();
+        }
+    }
+
+    protected void StopMouseHoverEffect()
+    {
+        if (mouseHoverParticle == null)
+        {
+            return;
+        }
+
+        mouseHoverParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
     public IEnumerator ExecuteDeathEvent()
