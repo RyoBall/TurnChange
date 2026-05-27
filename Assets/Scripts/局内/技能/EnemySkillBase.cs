@@ -39,7 +39,7 @@ public class EnemySkillBase : SkillBase
 
     private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
     {
-        State.NotifyCombatEvent(unitCombatant, StateCombatEventType.DamageSkillUsed);
+        State.NotifyDamageSkillUsed(unitCombatant);
     }
 
     public bool CanUse(Enemy owner)

@@ -46,7 +46,7 @@ public class CharacterPanelView : MonoBehaviour
     private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
     private readonly List<CharacterSkillButtonUI> m_skillButtons = new List<CharacterSkillButtonUI>();
 
-    private CharacterData m_currentCharacter;
+    private CharacterRosterData m_currentCharacter;
     private Canvas m_parentCanvas;
 
     private void Awake()
@@ -69,8 +69,19 @@ public class CharacterPanelView : MonoBehaviour
     private void Start()
     {
         ResolveDataSource();
+        SubscribeToDataSource();
         RebuildCharacterButtons();
         ShowStatsPanel();
+    }
+
+    private void OnEnable()
+    {
+        SubscribeToDataSource();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeFromDataSource();
     }
 
     private void Update()
@@ -110,6 +121,34 @@ public class CharacterPanelView : MonoBehaviour
         }
     }
 
+    private void SubscribeToDataSource()
+    {
+        ResolveDataSource();
+        if (dataSource == null)
+        {
+            return;
+        }
+
+        dataSource.CharacterRosterChanged -= HandleCharacterRosterChanged;
+        dataSource.CharacterRosterChanged += HandleCharacterRosterChanged;
+    }
+
+    private void UnsubscribeFromDataSource()
+    {
+        if (dataSource == null)
+        {
+            return;
+        }
+
+        dataSource.CharacterRosterChanged -= HandleCharacterRosterChanged;
+    }
+
+    private void HandleCharacterRosterChanged()
+    {
+        ResolveDataSource();
+        RebuildCharacterButtons();
+    }
+
     private void RebuildCharacterButtons()//重建角色选择按钮
     {
         ClearSpawnedButtons(m_characterButtons);
@@ -120,19 +159,20 @@ public class CharacterPanelView : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < dataSource.characterDatas.Count; i++)
+        IReadOnlyList<CharacterRosterData> characters = dataSource.GetUnlockedCharacterRosters();
+        for (int i = 0; i < characters.Count; i++)
         {
-            CharacterData data = dataSource.characterDatas[i];
+            CharacterRosterData data = characters[i];
             CharacterSelectButtonUI button = Instantiate(characterButtonPrefab, characterButtonRoot);
             ApplyCharacterButtonPosition(button.RectTransform, i);
             m_characterButtons.Add(button);
             button.Bind(data, SelectCharacter, false);
         }
         //默认选择第一个角色
-        SelectCharacter(dataSource.characterDatas.Count > 0 ? dataSource.characterDatas[0] : null);
+        SelectCharacter(characters.Count > 0 ? characters[0] : null);
     }
 
-    private void SelectCharacter(CharacterData data)
+    private void SelectCharacter(CharacterRosterData data)
     {
         m_currentCharacter = data;
         RefreshCharacterButtons();
@@ -143,40 +183,40 @@ public class CharacterPanelView : MonoBehaviour
 
     private void RefreshCharacterButtons()
     {
+        IReadOnlyList<CharacterRosterData> characters = dataSource != null ? dataSource.GetUnlockedCharacterRosters() : System.Array.Empty<CharacterRosterData>();
         for (int i = 0; i < m_characterButtons.Count; i++)
         {
             bool selected = dataSource != null
-                && i < dataSource.characterDatas.Count
-                && dataSource.characterDatas[i] == m_currentCharacter;
+                && i < characters.Count
+                && characters[i] == m_currentCharacter;
             m_characterButtons[i].SetSelected(selected);
         }
     }
 
-    private void RefreshCharacterDisplay(CharacterData data)
+    private void RefreshCharacterDisplay(CharacterRosterData data)
     {
         bool hasData = data != null;
-        CharacterRosterData rosterData = hasData ? data.GetRosterData() : null;
         bool hasLevelData = TryGetCharacterLevelData(data, out CharacterLevelData levelData);
 
         if (characterIconImage != null)
         {
-            characterIconImage.sprite = null;
+            characterIconImage.sprite = hasData ? data.GetPortraitSprite() : null;
             characterIconImage.enabled = characterIconImage.sprite != null;
         }
 
         if (characterNameText != null)
         {
-            characterNameText.text = hasData ? data.GetCharacterName() : "未选择角色";
+            characterNameText.text = hasData ? data.GetDisplayName() : "未选择角色";
         }
 
         if (levelText != null)
         {
-            levelText.text = hasData ? $"等级 {data.GetLevel()}" : "等级 -";
+            levelText.text = hasData && dataSource != null ? $"等级 {dataSource.GetTeamLevel()}" : "等级 -";
         }
 
         if (experienceText != null)
         {
-            experienceText.text = hasData ? $"Exp: {data.GetCurrentExp()}/{data.GetExpToNextLevel()}" : "经验 -";
+            experienceText.text = hasData && dataSource != null ? $"Exp: {dataSource.GetCurrentExp()}/{dataSource.GetExpToNextLevel()}" : "经验 -";
         }
 
         if (attackText != null)
@@ -210,7 +250,7 @@ public class CharacterPanelView : MonoBehaviour
         }
     }
 
-    private void RefreshSkillButtons(CharacterData data)
+    private void RefreshSkillButtons(CharacterRosterData data)
     {
         ClearSpawnedButtons(m_skillButtons);
 
@@ -220,7 +260,7 @@ public class CharacterPanelView : MonoBehaviour
         }
 
         int createdCount = 0;
-        CharacterRosterData rosterData = data != null ? data.GetRosterData() : null;
+        CharacterRosterData rosterData = data;
         if (rosterData != null)
         {
             for (int i = 0; i < rosterData.skills.Count; i++)
@@ -372,21 +412,21 @@ public class CharacterPanelView : MonoBehaviour
         buttonRectTransform.anchoredPosition = targetRectTransform.anchoredPosition;
     }
 
-    private bool TryGetCharacterLevelData(CharacterData data, out CharacterLevelData levelData)
+    private bool TryGetCharacterLevelData(CharacterRosterData data, out CharacterLevelData levelData)
     {
         levelData = default;
-        if (data == null)
+        if (data == null || dataSource == null)
         {
             return false;
         }
 
-        string characterId = data.GetCharacterID();
+        string characterId = data.GetCharacterId();
         if (string.IsNullOrWhiteSpace(characterId))
         {
             return false;
         }
 
-        return LevelDataContainer.TryGetCharacterLevelData(characterId, data.GetLevel(), out levelData);
+        return LevelDataContainer.TryGetCharacterLevelData(characterId, dataSource.GetTeamLevel(), out levelData);
     }
 
     private bool IsPointerInside(RectTransform rectTransform, Vector2 screenPosition)

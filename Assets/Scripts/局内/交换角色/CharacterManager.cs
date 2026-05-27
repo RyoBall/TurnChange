@@ -66,7 +66,7 @@ public class CharacterManager : MonoBehaviour
 		}
 	}
 	#region  换人流程
-	public IEnumerator SelectAndSwapCoroutine()//换人协程，处理整个换人流程
+	public IEnumerator SelectAndSwapCoroutine(Character selectedFieldCharacter = null)//换人协程，处理整个换人流程
 	{
 		if (fieldCharacters.Count <= 0)
 		{
@@ -80,15 +80,18 @@ public class CharacterManager : MonoBehaviour
 			yield break;
 		}
 
-		m_selectedFieldCharacter = null;
+		m_selectedFieldCharacter = selectedFieldCharacter;
 		m_selectedReserveCharacter = null;
 		m_isSelectingReserveCharacter = false;
 		m_isSelectingFieldCharacter = true;
 		//第一步:选择场上的角色
-		UpdatePromptText("请选择一个场上角色进行更换");
-		SetPromptVisible(true);
-		Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
-		yield return new WaitUntil(() => m_selectedFieldCharacter != null);
+		if (selectedFieldCharacter == null)
+		{
+			UpdatePromptText("请选择一个场上角色进行更换");
+			SetPromptVisible(true);
+			Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
+			yield return new WaitUntil(() => m_selectedFieldCharacter != null);
+		}
 		m_isSelectingFieldCharacter = false;
 		m_isSelectingReserveCharacter = true;
 		//第二步:选择候补角色
@@ -187,7 +190,7 @@ public class CharacterManager : MonoBehaviour
 			Debug.LogWarning("[CharacterManager] 替换失败：角色为空");
 			yield break;
 		}
-	
+
 		if (!fieldCharacters.Contains(oldCharacter) || !reserveCharacters.Contains(newCharacter))
 		{
 			Debug.LogWarning("[CharacterManager] 替换失败：角色不在正确列表中");
@@ -196,9 +199,6 @@ public class CharacterManager : MonoBehaviour
 		//设置入场角色位置
 		newCharacter.transform.position = oldCharacter.transform.position;
 		newCharacter.standPosition = oldCharacter.standPosition;
-		//执行退场技能
-		SkillExecuteManager.ExecuteSkill(oldCharacter, oldCharacter.GetExitSkillInstance());
-		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 		//执行退场动画
 		yield return oldCharacter.PlayExitAnimation();
 		//交换角色列表中的角色
@@ -208,8 +208,9 @@ public class CharacterManager : MonoBehaviour
 
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
+		newCharacter.ChangeActionValue(newCharacter.BaseActionValue, false);
 		//执行入场技能
-		SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.GetEnterSkillInstance());
+		SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.GetEnterSkillInstance(), true);
 		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 		//执行入场动画
 		yield return newCharacter.PlayEnterAnimation();
@@ -217,9 +218,7 @@ public class CharacterManager : MonoBehaviour
 		if (TurnManager.Instance != null)
 		{
 			Debug.Log($"[CharacterManager] 更新 TurnManager 中的角色引用，将 {oldCharacter.name} 替换为 {newCharacter.name}");
-			float oldActionValue = oldCharacter.currentActionValue;
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
-			newCharacter.ChangeActionValue(newCharacter.BaseActionValue); //换入角色立即跑行动条
 			TurnManager.Instance.InsertCombatant(newCharacter);
 		}
 
@@ -420,6 +419,20 @@ public class CharacterManager : MonoBehaviour
 				return character;
 			}
 		}
+		return null;
+	}
+
+	private Character GetFirstAvailableReserveCharacter()
+	{
+		for (int i = 0; i < reserveCharacters.Count; i++)
+		{
+			Character reserveCharacter = reserveCharacters[i];
+			if (reserveCharacter != null)
+			{
+				return reserveCharacter;
+			}
+		}
+
 		return null;
 	}
 	#endregion

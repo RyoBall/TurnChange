@@ -172,4 +172,27 @@ public class EnemyManager : MonoBehaviour
             }
         }
     }
+    public Enemy GetLowestHPRatioEnemy()
+    {
+        Enemy bestTarget = null;
+        float lowestHpRatio = float.MaxValue;
+        IReadOnlyList<Enemy> aliveEnemies = this.AliveEnemies;
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            Enemy enemy = aliveEnemies[i];
+            if (enemy == null || enemy.currentHP <= 0 || enemy.maxHP <= 0 || enemy.IsDead)
+            {
+                continue;
+            }
+
+            float hpRatio = (float)enemy.currentHP / enemy.maxHP;
+            if (bestTarget == null || hpRatio < lowestHpRatio)
+            {
+                bestTarget = enemy;
+                lowestHpRatio = hpRatio;
+            }
+        }
+
+        return bestTarget;
+    }
 }

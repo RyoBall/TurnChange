@@ -66,6 +66,7 @@ public class LevelSetupManager : MonoBehaviour
         }
 
         m_pendingBattleLevelData = BattleLaunchContext.ConsumePendingLevelData();
+        allPlayerCharacters = ResolveRuntimePlayerCharacters();
         IReadOnlyList<BattleEnemySpawnData> runtimeEnemies = m_pendingBattleLevelData != null
             ? m_pendingBattleLevelData.GetWaveEnemies(0)
             : null;
@@ -77,6 +78,8 @@ public class LevelSetupManager : MonoBehaviour
         {
             fieldPlayerCharacters = new List<CharacterRosterData>(m_pendingBattleLevelData.selectedFieldCharacters);
         }
+
+        EnsureCharactersIncluded(allPlayerCharacters, fieldPlayerCharacters);
 
         characterSpawner.SpawnLevel(
             allPlayerCharacters,
@@ -220,14 +223,51 @@ public class LevelSetupManager : MonoBehaviour
 
         int rewardExperience = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardExperience : 0;
         int rewardGold = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardGold : 0;
-        Datas.Instance?.ApplyBattleRewards(rewardExperience, rewardGold);
+        Datas.Instance?.MarkLevelCompleted(m_pendingBattleLevelData != null ? m_pendingBattleLevelData.levelId : string.Empty);
 
         if (settlementView != null)
         {
             yield return settlementView.PlaySettlementSequence(rewardExperience, rewardGold);
             yield break;
         }
+        Datas.Instance?.ApplyBattleRewards(rewardExperience, rewardGold);
 
         Debug.LogWarning("[LevelSetupManager] 缺少 BattleSettlementView，已结算奖励但未显示结算界面。", this);
+    }
+
+    private List<CharacterRosterData> ResolveRuntimePlayerCharacters()
+    {
+        if (Datas.Instance != null)
+        {
+            IReadOnlyList<CharacterRosterData> unlockedCharacters = Datas.Instance.GetUnlockedCharacterRosters();
+            if (Datas.Instance.HasSelectedStarterBranch)
+            {
+                return unlockedCharacters != null ? new List<CharacterRosterData>(unlockedCharacters) : new List<CharacterRosterData>();
+            }
+
+            if (unlockedCharacters != null && unlockedCharacters.Count > 0)
+            {
+                return new List<CharacterRosterData>(unlockedCharacters);
+            }
+        }
+
+        return allPlayerCharacters != null ? new List<CharacterRosterData>(allPlayerCharacters) : new List<CharacterRosterData>();
+    }
+
+    private static void EnsureCharactersIncluded(List<CharacterRosterData> allCharacters, List<CharacterRosterData> requiredCharacters)
+    {
+        if (allCharacters == null || requiredCharacters == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < requiredCharacters.Count; i++)
+        {
+            CharacterRosterData requiredCharacter = requiredCharacters[i];
+            if (requiredCharacter != null && !allCharacters.Contains(requiredCharacter))
+            {
+                allCharacters.Add(requiredCharacter);
+            }
+        }
     }
 }

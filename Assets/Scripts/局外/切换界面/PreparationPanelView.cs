@@ -45,26 +45,12 @@ public class PreparationPanelView : MonoBehaviour
     {
         get
         {
-            m_selectedRosterCache.Clear();
-            for (int i = 0; i < m_selectedCharacters.Count; i++)
-            {
-                CharacterRosterData rosterData = m_selectedCharacters[i] != null
-                    ? m_selectedCharacters[i].GetRosterDataOrNull()
-                    : null;
-
-                if (rosterData != null)
-                {
-                    m_selectedRosterCache.Add(rosterData);
-                }
-            }
-
-            return m_selectedRosterCache;
+            return m_selectedCharacters;
         }
     }
 
     private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
-    private readonly List<CharacterData> m_selectedCharacters = new List<CharacterData>();
-    private readonly List<CharacterRosterData> m_selectedRosterCache = new List<CharacterRosterData>();
+    private readonly List<CharacterRosterData> m_selectedCharacters = new List<CharacterRosterData>();
     private Vector2 m_ListVelocity;
     private bool m_IsCharacterListVisible;
 
@@ -83,8 +69,14 @@ public class PreparationPanelView : MonoBehaviour
     private void OnEnable()
     {
         BindToggleButton();
+        SubscribeToDataSource();
         RebuildCharacterButtons();
         RefreshSelectedCharacterImages();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeFromDataSource();
     }
 
     private void Update()
@@ -137,6 +129,34 @@ public class PreparationPanelView : MonoBehaviour
         toggleCharacterListButton.onClick.AddListener(ToggleCharacterList);
     }
 
+    private void SubscribeToDataSource()
+    {
+        if (Datas.Instance == null)
+        {
+            return;
+        }
+
+        Datas.Instance.CharacterRosterChanged -= HandleCharacterRosterChanged;
+        Datas.Instance.CharacterRosterChanged += HandleCharacterRosterChanged;
+    }
+
+    private void UnsubscribeFromDataSource()
+    {
+        if (Datas.Instance == null)
+        {
+            return;
+        }
+
+        Datas.Instance.CharacterRosterChanged -= HandleCharacterRosterChanged;
+    }
+
+    private void HandleCharacterRosterChanged()
+    {
+        RemoveUnavailableSelectedCharacters();
+        RebuildCharacterButtons();
+        RefreshSelectedCharacterImages();
+    }
+
     private void RebuildCharacterButtons()
     {
         ClearCharacterButtons();
@@ -146,7 +166,7 @@ public class PreparationPanelView : MonoBehaviour
             return;
         }
 
-        IReadOnlyList<CharacterData> characterDatas = Datas.Instance.GetCharacterDatas();
+        IReadOnlyList<CharacterRosterData> characterDatas = Datas.Instance.GetUnlockedCharacterRosters();
         if (characterDatas == null)
         {
             return;
@@ -154,7 +174,7 @@ public class PreparationPanelView : MonoBehaviour
 
         for (int i = 0; i < characterDatas.Count; i++)
         {
-            CharacterData characterData = characterDatas[i];
+            CharacterRosterData characterData = characterDatas[i];
             if (characterData == null)
             {
                 continue;
@@ -191,7 +211,37 @@ public class PreparationPanelView : MonoBehaviour
         m_characterButtons.Clear();
     }
 
-    private void ToggleCharacterSelection(CharacterData characterData)
+    private void RemoveUnavailableSelectedCharacters()
+    {
+        if (Datas.Instance == null)
+        {
+            m_selectedCharacters.Clear();
+            return;
+        }
+
+        IReadOnlyList<CharacterRosterData> currentCharacters = Datas.Instance.GetUnlockedCharacterRosters();
+        for (int i = m_selectedCharacters.Count - 1; i >= 0; i--)
+        {
+            CharacterRosterData selectedCharacter = m_selectedCharacters[i];
+            bool stillExists = false;
+
+            for (int j = 0; j < currentCharacters.Count; j++)
+            {
+                if (currentCharacters[j] == selectedCharacter)
+                {
+                    stillExists = true;
+                    break;
+                }
+            }
+
+            if (!stillExists)
+            {
+                m_selectedCharacters.RemoveAt(i);
+            }
+        }
+    }
+
+    private void ToggleCharacterSelection(CharacterRosterData characterData)
     {
         if (characterData == null)
         {
@@ -227,7 +277,7 @@ public class PreparationPanelView : MonoBehaviour
                 continue;
             }
 
-            CharacterData buttonCharacter = button.BoundData;
+            CharacterRosterData buttonCharacter = button.BoundData;
             bool selected = buttonCharacter != null && m_selectedCharacters.Contains(buttonCharacter);
             button.SetSelected(selected);
         }
@@ -267,7 +317,7 @@ public class PreparationPanelView : MonoBehaviour
             return;
         }
 
-        CharacterData characterData = index >= 0 && index < m_selectedCharacters.Count ? m_selectedCharacters[index] : null;
+        CharacterRosterData characterData = index >= 0 && index < m_selectedCharacters.Count ? m_selectedCharacters[index] : null;
         targetImage.sprite = characterData != null ? characterData.GetPortraitSprite() : null;
         targetImage.enabled = targetImage.sprite != null;
     }

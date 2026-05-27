@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class BackpackInventoryView : MonoBehaviour
+public class BackpackInventoryView : MonoBehaviour//背包列表
 {
     [SerializeField] private RectTransform contentRoot;
     [SerializeField] private Vector2 backpackSize = new Vector2(480f, 360f);

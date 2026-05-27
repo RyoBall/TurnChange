@@ -11,11 +11,11 @@ public class CharacterSelectButtonUI : MonoBehaviour
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private Image selectionHighlight;
 
-    private CharacterData m_data;
-    private Action<CharacterData> m_onClick;
+    private CharacterRosterData m_data;
+    private Action<CharacterRosterData> m_onClick;
 
     public RectTransform RectTransform => transform as RectTransform;
-    public CharacterData BoundData => m_data;
+    public CharacterRosterData BoundData => m_data;
 
     private void Awake()
     {
@@ -35,14 +35,14 @@ public class CharacterSelectButtonUI : MonoBehaviour
         }
     }
 
-    public void Bind(CharacterData data, Action<CharacterData> onClick, bool selected)
+    public void Bind(CharacterRosterData data, Action<CharacterRosterData> onClick, bool selected)
     {
         m_data = data;
         m_onClick = onClick;
 
         if (nameText != null)
         {
-            nameText.text = data != null ? data.GetCharacterName() : string.Empty;
+            nameText.text = data != null ? data.GetDisplayName() : string.Empty;
         }
 
         if (iconImage != null)

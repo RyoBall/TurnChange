@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance { get; private set; }
@@ -69,6 +70,36 @@ public class TurnManager : MonoBehaviour
             extraCombatant.ChangeActionValue(0f, false);
             InsertCombatant(extraCombatant);
         }
+    }
+    public void AdditionalTurnInsert(Character character)//插入追加回合的接口
+    {
+        AdditionalTurnInsert(character, null, null);
+    }
+
+    public void AdditionalTurnInsert(Character character, SkillBase skillOverride, List<Enemy> selectedEnemies)//插入带指定技能和目标的追加回合接口
+    {
+        if (character == null)
+        {
+            return;
+        }
+
+        GameObject additionalTurnObject = new GameObject($"AdditionalTurn_{character.combatantName}");
+        additionalTurnObject.transform.SetParent(transform);
+
+        AdditionalCharacter additionalCombatant = additionalTurnObject.AddComponent<AdditionalCharacter>();
+        if (skillOverride != null || selectedEnemies != null)
+        {
+            additionalCombatant.Initialize(character, skillOverride, selectedEnemies);
+        }
+        else
+        {
+            additionalCombatant.Initialize(character);
+        }
+
+        additionalCombatant.combatantName = character.combatantName;
+        additionalCombatant.standPosition = -1;
+        additionalCombatant.ChangeActionValue(0f, false);
+        InsertCombatant(additionalCombatant);
     }
     #region 回合开始的函数
     IEnumerator StartFight()

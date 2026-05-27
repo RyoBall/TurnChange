@@ -17,7 +17,6 @@ public class ShopModuleManager : MonoBehaviour
     public class ShopProductDefinition
     {
         public GridModuleDefinition module;
-        public int price = 1;
     }
 
     private class ShopRuntimeEntry
@@ -42,6 +41,7 @@ public class ShopModuleManager : MonoBehaviour
 
     [Header("购买配置")]
     [SerializeField] private ModulePlacementController backpackController;
+    [SerializeField] private int pricePerCell = 5;
     [SerializeField] private int currentCurrency = 999;
     [SerializeField] private bool spendCurrencyOnPurchase = true;
     [SerializeField] private bool markItemSoldOutOnPurchase = true;
@@ -168,13 +168,15 @@ public class ShopModuleManager : MonoBehaviour
                 Debug.LogWarning("Shop item prefab does not contain ShopModuleItemUI. Component was added automatically.", itemObject);
             }
 
+            GridModuleDefinition runtimeModule = product.module.Clone();
+
             ShopRuntimeEntry entry = new ShopRuntimeEntry
             {
                 slotIndex = i,
                 spawnPoint = spawnPoint,
                 itemUI = itemUI,
-                module = product.module.Clone(),
-                price = Mathf.Max(0, product.price),
+                module = runtimeModule,
+                price = CalculateModulePrice(runtimeModule),
                 soldOut = false
             };
 
@@ -313,6 +315,17 @@ public class ShopModuleManager : MonoBehaviour
         return Vector2.Lerp(previewMaxCellSize, previewMinCellSize, t);
     }
 
+    private int CalculateModulePrice(GridModuleDefinition module)
+    {
+        if (module == null)
+        {
+            return 0;
+        }
+        List<Vector2Int> m_priceCellBuffer = new List<Vector2Int>();
+        module.GetNormalizedCells(m_priceCellBuffer);
+        return Mathf.Max(0, m_priceCellBuffer.Count) * pricePerCell;
+    }
+
     private void ClearRuntimeEntries()
     {
         for (int i = 0; i < m_runtimeEntries.Count; i++)
@@ -328,6 +341,7 @@ public class ShopModuleManager : MonoBehaviour
 
     private void ClampConfig()//只是保证所有参数不会低于最低值
     {
+        pricePerCell = Mathf.Max(0, pricePerCell);
         currentCurrency = Mathf.Max(0, currentCurrency);
         itemsPerRefresh = Mathf.Max(0, itemsPerRefresh);
         previewMaxCellSize.x = Mathf.Max(1f, previewMaxCellSize.x);

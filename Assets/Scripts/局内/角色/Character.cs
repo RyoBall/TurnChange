@@ -15,11 +15,10 @@ public class Character : UnitCombatant
     [SerializeField] private CharacterAnimationOverrideDatabase animationOverrideDatabase;
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;//入场技能，回合开始时自动触发
-    public CharacterSkillType exitSkill;//退场技能，回合结束时自动触发
+    public CharacterSkillBase additionalSkill;
     private List<CharacterSkillBase> m_skillInstances = new List<CharacterSkillBase>();
     private Dictionary<CharacterSkillType, CharacterSkillBase> m_skillInstanceMap = new Dictionary<CharacterSkillType, CharacterSkillBase>();
     private CharacterSkillBase m_enterSkillInstance;
-    private CharacterSkillBase m_exitSkillInstance;
     private AnimatorOverrideController m_animatorOverrideController;
 
     [Header("混沌值")]
@@ -116,6 +115,11 @@ public class Character : UnitCombatant
         HandleChaosTurnStart();
         //结算状态
         yield return ProcessStatesOnTurnStart();
+        //如果死亡就结束回合
+        if(dead)
+        {
+            yield break;
+        }
         EnterMoveDOT();
         yield return new WaitForSeconds(moveAnimDuration);
 
@@ -276,7 +280,7 @@ public class Character : UnitCombatant
         {
             mouseExitFeedback?.StopFeedbacks();
             mouseEnterFeedback?.PlayFeedbacks();
-            SkillDescription.Instance.ChangeDescription(GetExitSkillInstance());
+            SkillDescription.Instance.ChangeDescription(null);
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
@@ -345,7 +349,7 @@ public class Character : UnitCombatant
     public IEnumerator PlayExitAnimation()
     {
         //简单的退场动画：向右移动并淡出
-        Vector3 targetPosition = transform.position + new Vector3(2f, 0, 0);
+        Vector3 targetPosition = transform.position + new Vector3(20f, 0, 0);
         float duration = 0.5f;
         Sequence exitSequence = DOTween.Sequence();
         exitSequence.Append(transform.DOMove(targetPosition, duration).SetEase(Ease.InBack));
@@ -400,7 +404,6 @@ public class Character : UnitCombatant
             m_skillInstanceMap[skillType] = skill;
         }
         m_enterSkillInstance = CreateSkillInstance(enterSkill);
-        m_exitSkillInstance = CreateSkillInstance(exitSkill);
     }
 
     public CharacterSkillBase GetSkillInstance(CharacterSkillType skillType)
@@ -424,16 +427,6 @@ public class Character : UnitCombatant
         return m_enterSkillInstance;
     }
 
-    public CharacterSkillBase GetExitSkillInstance()
-    {
-        if (m_exitSkillInstance == null)
-        {
-            InitializeSkill();
-        }
-
-        return m_exitSkillInstance;
-    }
-
     private CharacterSkillBase CreateSkillInstance(CharacterSkillType skillType)
     {
         CharacterSkillBase template = SkillDictionaryManager.GetSkill(skillType);
@@ -450,7 +443,6 @@ public class Character : UnitCombatant
     private void CleanupSkillInstances()
     {
         DestroySkillInstance(m_enterSkillInstance);
-        DestroySkillInstance(m_exitSkillInstance);
 
         if (m_skillInstances == null)
         {

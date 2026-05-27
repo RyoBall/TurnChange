@@ -21,21 +21,21 @@ public class DamageCounter : MonoBehaviour
     public static UnitCombatant.DamageInfo CountDamage(
         UnitCombatant attacker,
         UnitCombatant defender,
-        float attackCoefficient,
-        float baseDamage = 0f,
+        float skillCoef,
+        float skillBase = 0f,
         bool ifTrueDamage = false,
         bool canCrit = true,
         bool applyRandomVariance = true)
     {
         bool isCrit;
-        return CountDamage(attacker, defender, attackCoefficient, baseDamage, ifTrueDamage, canCrit, applyRandomVariance, out isCrit);
+        return CountDamage(attacker, defender, skillCoef, skillBase, ifTrueDamage, canCrit, applyRandomVariance, out isCrit);
     }
 
     public static UnitCombatant.DamageInfo CountDamage(
         UnitCombatant attacker,
         UnitCombatant defender,
-        float attackCoefficient,
-        float baseDamage,
+        float skillCoef,
+        float skillBase,
         bool ifTrueDamage,
         bool canCrit,
         bool applyRandomVariance,
@@ -60,7 +60,7 @@ public class DamageCounter : MonoBehaviour
     
     //计算伤害
         //先计算基础伤害
-        float raw = (attacker.attack * attackCoefficient + baseDamage) * randomFactor;
+        float raw = (attacker.attack * skillCoef + skillBase) * randomFactor;
         //计算暴击影响
         raw *= isCrit ? effectiveCritDamage : 1f;
         //计算防御影响

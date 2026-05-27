@@ -344,7 +344,7 @@ public class UnitHealthUIController : MonoBehaviour
         }
     }
 
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
     private void OnValidate()
     {
         ResolveReferences();
@@ -355,5 +355,5 @@ public class UnitHealthUIController : MonoBehaviour
             SyncImmediate();
         }
     }
-#endif
+#endif*/
 }

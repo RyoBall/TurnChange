@@ -52,8 +52,6 @@ public class StartBattleButton : MonoBehaviour
             return;
         }
 
-        Datas.Instance?.MarkLevelCompleted(preparationPanel.CurrentLevelData.levelId);
-
         BattleLaunchContext.SetPendingLevelData(preparationPanel.CurrentLevelData, preparationPanel.SelectedFieldCharacters);
         SceneManager.LoadScene(battleSceneName);
     }

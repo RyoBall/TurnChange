@@ -15,13 +15,15 @@ public enum StateCombatEventType
 {
     DamageSkillUsed,
     DotTriggered,
-    TurnStartDotSettled
+    CriticalHit,
+    EnemyKilled
 }
 
 public enum StateType
 {
     BloodContract,//血契
     PursuitPunish,//追惩
+    PunishMark,//惩戒标记
     PersistentTorment,//持续煎熬
     SeqFlame,//序焰
     Daze,//震慑
@@ -40,6 +42,10 @@ public enum StateType
     None,
     BerserkFeast,//狂暴盛宴
     BurningBlood,//燃血
+    CritRhythm,//暴击律动
+    DesperationMark,//裁决印记
+    HealingSpring,//回复之泉
+    RestorationSurge,//复苏锋芒
     DeadlyArmor,//致命穿甲
     BloodBath,//浴血
     Vulnerable,//易伤
@@ -52,17 +58,16 @@ public enum StateType
     GiftStrong,//馈赠·强
     ExploderProcess,//自爆流程
     NextActionDamageBoost,//下次行动增伤
-    ActionWeakened//单回合减攻
+    ActionWeakened,//单回合减攻
+    Weakened
 
 }
 
 [CreateAssetMenu(fileName = "State", menuName = "状态/新状态")]
 public class State : ScriptableObject
 {
-    private static UnitCombatant s_activeDotTriggerUnit;
-    private static bool s_activeDotTriggerHasDamage;
-    private static UnitCombatant s_turnStartSettlementUnit;
-    private static bool s_turnStartSettlementHasDotDamage;
+    private static UnitCombatant s_activeDotEventUnit;
+    private static bool s_activeDotEventHasDamage;
 
     [Header("状态配置")]
     [SerializeField] private StateDurationType durationType = StateDurationType.Turn;
@@ -148,6 +153,8 @@ public class State : ScriptableObject
     {
         m_behavior = null;
     }
+
+
 
     public void Mount(
         UnitCombatant owner,
@@ -366,7 +373,7 @@ public class State : ScriptableObject
     {
         return Mathf.Clamp(count, 0, Mathf.Max(1, maxStacks));
     }
-#region 伤害结算相关
+    #region 伤害结算相关
 
     public static void NotifyCombatEvent(UnitCombatant triggerUnit, StateCombatEventType eventType)
     {
@@ -395,18 +402,22 @@ public class State : ScriptableObject
             }
         }
     }
+    public static void NotifyDamageSkillUsed(UnitCombatant triggerUnit)
+    {
+        NotifyCombatEvent(triggerUnit, StateCombatEventType.DamageSkillUsed);
+    }
 
-    public static void RunDotTriggerEvent(UnitCombatant triggerUnit, System.Action triggerAction)
+    public static void RunBatchedDotEvent(UnitCombatant triggerUnit, System.Action triggerAction)
     {
         if (triggerUnit == null || triggerAction == null)
         {
             return;
         }
 
-        UnitCombatant previousTriggerUnit = s_activeDotTriggerUnit;
-        bool previousHasDamage = s_activeDotTriggerHasDamage;
-        s_activeDotTriggerUnit = triggerUnit;
-        s_activeDotTriggerHasDamage = false;
+        UnitCombatant previousTriggerUnit = s_activeDotEventUnit;
+        bool previousHasDamage = s_activeDotEventHasDamage;
+        s_activeDotEventUnit = triggerUnit;
+        s_activeDotEventHasDamage = false;
 
         try
         {
@@ -414,56 +425,57 @@ public class State : ScriptableObject
         }
         finally
         {
-            bool hasDotDamage = s_activeDotTriggerHasDamage;
-            s_activeDotTriggerUnit = previousTriggerUnit;
-            s_activeDotTriggerHasDamage = previousHasDamage || hasDotDamage;
+            FinishBatchedDotEvent(triggerUnit, previousTriggerUnit, previousHasDamage);
+        }
+    }
 
-            if (hasDotDamage)
+    public static IEnumerator RunBatchedDotEvent(UnitCombatant triggerUnit, IEnumerator triggerRoutine)
+    {
+        if (triggerUnit == null || triggerRoutine == null)
+        {
+            yield break;
+        }
+
+        UnitCombatant previousTriggerUnit = s_activeDotEventUnit;
+        bool previousHasDamage = s_activeDotEventHasDamage;
+        s_activeDotEventUnit = triggerUnit;
+        s_activeDotEventHasDamage = false;
+
+        try
+        {
+            while (triggerRoutine.MoveNext())
             {
-                NotifyCombatEvent(triggerUnit, StateCombatEventType.DotTriggered);
+                yield return triggerRoutine.Current;
             }
         }
-    }
-
-    public static void BeginTurnStartStateSettlement(UnitCombatant unit)
-    {
-        s_turnStartSettlementUnit = unit;
-        s_turnStartSettlementHasDotDamage = false;
-    }
-
-    public static void EndTurnStartStateSettlement(UnitCombatant unit)
-    {
-        bool shouldNotify = unit != null
-            && s_turnStartSettlementUnit == unit
-            && s_turnStartSettlementHasDotDamage;
-
-        s_turnStartSettlementUnit = null;
-        s_turnStartSettlementHasDotDamage = false;
-
-        if (shouldNotify)
+        finally
         {
-            NotifyCombatEvent(unit, StateCombatEventType.TurnStartDotSettled);
+            FinishBatchedDotEvent(triggerUnit, previousTriggerUnit, previousHasDamage);
         }
     }
 
-    public static void RecordCombatDamage(UnitCombatant source, UnitCombatant target, bool isDotDamage)
+    internal static void RecordBatchedDotDamage(bool isDotDamage)
     {
-        if (!isDotDamage)
+        if (!isDotDamage || s_activeDotEventUnit == null)
         {
             return;
         }
 
-        if (source != null && source == s_activeDotTriggerUnit)
-        {
-            s_activeDotTriggerHasDamage = true;
-        }
+        s_activeDotEventHasDamage = true;
+    }
 
-        if (target != null && target == s_turnStartSettlementUnit)
+    private static void FinishBatchedDotEvent(UnitCombatant triggerUnit, UnitCombatant previousTriggerUnit, bool previousHasDamage)
+    {
+        bool hasDotDamage = s_activeDotEventHasDamage;
+        s_activeDotEventUnit = previousTriggerUnit;
+        s_activeDotEventHasDamage = previousHasDamage || hasDotDamage;
+
+        if (hasDotDamage)
         {
-            s_turnStartSettlementHasDotDamage = true;
+            NotifyCombatEvent(triggerUnit, StateCombatEventType.DotTriggered);
         }
     }
-#endregion
+    #endregion
     public static void TickAllStatesByActionValue(float passedActionValue)
     {
         int actionValueCost = Mathf.Max(0, Mathf.CeilToInt(passedActionValue));
@@ -543,6 +555,14 @@ public static class StateBehaviorFactory
                 return new BerserkFeastStateBehavior();
             case StateType.BurningBlood:
                 return new BurningBloodStateBehavior();
+            case StateType.CritRhythm:
+                return new CritRhythmStateBehavior();
+            case StateType.DesperationMark:
+                return new DesperationMarkStateBehavior();
+            case StateType.HealingSpring:
+                return new HealingSpringStateBehavior();
+            case StateType.RestorationSurge:
+                return new RestorationSurgeStateBehavior();
             case StateType.DeadlyArmor:
                 return new DeadlyArmorStateBehavior();
             case StateType.BloodBath:
@@ -553,16 +573,6 @@ public static class StateBehaviorFactory
                 return new ArmorBreakStateBehavior();
             case StateType.BloodSurgeHeal:
                 return new BloodSurgeHealStateBehavior();
-            case StateType.CriticalGuard:
-                return new CriticalGuardStateBehavior();
-            case StateType.BloodGift:
-                return new BloodGiftStateBehavior();
-            case StateType.GiftWeak:
-                return new GiftWeakStateBehavior();
-            case StateType.GiftMid:
-                return new GiftMidStateBehavior();
-            case StateType.GiftStrong:
-                return new GiftStrongStateBehavior();
             case StateType.ExploderProcess:
                 return new ExploderProcessStateBehavior();
             case StateType.NextActionDamageBoost:
@@ -571,6 +581,8 @@ public static class StateBehaviorFactory
                 return new ActionWeakenedStateBehavior();
             case StateType.PursuitPunish:
                 return new PursuitPunishStateBehavior();
+            case StateType.PunishMark:
+                return new DefaultStateBehavior();
             case StateType.PersistentTorment:
                 return new PersistentTormentStateBehavior();
             case StateType.SeqFlame:
@@ -601,6 +613,8 @@ public static class StateBehaviorFactory
                 return new ChaosHalfStateBehavior();
             case StateType.ChaosStun:
                 return new ChaosStunStateBehavior();
+            case StateType.Weakened:
+                return new WeakenedStateBehavior();
             default:
                 return new DefaultStateBehavior();
         }
@@ -735,6 +749,255 @@ public class BurningBloodStateBehavior : StateBehaviorBase
 
         s_killInTurn[owner] = false;
         return true;
+    }
+}
+
+public class CritRhythmStateBehavior : StateBehaviorBase
+{
+    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType)
+    {
+        if (state.owner == null || CharacterManager.Instance == null)
+        {
+            return;
+        }
+
+        if (eventType == StateCombatEventType.CriticalHit && triggerUnit != state.owner)
+        {
+            return;
+        }
+
+        if (eventType != StateCombatEventType.CriticalHit && eventType != StateCombatEventType.EnemyKilled)
+        {
+            return;
+        }
+
+        float teamAdvanceRatio = state.baseExtraData1;
+        if (teamAdvanceRatio <= 0f)
+        {
+            return;
+        }
+
+        foreach (var ally in CharacterManager.Instance.fieldCharacters)
+        {
+            if (ally == null || ally.IsDead)
+            {
+                continue;
+            }
+
+            ally.ChangeActionValue(Mathf.Max(0f, ally.currentActionValue - ally.currentActionValue * teamAdvanceRatio));
+        }
+    }
+}
+
+public class DesperationMarkStateBehavior : StateBehaviorBase
+{
+    private static readonly HashSet<UnitCombatant> s_resolvingExtraDamage = new HashSet<UnitCombatant>();
+
+    private bool transferredOnDeath;
+
+    public override void OnStateApply()
+    {
+        RemoveDuplicateAliveMarks();
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || target != state.owner || damage <= 0 || transferredOnDeath)
+        {
+            return;
+        }
+
+        if (state.owner.currentHP <= 0)
+        {
+            TransferMark();
+            return;
+        }
+
+        if (s_resolvingExtraDamage.Contains(state.owner))
+        {
+            return;
+        }
+
+        int extraTrueDamage = Mathf.RoundToInt(damage * state.baseExtraData1);
+        if (extraTrueDamage <= 0)
+        {
+            return;
+        }
+
+        UnitCombatant extraDamageSource = source != null ? source : state.giver != null ? state.giver : state.owner;
+        s_resolvingExtraDamage.Add(state.owner);
+        try
+        {
+            state.owner.TakeDamage(
+                new UnitCombatant.DamageInfo(extraTrueDamage, extraDamageSource)
+                    .AsTrueDamage()
+                    .WithState(StateType.DesperationMark));
+        }
+        finally
+        {
+            s_resolvingExtraDamage.Remove(state.owner);
+        }
+
+        if (state.owner.currentHP <= 0)
+        {
+            TransferMark();
+        }
+    }
+
+    private void RemoveDuplicateAliveMarks()
+    {
+        if (EnemyManager.Instance == null || state.owner == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            Enemy enemy = aliveEnemies[i];
+            if (enemy == null || enemy == state.owner || enemy.currentHP <= 0 || enemy.IsDead)
+            {
+                continue;
+            }
+
+            State duplicate = enemy.GetState(StateType.DesperationMark);
+            if (duplicate != null)
+            {
+                enemy.RemoveState(duplicate);
+            }
+        }
+    }
+
+    private void TransferMark()
+    {
+        if (transferredOnDeath || EnemyManager.Instance == null)
+        {
+            return;
+        }
+
+        transferredOnDeath = true;
+
+        Enemy nextTarget = GetNextTarget();
+        if (nextTarget == null)
+        {
+            return;
+        }
+
+        UnitCombatant giver = state.giver != null ? state.giver : state.owner;
+        State transferredState = nextTarget.AddState(StateType.DesperationMark, giver, GetTransferDuration(), state.StackCount, state.skillCoef);
+        if (transferredState == null)
+        {
+            return;
+        }
+
+        transferredState.baseExtraData1 = state.baseExtraData1;
+        transferredState.baseExtraData2 = state.baseExtraData2;
+        transferredState.baseExtraData3 = state.baseExtraData3;
+        transferredState.baseExtraData4 = state.baseExtraData4;
+    }
+
+    private int GetTransferDuration()
+    {
+        switch (state.DurationType)
+        {
+            case StateDurationType.Turn:
+                return Mathf.Max(1, state.RemainingTurns);
+            case StateDurationType.ActionValue:
+                return Mathf.Max(1, state.RemainingActionValue);
+            default:
+                return 99;
+        }
+    }
+
+    private Enemy GetNextTarget()
+    {
+        Enemy bestTarget = null;
+        float lowestHpRatio = float.MaxValue;
+        IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            Enemy enemy = aliveEnemies[i];
+            if (enemy == null || enemy == state.owner || enemy.currentHP <= 0 || enemy.maxHP <= 0 || enemy.IsDead)
+            {
+                continue;
+            }
+
+            float hpRatio = (float)enemy.currentHP / enemy.maxHP;
+            if (bestTarget == null || hpRatio < lowestHpRatio)
+            {
+                bestTarget = enemy;
+                lowestHpRatio = hpRatio;
+            }
+        }
+
+        return bestTarget;
+    }
+}
+
+public class HealingSpringStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return state.baseExtraData1 > 0f ? state.baseExtraData1 : 1.2f;
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (state.owner == null || source != state.owner || isDotDamage || target == null || target == source || damage <= 0 || CharacterManager.Instance == null)
+        {
+            return;
+        }
+
+        List<Character> reserveTargets = new List<Character>();
+        for (int i = 0; i < CharacterManager.Instance.reserveCharacters.Count; i++)
+        {
+            Character reserveCharacter = CharacterManager.Instance.reserveCharacters[i];
+            if (reserveCharacter == null || reserveCharacter.IsDead)
+            {
+                continue;
+            }
+
+            reserveTargets.Add(reserveCharacter);
+        }
+
+        if (reserveTargets.Count <= 0)
+        {
+            return;
+        }
+
+        int baseHeal = damage / reserveTargets.Count;
+        int remainder = damage % reserveTargets.Count;
+        for (int i = 0; i < reserveTargets.Count; i++)
+        {
+            int healAmount = baseHeal + (i < remainder ? 1 : 0);
+            if (healAmount > 0)
+            {
+                reserveTargets[i].Heal(healAmount);
+            }
+        }
+    }
+}
+
+public class RestorationSurgeStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        if (isDotDamage)
+        {
+            return 1f;
+        }
+
+        return state.baseExtraData1 > 0f ? state.baseExtraData1 : 1f;
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        if (source != state.owner || target == null || damage <= 0 || isDotDamage)
+        {
+            return;
+        }
+
+        state.ChangeStackCount(0);
     }
 }
 
@@ -1025,17 +1288,21 @@ public class GiftStrongStateBehavior : GiftStateBehaviorBase
 
 public class PursuitPunishStateBehavior : StateBehaviorBase
 {
-
     public override void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
     {
-        if (!(target is Enemy) || TurnManager.Instance?.GetCurrentCombatant() == state.owner)
+        Character ownerCharacter = state.owner as Character;
+        if (!(target is Enemy enemy) || ownerCharacter == null)
         {
             return;
         }
-        float pursuitCoef = state.skillCoef;
-        var damageInfo = DamageCounter.CountDamage(state.owner, target, pursuitCoef, 0f, false, false, false)
-            .WithState(state.stateType);
-        target.TakeDamage(damageInfo);
+
+        if (debuffGiver == state.owner)
+        {
+            return;
+        }
+
+        enemy.AddState(StateType.PunishMark, state.owner, 1, 1);
+        TurnManager.Instance?.AdditionalTurnInsert(ownerCharacter);
     }
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
@@ -1161,7 +1428,7 @@ public class ElementalDetonationStateBehavior : StateBehaviorBase
                 continue;
             }
 
-            enemy.TakeDamage(new UnitCombatant.DamageInfo(finalDamage, damageSource).AsTrueDamage());
+            enemy.TakeDamage(DamageCounter.CountDamage(state.giver, enemy, 0, finalDamage, true, false));
         }
     }
 
@@ -1300,7 +1567,7 @@ public class ChargeStateBehavior : StateBehaviorBase
         {
             float shieldHpRatio = state.baseExtraData1;
             float fixedShieldScale = state.baseExtraData3;
-            int shieldValue = Mathf.RoundToInt(state.owner.maxHP * shieldHpRatio + fixedShieldScale * 100f);
+            int shieldValue = Mathf.RoundToInt(state.owner.maxHP * shieldHpRatio + fixedShieldScale);
             foreach (var ally in CharacterManager.Instance.fieldCharacters)
             {
                 if (ally == null)
@@ -1310,6 +1577,18 @@ public class ChargeStateBehavior : StateBehaviorBase
 
                 ally.AddShield(shieldValue);
             }
+            foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+            {
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                enemy.TakeDamage(DamageCounter.CountDamage(state.owner, enemy, state.skillCoef, 0f, false, false, true));
+                enemy.ChangeActionValue(enemy.currentActionValue + enemy.currentActionValue * state.baseExtraData4);
+                //推条
+            }
+            State.NotifyCombatEvent(state.owner, StateCombatEventType.DamageSkillUsed);
         }
 
         TurnManager.Instance?.ExtraTurnInsert(state.owner as Character);
@@ -1357,7 +1636,14 @@ public class ChaosStunStateBehavior : StateBehaviorBase
         yield break;
     }
 }
-
+public class WeakenedStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        state.ChangeStackCount(state.StackCount - 1);
+        return state.baseExtraData1;
+    }
+}
 public class InspectorReadOnlyAttribute : PropertyAttribute
 {
     // 这个类不需要额外代码，只是作为一个标记存在

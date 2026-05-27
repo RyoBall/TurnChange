@@ -16,6 +16,7 @@ public enum CharacterSkillType
     ExitSkillOne,
     AllAttack,
     PursuitPunish,
+    PursuitPunishAdditional,
     EnterSkillTwo,
     ExitSkillTwo,
     DebuffSpreadAttack,
@@ -28,6 +29,7 @@ public enum CharacterSkillType
     MainDpsEnter,
     MainDpsExit,
     MainDpsSkillOne,
+    MainDpsSkillOneAdditional,
     MainDpsSkillTwo,
     SubDpsEnter,
     SubDpsExit,
@@ -67,10 +69,20 @@ public class CharacterSkillBase : SkillBase
 
     private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
     {
-        State.NotifyCombatEvent(unitCombatant, StateCombatEventType.DamageSkillUsed);
+        State.NotifyDamageSkillUsed(unitCombatant);
     }
 
     public override IEnumerator Execute(UnitCombatant unitCombatant)
+    {
+        yield return ExecuteInternal(unitCombatant, null, false);
+    }
+
+    public override IEnumerator Execute(UnitCombatant unitCombatant, List<Enemy> selectedEnemies)
+    {
+        yield return ExecuteInternal(unitCombatant, selectedEnemies, true);
+    }
+
+    private IEnumerator ExecuteInternal(UnitCombatant unitCombatant, List<Enemy> selectedEnemies, bool skipEnemySelection)
     {
         if (unitCombatant == null)
         {
@@ -85,8 +97,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        List<Enemy> selectedEnemies = null;
-        if (requiresEnemyTarget)
+        if (requiresEnemyTarget && !skipEnemySelection)
         {
             if (SkillManager.Instance == null)
             {
@@ -99,8 +110,10 @@ public class CharacterSkillBase : SkillBase
             yield return SkillManager.Instance.SelectEnemiesCoroutine(enemyTargetCount, selectedEnemies);
         }
 
+        bool requiresRuntimeAllyTarget = RequiresRuntimeAllyTarget();
+
         List<Character> selectedCharacters = null;
-        if (requiresAllyTarget)
+        if (requiresRuntimeAllyTarget)
         {
             if (SkillManager.Instance == null)
             {
@@ -113,7 +126,7 @@ public class CharacterSkillBase : SkillBase
             yield return SkillManager.Instance.SelectCharactersCoroutine(allyTargetCount, selectedCharacters);
         }
 
-        bool shouldEndTurn = endTurnAfterUse;
+        bool shouldEndTurn = ResolveShouldEndTurn();
         //技能镜头过渡
         CinemachineCameraManager cameraManager = CinemachineCameraManager.Instance;
         bool useSkillCameraTransition = cameraManager != null;
@@ -137,6 +150,10 @@ public class CharacterSkillBase : SkillBase
         else
         {
             FloatingTipGenerator.Instance.ShowDefaultTip(SkillDictionaryManager.GetSkillName(skillType));
+            yield return new WaitForSeconds(0.2f);
+            character.PlayATKAnimation();
+            yield return new WaitForSeconds(0.5f);
+            character.EndATKAnimation();
         }
 
         switch (skillType)
@@ -146,6 +163,9 @@ public class CharacterSkillBase : SkillBase
                 break;
             case CharacterSkillType.PursuitPunish:
                 yield return PursuitPunish(character);
+                break;
+            case CharacterSkillType.PursuitPunishAdditional:
+                yield return PursuitPunishAdditional(character);
                 break;
             case CharacterSkillType.EnterSkillOne:
                 yield return EnterSkillOne(character);
@@ -186,6 +206,9 @@ public class CharacterSkillBase : SkillBase
             case CharacterSkillType.MainDpsSkillOne:
                 yield return MainDpsSkillOne(character, selectedEnemies);
                 break;
+            case CharacterSkillType.MainDpsSkillOneAdditional:
+                yield return MainDpsSkillOneAdditional(character, selectedEnemies);
+                break;
             case CharacterSkillType.MainDpsSkillTwo:
                 shouldEndTurn = false;
                 yield return MainDpsSkillTwo(character);
@@ -210,7 +233,6 @@ public class CharacterSkillBase : SkillBase
                 yield return HealerExit(character);
                 break;
             case CharacterSkillType.HealerSkillOne:
-                shouldEndTurn = false;
                 yield return HealerSkillOne(character, selectedCharacters);
                 break;
             case CharacterSkillType.HealerSkillTwo:
@@ -234,13 +256,30 @@ public class CharacterSkillBase : SkillBase
     #region 技能具体执行逻辑
     private IEnumerator EnterSkillOne(Character character)
     {
-        int duration = Mathf.RoundToInt(extraData1);
+        const int durationActionValue = 200;
         float verdictDotMultiplier = extraData2;
-        float cutdownDirectMultiplier = extraData3;
-        float cutdownDotBonus = extraData4;
-        FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的入场技能触发，获得重力环境");
-        EnvironmentManager.Instance.AddEnvironment(EnvironmentType.Gravity, duration, character, verdictDotMultiplier);
-        EnvironmentManager.Instance.AddEnvironment(EnvironmentType.Cutdown, duration, character, cutdownDirectMultiplier, cutdownDotBonus);
+        FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}释放重裁域场");
+        EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.Gravity, durationActionValue, character, verdictDotMultiplier);
+        foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+        {
+            int debuffStack = 0;
+            foreach (var state in enemy.States)
+            {
+                if (state != null && state.isDebuff)
+                {
+                    debuffStack++;
+                }
+            }
+            if (debuffStack > 0)
+            {
+                enemy.TakeDamage(DamageCounter.CountDamage(character, enemy, 0, debuffStack * extraData3, false, true, true));
+                enemy.AddState(StateType.Weakened, character, 99, 1);
+            }
+            else
+            {
+                enemy.AddState(StateType.Weakened, character, 99, 2);
+            }
+        }
         yield break;
     }
     private IEnumerator ExitSkillOne(Character character)
@@ -249,7 +288,7 @@ public class CharacterSkillBase : SkillBase
         NotifyDamageSkillUsed(character);
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的离场技能触发，结算dot伤害");
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
-        State.RunDotTriggerEvent(character, () =>
+        State.RunBatchedDotEvent(character, () =>
         {
             foreach (var enemy in enemies)
             {
@@ -273,7 +312,7 @@ public class CharacterSkillBase : SkillBase
         float refreshMultiplier = extraData2;
         NotifyDamageSkillUsed(character);
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
-        State.RunDotTriggerEvent(character, () =>
+        State.RunBatchedDotEvent(character, () =>
         {
             foreach (var enemy in enemies)
             {
@@ -305,13 +344,68 @@ public class CharacterSkillBase : SkillBase
         character.AddState(StateType.PursuitPunish, character, duration, 1);
         yield break;
     }
-    private IEnumerator EnterSkillTwo(Character character)
+
+    private IEnumerator PursuitPunishAdditional(Character character)
     {
-        if (EnemyManager.Instance == null)
+        if (character == null || EnemyManager.Instance == null)
         {
             yield break;
         }
 
+        List<Enemy> markedEnemies = new List<Enemy>();
+        IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            Enemy enemy = aliveEnemies[i];
+            if (enemy == null || enemy.IsDead)
+            {
+                continue;
+            }
+
+            if (!enemy.HasState(StateType.PunishMark))
+            {
+                continue;
+            }
+
+            markedEnemies.Add(enemy);
+        }
+
+        if (markedEnemies.Count <= 0)
+        {
+            yield break;
+        }
+
+        NotifyDamageSkillUsed(character);
+        State.RunBatchedDotEvent(character, () =>
+        {
+            for (int i = 0; i < markedEnemies.Count; i++)
+            {
+                Enemy enemy = markedEnemies[i];
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                var damageInfo = DamageCounter.CountDamage(character, enemy, extraData1, 0f, false, false, false)
+                    .WithState(StateType.PursuitPunish);
+                enemy.TakeDamage(damageInfo);
+                State punishMark = enemy.GetState(StateType.PunishMark);
+                if (punishMark != null)
+                {
+                    enemy.RemoveState(punishMark);
+                }
+            }
+        });
+        yield break;
+    }
+    private IEnumerator EnterSkillTwo(Character character)
+    {
+        if (character == null || EnemyManager.Instance == null)
+        {
+            yield break;
+        }
+
+        const int durationActionValue = 300;
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         foreach (var enemy in enemies)
         {
@@ -320,8 +414,9 @@ public class CharacterSkillBase : SkillBase
                 continue;
             }
 
-            int duration = Mathf.RoundToInt(extraData1);
-            enemy.AddState(StateType.PersistentTorment, character, duration, 1);
+            State tormentState = enemy.AddState(StateType.PersistentTorment, character, durationActionValue, 1);
+            enemy.AddState(PickRandomDotState(enemy), character, 0, 1);
+            TryApplyPersistentTormentDaze(tormentState);
         }
 
         yield break;
@@ -371,7 +466,7 @@ public class CharacterSkillBase : SkillBase
         NotifyDamageSkillUsed(character);
 
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
-        State.RunDotTriggerEvent(character, () =>
+        State.RunBatchedDotEvent(character, () =>
         {
             foreach (var enemy in enemies)
             {
@@ -411,7 +506,7 @@ public class CharacterSkillBase : SkillBase
 
         NotifyDamageSkillUsed(character);
         bool ifAttack = false;
-        State.RunDotTriggerEvent(character, () =>
+        State.RunBatchedDotEvent(character, () =>
         {
             foreach (var state in target.States)
             {
@@ -436,8 +531,25 @@ public class CharacterSkillBase : SkillBase
         {
             yield break;
         }
+        //叠层
+        character.AddState(StateType.CounterCharge, character, 99, 1);
 
-        character.AddState(StateType.CounterCharge, character, 99, 1, extraData1);
+        if (CharacterManager.Instance == null)
+        {
+            yield break;
+        }
+        //拉条与抵御
+        foreach (var ally in CharacterManager.Instance.fieldCharacters)
+        {
+            if (ally == null)
+            {
+                continue;
+            }
+
+            ally.AddState(StateType.Resist, character, 99, 1);
+            ally.ChangeActionValue(Mathf.Max(0f, ally.currentActionValue - ally.currentActionValue * 0.5f));
+        }
+
         yield break;
     }
 
@@ -527,14 +639,26 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        int berserkDuration = Mathf.RoundToInt(extraData1);
-        State berserkState = character.AddState(StateType.BerserkFeast, character, berserkDuration, 1, extraData2);
-        if (berserkState != null && extraData3 > 0f)
+        character.AddState(StateType.BerserkFeast, character, 200, 1);
+        character.AddState(StateType.BurningBlood, character, 99, 1);
+        NotifyDamageSkillUsed(character);
+        Enemy target = EnemyManager.Instance.GetLowestHPRatioEnemy();
+        if (target == null)
+            yield break;
+        float normalExecuteThreshold = extraData4;
+        float bossExecuteThreshold = 0.08f;
+        float executeThreshold = IsBoss(target) ? bossExecuteThreshold : normalExecuteThreshold;
+        if (target.currentHP <= Mathf.RoundToInt(target.maxHP * executeThreshold))
         {
-            berserkState.baseExtraData1 = extraData3;
+            target.TakeDamage(new UnitCombatant.DamageInfo(target.currentHP + target.currentShield + 99999, character).AsTrueDamage());
+            yield break;
         }
-
-        character.AddState(StateType.BurningBlood, character, 99, 1, extraData4);
+        //伤害计算
+        float normalHpCoef = extraData3;
+        float bossHpCoef = 0.15f;
+        float hpCoef = IsBoss(target) ? bossHpCoef : normalHpCoef;
+        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), true, false, true);
+        target.TakeDamage(damageInfo);
         yield break;
     }
 
@@ -576,6 +700,16 @@ public class CharacterSkillBase : SkillBase
 
     private IEnumerator MainDpsSkillOne(Character character, List<Enemy> selectedEnemies)
     {
+        yield return ExecuteMainDpsSkillOne(character, selectedEnemies, 1f, true);
+    }
+
+    private IEnumerator MainDpsSkillOneAdditional(Character character, List<Enemy> selectedEnemies)
+    {
+        yield return ExecuteMainDpsSkillOne(character, selectedEnemies, 0.5f, false);
+    }
+
+    private IEnumerator ExecuteMainDpsSkillOne(Character character, List<Enemy> selectedEnemies, float damageScale, bool insertAdditionalTurnOnCrit)
+    {
         Enemy target = GetPrimaryEnemy(selectedEnemies);
         if (character == null || target == null)
         {
@@ -586,20 +720,20 @@ public class CharacterSkillBase : SkillBase
 
         float normalCoef = skillCoef;
         float debuffCoef = extraData1;
-        float coef = HasAnyDebuff(target) ? debuffCoef : normalCoef;
+        float coef = (HasAnyDebuff(target) ? debuffCoef : normalCoef) * damageScale;
+        int scaledSkillBase = Mathf.RoundToInt(skillBase * damageScale);
 
         bool isCrit;
-        var damageInfo = DamageCounter.CountDamage(character, target, coef, skillBase, false, true, true, out isCrit);
+        var damageInfo = DamageCounter.CountDamage(character, target, coef, scaledSkillBase, false, true, true, out isCrit);
 
         target.TakeDamage(damageInfo);
-        //在这里添加额外伤害的逻辑，基于暴击与否以及目标身上的状态
         State berserkState = character.GetState(StateType.BerserkFeast);
-        if (berserkState != null && isCrit && target.currentHP > 0)
+        if (insertAdditionalTurnOnCrit && berserkState != null && isCrit && target.currentHP > 0)
         {
-            float chainRatio = Mathf.Clamp01(berserkState.baseExtraData1);
-            if (chainRatio > 0f)
+            CharacterSkillBase additionalSkill = SkillDictionaryManager.GetSkill(CharacterSkillType.MainDpsSkillOneAdditional);
+            if (additionalSkill != null)
             {
-                yield return ExecuteBerserkChainAttack(character, target, coef, skillBase, chainRatio);
+                TurnManager.Instance?.AdditionalTurnInsert(character, additionalSkill, new List<Enemy> { target });
             }
         }
 
@@ -631,7 +765,14 @@ public class CharacterSkillBase : SkillBase
 
         int durationActionValue = Mathf.RoundToInt(extraData1);
         EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.DesperationField, durationActionValue, character);
-        character.AddState(StateType.BloodBath, character, durationActionValue);
+        character.AddState(StateType.CritRhythm, character, 99, 1);
+
+        Enemy lowestHpEnemy = GetLowestHealthRatioEnemy();
+        if (lowestHpEnemy != null)
+        {
+            lowestHpEnemy.AddState(StateType.DesperationMark, character, durationActionValue, 1);
+        }
+
         yield break;
     }
 
@@ -743,15 +884,29 @@ public class CharacterSkillBase : SkillBase
 
     private IEnumerator HealerEnter(Character character)
     {
-        Character target = CharacterManager.Instance?.GetAnotherFieldCharacter(character);
-        if (character == null || target == null)
+        if (character == null)
         {
             yield break;
         }
 
-        int durationActionValue = Mathf.RoundToInt(extraData1);
-        target.AddState(StateType.BloodContract, character, durationActionValue);
-        target.AddState(StateType.CriticalGuard, character, durationActionValue);
+        Character target = CharacterManager.Instance?.GetAnotherFieldCharacter(character);
+        if (target == null)
+        {
+            yield break;
+        }
+
+        List<Character> allies = GetAllLivingAllies();
+        float teamMissingHpRatio = GetTeamMissingHpRatio(allies);
+
+        RemoveDebuffs(target, 3);
+
+        State restorationSurge = target.AddState(StateType.RestorationSurge, character, 1, 1);
+        if (restorationSurge != null)
+        {
+            restorationSurge.baseExtraData1 = 1f + teamMissingHpRatio;
+        }
+
+        HealAlliesByMissingHp(allies, 0.4f);
         yield break;
     }
 
@@ -792,44 +947,66 @@ public class CharacterSkillBase : SkillBase
 
     private IEnumerator HealerSkillOne(Character character, List<Character> selectedCharacters)
     {
-        Character target = GetPrimaryAlly(selectedCharacters, character);
+        if (character == null)
+        {
+            yield break;
+        }
+
+        Character target = GetOtherAlly(selectedCharacters, character);
         if (character == null || target == null)
         {
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
-        int healAmount = Mathf.RoundToInt(character.maxHP * extraData1);
-        if (target.HasState(StateType.BurningBlood) || target.HasState(StateType.BloodBath))
-        {
-            healAmount = Mathf.RoundToInt(healAmount * (1f + extraData3));
-        }
-
-        target.Heal(healAmount);
-
-        int selfDamage = Mathf.RoundToInt(healAmount * extraData2);
-        character.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, character).AsTrueDamage());
+        HealAlliesByMaxHp(GetAllLivingAllies(), 0.1f);
+        target.AddState(StateType.HealingSpring, character, 1, 1);
         yield break;
     }
 
     private IEnumerator HealerSkillTwo(Character character, List<Character> selectedCharacters)
     {
-        Character target = GetPrimaryAlly(selectedCharacters, character);
-        if (character == null || target == null)
+        if (character == null)
         {
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
-        int selfDamage = Mathf.RoundToInt(character.maxHP * extraData1);
-        character.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, character).AsTrueDamage());
+        const int durationActionValue = 100;
+        EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.MiracleField, durationActionValue, character);
 
-        int bloodGiftDuration = Mathf.Max(1, Mathf.RoundToInt(extraData3));
-        target.AddState(StateType.BloodGift, character, bloodGiftDuration, 1);
-        target.ChangeActionValue(Mathf.Max(0f, target.currentActionValue - target.currentActionValue * extraData2));
+        TurnStateManager.Instance?.ChangeState(TurnState.OutCharacterTurn, character);
+        if (CharacterManager.Instance != null)
+        {
+            yield return CharacterManager.Instance.SelectAndSwapCoroutine(character);
+        }
+
+        character.EndTurn();
         yield break;
     }
     #endregion
+
+    private bool RequiresRuntimeAllyTarget()
+    {
+        switch (skillType)
+        {
+            case CharacterSkillType.HealerSkillTwo:
+                return false;
+            default:
+                return requiresAllyTarget;
+        }
+    }
+
+    private bool ResolveShouldEndTurn()
+    {
+        switch (skillType)
+        {
+            case CharacterSkillType.HealerSkillOne:
+                return true;
+            case CharacterSkillType.HealerSkillTwo:
+                return false;
+            default:
+                return endTurnAfterUse;
+        }
+    }
 
     private Enemy GetPrimaryEnemy(List<Enemy> selectedEnemies)//获取第一个敌人
     {
@@ -841,30 +1018,38 @@ public class CharacterSkillBase : SkillBase
         return selectedEnemies[0];
     }
 
-    private IEnumerator ExecuteBerserkChainAttack(Character character, Enemy target, float baseCoef, int baseSkillBase, float chainRatio)
+    private IEnumerator HandleMainDpsSwapOut(Character character)
     {
-        const int maxChainCount = 12;
-        bool previousHitCrit = true;
-        int chainCount = 0;
-
-        while (previousHitCrit && target != null && target.currentHP > 0 && chainCount < maxChainCount)
+        if (character == null)
         {
-            bool isCrit;
-            var chainDamage = DamageCounter.CountDamage(
-                character,
-                target,
-                baseCoef * chainRatio,
-                baseSkillBase * chainRatio,
-                false,
-                true,
-                true,
-                out isCrit);
-
-            target.TakeDamage(chainDamage);
-            previousHitCrit = isCrit;
-            chainCount++;
-            yield return new WaitForSeconds(0.1f);
+            yield break;
         }
+
+        RemoveStateIfExists(character, StateType.BerserkFeast);
+        RemoveStateIfExists(character, StateType.BurningBlood);
+
+        Enemy target = GetLowestHealthRatioEnemy();
+        if (target == null)
+        {
+            yield break;
+        }
+
+        NotifyDamageSkillUsed(character);
+
+        float executeThreshold = IsBoss(target) ? 0.2f : 0.4f;
+        if (target.currentHP <= Mathf.RoundToInt(target.maxHP * executeThreshold))
+        {
+            target.TakeDamage(new UnitCombatant.DamageInfo(target.currentHP + target.currentShield + 99999, character).AsTrueDamage());
+        }
+        else
+        {
+            float maxHpRatio = IsBoss(target) ? 0.1f : 0.2f;
+            int damage = Mathf.RoundToInt(target.maxHP * maxHpRatio + character.attack * 1.6f);
+            target.TakeDamage(new UnitCombatant.DamageInfo(damage, character).AsTrueDamage());
+        }
+
+        GlobalFeedbacks.Instance?.skillFeedback?.PlayFeedbacks();
+        yield return UnitCombatant.WaitForPendingDeaths();
     }
 
     private Character GetPrimaryAlly(List<Character> selectedCharacters, Character fallback)
@@ -888,6 +1073,132 @@ public class CharacterSkillBase : SkillBase
         }
 
         return null;
+    }
+
+    private Character GetOtherAlly(List<Character> selectedCharacters, Character fallback)
+    {
+        if (selectedCharacters != null)
+        {
+            for (int i = 0; i < selectedCharacters.Count; i++)
+            {
+                Character selectedCharacter = selectedCharacters[i];
+                if (selectedCharacter != null && selectedCharacter != fallback)
+                {
+                    return selectedCharacter;
+                }
+            }
+        }
+
+        return CharacterManager.Instance?.GetAnotherFieldCharacter(fallback);
+    }
+
+    private List<Character> GetAllLivingAllies()
+    {
+        List<Character> allies = new List<Character>();
+        if (CharacterManager.Instance == null)
+        {
+            return allies;
+        }
+
+        IReadOnlyList<Character> source = CharacterManager.Instance.allCharacters != null
+            && CharacterManager.Instance.allCharacters.Count > 0
+            ? CharacterManager.Instance.allCharacters
+            : CharacterManager.Instance.fieldCharacters;
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            Character ally = source[i];
+            if (ally == null || ally.IsDead)
+            {
+                continue;
+            }
+
+            allies.Add(ally);
+        }
+
+        return allies;
+    }
+
+    private float GetTeamMissingHpRatio(List<Character> allies)
+    {
+        float totalMaxHp = 0f;
+        float totalMissingHp = 0f;
+        for (int i = 0; i < allies.Count; i++)
+        {
+            Character ally = allies[i];
+            if (ally == null || ally.maxHP <= 0)
+            {
+                continue;
+            }
+
+            totalMaxHp += ally.maxHP;
+            totalMissingHp += Mathf.Max(0, ally.maxHP - ally.currentHP);
+        }
+
+        if (totalMaxHp <= 0f)
+        {
+            return 0f;
+        }
+
+        return Mathf.Clamp01(totalMissingHp / totalMaxHp);
+    }
+
+    private void HealAlliesByMissingHp(List<Character> allies, float ratio)
+    {
+        for (int i = 0; i < allies.Count; i++)
+        {
+            Character ally = allies[i];
+            if (ally == null)
+            {
+                continue;
+            }
+
+            int missingHp = Mathf.Max(0, ally.maxHP - ally.currentHP);
+            if (missingHp <= 0)
+            {
+                continue;
+            }
+
+            ally.Heal(Mathf.RoundToInt(missingHp * ratio));
+        }
+    }
+
+    private void HealAlliesByMaxHp(List<Character> allies, float ratio)
+    {
+        for (int i = 0; i < allies.Count; i++)
+        {
+            Character ally = allies[i];
+            if (ally == null || ally.maxHP <= 0)
+            {
+                continue;
+            }
+
+            ally.Heal(Mathf.RoundToInt(ally.maxHP * ratio));
+        }
+    }
+
+    private void RemoveDebuffs(Character target, int removeCount)
+    {
+        if (target == null || removeCount <= 0)
+        {
+            return;
+        }
+
+        List<State> states = new List<State>(target.States);
+        int removedCount = 0;
+        for (int i = 0; i < states.Count && removedCount < removeCount; i++)
+        {
+            State state = states[i];
+            if (state == null || !state.isDebuff)
+            {
+                continue;
+            }
+
+            if (target.RemoveState(state))
+            {
+                removedCount++;
+            }
+        }
     }
 
     private bool HasAnyDebuff(UnitCombatant target)
@@ -917,6 +1228,55 @@ public class CharacterSkillBase : SkillBase
 
         return !string.IsNullOrEmpty(enemy.enemyID)
             && enemy.enemyID.IndexOf("boss", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private Enemy GetLowestHealthRatioEnemy()
+    {
+        if (EnemyManager.Instance == null)
+        {
+            return null;
+        }
+
+        Enemy bestTarget = null;
+        float lowestHpRatio = float.MaxValue;
+        for (int i = 0; i < EnemyManager.Instance.AliveEnemies.Count; i++)
+        {
+            Enemy enemy = EnemyManager.Instance.AliveEnemies[i];
+            if (enemy == null || enemy.maxHP <= 0)
+            {
+                continue;
+            }
+
+            float hpRatio = (float)enemy.currentHP / enemy.maxHP;
+            if (bestTarget == null || hpRatio < lowestHpRatio)
+            {
+                bestTarget = enemy;
+                lowestHpRatio = hpRatio;
+            }
+        }
+
+        return bestTarget;
+    }
+
+    private void TryApplyPersistentTormentDaze(State tormentState)
+    {
+        if (tormentState == null || tormentState.owner == null)
+        {
+            return;
+        }
+
+        int maxStacks = Mathf.Max(1, tormentState.MaxStacks);
+        float chancePerStack = tormentState.baseExtraData2;
+        int stunDuration = Mathf.RoundToInt(tormentState.baseExtraData3);
+        int validLayer = Mathf.Clamp(tormentState.StackCount, 0, maxStacks);
+        float chance = Mathf.Min(maxStacks * chancePerStack, validLayer * chancePerStack);
+        if (chance <= 0f || Random.value > chance)
+        {
+            return;
+        }
+
+        tormentState.owner.AddState(StateType.Daze, tormentState.giver != null ? tormentState.giver : tormentState.owner, stunDuration, 1);
+        FloatingTipGenerator.Instance?.ShowTipAtObject(tormentState.owner.transform, $"{tormentState.owner.name}受到震慑");
     }
 
 

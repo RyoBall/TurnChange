@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class Commander : MonoBehaviour
 {
-    private const int DefaultCommandPoints = 3;
+    private const int DefaultCommandPoints = 1;
     private const int DefaultMaxCommandPoints = 5;
     private const int KillRecoveryAmount = 2;
-    private const int GuaranteeRecoveryAmount = 2;
-    private const float GuaranteeActionValueThreshold = 300f;
+    private const int GuaranteeRecoveryAmount = 1;
+    private const float GuaranteeActionValueThreshold = 100f;
 
     private static Commander Instance ;
     public static Commander GetInstance()
@@ -52,6 +52,7 @@ public class Commander : MonoBehaviour
 
     public void NotifyEnemyKilled(UnitCombatant source, UnitCombatant target)
     {
+        return; // 目前击杀回点功能关闭，后续可以根据需要重新启用
         if (!(source is Character) || !(target is Enemy))
         {
             return;
@@ -71,7 +72,7 @@ public class Commander : MonoBehaviour
         while (actionValueSinceLastRecovery >= GuaranteeActionValueThreshold)
         {
             actionValueSinceLastRecovery -= GuaranteeActionValueThreshold;
-            RecoverCommandPointsInternal(GuaranteeRecoveryAmount, false, $"指挥点低保+{GuaranteeRecoveryAmount}");
+            RecoverCommandPointsInternal(GuaranteeRecoveryAmount, false, $"指挥点+{GuaranteeRecoveryAmount}");
         }
     }
 

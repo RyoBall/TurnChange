@@ -204,7 +204,7 @@ public class ModulePlacementController : MonoBehaviour
         }
     }
 
-    private void RefreshViews()
+    private void RefreshViews()//刷新所有相关界面显示
     {
         if (inventoryView != null)
         {
@@ -245,12 +245,6 @@ public class ModulePlacementController : MonoBehaviour
         m_runtimeModules.Add(runtimeModule);
         SyncModuleStateToData();
         RefreshViews();
-
-        if (autoSelect)
-        {
-            SetSelection(runtimeModule);
-            return;
-        }
 
         if (selectionText != null)
         {

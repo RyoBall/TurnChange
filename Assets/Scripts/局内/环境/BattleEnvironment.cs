@@ -4,10 +4,11 @@ public enum EnvironmentType
 {
     Gravity,
     Cutdown,
-    DesperationField
+    DesperationField,
+    MiracleField
 }
 [CreateAssetMenu(fileName = "Environment", menuName = "环境/新环境")]
-public class BattleEnvironment:ScriptableObject
+public class BattleEnvironment : ScriptableObject
 {
     [Header("环境配置")]
     public EnvironmentType environmentType;
@@ -51,6 +52,17 @@ public class BattleEnvironment:ScriptableObject
     private void OnEnable()
     {
         m_behavior = null;
+    }
+
+
+    private static BattleEnvironment CreateRuntimeFallbackEnvironment(string environmentName, EnvironmentType environmentType, int defaultActionValue)
+    {
+        BattleEnvironment environment = CreateInstance<BattleEnvironment>();
+        environment.hideFlags = HideFlags.HideAndDontSave;
+        environment.name = environmentName;
+        environment.environmentType = environmentType;
+        environment.defaultDurationActionValue = defaultActionValue;
+        return environment;
     }
 
     public void ApplyEnvironment(UnitCombatant source = null, int overrideActionValue = -1, float extraData1 = 0f, float extraData2 = 0f, float extraData3 = 0f, float extraData4 = 0f)
@@ -225,6 +237,8 @@ public static class EnvironmentBehaviorFactory
                 return new CutdownEnvironmentBehavior();
             case EnvironmentType.DesperationField:
                 return new DesperationFieldEnvironmentBehavior();
+            case EnvironmentType.MiracleField:
+                return new MiracleFieldEnvironmentBehavior();
             default:
                 return new DefaultEnvironmentBehavior();
         }
@@ -237,6 +251,15 @@ public class DefaultEnvironmentBehavior : EnvironmentBehaviorBase
 
 public class DesperationFieldEnvironmentBehavior : EnvironmentBehaviorBase
 {
+    public override void OnEnvironmentApply()
+    {
+        base.OnEnvironmentApply();
+        EnvironmentManager environmentManager = EnvironmentManager.Instance;
+        if (environmentManager != null)
+        {
+            environmentManager.RemoveEnvironmentIfExist(EnvironmentType.Gravity);
+        }
+    }
     public override float GetCritRateBonus(UnitCombatant unit)
     {
         return GetMissingHpRatio(unit) * 0.5f;
@@ -260,6 +283,16 @@ public class DesperationFieldEnvironmentBehavior : EnvironmentBehaviorBase
 
 public class GravityEnvironmentBehavior : EnvironmentBehaviorBase
 {
+    public override void OnEnvironmentApply()
+    {
+        base.OnEnvironmentApply();
+        EnvironmentManager environmentManager = EnvironmentManager.Instance;
+        if (environmentManager != null)
+        {
+            environmentManager.RemoveEnvironmentIfExist(EnvironmentType.DesperationField);
+        }
+    }
+
     public override float GetIncomingDamageMultiplier(UnitCombatant attacker, UnitCombatant defender, bool isDotDamage, bool isTrueDamage)
     {
         if (!isDotDamage || !(defender is Enemy))
@@ -304,5 +337,23 @@ public class CutdownEnvironmentBehavior : EnvironmentBehaviorBase
 
         float decayStep = environment.RuntimeData3 > 0f ? environment.RuntimeData3 : 0.15f;
         m_currentDotBonus = Mathf.Max(0f, m_currentDotBonus - decayStep);
+    }
+}
+
+public class MiracleFieldEnvironmentBehavior : EnvironmentBehaviorBase
+{
+    public override float GetIncomingDamageMultiplier(UnitCombatant attacker, UnitCombatant defender, bool isDotDamage, bool isTrueDamage)
+    {
+        if (attacker is Character && defender is Enemy)
+        {
+            return 1.2f;
+        }
+
+        if (defender is Character)
+        {
+            return 0.9f;
+        }
+
+        return 1f;
     }
 }

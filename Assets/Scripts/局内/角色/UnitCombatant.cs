@@ -88,7 +88,7 @@ public class UnitCombatant : Combatant
         {
             damageInfo.Damage = 0;
         }
-        State.RecordCombatDamage(damageInfo.Source, this, damageInfo.IsDotDamage);
+
         int finalDamage = damageInfo.Damage;
         //结算盾值
         finalDamage = ConsumeShield(finalDamage);
@@ -244,26 +244,24 @@ public class UnitCombatant : Combatant
 
     public IEnumerator ProcessStatesOnTurnStart()
     {
-        State.BeginTurnStartStateSettlement(this);
-        try
+        yield return State.RunBatchedDotEvent(this, ProcessTurnStartStatesInternal());
+    }
+
+    private IEnumerator ProcessTurnStartStatesInternal()
+    {
+        for (int i = states.Count - 1; i >= 0; i--)
         {
-            for (int i = states.Count - 1; i >= 0; i--)
+            State state = states[i];
+            if (state == null)
             {
-                State state = states[i];
-                if (state == null)
-                {
-                    states.RemoveAt(i);
-                    continue;
-                }
-                yield return state.OnOwnerTurnStart();
+                states.RemoveAt(i);
+                continue;
             }
 
-            yield return WaitForDeathEvents();
+            yield return state.OnOwnerTurnStart();
         }
-        finally
-        {
-            State.EndTurnStartStateSettlement(this);
-        }
+
+        yield return WaitForDeathEvents();
     }
 
     public void ProcessStatesOnTurnEnd()
@@ -405,7 +403,7 @@ public class UnitCombatant : Combatant
 
     protected virtual bool CanReceiveState(StateType stateType, UnitCombatant giver)
     {
-        return true;
+        return !dead;
     }
 
     public static void NotifyDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
@@ -433,6 +431,8 @@ public class UnitCombatant : Combatant
 
     public static void NotifyAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage = false, bool isTrueDamage = false)
     {
+        State.RecordBatchedDotDamage(isDotDamage);
+
         foreach (var com in TurnManager.Instance.CurrentTurnOrder.ToList())
         {
             var unit = com as UnitCombatant;

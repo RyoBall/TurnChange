@@ -54,8 +54,16 @@ public class EnvironmentManager : MonoBehaviour
         newEnvironment.environmentType = type;
         newEnvironment.ApplyEnvironment(applier, durationActionValue, extraData1, extraData2, extraData3, extraData4);
     }
+    public void RemoveEnvironmentIfExist(EnvironmentType type)
+    {
+        BattleEnvironment existing = GetActiveEnvironment(type);
+        if (existing != null)
+        {
+            existing.RemoveEnvironment();
+        }
+    }
 
-    public void RegisterEnvironment(BattleEnvironment environment)
+    public void RegisterEnvironment(BattleEnvironment environment)//将环境添加到列表
     {
         if (environment == null || activeEnvironments.Contains(environment))
         {

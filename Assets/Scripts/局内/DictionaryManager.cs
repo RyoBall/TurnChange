@@ -46,21 +46,23 @@ public class StateDictionaryManager : MonoBehaviour
     }
     public static State GetState(StateType stateType)
     {
-        if (stateDict.TryGetValue(stateType, out var data))
+        if (stateDict != null && stateDict.TryGetValue(stateType, out var data))
         {   
             var state = Instantiate(data); // 返回实例化对象，避免修改原始数据
             state.name = data.name; // 保持实例化对象的名字与原始数据一致，方便调试
             return state;
         }
+
         Debug.LogError($"未找到状态: {stateType}");
         return null;
     }
     public static string GetStateName(StateType stateType)
     {
-        if (stateDict.TryGetValue(stateType, out var data))
+        if (stateDict != null && stateDict.TryGetValue(stateType, out var data))
             return data.name;
         else if(stateType == StateType.None)
             return "";
+
         Debug.LogError($"未找到状态: {stateType}");
         return null;
     }

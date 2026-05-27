@@ -1,56 +1,6 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-
-[System.Serializable]
-public class CharacterData
-{
-    [SerializeField] private CharacterRosterData characterRosterData;
-    [SerializeField, HideInInspector] private int characterLevel = 1;
-    [SerializeField, HideInInspector] private float currentExp = 0f;
-    [SerializeField, HideInInspector] private float expToNextLevel = 100f;
-
-    public float GetCurrentExp() => Datas.Instance != null ? Datas.Instance.GetCurrentExp() : currentExp;
-
-    public float GetExpToNextLevel() => Datas.Instance != null ? Datas.Instance.GetExpToNextLevel() : expToNextLevel;
-
-    public CharacterRosterData GetRosterData()
-    {
-        return characterRosterData;
-    }
-
-    public string GetCharacterName()
-    {
-        if (characterRosterData == null)
-        {
-            return string.Empty;
-        }
-
-        return string.IsNullOrWhiteSpace(characterRosterData.characterName)
-            ? characterRosterData.characterID
-            : characterRosterData.characterName;
-    }
-
-    public string GetCharacterID()
-    {
-        return characterRosterData != null ? characterRosterData.characterID : string.Empty;
-    }
-
-    public Sprite GetPortraitSprite()
-    {
-        return characterRosterData != null ? characterRosterData.portraitSprite : null;
-    }
-
-    public CharacterRosterData GetRosterDataOrNull()
-    {
-        return characterRosterData;
-    }
-
-    public int GetLevel()
-    {
-        return Datas.Instance != null ? Datas.Instance.GetTeamLevel() : Mathf.Clamp(characterLevel, 1, 99);
-    }
-}
 
 [System.Serializable]
 public class ModuleData
@@ -135,9 +85,16 @@ public class Datas : MonoBehaviour
     private const int MaxTeamLevel = 99;
 
     public static Datas Instance;
+    public event Action CharacterRosterChanged;
+    public event Action<string> LevelCompleted;
 
     [Header("角色列表")]
-    public List<CharacterData> characterDatas = new List<CharacterData>();
+    [SerializeField] private List<CharacterRosterData> characterDatas = new List<CharacterRosterData>();
+
+    [Header("开局流派")]
+    [SerializeField] private string starterChoiceSceneName = "Main";
+    [SerializeField] private List<StarterBranchDefinition> starterBranches = new List<StarterBranchDefinition>();
+    [SerializeField] private string selectedStarterBranchId;
 
     [Header("关卡进度")]
     [SerializeField] private List<LevelSelectionData> allLevels = new List<LevelSelectionData>();
@@ -154,6 +111,12 @@ public class Datas : MonoBehaviour
     [SerializeField] private bool hasModuleState;
     [SerializeField] private List<ModuleData> ownedModules = new List<ModuleData>();
     [SerializeField] private List<PlacedModuleData> placedModules = new List<PlacedModuleData>();
+    private readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
+    private bool m_characterLookupBuilt;
+
+    public bool HasSelectedStarterBranch => !string.IsNullOrWhiteSpace(selectedStarterBranchId);
+    public string SelectedStarterBranchId => selectedStarterBranchId;
+    public string StarterChoiceSceneName => starterChoiceSceneName;
 
     private void Awake()
     {
@@ -164,6 +127,9 @@ public class Datas : MonoBehaviour
         }
 
         Instance = this;
+    InitializeCharacterLookup();
+    NormalizeUnlockedCharacters();
+
         teamLevel = Mathf.Clamp(teamLevel, 1, MaxTeamLevel);
         currentExp = Mathf.Max(0f, currentExp);
         gold = Mathf.Max(0, gold);
@@ -178,9 +144,53 @@ public class Datas : MonoBehaviour
         }
     }
 
-    public IReadOnlyList<CharacterData> GetCharacterDatas()
+    public bool AddCharacterData(CharacterType characterType)
+    {
+        InitializeCharacterLookup();
+        if (!m_characterTypeLookup.TryGetValue(characterType, out CharacterRosterData rosterData) || rosterData == null)
+        {
+            Debug.LogWarning($"[Datas] 未找到 CharacterType 对应的角色资源: {characterType}", this);
+            return false;
+        }
+
+        if (ContainsCharacter(rosterData))
+        {
+            return false;
+        }
+
+        characterDatas.Add(rosterData);
+        return true;
+    }
+
+    public CharacterRosterData GetCharacterRoster(CharacterType characterType)
+    {
+        InitializeCharacterLookup();
+        return m_characterTypeLookup.TryGetValue(characterType, out CharacterRosterData data) ? data : null;
+    }
+
+    public IReadOnlyList<CharacterRosterData> GetUnlockedCharacterRosters()
     {
         return characterDatas;
+    }
+
+    public void ClearUnlockedCharacters()
+    {
+        if (characterDatas.Count == 0)
+        {
+            return;
+        }
+
+        characterDatas.Clear();
+    }
+
+    public List<StarterBranchDefinition> GetStarterBranchesBuffer()
+    {
+        if (starterBranches == null)
+        {
+            starterBranches = new List<StarterBranchDefinition>();
+        }
+
+        return starterBranches;
     }
 
     public IReadOnlyList<LevelSelectionData> GetAllLevels()
@@ -191,6 +201,11 @@ public class Datas : MonoBehaviour
     public IReadOnlyList<string> GetCompletedLevelIds()
     {
         return completedLevelIds;
+    }
+
+    public int GetCompletedLevelCount()
+    {
+        return completedLevelIds != null ? completedLevelIds.Count : 0;
     }
 
     public void SetAllLevels(IEnumerable<LevelSelectionData> levels)
@@ -237,6 +252,7 @@ public class Datas : MonoBehaviour
         }
 
         completedLevelIds.Add(levelId);
+        LevelCompleted?.Invoke(levelId);
     }
 
     public int GetTeamLevel()
@@ -279,26 +295,11 @@ public class Datas : MonoBehaviour
         }
 
         currentExp += amount;
-        int guard = 0;
-        while (GetTeamLevel() < MaxTeamLevel && guard++ < MaxTeamLevel)
-        {
-            float requiredExp = GetExpToNextLevel();
-            if (currentExp + 0.0001f < requiredExp)
-            {
-                break;
-            }
 
-            currentExp -= requiredExp;
-            teamLevel = Mathf.Min(MaxTeamLevel, teamLevel + 1);
-        }
-
-        if (GetTeamLevel() >= MaxTeamLevel)
+        while (currentExp >= GetExpToNextLevel())
         {
-            currentExp = Mathf.Min(currentExp, GetExpToNextLevel());
-        }
-        else
-        {
-            currentExp = Mathf.Max(0f, currentExp);
+            currentExp -= GetExpToNextLevel();
+            teamLevel = Mathf.Min(GetTeamLevel() + 1, MaxTeamLevel);
         }
     }
 
@@ -306,6 +307,11 @@ public class Datas : MonoBehaviour
     {
         AddGold(goldReward);
         AddExperience(experienceReward);
+    }
+
+    public void SetSelectedStarterBranchId(string branchId)
+    {
+        selectedStarterBranchId = branchId;
     }
 
     public bool HasModuleState()
@@ -373,5 +379,120 @@ public class Datas : MonoBehaviour
         }
 
         hasModuleState = true;
+    }
+
+    private void InitializeCharacterLookup()
+    {
+        if (m_characterLookupBuilt)
+        {
+            return;
+        }
+
+        m_characterLookupBuilt = true;
+        m_characterTypeLookup.Clear();
+
+        CharacterRosterData[] resourceCharacters = Resources.LoadAll<CharacterRosterData>("配置可编程物体/参战者/角色");
+        for (int i = 0; i < resourceCharacters.Length; i++)
+        {
+            CharacterRosterData rosterData = resourceCharacters[i];
+            if (rosterData == null)
+            {
+                continue;
+            }
+
+            if (m_characterTypeLookup.TryGetValue(rosterData.characterType, out CharacterRosterData existingData)
+                && existingData != null
+                && existingData != rosterData)
+            {
+                Debug.LogWarning($"[Datas] CharacterType {rosterData.characterType} 重复映射到多个角色资源，将使用最后加载到的资源: {rosterData.name}", this);
+            }
+
+            m_characterTypeLookup[rosterData.characterType] = rosterData;
+        }
+    }
+
+    private void NormalizeUnlockedCharacters()
+    {
+        if (characterDatas == null)
+        {
+            characterDatas = new List<CharacterRosterData>();
+            return;
+        }
+
+        var normalizedCharacters = new List<CharacterRosterData>(characterDatas.Count);
+        var registeredIds = new HashSet<string>(StringComparer.Ordinal);
+
+        for (int i = 0; i < characterDatas.Count; i++)
+        {
+            CharacterRosterData rosterData = characterDatas[i];
+            if (rosterData == null)
+            {
+                continue;
+            }
+
+            if (m_characterTypeLookup.TryGetValue(rosterData.characterType, out CharacterRosterData mappedRosterData)
+                && mappedRosterData != null)
+            {
+                rosterData = mappedRosterData;
+            }
+
+            string characterId = rosterData.GetCharacterId();
+            if (string.IsNullOrWhiteSpace(characterId) || !registeredIds.Add(characterId))
+            {
+                continue;
+            }
+
+            normalizedCharacters.Add(rosterData);
+        }
+
+        if (normalizedCharacters.Count == characterDatas.Count)
+        {
+            bool sameOrder = true;
+            for (int i = 0; i < normalizedCharacters.Count; i++)
+            {
+                if (normalizedCharacters[i] != characterDatas[i])
+                {
+                    sameOrder = false;
+                    break;
+                }
+            }
+
+            if (sameOrder)
+            {
+                return;
+            }
+        }
+
+        characterDatas.Clear();
+        characterDatas.AddRange(normalizedCharacters);
+    }
+
+    private bool ContainsCharacter(CharacterRosterData rosterData)
+    {
+        if (rosterData == null)
+        {
+            return false;
+        }
+
+        string characterId = rosterData.GetCharacterId();
+        if (string.IsNullOrWhiteSpace(characterId))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < characterDatas.Count; i++)
+        {
+            CharacterRosterData data = characterDatas[i];
+            if (data != null && string.Equals(data.GetCharacterId(), characterId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    public void NotifyCharacterRosterChanged()
+    {
+        CharacterRosterChanged?.Invoke();
     }
 }
