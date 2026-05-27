@@ -11,7 +11,7 @@ PrefabInstance:
     - target: {fileID: 3676554860531327467, guid: 7c3def371b2b8614bb5d78ec6e318587,
         type: 3}
       propertyPath: m_Name
-      value: Orbs_gold
+      value: "\u9009\u4E2D"
       objectReference: {fileID: 0}
     - target: {fileID: 3676554860531327476, guid: 7c3def371b2b8614bb5d78ec6e318587,
         type: 3}
@@ -61,6 +61,11 @@ PrefabInstance:
     - target: {fileID: 3676554860531327476, guid: 7c3def371b2b8614bb5d78ec6e318587,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3676554860531327477, guid: 7c3def371b2b8614bb5d78ec6e318587,
+        type: 3}
+      propertyPath: playOnAwake
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

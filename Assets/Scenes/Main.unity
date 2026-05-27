@@ -5511,35 +5511,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterDatas:
-  - characterRosterData: {fileID: 11400000, guid: 511beaf3365619041b59f31e4bc10c52,
-      type: 2}
-  - characterRosterData: {fileID: 11400000, guid: a7f0b46fa2265ec499f0c713cef66195,
-      type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   starterChoiceSceneName: Main
   starterBranches:
   - branchId: Dot
     displayName: "\u6301\u7EED\u4F24\u5BB3"
     description: 
-    primaryCharacterId: "Dot\u4E3Bc"
-    secondaryCharacterId: "Dot\u526Fc"
-    supportCharacterId: "\u76FE"
+    primaryCharacterType: 0
+    secondaryCharacterType: 1
+    supportCharacterType: 2
     followupUnlocks:
     - levelId: 1
-      characterId: "\u76FE"
+      characterType: 2
     - levelId: 2
-      characterId: "\u76F4\u4F24\u4E3Bc"
+      characterType: 3
     - levelId: 3
-      characterId: 
+      characterType: 4
     - levelId: 4
-      characterId: 
+      characterType: 5
     accentColor: {r: 1, g: 1, b: 1, a: 1}
   - branchId: "\u76F4\u4F24"
     displayName: "\u76F4\u63A5\u4F24\u5BB3"
     description: 
-    primaryCharacterId: "\u76F4\u4F24\u4E3Bc"
-    secondaryCharacterId: "\u76F4\u4F24\u526Fc"
-    supportCharacterId: "\u6CBB\u7597"
-    followupUnlocks: []
+    primaryCharacterType: 3
+    secondaryCharacterType: 4
+    supportCharacterType: 5
+    followupUnlocks:
+    - levelId: 1
+      characterType: 5
+    - levelId: 2
+      characterType: 0
+    - levelId: 3
+      characterType: 1
+    - levelId: 4
+      characterType: 2
     accentColor: {r: 1, g: 1, b: 1, a: 1}
   selectedStarterBranchId: 
   allLevels: []
@@ -11988,6 +11994,24 @@ MonoBehaviour:
   - levelId: 1
     levelName: "\u5173\u53611"
     enemyWaves:
+    - waveId: 
+      enemies:
+      - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+        level: 0
+        isChessSeriesEnemy: 0
+        chessBossData:
+          enabled: 0
+          bossGroupId: 
+          unitRole: 0
+          startHiddenUntilPhaseTwo: 0
+          summonPawnData: {fileID: 0}
+          summonPawnLevel: 0
+          pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+          pawnAdvanceDuration: 0
+          pawnPromotionSteps: 0
+          summonedPawnHealRatio: 0
+          immuneToDaze: 0
+          immuneToTaunt: 0
     - waveId: 
       enemies:
       - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}

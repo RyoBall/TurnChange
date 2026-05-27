@@ -4,6 +4,7 @@ using UnityEngine;
 public class LevelCharacterSpawner : MonoBehaviour
 {
     private const int EnemyStandPositionStart = 3;
+    private static readonly Dictionary<int, Vector3> s_spawnPositionByStandPosition = new Dictionary<int, Vector3>();
 
     [Header("Spawn Points")]
     [SerializeField] private Transform[] playerFieldSpawnPoints;
@@ -19,6 +20,13 @@ public class LevelCharacterSpawner : MonoBehaviour
     [SerializeField] private GameObject enemyPrefab;
 
     private readonly List<GameObject> m_spawnedObjects = new List<GameObject>();
+
+    public static IReadOnlyDictionary<int, Vector3> SpawnPositionByStandPosition => s_spawnPositionByStandPosition;
+
+    public static bool TryGetSpawnPosition(int standPosition, out Vector3 spawnPosition)
+    {
+        return s_spawnPositionByStandPosition.TryGetValue(standPosition, out spawnPosition);
+    }
 
     public void SpawnLevel(
         List<CharacterRosterData> allPlayerCharacters,
@@ -124,6 +132,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         }
 
         m_spawnedObjects.Clear();
+        s_spawnPositionByStandPosition.Clear();
     }
 
     public void SpawnEnemyWave(
@@ -167,8 +176,10 @@ public class LevelCharacterSpawner : MonoBehaviour
             ? GetSpawnPoint(playerFieldSpawnPoints, fieldOrderIndex)
             : GetSpawnPoint(playerReserveSpawnPoints, reserveIndex++);
         Transform parent = isFieldCharacter ? playerRoot : reserveRoot;
+        Vector3 spawnPosition = GetSpawnPosition(spawnPoint);
+        Quaternion spawnRotation = GetSpawnRotation(spawnPoint);
 
-        GameObject spawnedObject = Instantiate(prefabToSpawn, GetSpawnPosition(spawnPoint), GetSpawnRotation(spawnPoint), parent);
+        GameObject spawnedObject = Instantiate(prefabToSpawn, spawnPosition, spawnRotation, parent);
         Character instance = spawnedObject.GetComponent<Character>();
         if (instance == null)
         {
@@ -178,6 +189,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         }
 
         ConfigureCharacter(instance, data, isFieldCharacter, assignedStandPosition);
+        RegisterSpawnPosition(assignedStandPosition, spawnPosition);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -207,6 +219,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         }
 
         ConfigureEnemy(instance, data, EnemyStandPositionStart + index);
+        RegisterSpawnPosition(EnemyStandPositionStart + index, spawnPosition);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -236,6 +249,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         }
 
         ConfigureEnemy(instance, data, standPositionStart + index);
+        RegisterSpawnPosition(standPositionStart + index, spawnPosition);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -384,5 +398,15 @@ public class LevelCharacterSpawner : MonoBehaviour
     private Quaternion GetSpawnRotation(Transform spawnPoint)
     {
         return spawnPoint != null ? spawnPoint.rotation : Quaternion.identity;
+    }
+
+    private void RegisterSpawnPosition(int standPosition, Vector3 spawnPosition)
+    {
+        if (standPosition == int.MaxValue)
+        {
+            return;
+        }
+
+        s_spawnPositionByStandPosition[standPosition] = spawnPosition;
     }
 }

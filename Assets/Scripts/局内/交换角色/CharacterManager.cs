@@ -197,9 +197,22 @@ public class CharacterManager : MonoBehaviour
 			yield break;
 		}
 		//设置入场角色位置
-		newCharacter.transform.position = oldCharacter.transform.position;
-		newCharacter.standPosition = oldCharacter.standPosition;
+		int targetStandPosition = oldCharacter.standPosition;
+		if (LevelCharacterSpawner.TryGetSpawnPosition(targetStandPosition, out Vector3 spawnPosition))
+		{
+			newCharacter.transform.position = spawnPosition;
+		}
+		else
+		{
+			newCharacter.transform.position = oldCharacter.transform.position;
+		}
+
+		newCharacter.standPosition = targetStandPosition;
 		//执行退场动画
+		if(TurnManager.Instance != null)
+		{
+			TurnManager.Instance.RemoveCombatant(oldCharacter);
+		}
 		yield return oldCharacter.PlayExitAnimation();
 		//交换角色列表中的角色
 		int fieldIndex = fieldCharacters.IndexOf(oldCharacter);
@@ -209,16 +222,15 @@ public class CharacterManager : MonoBehaviour
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
 		newCharacter.ChangeActionValue(newCharacter.BaseActionValue, false);
+		//执行入场动画
+		yield return newCharacter.PlayEnterAnimation();
 		//执行入场技能
 		SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.GetEnterSkillInstance(), true);
 		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
-		//执行入场动画
-		yield return newCharacter.PlayEnterAnimation();
 		//更新 TurnManager 中的角色引用，确保回合顺序正确
 		if (TurnManager.Instance != null)
 		{
 			Debug.Log($"[CharacterManager] 更新 TurnManager 中的角色引用，将 {oldCharacter.name} 替换为 {newCharacter.name}");
-			TurnManager.Instance.RemoveCombatant(oldCharacter);
 			TurnManager.Instance.InsertCombatant(newCharacter);
 		}
 

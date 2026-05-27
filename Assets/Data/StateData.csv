@@ -32,3 +32,4 @@ Name,EnumName,Description,BaseMultiplier,IsDebuff,IsDot,MaxStacks,DurationType,D
 下次行动增伤,NextActionDamageBoost,使目标下一次行动造成的伤害提高20%，行动结束后移除。,0,否,否,1,Special,1,100,1.2,下次行动输出倍率,0,预留,0,预留,0,预留
 单回合减攻,ActionWeakened,使目标本次行动造成的伤害降低60%，行动结束后移除。,0,是,否,1,Special,1,100,0.4,本次行动输出倍率,0,预留,0,预留,0,预留
 弱化,Weakened,使目标造成伤害时伤害降低至80%，并消耗1层。该效果可叠加。,0,是,否,99,Special,0,100,0.8,每层输出倍率,0,预留,0,预留,0,预留
+惩戒标记,PunishMark,,0,否,否,1,Special,0,100,,,,,,,,
