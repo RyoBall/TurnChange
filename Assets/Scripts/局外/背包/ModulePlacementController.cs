@@ -6,6 +6,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class ModulePlacementController : MonoBehaviour
 {
+    public static ModulePlacementController Instance { get; private set; }
     [Header("基础引用")]
     [SerializeField] private Canvas targetCanvas;
     [SerializeField] private BackpackInventoryView inventoryView;
@@ -38,21 +39,16 @@ public class ModulePlacementController : MonoBehaviour
 
     private void Awake()
     {
-        if (targetCanvas == null)
+        if(Instance!=null&&Instance!=this)
         {
-            targetCanvas = GetComponentInParent<Canvas>();
+            Destroy(this.gameObject);
+            return;
         }
-
-        if (inventoryView == null)
+        else if(Instance==null)
         {
-            inventoryView = GetComponentInChildren<BackpackInventoryView>();
+            Instance = this;
         }
-
-        if (placementBoard == null)
-        {
-            placementBoard = GetComponentInChildren<ModulePlacementBoard>();
-        }
-
+        
         if (inventoryView != null)
         {
             inventoryView.ModuleClicked += HandleModuleClicked;
@@ -72,7 +68,7 @@ public class ModulePlacementController : MonoBehaviour
         RefreshViews();
         SetSelection(null);
     }
-
+    
     private void OnDestroy()
     {
         if (inventoryView != null)

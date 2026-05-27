@@ -284,13 +284,6 @@ public class CharacterPanelView : MonoBehaviour
             m_skillButtons.Add(enterButton);
             createdCount++;
             ApplySkillButtonPosition(enterButton.RectTransform, createdCount - 1);
-            //退场技能
-            var exitSkill = SkillDictionaryManager.GetSkill(rosterData.exitSkill);
-            CharacterSkillButtonUI exitButton = Instantiate(skillButtonPrefab, skillButtonRoot);
-            exitButton.Bind(exitSkill, ShowSkillDescription);
-            m_skillButtons.Add(exitButton);
-            createdCount++;
-            ApplySkillButtonPosition(exitButton.RectTransform, createdCount - 1);
         }
         if (emptySkillText != null)
         {

@@ -1,7 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Coffee.UIEffects;
 
 /// <summary>
 /// 为 UI 按钮提供鼠标移入/移出动画：移入时弹性放大，移出时缓缓恢复原始大小。
@@ -33,8 +32,6 @@ public class UIButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointer
     [SerializeField] private bool useUnscaledTime = true;
     [Tooltip("在组件禁用时是否重置为初始缩放")]
     [SerializeField] private bool resetOnDisable = true;
-    [Header("UIEffect")]
-    [SerializeField] private UIEffect uiEffect;
     private Coroutine runningCoroutine;
     private Transform target;
     private Vector3 originalLocalScale;
@@ -116,8 +113,6 @@ public class UIButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointer
             elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             yield return null;
         }
-        if (uiEffect != null)
-            uiEffect.edgeMode = EdgeMode.Shiny;
         target.localScale = to;
         runningCoroutine = null;
     }
@@ -138,8 +133,6 @@ public class UIButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointer
             elapsed += useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
             yield return null;
         }
-        if (uiEffect != null)
-            uiEffect.edgeMode = EdgeMode.None;
         target.localScale = to;
         runningCoroutine = null;
     }

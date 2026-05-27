@@ -217,6 +217,7 @@ public class CharacterManager : MonoBehaviour
 		//交换角色列表中的角色
 		int fieldIndex = fieldCharacters.IndexOf(oldCharacter);
 		fieldCharacters[fieldIndex] = newCharacter;
+		oldCharacter.TriggerSwapCooldown();
 		oldCharacter.ReduceChaos(3);
 
 		reserveCharacters.Remove(newCharacter);
@@ -276,6 +277,7 @@ public class CharacterManager : MonoBehaviour
 
 			Character captured = reserve;
 			button.GetComponent<EnterCharacterButton>()?.Initialize(captured);
+			button.interactable = !captured.IsSwapOnCooldown;
 			button.onClick.AddListener(() => OnReserveButtonClicked(captured));
 			m_runtimeButtons.Add(button);
 		}

@@ -11,15 +11,38 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
     public Character character;
     [SerializeField] private MMF_Player enterFeedback;
     [SerializeField] private MMF_Player exitFeedback;
+    private Button m_button;
+
+    private void Awake()
+    {
+        m_button = GetComponent<Button>();
+    }
+
     public void Initialize(Character character)
     {
         this.character = character;
+        if (m_button == null)
+        {
+            m_button = GetComponent<Button>();
+        }
+
+        if (m_button != null)
+        {
+            m_button.interactable = character != null && !character.IsSwapOnCooldown;
+        }
     }
 
+    private bool CanRespondToPointer()
+    {
+        return CharacterManager.Instance != null
+            && CharacterManager.Instance.IsSelectingReserveCharacter
+            && m_button != null
+            && m_button.interactable;
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (CharacterManager.Instance.IsSelectingReserveCharacter)
+        if (CanRespondToPointer())
         {
             var targetCharacter = character != null ? character : GetComponentInParent<Character>();
             if (targetCharacter != null)
@@ -32,10 +55,10 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (CharacterManager.Instance.IsSelectingReserveCharacter)
+        if (CanRespondToPointer())
         {
             SkillDescription.Instance.ChangeDescription(null);
+            exitFeedback?.PlayFeedbacks();
         }
-        exitFeedback?.PlayFeedbacks();
     }
 }

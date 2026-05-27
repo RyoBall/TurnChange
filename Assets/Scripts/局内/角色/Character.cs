@@ -28,6 +28,12 @@ public class Character : UnitCombatant
     private const int ChaosRecoverValue = 2;
     public int ChaosValue => chaosValue;
     public int MaxChaosValueConst => MaxChaosValue;
+    [Header("换人冷却")]
+    [SerializeField] private float switchCooldownRemaining;
+    [SerializeField] private float switchCooldownMax = 200f;
+    public float SwitchCooldownRemaining => switchCooldownRemaining;
+    public float SwitchCooldownMax => switchCooldownMax;
+    public bool IsSwapOnCooldown => switchCooldownRemaining > 0f;
     bool endTurn = false;
     [Header("选中效果")]
     public float selectedScale = 1.1f;
@@ -225,6 +231,35 @@ public class Character : UnitCombatant
         UpdateChaosStates();
         return reducedValue;
     }
+    #region  换人cd相关
+
+    public void TriggerSwapCooldown()
+    {
+        switchCooldownRemaining = Mathf.Max(0f, switchCooldownMax);
+    }
+
+    public void SetSwitchCooldownMax(float value, bool clampCurrent = true)
+    {
+        switchCooldownMax = Mathf.Max(0f, value);
+        if (clampCurrent)
+        {
+            switchCooldownRemaining = Mathf.Min(switchCooldownRemaining, switchCooldownMax);
+        }
+    }
+
+    public float ReduceSwitchCooldown(float amount)
+    {
+        if (amount <= 0f || switchCooldownRemaining <= 0f)
+        {
+            return 0f;
+        }
+
+        float before = switchCooldownRemaining;
+        switchCooldownRemaining = Mathf.Max(0f, switchCooldownRemaining - amount);
+        return before - switchCooldownRemaining;
+    }
+
+    #endregion
     private void EnterMoveDOT()
     {
         m_originalPosition = transform.position;

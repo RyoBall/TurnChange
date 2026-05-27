@@ -127,8 +127,8 @@ public class Datas : MonoBehaviour
         }
 
         Instance = this;
-    InitializeCharacterLookup();
-    NormalizeUnlockedCharacters();
+        InitializeCharacterLookup();
+        NormalizeUnlockedCharacters();
 
         teamLevel = Mathf.Clamp(teamLevel, 1, MaxTeamLevel);
         currentExp = Mathf.Max(0f, currentExp);

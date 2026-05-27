@@ -11,7 +11,6 @@ public class CharacterRosterData : ScriptableObject
 
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;
-    public CharacterSkillType exitSkill;
 
     public string GetCharacterId()
     {

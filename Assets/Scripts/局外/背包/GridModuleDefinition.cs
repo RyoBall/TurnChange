@@ -2,22 +2,77 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Serializable]
-public class GridModuleDefinition
+public enum GridModuleType
 {
+    DotDamage,
+}
+
+[CreateAssetMenu(fileName = "GridModule", menuName = "背包/新模块")]
+public class GridModuleDefinition : ScriptableObject
+{
+    [Header("模块配置")]
+    public GridModuleType moduleType;
     public string moduleName = "新模块";
     public Color color = new Color(0.28f, 0.78f, 1f, 0.9f);
+    public float baseExtraData1;
+    public float baseExtraData2;
+    public float baseExtraData3;
+    public float baseExtraData4;
     public List<Vector2Int> cells = new List<Vector2Int>
     {
         Vector2Int.zero
     };
 
+    [NonSerialized] private IGridModuleBehavior m_behavior;
+    [NonSerialized] private bool m_isLoaded;
+
+    public bool IsLoaded => m_isLoaded;
+
+    private IGridModuleBehavior Behavior
+    {
+        get
+        {
+            if (m_behavior == null)
+            {
+                m_behavior = GridModuleBehaviorFactory.Create(moduleType);
+                m_behavior.Initialize(this);
+            }
+
+            return m_behavior;
+        }
+    }
+
+    private void OnEnable()
+    {
+        m_behavior = null;
+    }
+
+    private void OnValidate()
+    {
+        m_behavior = null;
+    }
+
+    public static GridModuleDefinition CreateRuntimeInstance()
+    {
+        GridModuleDefinition instance = CreateInstance<GridModuleDefinition>();
+        instance.hideFlags = HideFlags.HideAndDontSave;
+        return instance;
+    }
+
     public GridModuleDefinition Clone()
     {
-        GridModuleDefinition clone = new GridModuleDefinition();
+        GridModuleDefinition clone = Instantiate(this);
+        clone.hideFlags = HideFlags.HideAndDontSave;
         clone.moduleName = moduleName;
+        clone.moduleType = moduleType;
         clone.color = color;
+        clone.baseExtraData1 = baseExtraData1;
+        clone.baseExtraData2 = baseExtraData2;
+        clone.baseExtraData3 = baseExtraData3;
+        clone.baseExtraData4 = baseExtraData4;
         clone.cells = new List<Vector2Int>(cells.Count);
+        clone.m_behavior = null;
+        clone.m_isLoaded = false;
 
         for (int i = 0; i < cells.Count; i++)
         {
@@ -25,6 +80,33 @@ public class GridModuleDefinition
         }
 
         return clone;
+    }
+
+    public void ApplyToBoard()
+    {
+        if (m_isLoaded)
+        {
+            return;
+        }
+
+        m_isLoaded = true;
+        Behavior.OnApplyToBoard();
+    }
+
+    public void RemoveFromBoard()
+    {
+        if (!m_isLoaded)
+        {
+            return;
+        }
+
+        Behavior.OnRemoveFromBoard();
+        m_isLoaded = false;
+    }
+
+    public float GetDotDamageMultiplier()
+    {
+        return Behavior.GetDotDamageMultiplier();
     }
 
     public void GetNormalizedCells(List<Vector2Int> results)
@@ -130,5 +212,53 @@ public class GridModuleDefinition
     {
         Vector2Int size = GetSize();
         return Mathf.Max(size.x, size.y);
+    }
+}
+
+public interface IGridModuleBehavior
+{
+    void Initialize(GridModuleDefinition module);
+    void OnApplyToBoard();
+    void OnRemoveFromBoard();
+    float GetDotDamageMultiplier();
+}
+
+public abstract class GridModuleBehaviorBase : IGridModuleBehavior
+{
+    protected GridModuleDefinition module;
+
+    public virtual void Initialize(GridModuleDefinition module)
+    {
+        this.module = module;
+    }
+
+    public virtual void OnApplyToBoard() { }
+    public virtual void OnRemoveFromBoard() { }
+    public virtual float GetDotDamageMultiplier() { return 1f; }
+}
+
+public static class GridModuleBehaviorFactory
+{
+    public static IGridModuleBehavior Create(GridModuleType moduleType)
+    {
+        switch (moduleType)
+        {
+            case GridModuleType.DotDamage:
+                return new DotDamageGridModuleBehavior();
+            default:
+                return new DefaultGridModuleBehavior();
+        }
+    }
+}
+
+public class DefaultGridModuleBehavior : GridModuleBehaviorBase
+{
+}
+
+public class DotDamageGridModuleBehavior : GridModuleBehaviorBase
+{
+    public override float GetDotDamageMultiplier()
+    {
+        return Mathf.Max(0f, 1f + module.baseExtraData1);
     }
 }

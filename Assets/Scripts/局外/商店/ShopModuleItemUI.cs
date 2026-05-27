@@ -78,7 +78,7 @@ public class ShopModuleItemUI : MonoBehaviour
 
         m_onPurchaseRequested?.Invoke(m_module);
     }
-
+#region 确认视图不为空
     private void EnsureView()
     {
         if (m_background == null)
@@ -166,7 +166,7 @@ public class ShopModuleItemUI : MonoBehaviour
         }
 
     }
-
+#endregion
     private void RedrawShape(Vector2 drawCellSize)
     {
         for (int i = 0; i < m_shapeCells.Count; i++)

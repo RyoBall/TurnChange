@@ -234,20 +234,24 @@ public class TurnManager : MonoBehaviour
             {
                 combatant.ChangeActionValue(Mathf.Max(0f, combatant.currentActionValue - advanceValue), false);
             }
-
+            //推进换人技能的冷却
+            if (CharacterManager.Instance != null)
+            {
+                for (int i = 0; i < CharacterManager.Instance.reserveCharacters.Count; i++)
+                {
+                    Character reserveCharacter = CharacterManager.Instance.reserveCharacters[i];
+                    reserveCharacter?.ReduceSwitchCooldown(advanceValue);
+                }
+            }
+            //推进状态持续时间
             State.TickAllStatesByActionValue(advanceValue);
+            //推进指挥点回复时间
             Commander.GetInstance().NotifyActionValueAdvanced(advanceValue);
-
+            //推进环境持续时间
             if (EnvironmentManager.Instance != null)
             {
                 EnvironmentManager.Instance.TickEnvironments(advanceValue);
             }
-
-            if (nextCombatant != null)
-            {
-                Debug.Log($"[TurnManager] 进入回合: {nextCombatant.name} (速度={nextCombatant.speed})");
-            }
-
             ////// 回合开始。
             yield return StartCoroutine(nextCombatant.PerformTurn());
             ////// 回合结束
