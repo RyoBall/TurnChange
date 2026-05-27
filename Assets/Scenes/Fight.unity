@@ -8357,6 +8357,7 @@ MonoBehaviour:
   shieldFeedback: {fileID: 0}
   buffAppliedFeedback: {fileID: 0}
   debuffAppliedFeedback: {fileID: 0}
+  mouseHoverParticle: {fileID: 0}
   states: []
   character: {fileID: 0}
 --- !u!1 &1938414814
