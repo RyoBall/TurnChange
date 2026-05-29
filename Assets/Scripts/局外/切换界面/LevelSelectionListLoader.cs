@@ -78,8 +78,16 @@ public class LevelSelectionListLoader : MonoBehaviour
             }
 
             LevelSelectionData levelData = sourceLevels[appliedCount];
+            bool isUnlocked = levelData != null && GetPreviousLevel(sourceLevels, appliedCount) == null;
+            if (Datas.Instance != null && levelData != null)
+            {
+                isUnlocked = Datas.Instance.IsLevelUnlocked(levelData.levelId);
+                levelData.isUnlocked = isUnlocked;
+            }
+
             bool isCompleted = Datas.Instance != null && Datas.Instance.IsLevelCompleted(levelData != null ? levelData.levelId : string.Empty);
             item.SetLevelData(levelData);
+            item.SetUnlockedState(isUnlocked);
             item.SetCompletedState(isCompleted);
             appliedCount++;
         }
@@ -159,5 +167,23 @@ public class LevelSelectionListLoader : MonoBehaviour
         }
 
         ApplyLevels();
+    }
+
+    private static LevelSelectionData GetPreviousLevel(IReadOnlyList<LevelSelectionData> levels, int currentIndex)
+    {
+        if (levels == null)
+        {
+            return null;
+        }
+
+        for (int i = currentIndex - 1; i >= 0; i--)
+        {
+            if (levels[i] != null)
+            {
+                return levels[i];
+            }
+        }
+
+        return null;
     }
 }

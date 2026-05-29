@@ -5,26 +5,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
-[System.Serializable]
-public class StarterBranchUnlockEntry
-{
-    public string levelId;
-    public CharacterType characterType;
-}
-
-[System.Serializable]
-public class StarterBranchDefinition
-{
-    public string branchId;
-    public string displayName;
-    [TextArea(2, 4)] public string description;
-    public CharacterType primaryCharacterType;
-    public CharacterType secondaryCharacterType;
-    public CharacterType supportCharacterType;
-    public List<StarterBranchUnlockEntry> followupUnlocks = new List<StarterBranchUnlockEntry>();
-    public Color accentColor = new Color(0.2f, 0.47f, 0.85f, 1f);
-}
-
 public enum CharacterType
 {
     DotMain,
@@ -42,6 +22,7 @@ public class StarterBranchRuntimeController : MonoBehaviour
     private const string DirectDamageBranchId = "直伤";
 
     [Header("开局选择UI")]
+    [SerializeField] private StarterBranchConfig starterBranchConfig;
     [SerializeField] private Canvas choiceCanvas;
     [SerializeField] private RectTransform choiceRoot;
     [SerializeField] private RectTransform choicePanel;
@@ -252,12 +233,12 @@ public class StarterBranchRuntimeController : MonoBehaviour
     //根据ID获取流派定义
     private StarterBranchDefinition GetStarterBranch(string branchId)
     {
-        if (string.IsNullOrWhiteSpace(branchId) || m_datas == null)
+        if (string.IsNullOrWhiteSpace(branchId))
         {
             return null;
         }
 
-        List<StarterBranchDefinition> starterBranches = m_datas.GetStarterBranchesBuffer();
+        IReadOnlyList<StarterBranchDefinition> starterBranches = GetStarterBranches();
         for (int i = 0; i < starterBranches.Count; i++)
         {
             StarterBranchDefinition branch = starterBranches[i];
@@ -293,7 +274,7 @@ public class StarterBranchRuntimeController : MonoBehaviour
             return;
         }
 
-        List<StarterBranchDefinition> starterBranches = m_datas.GetStarterBranchesBuffer();
+        IReadOnlyList<StarterBranchDefinition> starterBranches = GetStarterBranches();
         if (starterBranches.Count < 2)
         {
             Debug.LogWarning("[StarterBranchRuntimeController] 流派配置不足，无法显示开局选择弹窗。", this);
@@ -356,6 +337,12 @@ public class StarterBranchRuntimeController : MonoBehaviour
         });
         return true;
     }
+
+    private IReadOnlyList<StarterBranchDefinition> GetStarterBranches()
+    {
+        return starterBranchConfig != null ? starterBranchConfig.StarterBranches : Array.Empty<StarterBranchDefinition>();
+    }
+
     private void CreateStarterChoiceButton(StarterBranchDefinition branch)
     {
         RectTransform choiceButtonparent = null;

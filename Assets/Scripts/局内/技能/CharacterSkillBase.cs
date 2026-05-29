@@ -11,7 +11,7 @@ public enum SkillTargetType
 }
 public enum CharacterSkillType
 {
-    Change,
+    None,
     EnterSkillOne,
     ExitSkillOne,
     AllAttack,
@@ -67,9 +67,9 @@ public class CharacterSkillBase : SkillBase
 
     private readonly Dictionary<Character, int> m_runtimeCooldown = new Dictionary<Character, int>();
 
-    private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
+    private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant, IReadOnlyList<UnitCombatant> damagedUnits)
     {
-        State.NotifyDamageSkillUsed(unitCombatant);
+        State.NotifyDamageSkillUsed(unitCombatant, damagedUnits);
     }
 
     public override IEnumerator Execute(UnitCombatant unitCombatant)
@@ -108,8 +108,12 @@ public class CharacterSkillBase : SkillBase
 
             selectedEnemies = new List<Enemy>();
             yield return SkillManager.Instance.SelectEnemiesCoroutine(enemyTargetCount, selectedEnemies);
+            if (selectedEnemies == null || selectedEnemies.Count <= 0)
+            {
+                Debug.Log("[SkillBase] 未选择敌人，技能取消");
+                yield break;
+            }
         }
-
         bool requiresRuntimeAllyTarget = RequiresRuntimeAllyTarget();
 
         List<Character> selectedCharacters = null;
@@ -124,6 +128,11 @@ public class CharacterSkillBase : SkillBase
 
             selectedCharacters = new List<Character>();
             yield return SkillManager.Instance.SelectCharactersCoroutine(allyTargetCount, selectedCharacters);
+            if (selectedCharacters == null || selectedCharacters.Count <= 0)
+            {
+                Debug.Log("[SkillBase] 未选择队友，技能取消");
+                yield break;
+            }
         }
 
         bool shouldEndTurn = ResolveShouldEndTurn();
@@ -170,14 +179,8 @@ public class CharacterSkillBase : SkillBase
             case CharacterSkillType.EnterSkillOne:
                 yield return EnterSkillOne(character);
                 break;
-            case CharacterSkillType.ExitSkillOne:
-                yield return ExitSkillOne(character);
-                break;
             case CharacterSkillType.EnterSkillTwo:
                 yield return EnterSkillTwo(character);
-                break;
-            case CharacterSkillType.ExitSkillTwo:
-                yield return ExitSkillTwo(character);
                 break;
             case CharacterSkillType.DebuffSpreadAttack:
                 yield return DebuffSpreadAttack(character);
@@ -188,9 +191,6 @@ public class CharacterSkillBase : SkillBase
             case CharacterSkillType.EnterSkillThree:
                 yield return EnterSkillThree(character);
                 break;
-            case CharacterSkillType.ExitSkillThree:
-                yield return ExitSkillThree(character);
-                break;
             case CharacterSkillType.TauntPull:
                 yield return TauntPull(character, selectedEnemies);
                 break;
@@ -199,9 +199,6 @@ public class CharacterSkillBase : SkillBase
                 break;
             case CharacterSkillType.MainDpsEnter:
                 yield return MainDpsEnter(character);
-                break;
-            case CharacterSkillType.MainDpsExit:
-                yield return MainDpsExit(character, selectedEnemies);
                 break;
             case CharacterSkillType.MainDpsSkillOne:
                 yield return MainDpsSkillOne(character, selectedEnemies);
@@ -216,9 +213,6 @@ public class CharacterSkillBase : SkillBase
             case CharacterSkillType.SubDpsEnter:
                 yield return SubDpsEnter(character);
                 break;
-            case CharacterSkillType.SubDpsExit:
-                yield return SubDpsExit(character);
-                break;
             case CharacterSkillType.SubDpsSkillOne:
                 yield return SubDpsSkillOne(character, selectedEnemies);
                 break;
@@ -228,9 +222,6 @@ public class CharacterSkillBase : SkillBase
                 break;
             case CharacterSkillType.HealerEnter:
                 yield return HealerEnter(character);
-                break;
-            case CharacterSkillType.HealerExit:
-                yield return HealerExit(character);
                 break;
             case CharacterSkillType.HealerSkillOne:
                 yield return HealerSkillOne(character, selectedCharacters);
@@ -285,9 +276,9 @@ public class CharacterSkillBase : SkillBase
     private IEnumerator ExitSkillOne(Character character)
     {
         float dotTriggerMultiplier = extraData1;
-        NotifyDamageSkillUsed(character);
-        FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的离场技能触发，结算dot伤害");
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        NotifyDamageSkillUsed(character, enemies);
+        FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}的离场技能触发，结算dot伤害");
         State.RunBatchedDotEvent(character, () =>
         {
             foreach (var enemy in enemies)
@@ -310,8 +301,8 @@ public class CharacterSkillBase : SkillBase
     {
         int dotDuration = Mathf.RoundToInt(extraData1);
         float refreshMultiplier = extraData2;
-        NotifyDamageSkillUsed(character);
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        NotifyDamageSkillUsed(character, enemies);
         State.RunBatchedDotEvent(character, () =>
         {
             foreach (var enemy in enemies)
@@ -375,7 +366,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, markedEnemies);
         State.RunBatchedDotEvent(character, () =>
         {
             for (int i = 0; i < markedEnemies.Count; i++)
@@ -463,9 +454,8 @@ public class CharacterSkillBase : SkillBase
         int dotDuration = Mathf.RoundToInt(extraData2);
         float dotSkillCoef = extraData1;
         float refreshMultiplier = extraData3;
-        NotifyDamageSkillUsed(character);
-
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        NotifyDamageSkillUsed(character, enemies);
         State.RunBatchedDotEvent(character, () =>
         {
             foreach (var enemy in enemies)
@@ -504,7 +494,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         bool ifAttack = false;
         State.RunBatchedDotEvent(character, () =>
         {
@@ -641,10 +631,10 @@ public class CharacterSkillBase : SkillBase
 
         character.AddState(StateType.BerserkFeast, character, 200, 1);
         character.AddState(StateType.BurningBlood, character, 99, 1);
-        NotifyDamageSkillUsed(character);
         Enemy target = EnemyManager.Instance.GetLowestHPRatioEnemy();
         if (target == null)
             yield break;
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         float normalExecuteThreshold = extraData4;
         float bossExecuteThreshold = 0.08f;
         float executeThreshold = IsBoss(target) ? bossExecuteThreshold : normalExecuteThreshold;
@@ -678,7 +668,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
 
         //斩杀
         float normalExecuteThreshold = extraData1;
@@ -716,7 +706,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
 
         float normalCoef = skillCoef;
         float debuffCoef = extraData1;
@@ -824,7 +814,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, enemies);
         foreach (var enemy in enemies)
         {
             if (enemy == null)
@@ -846,7 +836,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         int armorBreakStacks = Mathf.Max(1, Mathf.RoundToInt(extraData1));
         target.AddState(StateType.ArmorBreak, character, 99, armorBreakStacks);
         var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, false, true, true);
@@ -861,7 +851,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { character });
         int selfDamage = Mathf.RoundToInt(character.maxHP * extraData1);
         if (character.currentHP <= selfDamage)
         {
@@ -910,7 +900,7 @@ public class CharacterSkillBase : SkillBase
         yield break;
     }
 
-    private IEnumerator HealerExit(Character character)
+   /* private IEnumerator HealerExit(Character character)
     {
         if (character == null || CharacterManager.Instance == null)
         {
@@ -943,7 +933,7 @@ public class CharacterSkillBase : SkillBase
         }
 
         yield break;
-    }
+    }*/
 
     private IEnumerator HealerSkillOne(Character character, List<Character> selectedCharacters)
     {
@@ -1034,7 +1024,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        NotifyDamageSkillUsed(character);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
 
         float executeThreshold = IsBoss(target) ? 0.2f : 0.4f;
         if (target.currentHP <= Mathf.RoundToInt(target.maxHP * executeThreshold))

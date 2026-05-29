@@ -40,6 +40,7 @@ public class AdditionalCharacter : Combatant
         }
 
         TurnManager.Instance?.RemoveCombatant(this);
+        yield return null;
         Destroy(gameObject);
     }
 }

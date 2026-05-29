@@ -21,7 +21,6 @@ public enum StateCombatEventType
 
 public enum StateType
 {
-    BloodContract,//血契
     PursuitPunish,//追惩
     PunishMark,//惩戒标记
     PersistentTorment,//持续煎熬
@@ -51,11 +50,6 @@ public enum StateType
     Vulnerable,//易伤
     ArmorBreak,//破甲
     BloodSurgeHeal,//浴血反哺
-    CriticalGuard,//临界
-    BloodGift,//血赐
-    GiftWeak,//馈赠·弱
-    GiftMid,//馈赠·中
-    GiftStrong,//馈赠·强
     ExploderProcess,//自爆流程
     NextActionDamageBoost,//下次行动增伤
     ActionWeakened,//单回合减攻
@@ -68,6 +62,7 @@ public class State : ScriptableObject
 {
     private static UnitCombatant s_activeDotEventUnit;
     private static bool s_activeDotEventHasDamage;
+    private static List<UnitCombatant> s_activeDotDamagedUnits;
 
     [Header("状态配置")]
     [SerializeField] private StateDurationType durationType = StateDurationType.Turn;
@@ -279,14 +274,14 @@ public class State : ScriptableObject
         Behavior.OnAnyDamageSettled(source, target, damage, isDotDamage, isTrueDamage);
     }
 
-    public void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType)
+    public void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
     {
         if (owner == null || triggerUnit == null)
         {
             return;
         }
 
-        Behavior.OnCombatEventTriggered(triggerUnit, eventType);
+        Behavior.OnCombatEventTriggered(triggerUnit, eventType, damagedUnits);
     }
 
     public void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
@@ -375,12 +370,14 @@ public class State : ScriptableObject
     }
     #region 伤害结算相关
 
-    public static void NotifyCombatEvent(UnitCombatant triggerUnit, StateCombatEventType eventType)
+    private static void NotifyCombatEvent(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
     {
         if (triggerUnit == null || TurnManager.Instance == null)
         {
             return;
         }
+
+        damagedUnits ??= System.Array.Empty<UnitCombatant>();
 
         foreach (var com in TurnManager.Instance.CurrentTurnOrder.ToList())
         {
@@ -398,13 +395,13 @@ public class State : ScriptableObject
                     continue;
                 }
 
-                state.OnCombatEventTriggered(triggerUnit, eventType);
+                state.OnCombatEventTriggered(triggerUnit, eventType, damagedUnits);
             }
         }
     }
-    public static void NotifyDamageSkillUsed(UnitCombatant triggerUnit)
+    public static void NotifyDamageSkillUsed(UnitCombatant triggerUnit, IReadOnlyList<UnitCombatant> damagedUnits)
     {
-        NotifyCombatEvent(triggerUnit, StateCombatEventType.DamageSkillUsed);
+        NotifyCombatEvent(triggerUnit, StateCombatEventType.DamageSkillUsed, damagedUnits);
     }
 
     public static void RunBatchedDotEvent(UnitCombatant triggerUnit, System.Action triggerAction)
@@ -416,8 +413,10 @@ public class State : ScriptableObject
 
         UnitCombatant previousTriggerUnit = s_activeDotEventUnit;
         bool previousHasDamage = s_activeDotEventHasDamage;
+        List<UnitCombatant> previousDamagedUnits = s_activeDotDamagedUnits;
         s_activeDotEventUnit = triggerUnit;
         s_activeDotEventHasDamage = false;
+        s_activeDotDamagedUnits = new List<UnitCombatant>();
 
         try
         {
@@ -425,7 +424,7 @@ public class State : ScriptableObject
         }
         finally
         {
-            FinishBatchedDotEvent(triggerUnit, previousTriggerUnit, previousHasDamage);
+            FinishBatchedDotEvent(triggerUnit, previousTriggerUnit, previousHasDamage, previousDamagedUnits);
         }
     }
 
@@ -438,8 +437,10 @@ public class State : ScriptableObject
 
         UnitCombatant previousTriggerUnit = s_activeDotEventUnit;
         bool previousHasDamage = s_activeDotEventHasDamage;
+        List<UnitCombatant> previousDamagedUnits = s_activeDotDamagedUnits;
         s_activeDotEventUnit = triggerUnit;
         s_activeDotEventHasDamage = false;
+        s_activeDotDamagedUnits = new List<UnitCombatant>();
 
         try
         {
@@ -450,29 +451,52 @@ public class State : ScriptableObject
         }
         finally
         {
-            FinishBatchedDotEvent(triggerUnit, previousTriggerUnit, previousHasDamage);
+            FinishBatchedDotEvent(triggerUnit, previousTriggerUnit, previousHasDamage, previousDamagedUnits);
         }
     }
 
-    internal static void RecordBatchedDotDamage(bool isDotDamage)
+    internal static void RecordBatchedDotDamage(UnitCombatant target, int damage, bool isDotDamage)
     {
-        if (!isDotDamage || s_activeDotEventUnit == null)
+        if (!isDotDamage || s_activeDotEventUnit == null || target == null || damage <= 0)
         {
             return;
         }
 
         s_activeDotEventHasDamage = true;
+        if (s_activeDotDamagedUnits == null)
+        {
+            s_activeDotDamagedUnits = new List<UnitCombatant>();
+        }
+
+        if (!s_activeDotDamagedUnits.Contains(target))
+        {
+            s_activeDotDamagedUnits.Add(target);
+        }
     }
 
-    private static void FinishBatchedDotEvent(UnitCombatant triggerUnit, UnitCombatant previousTriggerUnit, bool previousHasDamage)
+    private static void FinishBatchedDotEvent(UnitCombatant triggerUnit, UnitCombatant previousTriggerUnit, bool previousHasDamage, List<UnitCombatant> previousDamagedUnits)
     {
         bool hasDotDamage = s_activeDotEventHasDamage;
+        List<UnitCombatant> damagedUnits = s_activeDotDamagedUnits ?? new List<UnitCombatant>();
         s_activeDotEventUnit = previousTriggerUnit;
         s_activeDotEventHasDamage = previousHasDamage || hasDotDamage;
+        s_activeDotDamagedUnits = previousDamagedUnits;
+
+        if (previousDamagedUnits != null)
+        {
+            for (int i = 0; i < damagedUnits.Count; i++)
+            {
+                UnitCombatant damagedUnit = damagedUnits[i];
+                if (damagedUnit != null && !previousDamagedUnits.Contains(damagedUnit))
+                {
+                    previousDamagedUnits.Add(damagedUnit);
+                }
+            }
+        }
 
         if (hasDotDamage)
         {
-            NotifyCombatEvent(triggerUnit, StateCombatEventType.DotTriggered);
+            NotifyCombatEvent(triggerUnit, StateCombatEventType.DotTriggered, damagedUnits);
         }
     }
     #endregion
@@ -504,7 +528,7 @@ public interface IStateBehavior
     IEnumerator OnOwnerTurnStart();
     void OnOwnerTurnEnd();
     void OnStateEnd();
-    void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType);
+    void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits);
     void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage);
     void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver);
     float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage);
@@ -530,7 +554,7 @@ public abstract class StateBehaviorBase : IStateBehavior
     public virtual IEnumerator OnOwnerTurnStart() { yield break; }//由于这是回合开始的行为，最好支持协程，以便实现一些需要等待的效果
     public virtual void OnOwnerTurnEnd() { }
     public virtual void OnStateEnd() { }
-    public virtual void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType) { }
+    public virtual void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits) { }
     public virtual void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage) { }
     public virtual void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver) { }
     public virtual float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1f; }
@@ -549,8 +573,6 @@ public static class StateBehaviorFactory
     {
         switch (stateType)
         {
-            case StateType.BloodContract:
-                return new BloodContractStateBehavior();
             case StateType.BerserkFeast:
                 return new BerserkFeastStateBehavior();
             case StateType.BurningBlood:
@@ -754,7 +776,7 @@ public class BurningBloodStateBehavior : StateBehaviorBase
 
 public class CritRhythmStateBehavior : StateBehaviorBase
 {
-    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType)
+    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
     {
         if (state.owner == null || CharacterManager.Instance == null)
         {
@@ -1302,6 +1324,13 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
         }
 
         enemy.AddState(StateType.PunishMark, state.owner, 1, 1);
+        foreach(var combatant in TurnManager.Instance.CurrentTurnOrder)
+        {
+            if (combatant is AdditionalCharacter additionalTurnCombatant && additionalTurnCombatant.character == ownerCharacter)
+            {
+                return;
+            }
+        }
         TurnManager.Instance?.AdditionalTurnInsert(ownerCharacter);
     }
 
@@ -1463,11 +1492,20 @@ public class CounterChargeStateBehavior : StateBehaviorBase
         state.owner.AddState(StateType.Charge, state.owner, 99, initialCharge);
     }
 
-    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType)
+    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
     {
         int selfGain = Mathf.RoundToInt(state.baseExtraData2);
         int otherGain = Mathf.RoundToInt(state.baseExtraData3);
-        int count = triggerUnit == state.owner ? selfGain : otherGain;
+        bool isSelfTriggered = false;
+        foreach(var unit in damagedUnits)
+        {
+            if(unit==state.owner)
+             {
+                isSelfTriggered = true;
+                break;
+             }
+        }
+        int count = isSelfTriggered ? selfGain : otherGain;
         AddOrUpdateChargeState(count);
     }
 
@@ -1551,8 +1589,8 @@ public class ChargeStateBehavior : StateBehaviorBase
         int threshold = Mathf.RoundToInt(state.baseExtraData2);
         if (state.StackCount >= threshold)
         {
-            TriggerCounterCharge();
             state.ChangeStackCount(0);
+            TriggerCounterCharge();
         }
     }
 
@@ -1588,7 +1626,7 @@ public class ChargeStateBehavior : StateBehaviorBase
                 enemy.ChangeActionValue(enemy.currentActionValue + enemy.currentActionValue * state.baseExtraData4);
                 //推条
             }
-            State.NotifyCombatEvent(state.owner, StateCombatEventType.DamageSkillUsed);
+            State.NotifyDamageSkillUsed(state.owner, new List<UnitCombatant>(EnemyManager.Instance.AliveEnemies));
         }
 
         TurnManager.Instance?.ExtraTurnInsert(state.owner as Character);

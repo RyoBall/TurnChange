@@ -457,7 +457,7 @@ public class UnitCombatant : Combatant
 
     public static void NotifyAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage = false, bool isTrueDamage = false)
     {
-        State.RecordBatchedDotDamage(isDotDamage);
+        State.RecordBatchedDotDamage(target, damage, isDotDamage);
 
         foreach (var com in TurnManager.Instance.CurrentTurnOrder.ToList())
         {

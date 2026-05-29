@@ -15,6 +15,7 @@ public class Character : UnitCombatant
     [SerializeField] private CharacterAnimationOverrideDatabase animationOverrideDatabase;
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;//入场技能，回合开始时自动触发
+    public CharacterSkillType additionalSkillType;
     public CharacterSkillBase additionalSkill;
     private List<CharacterSkillBase> m_skillInstances = new List<CharacterSkillBase>();
     private Dictionary<CharacterSkillType, CharacterSkillBase> m_skillInstanceMap = new Dictionary<CharacterSkillType, CharacterSkillBase>();
@@ -433,6 +434,7 @@ public class Character : UnitCombatant
             m_skillInstanceMap[skillType] = skill;
         }
         m_enterSkillInstance = CreateSkillInstance(enterSkill);
+        additionalSkill = CreateSkillInstance(additionalSkillType);
     }
 
     public CharacterSkillBase GetSkillInstance(CharacterSkillType skillType)
@@ -472,6 +474,9 @@ public class Character : UnitCombatant
     private void CleanupSkillInstances()
     {
         DestroySkillInstance(m_enterSkillInstance);
+        DestroySkillInstance(additionalSkill);
+        additionalSkill = null;
+        m_enterSkillInstance = null;
 
         if (m_skillInstances == null)
         {
@@ -527,7 +532,7 @@ public class Character : UnitCombatant
         critRate = levelData.critRate;
         critDamage = levelData.critDamage;
         //耦合度有点高了
-        speed = Mathf.Max(1, Mathf.RoundToInt(levelData.speed * (Datas.Instance != null ? Datas.Instance.GetPlayerSpeedMultiplier() : 1f)));
+        speed = Mathf.Max(1, Mathf.RoundToInt(levelData.speed / (Datas.Instance != null ? Datas.Instance.GetPlayerSpeedMultiplier() : 1f)));
         K = levelData.K;
     }
 }

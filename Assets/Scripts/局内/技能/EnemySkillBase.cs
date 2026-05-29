@@ -37,9 +37,9 @@ public class EnemySkillBase : SkillBase
 
     public int RemainingCooldown => m_remainingCooldown;
 
-    private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant)
+    private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant, IReadOnlyList<UnitCombatant> damagedUnits)
     {
-        State.NotifyDamageSkillUsed(unitCombatant);
+        State.NotifyDamageSkillUsed(unitCombatant, damagedUnits);
     }
 
     public bool CanUse(Enemy owner)
@@ -140,8 +140,8 @@ public class EnemySkillBase : SkillBase
     // 1.护盾手 技能二
     private IEnumerator ShieldSupport_2(Enemy self)
     {
-        NotifyDamageSkillUsed(self);
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        NotifyDamageSkillUsed(self, allies);
         foreach (var ally in allies)
         {
             if (ally == null) continue;
@@ -156,7 +156,7 @@ public class EnemySkillBase : SkillBase
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        NotifyDamageSkillUsed(self);
+        NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(self, target, this, true);
         target.TakeDamage(damageInfo);
         target.TryAddChaos(1);
@@ -222,8 +222,8 @@ public class EnemySkillBase : SkillBase
 
     private IEnumerator ExploderBurst(Enemy self)
     {
-        NotifyDamageSkillUsed(self);
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        NotifyDamageSkillUsed(self, allies);
         foreach (var ally in allies)
         {
             if (ally == null) continue;
@@ -278,8 +278,8 @@ public class EnemySkillBase : SkillBase
     private IEnumerator ChessQueenChaosCharge(Enemy self)
     {
         int chaosAmount = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 2f));
-        NotifyDamageSkillUsed(self);
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        NotifyDamageSkillUsed(self, allies);
         foreach (var ally in allies)
         {
             if (ally == null || ally.IsDead)

@@ -112,7 +112,6 @@ public class Datas : MonoBehaviour
 
     [Header("开局流派")]
     [SerializeField] private string starterChoiceSceneName = "Main";
-    [SerializeField] private List<StarterBranchDefinition> starterBranches = new List<StarterBranchDefinition>();
     [SerializeField] private string selectedStarterBranchId;
 
     [Header("关卡进度")]
@@ -134,11 +133,10 @@ public class Datas : MonoBehaviour
     [SerializeField] private List<PlacedModuleData> placedModules = new List<PlacedModuleData>();
 
     [SerializeField] private int backpackWidth = 4;
-    
-    private readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
+
+    public readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
     private readonly List<TemporaryBattleModifierData> m_battleModifierSnapshot = new List<TemporaryBattleModifierData>();
     private bool m_characterLookupBuilt;
-    private bool m_ownedModulesRuntimePrepared;
     private bool m_hasBattleModifierSnapshot;
     private bool m_isSubscribedToBattleRuntimeEvents;
 
@@ -182,6 +180,7 @@ public class Datas : MonoBehaviour
         return backpackWidth;
     }
     #endregion
+    #region 角色解锁
     public bool AddCharacterData(CharacterType characterType)
     {
         InitializeCharacterLookup();
@@ -206,6 +205,13 @@ public class Datas : MonoBehaviour
         return m_characterTypeLookup.TryGetValue(characterType, out CharacterRosterData data) ? data : null;
     }
 
+    public bool TryGetCharacterId(CharacterType characterType, out string characterId)
+    {
+        CharacterRosterData rosterData = GetCharacterRoster(characterType);
+        characterId = rosterData != null ? rosterData.GetCharacterId() : string.Empty;
+        return !string.IsNullOrWhiteSpace(characterId);
+    }
+
     public IReadOnlyList<CharacterRosterData> GetUnlockedCharacterRosters()
     {
         return characterDatas;
@@ -221,16 +227,12 @@ public class Datas : MonoBehaviour
         characterDatas.Clear();
     }
 
-    public List<StarterBranchDefinition> GetStarterBranchesBuffer()
+    public void SetSelectedStarterBranchId(string branchId)
     {
-        if (starterBranches == null)
-        {
-            starterBranches = new List<StarterBranchDefinition>();
-        }
-
-        return starterBranches;
+        selectedStarterBranchId = branchId;
     }
-
+    #endregion
+    #region 关卡进度相关
     public IReadOnlyList<LevelSelectionFloorData> GetLevelFloors()
     {
         return levelFloors;
@@ -260,6 +262,7 @@ public class Datas : MonoBehaviour
     public IReadOnlyList<LevelSelectionData> GetCurrentFloorLevels()
     {
         LevelSelectionFloorData floorData = GetCurrentFloorData();
+        UpdateLevelUnlockStates(floorData);
         return floorData != null ? floorData.GetLevels() : Array.Empty<LevelSelectionData>();
     }
 
@@ -337,6 +340,34 @@ public class Datas : MonoBehaviour
         return completedLevelIds.Contains(levelId);
     }
 
+    public bool IsLevelUnlocked(string levelId)
+    {
+        if (string.IsNullOrWhiteSpace(levelId))
+        {
+            return false;
+        }
+
+        LevelSelectionFloorData floorData = GetCurrentFloorData();
+        if (floorData == null)
+        {
+            return false;
+        }
+
+        UpdateLevelUnlockStates(floorData);
+
+        IReadOnlyList<LevelSelectionData> levels = floorData.GetLevels();
+        for (int i = 0; i < levels.Count; i++)
+        {
+            LevelSelectionData level = levels[i];
+            if (level != null && string.Equals(level.levelId, levelId, StringComparison.Ordinal))
+            {
+                return level.isUnlocked;
+            }
+        }
+
+        return false;
+    }
+
     public void MarkLevelCompleted(string levelId)
     {
         if (string.IsNullOrWhiteSpace(levelId) || completedLevelIds.Contains(levelId))
@@ -345,14 +376,55 @@ public class Datas : MonoBehaviour
         }
 
         completedLevelIds.Add(levelId);
+        UpdateLevelUnlockStates(GetCurrentFloorData());
         LevelCompleted?.Invoke(levelId);
+    }
+
+    private void UpdateLevelUnlockStates(LevelSelectionFloorData floorData)
+    {
+        if (floorData == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<LevelSelectionData> levels = floorData.GetLevels();
+        for (int i = 0; i < levels.Count; i++)
+        {
+            LevelSelectionData currentLevel = levels[i];
+            if (currentLevel == null)
+            {
+                continue;
+            }
+
+            LevelSelectionData previousLevel = GetPreviousLevel(levels, i);
+            currentLevel.isUnlocked = previousLevel == null || IsLevelCompleted(previousLevel.levelId);
+        }
+    }
+
+    private LevelSelectionData GetPreviousLevel(IReadOnlyList<LevelSelectionData> levels, int currentIndex)
+    {
+        if (levels == null)
+        {
+            return null;
+        }
+
+        for (int i = currentIndex - 1; i >= 0; i--)
+        {
+            if (levels[i] != null)
+            {
+                return levels[i];
+            }
+        }
+
+        return null;
     }
 
     public int GetTeamLevel()
     {
         return Mathf.Clamp(teamLevel, 1, MaxTeamLevel);
     }
-
+    #endregion
+    #region 金币与经验相关
     public float GetCurrentExp()
     {
         return currentExp;
@@ -411,6 +483,7 @@ public class Datas : MonoBehaviour
         AddGold(goldReward);
         AddExperience(experienceReward);
     }
+    #endregion
     #region 局外接入战斗增益
     public void AddTemporaryBattleModifier(TemporaryBattleModifierData modifier)
     {
@@ -584,39 +657,15 @@ public class Datas : MonoBehaviour
         return m_hasBattleModifierSnapshot ? m_battleModifierSnapshot : activeBattleModifiers;
     }
     #endregion
-    public void SetSelectedStarterBranchId(string branchId)
+    #region 模块系统
+    public IReadOnlyList<GridModuleDefinition> GetOwnedModuleDefinitions()
     {
-        selectedStarterBranchId = branchId;
-    }
-#region 模块系统
-    public bool HasModuleState()
-    {
-        return hasModuleState || ownedModules.Count > 0 || placedModules.Count > 0;
-    }
-
-    public IReadOnlyList<GridModuleDefinition> GetOwnedModules()
-    {
-        EnsureOwnedModulesRuntimePrepared();
         return ownedModules;
     }
 
-    public void GetPlacedModuleData(List<PlacedModuleData> results)
+    public IReadOnlyList<PlacedModuleData> GetPlacedModuleEntries()
     {
-        EnsureOwnedModulesRuntimePrepared();
-
-        if (results == null)
-        {
-            return;
-        }
-
-        results.Clear();
-        for (int i = 0; i < placedModules.Count; i++)
-        {
-            if (placedModules[i] != null)
-            {
-                results.Add(new PlacedModuleData(placedModules[i].ModuleIndex, placedModules[i].AnchorCell));
-            }
-        }
+        return placedModules;
     }
 
     public GridModuleDefinition AddOwnedModule(GridModuleDefinition module)
@@ -626,114 +675,44 @@ public class Datas : MonoBehaviour
             return null;
         }
 
-        EnsureOwnedModulesRuntimePrepared();
-
         GridModuleDefinition runtimeModule = module.Clone();
-        runtimeModule.RemoveFromBoard();
         ownedModules.Add(runtimeModule);
         hasModuleState = true;
         ModuleStateChanged?.Invoke();
         return runtimeModule;
     }
 
-    public bool TryPlaceOwnedModule(GridModuleDefinition module, Vector2Int anchorCell)
+    public void AddPlacedModuleEntry(PlacedModuleData placedModule)
     {
-        EnsureOwnedModulesRuntimePrepared();
-
-        int moduleIndex = ownedModules.IndexOf(module);
-        if (moduleIndex < 0 || module == null || module.IsLoaded)
-        {
-            return false;
-        }
-
-        for (int i = placedModules.Count - 1; i >= 0; i--)
-        {
-            if (placedModules[i] != null && placedModules[i].ModuleIndex == moduleIndex)
-            {
-                placedModules.RemoveAt(i);
-            }
-        }
-
-        placedModules.Add(new PlacedModuleData(moduleIndex, anchorCell));
-        module.ApplyToBoard();
-        hasModuleState = true;
-        ModuleStateChanged?.Invoke();
-        return true;
-    }
-
-    public bool TryPickupOwnedModule(GridModuleDefinition module)
-    {
-        EnsureOwnedModulesRuntimePrepared();
-
-        int moduleIndex = ownedModules.IndexOf(module);
-        if (moduleIndex < 0 || module == null)
-        {
-            return false;
-        }
-
-        bool removedPlacement = false;
-        for (int i = placedModules.Count - 1; i >= 0; i--)
-        {
-            if (placedModules[i] != null && placedModules[i].ModuleIndex == moduleIndex)
-            {
-                placedModules.RemoveAt(i);
-                removedPlacement = true;
-            }
-        }
-
-        if (!removedPlacement && !module.IsLoaded)
-        {
-            return false;
-        }
-
-        module.RemoveFromBoard();
-        hasModuleState = HasModuleState();
-        ModuleStateChanged?.Invoke();
-        return true;
-    }
-
-    private void EnsureOwnedModulesRuntimePrepared()
-    {
-        if (m_ownedModulesRuntimePrepared)
+        if (placedModule == null)
         {
             return;
         }
 
-        m_ownedModulesRuntimePrepared = true;
-
-        for (int i = 0; i < ownedModules.Count; i++)
-        {
-            if (ownedModules[i] != null)
-            {
-                GridModuleDefinition runtimeModule = ownedModules[i].Clone();
-                runtimeModule.RemoveFromBoard();
-                ownedModules[i] = runtimeModule;
-            }
-        }
-
-        for (int i = 0; i < placedModules.Count; i++)
-        {
-            if (placedModules[i] == null)
-            {
-                continue;
-            }
-
-            int moduleIndex = placedModules[i].ModuleIndex;
-            if (moduleIndex < 0 || moduleIndex >= ownedModules.Count)
-            {
-                continue;
-            }
-
-            GridModuleDefinition module = ownedModules[moduleIndex];
-            if (module != null && !module.IsLoaded)
-            {
-                module.ApplyToBoard();
-            }
-        }
-
-        hasModuleState = HasModuleState();
+        placedModules.Add(placedModule);
     }
-#endregion
+
+    public bool RemovePlacedModuleEntryAt(int entryIndex)
+    {
+        if (entryIndex < 0 || entryIndex >= placedModules.Count)
+        {
+            return false;
+        }
+
+        placedModules.RemoveAt(entryIndex);
+        return true;
+    }
+
+    public void SetHasModuleState(bool value)
+    {
+        hasModuleState = value;
+    }
+
+    public void NotifyModuleStateChanged()
+    {
+        ModuleStateChanged?.Invoke();
+    }
+    #endregion
     private void InitializeCharacterLookup()
     {
         if (m_characterLookupBuilt)
