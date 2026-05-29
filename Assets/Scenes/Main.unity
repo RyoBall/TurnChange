@@ -489,6 +489,7 @@ RectTransform:
   m_Children:
   - {fileID: 851601207}
   - {fileID: 505091964}
+  - {fileID: 1129329940}
   - {fileID: 2012730109}
   - {fileID: 366367846}
   - {fileID: 710542394}
@@ -749,6 +750,262 @@ MonoBehaviour:
   snapMaxSpeed: 5000
   enableScrollWheelSnap: 1
   scrollWheelThreshold: 0.1
+--- !u!1 &154836183
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 154836184}
+  - component: {fileID: 154836187}
+  - component: {fileID: 154836186}
+  - component: {fileID: 154836185}
+  m_Layer: 5
+  m_Name: Button
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &154836184
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 154836183}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 159680254}
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -366, y: 140}
+  m_SizeDelta: {x: 160, y: 80}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &154836185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 154836183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 154836186}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &154836186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 154836183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &154836187
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 154836183}
+  m_CullTransparentMesh: 1
+--- !u!1 &159680253
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 159680254}
+  - component: {fileID: 159680256}
+  - component: {fileID: 159680255}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &159680254
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159680253}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 154836184}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &159680255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159680253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u9009\u62E9"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4281479730
+  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &159680256
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159680253}
+  m_CullTransparentMesh: 1
 --- !u!1 &168821236
 GameObject:
   m_ObjectHideFlags: 0
@@ -1037,6 +1294,81 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &192466809
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 192466810}
+  - component: {fileID: 192466812}
+  - component: {fileID: 192466811}
+  m_Layer: 5
+  m_Name: BackGround
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &192466810
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192466809}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1129329940}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &192466811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192466809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &192466812
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 192466809}
+  m_CullTransparentMesh: 1
 --- !u!1 &204635037
 GameObject:
   m_ObjectHideFlags: 0
@@ -1767,7 +2099,127 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
+--- !u!1 &288939362
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 288939363}
+  - component: {fileID: 288939366}
+  - component: {fileID: 288939365}
+  - component: {fileID: 288939364}
+  m_Layer: 5
+  m_Name: Button (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &288939363
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288939362}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2123798276}
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -366, y: -160}
+  m_SizeDelta: {x: 160, y: 80}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &288939364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288939362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 288939365}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &288939365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288939362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &288939366
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288939362}
+  m_CullTransparentMesh: 1
 --- !u!1 &301964692
 GameObject:
   m_ObjectHideFlags: 0
@@ -2397,6 +2849,83 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 436887565}
   m_CullTransparentMesh: 1
+--- !u!1 &439370930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 439370931}
+  - component: {fileID: 439370933}
+  - component: {fileID: 439370932}
+  m_Layer: 5
+  m_Name: "\u4E8B\u4EF6"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &439370931
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439370930}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1202824376}
+  - {fileID: 1781490786}
+  m_Father: {fileID: 1129329940}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 455, y: 0}
+  m_SizeDelta: {x: -910, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &439370932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439370930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &439370933
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439370930}
+  m_CullTransparentMesh: 1
 --- !u!1 &500399023
 GameObject:
   m_ObjectHideFlags: 0
@@ -2821,6 +3350,141 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 521263175}
+  m_CullTransparentMesh: 1
+--- !u!1 &528069990
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 528069991}
+  - component: {fileID: 528069993}
+  - component: {fileID: 528069992}
+  m_Layer: 5
+  m_Name: "\u9009\u9879\u6587\u672C (2)"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &528069991
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528069990}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 95, y: -160}
+  m_SizeDelta: {x: 500, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &528069992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528069990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 20
+  m_fontSizeBase: 20
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &528069993
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528069990}
   m_CullTransparentMesh: 1
 --- !u!1 &533989793
 GameObject:
@@ -3522,6 +4186,141 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 582400213}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &608635236
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 608635237}
+  - component: {fileID: 608635239}
+  - component: {fileID: 608635238}
+  m_Layer: 5
+  m_Name: "\u9009\u9879\u6587\u672C"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &608635237
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608635236}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 95, y: 140}
+  m_SizeDelta: {x: 500, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &608635238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608635236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 20
+  m_fontSizeBase: 20
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &608635239
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608635236}
+  m_CullTransparentMesh: 1
 --- !u!1 &627285806
 GameObject:
   m_ObjectHideFlags: 0
@@ -3691,6 +4490,50 @@ RectTransform:
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 100, y: 100}
   m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &685187532
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 685187533}
+  m_Layer: 5
+  m_Name: "\u9009\u9879"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &685187533
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685187532}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1764666023}
+  - {fileID: 1493197183}
+  - {fileID: 1984381008}
+  - {fileID: 154836184}
+  - {fileID: 1101110474}
+  - {fileID: 288939363}
+  - {fileID: 608635237}
+  - {fileID: 1788914728}
+  - {fileID: 528069991}
+  m_Father: {fileID: 1129329940}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 455, y: -270}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &692857682
 GameObject:
@@ -4265,7 +5108,6 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
 --- !u!1 &784171835
 GameObject:
   m_ObjectHideFlags: 0
@@ -5419,7 +6261,7 @@ GameObject:
   - component: {fileID: 964294950}
   - component: {fileID: 964294951}
   m_Layer: 0
-  m_Name: "\u89D2\u8272\u6570\u636E"
+  m_Name: "\u603B\u6570\u636E"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5490,8 +6332,1126 @@ MonoBehaviour:
       characterType: 2
     accentColor: {r: 1, g: 1, b: 1, a: 1}
   selectedStarterBranchId: 
-  allLevels: []
+  levelFloors:
+  - floorId: 1
+    levels:
+    - levelId: 1
+      levelName: "\u5173\u53611"
+      buttonType: 1
+      eventData: {fileID: 11400000, guid: 649f732cc1f72614fa9983c0709ae819, type: 2}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 25
+      rewardGold: 25
+    - levelId: 2
+      levelName: "\u5173\u53612"
+      buttonType: 0
+      eventData: {fileID: 0}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 25
+      rewardGold: 25
+    - levelId: 3
+      levelName: "\u4E8B\u4EF6"
+      buttonType: 1
+      eventData: {fileID: 0}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 0
+      rewardGold: 0
+    - levelId: 4
+      levelName: "\u5173\u53611"
+      buttonType: 0
+      eventData: {fileID: 0}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 25
+      rewardGold: 25
+    - levelId: 5
+      levelName: "\u5173\u53611"
+      buttonType: 0
+      eventData: {fileID: 0}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 25
+      rewardGold: 25
+    - levelId: 6
+      levelName: "\u5173\u53611"
+      buttonType: 0
+      eventData: {fileID: 0}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 25
+      rewardGold: 25
+    - levelId: 7
+      levelName: "\u5173\u53611"
+      buttonType: 0
+      eventData: {fileID: 0}
+      enemyWaves:
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      - enemies:
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
+          level: 1
+          isChessSeriesEnemy: 0
+          chessBossData:
+            enabled: 0
+            bossGroupId: 
+            unitRole: 0
+            startHiddenUntilPhaseTwo: 0
+            summonPawnData: {fileID: 0}
+            summonPawnLevel: 0
+            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
+            pawnAdvanceDuration: 0
+            pawnPromotionSteps: 0
+            summonedPawnHealRatio: 0
+            immuneToDaze: 0
+            immuneToTaunt: 0
+      rewardExperience: 25
+      rewardGold: 25
+  - floorId: 
+    levels: []
+  - floorId: 
+    levels: []
+  currentFloorIndex: 0
   completedLevelIds: []
+  activeBattleModifiers: []
   teamLevel: 1
   currentExp: 0
   baseExpToNextLevel: 100
@@ -5499,23 +7459,12 @@ MonoBehaviour:
   gold: 0
   hasModuleState: 1
   ownedModules:
-  - moduleName: L
-    color: {r: 0, g: 0, b: 0, a: 1}
-    cells:
-    - {x: 0, y: 0}
-    - {x: 0, y: 1}
-    - {x: 1, y: 0}
-  - moduleName: T
-    color: {r: 0, g: 0, b: 0, a: 1}
-    cells:
-    - {x: 0, y: 0}
-    - {x: 1, y: 0}
-    - {x: 2, y: 0}
-    - {x: 1, y: 1}
-    - {x: 1, y: 2}
+  - {fileID: 11400000, guid: bc8b204f293cb134b8b8e22d86f6ca01, type: 2}
+  - {fileID: 11400000, guid: bc8b204f293cb134b8b8e22d86f6ca01, type: 2}
   placedModules:
   - moduleIndex: 2
     anchorCell: {x: 1, y: 0}
+  backpackWidth: 4
 --- !u!1 &975851273
 GameObject:
   m_ObjectHideFlags: 0
@@ -5572,20 +7521,12 @@ MonoBehaviour:
   - {fileID: 692857683}
   - {fileID: 1613582794}
   productPool:
-  - module:
-      moduleName: 1
-      color: {r: 0, g: 0, b: 0, a: 1}
-      cells:
-      - {x: 0, y: 0}
-      - {x: 1, y: 0}
-      - {x: 0, y: 1}
-      - {x: 0, y: 2}
+  - module: {fileID: 11400000, guid: bc8b204f293cb134b8b8e22d86f6ca01, type: 2}
   shopItemPrefab: {fileID: 8992528826771473238, guid: e7b02e701a58a9940989358131d0b200,
     type: 3}
-  initializationMode: 1
   itemsPerRefresh: 3
   autoInitializeOnAwake: 1
-  pricePerCell: 5
+  backpackController: {fileID: 0}
   spendCurrencyOnPurchase: 1
   markItemSoldOutOnPurchase: 1
   previewMaxCellSize: {x: 80, y: 80}
@@ -6787,6 +8728,127 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1101110473
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1101110474}
+  - component: {fileID: 1101110477}
+  - component: {fileID: 1101110476}
+  - component: {fileID: 1101110475}
+  m_Layer: 5
+  m_Name: Button (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1101110474
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101110473}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1571926579}
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -366, y: -10}
+  m_SizeDelta: {x: 160, y: 80}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1101110475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101110473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1101110476}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1101110476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101110473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1101110477
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101110473}
+  m_CullTransparentMesh: 1
 --- !u!1 &1102473257
 GameObject:
   m_ObjectHideFlags: 0
@@ -6864,6 +8926,53 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1102473257}
+  m_CullTransparentMesh: 1
+--- !u!1 &1129329939
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1129329940}
+  - component: {fileID: 1129329941}
+  m_Layer: 5
+  m_Name: "\u4E8B\u4EF6"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1129329940
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1129329939}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 192466810}
+  - {fileID: 439370931}
+  - {fileID: 685187533}
+  m_Father: {fileID: 50556646}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1129329941
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1129329939}
   m_CullTransparentMesh: 1
 --- !u!1 &1147383441
 GameObject:
@@ -7069,6 +9178,141 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1202824375
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1202824376}
+  - component: {fileID: 1202824378}
+  - component: {fileID: 1202824377}
+  m_Layer: 5
+  m_Name: "\u6807\u9898"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1202824376
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202824375}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 439370931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -90}
+  m_SizeDelta: {x: 200, y: 50}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &1202824377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202824375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1202824378
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202824375}
+  m_CullTransparentMesh: 1
 --- !u!1 &1220007937
 GameObject:
   m_ObjectHideFlags: 0
@@ -7183,13 +9427,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5aa74b13327f644395fe0a1bdc8cfea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  phase1Color: {r: 0, g: 0, b: 0, a: 1}
-  phase2Color: {r: 0, g: 0, b: 0, a: 0}
   fadeToPhase1Duration: 0.5
-  holdPhase1Duration: 0
-  transitionPhase1To2Duration: 0.6
   fadeOutDuration: 0.25
-  createOverlayIfMissing: 1
   overlayCanvas: {fileID: 2098937607}
   fadeInPlayer: {fileID: 168821237}
   fadeOutPlayer: {fileID: 209511337}
@@ -8707,6 +10946,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1491508453}
   m_CullTransparentMesh: 1
+--- !u!1 &1493197182
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1493197183}
+  - component: {fileID: 1493197185}
+  - component: {fileID: 1493197184}
+  m_Layer: 5
+  m_Name: "\u6587\u5B57\u80CC\u666F"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1493197183
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493197182}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 94.99998, y: -4.9999886}
+  m_SizeDelta: {x: 450, y: 40}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1493197184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493197182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1493197185
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493197182}
+  m_CullTransparentMesh: 1
 --- !u!1 &1521233877
 GameObject:
   m_ObjectHideFlags: 0
@@ -8832,7 +11146,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0a54b8e215c47d48a918d592c42d81e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  contentRoot: {fileID: 0}
+  contentRoot: {fileID: 1547351702}
+  moduleItemPrefab: {fileID: 7756721229839752346, guid: 625808419f6b36d4e933701d2280cb26,
+    type: 3}
   backpackSize: {x: 340, y: 700}
   modulesPerRow: 2
   modulesPerColumn: 4
@@ -8974,6 +11290,141 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1563592391}
+  m_CullTransparentMesh: 1
+--- !u!1 &1571926578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1571926579}
+  - component: {fileID: 1571926581}
+  - component: {fileID: 1571926580}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1571926579
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571926578}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1101110474}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1571926580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571926578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u9009\u62E9"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4281479730
+  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1571926581
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571926578}
   m_CullTransparentMesh: 1
 --- !u!1 &1575557228
 GameObject:
@@ -10040,7 +12491,6 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
 --- !u!1 &1699391189
 GameObject:
   m_ObjectHideFlags: 0
@@ -10211,7 +12661,6 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
 --- !u!1 &1727432550
 GameObject:
   m_ObjectHideFlags: 0
@@ -10652,7 +13101,81 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
+--- !u!1 &1764666022
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1764666023}
+  - component: {fileID: 1764666025}
+  - component: {fileID: 1764666024}
+  m_Layer: 5
+  m_Name: "\u6587\u5B57\u80CC\u666F"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1764666023
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764666022}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 94.99998, y: -155}
+  m_SizeDelta: {x: 450, y: 40}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1764666024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764666022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1764666025
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764666022}
+  m_CullTransparentMesh: 1
 --- !u!1 &1776988290
 GameObject:
   m_ObjectHideFlags: 0
@@ -10799,6 +13322,276 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1779626708}
+  m_CullTransparentMesh: 1
+--- !u!1 &1781490785
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1781490786}
+  - component: {fileID: 1781490788}
+  - component: {fileID: 1781490787}
+  m_Layer: 5
+  m_Name: "\u63CF\u8FF0"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1781490786
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781490785}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 439370931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -200}
+  m_SizeDelta: {x: 800, y: 350}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &1781490787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781490785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 28
+  m_fontSizeBase: 28
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1781490788
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781490785}
+  m_CullTransparentMesh: 1
+--- !u!1 &1788914727
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1788914728}
+  - component: {fileID: 1788914730}
+  - component: {fileID: 1788914729}
+  m_Layer: 5
+  m_Name: "\u9009\u9879\u6587\u672C (1)"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1788914728
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788914727}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 95, y: -10}
+  m_SizeDelta: {x: 500, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1788914729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788914727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 20
+  m_fontSizeBase: 20
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1788914730
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788914727}
   m_CullTransparentMesh: 1
 --- !u!1 &1794227957
 GameObject:
@@ -11182,6 +13975,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1809618640}
   m_CullTransparentMesh: 1
+--- !u!1 &1830951429
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1830951431}
+  - component: {fileID: 1830951430}
+  m_Layer: 0
+  m_Name: "\u4E8B\u4EF6\u754C\u9762\u7BA1\u7406\u5668"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1830951430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1830951429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fd71d6caf7682f43b36d9eb5a19e118, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelRoot: {fileID: 1129329939}
+  levelListLoader: {fileID: 1978627445}
+  titleText: {fileID: 1202824377}
+  descriptionText: {fileID: 1781490787}
+  optionButtons:
+  - {fileID: 154836185}
+  - {fileID: 1101110475}
+  - {fileID: 288939364}
+  optionTexts:
+  - {fileID: 608635238}
+  - {fileID: 1788914729}
+  - {fileID: 528069992}
+--- !u!4 &1830951431
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1830951429}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1841733632
 GameObject:
   m_ObjectHideFlags: 0
@@ -11982,67 +14831,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b4e128aa2653f4469e489d1a522299d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levels:
-  - levelId: 1
-    levelName: "\u5173\u53611"
-    enemyWaves:
-    - waveId: 
-      enemies:
-      - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-        level: 0
-        isChessSeriesEnemy: 0
-        chessBossData:
-          enabled: 0
-          bossGroupId: 
-          unitRole: 0
-          startHiddenUntilPhaseTwo: 0
-          summonPawnData: {fileID: 0}
-          summonPawnLevel: 0
-          pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-          pawnAdvanceDuration: 0
-          pawnPromotionSteps: 0
-          summonedPawnHealRatio: 0
-          immuneToDaze: 0
-          immuneToTaunt: 0
-    - waveId: 
-      enemies:
-      - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-        level: 0
-        isChessSeriesEnemy: 0
-        chessBossData:
-          enabled: 0
-          bossGroupId: 
-          unitRole: 0
-          startHiddenUntilPhaseTwo: 0
-          summonPawnData: {fileID: 0}
-          summonPawnLevel: 0
-          pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-          pawnAdvanceDuration: 0
-          pawnPromotionSteps: 0
-          summonedPawnHealRatio: 0
-          immuneToDaze: 0
-          immuneToTaunt: 0
-    rewardExperience: 10
-    rewardGold: 10
-  - levelId: 2
-    levelName: "\u5173\u53612"
-    enemyWaves: []
-    rewardExperience: 0
-    rewardGold: 0
-  - levelId: 3
-    levelName: "\u5173\u53613"
-    enemyWaves: []
-    rewardExperience: 0
-    rewardGold: 0
-  - levelId: 4
-    levelName: "Boss\u5173\u53611"
-    enemyWaves: []
-    rewardExperience: 0
-    rewardGold: 0
+  levelFloors: []
   itemsRoot: {fileID: 1147383442}
   carousel: {fileID: 140247126}
   populateOnStart: 1
   disableExtraItems: 1
+  initializeDatasFromLocalConfig: 1
 --- !u!4 &1978627446
 Transform:
   m_ObjectHideFlags: 0
@@ -12058,6 +14852,81 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1984381007
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1984381008}
+  - component: {fileID: 1984381010}
+  - component: {fileID: 1984381009}
+  m_Layer: 5
+  m_Name: "\u6587\u5B57\u80CC\u666F"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1984381008
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984381007}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685187533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 94.99998, y: 145}
+  m_SizeDelta: {x: 450, y: 40}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1984381009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984381007}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1984381010
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984381007}
+  m_CullTransparentMesh: 1
 --- !u!1001 &1987809996
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13343,6 +16212,141 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &2123798275
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2123798276}
+  - component: {fileID: 2123798278}
+  - component: {fileID: 2123798277}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2123798276
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2123798275}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 288939363}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2123798277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2123798275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\u9009\u62E9"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 64b15a035c99e524e8258348c476ed00, type: 2}
+  m_sharedMaterial: {fileID: -5416829249836740390, guid: 64b15a035c99e524e8258348c476ed00,
+    type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4281479730
+  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &2123798278
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2123798275}
+  m_CullTransparentMesh: 1
 --- !u!1 &2125595178
 GameObject:
   m_ObjectHideFlags: 0
@@ -13586,7 +16590,6 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
 --- !u!1 &2139047893
 GameObject:
   m_ObjectHideFlags: 0
@@ -13836,7 +16839,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -13998,3 +17001,4 @@ SceneRoots:
   - {fileID: 1978627446}
   - {fileID: 964294950}
   - {fileID: 1801067787}
+  - {fileID: 1830951431}

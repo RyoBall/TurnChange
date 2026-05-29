@@ -18,6 +18,7 @@ public class GridModuleDefinition : ScriptableObject
     public float baseExtraData2;
     public float baseExtraData3;
     public float baseExtraData4;
+    [SerializeField]int privePerCell = 5;
     public List<Vector2Int> cells = new List<Vector2Int>
     {
         Vector2Int.zero
@@ -51,14 +52,10 @@ public class GridModuleDefinition : ScriptableObject
     {
         m_behavior = null;
     }
-
-    public static GridModuleDefinition CreateRuntimeInstance()
+    public int GetPricePerCell()
     {
-        GridModuleDefinition instance = CreateInstance<GridModuleDefinition>();
-        instance.hideFlags = HideFlags.HideAndDontSave;
-        return instance;
+        return Mathf.Max(0, privePerCell);
     }
-
     public GridModuleDefinition Clone()
     {
         GridModuleDefinition clone = Instantiate(this);

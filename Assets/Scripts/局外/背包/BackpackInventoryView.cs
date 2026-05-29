@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class BackpackInventoryView : MonoBehaviour//背包列表
 {
     [SerializeField] private RectTransform contentRoot;
+    [SerializeField] private GameObject moduleItemPrefab;
     [SerializeField] private Vector2 backpackSize = new Vector2(480f, 360f);
     [SerializeField] private int modulesPerRow = 3;
     [SerializeField] private int modulesPerColumn = 3;
@@ -30,7 +31,7 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
         EnsureLayout();
     }
 
-    public void Rebuild(IReadOnlyList<GridModuleDefinition> modules, GridModuleDefinition selectedModule, HashSet<GridModuleDefinition> loadedModules)
+    public void Rebuild(IReadOnlyList<GridModuleDefinition> modules, GridModuleDefinition selectedModule)
     {
         EnsureLayout();
 
@@ -57,17 +58,28 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
                 continue;
             }
 
-            GameObject itemObject = new GameObject("ModuleItem_" + i, typeof(RectTransform), typeof(LayoutElement), typeof(BackpackModuleItemUI));
-            itemObject.transform.SetParent(contentRoot, false);
+            if (moduleItemPrefab == null)
+            {
+                Debug.LogError("BackpackInventoryView is missing moduleItemPrefab.", this);
+                return;
+            }
 
-            LayoutElement layoutElement = itemObject.GetComponent<LayoutElement>();
+            GameObject itemObject = Instantiate(moduleItemPrefab, contentRoot);
+            itemObject.name = "ModuleItem_" + i;
+            BackpackModuleItemUI item = itemObject.GetComponent<BackpackModuleItemUI>();
+
+            LayoutElement layoutElement = item.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = item.gameObject.AddComponent<LayoutElement>();
+            }
+
             layoutElement.preferredWidth = itemSize.x;
             layoutElement.preferredHeight = itemSize.y;
             layoutElement.minWidth = itemSize.x;
             layoutElement.minHeight = itemSize.y;
 
-            BackpackModuleItemUI item = itemObject.GetComponent<BackpackModuleItemUI>();
-            bool isLoaded = loadedModules != null && loadedModules.Contains(module);
+            bool isLoaded = module.IsLoaded;
             item.Bind(module, module == selectedModule, isLoaded, GetPreviewCellSize(module), HandleModuleClicked);
             m_items.Add(item);
         }

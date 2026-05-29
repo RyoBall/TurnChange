@@ -209,7 +209,7 @@ public class CharacterManager : MonoBehaviour
 
 		newCharacter.standPosition = targetStandPosition;
 		//执行退场动画
-		if(TurnManager.Instance != null)
+		if (TurnManager.Instance != null)
 		{
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
 		}
@@ -236,6 +236,7 @@ public class CharacterManager : MonoBehaviour
 		}
 
 		Debug.Log($"[CharacterManager] 已将场上角色 {oldCharacter.name} 替换为 {newCharacter.name}");
+		BattleRuntimeEvents.RaisePlayerCharacterSwapped();
 		OnFieldCharacterSwapped?.Invoke(oldCharacter, newCharacter);
 		yield break;
 	}

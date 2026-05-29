@@ -526,6 +526,8 @@ public class Character : UnitCombatant
         defense = levelData.defense;
         critRate = levelData.critRate;
         critDamage = levelData.critDamage;
+        //耦合度有点高了
+        speed = Mathf.Max(1, Mathf.RoundToInt(levelData.speed * (Datas.Instance != null ? Datas.Instance.GetPlayerSpeedMultiplier() : 1f)));
         K = levelData.K;
     }
 }

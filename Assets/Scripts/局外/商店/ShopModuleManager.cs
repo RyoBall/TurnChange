@@ -35,12 +35,11 @@ public class ShopModuleManager : MonoBehaviour
     [Header("商品池")]
     [SerializeField] private List<ShopProductDefinition> productPool = new List<ShopProductDefinition>();
     [SerializeField] private GameObject shopItemPrefab;
-    [SerializeField] private ShopInitializationMode initializationMode = ShopInitializationMode.RandomUnique;
     [SerializeField] private int itemsPerRefresh = 3;
     [SerializeField] private bool autoInitializeOnAwake = true;
 
     [Header("购买配置")]
-    [SerializeField] private int pricePerCell = 5;
+    [SerializeField] private ModulePlacementController backpackController;
     [SerializeField] private bool spendCurrencyOnPurchase = true;
     [SerializeField] private bool markItemSoldOutOnPurchase = true;
     [SerializeField] private Vector2 previewMaxCellSize = new Vector2(22f, 22f);
@@ -58,6 +57,8 @@ public class ShopModuleManager : MonoBehaviour
     public event Action<GridModuleDefinition, int, int> PurchaseFailed;
     public event Action ShopStateChanged;
 
+    public int CurrentCurrency => GetCurrentCurrency();
+
     private void Awake()
     {
         ClampConfig();
@@ -72,6 +73,22 @@ public class ShopModuleManager : MonoBehaviour
     private void OnDestroy()
     {
         UnbindRefreshButton();
+    }
+
+    public void SetCurrency(int currency)
+    {
+        if (Datas.Instance != null)
+        {
+            int delta = Mathf.Max(0, currency) - Datas.Instance.GetGold();
+            Datas.Instance.ModifyGold(delta);
+        }
+
+        RefreshVisualState();
+    }
+
+    public void SetBackpackController(ModulePlacementController controller)
+    {
+        backpackController = controller;
     }
 
     public void SetSpawnPoints(IReadOnlyList<RectTransform> points)
@@ -180,13 +197,13 @@ public class ShopModuleManager : MonoBehaviour
 
     public bool TryPurchaseItem(int slotIndex)
     {
-        int currentCurrency = Datas.Instance.GetGold();
         ShopRuntimeEntry entry = GetRuntimeEntry(slotIndex);
         if (entry == null || entry.module == null)
         {
             return false;
         }
 
+        int currentCurrency = GetCurrentCurrency();
         if (entry.soldOut || currentCurrency < entry.price)
         {
             PurchaseFailed?.Invoke(entry.module, entry.price, slotIndex);
@@ -195,14 +212,14 @@ public class ShopModuleManager : MonoBehaviour
             return false;
         }
 
-        if (spendCurrencyOnPurchase)
+        if (spendCurrencyOnPurchase && Datas.Instance != null)
         {
-            currentCurrency = Mathf.Max(0, currentCurrency - entry.price);
+            Datas.Instance.ModifyGold(-entry.price);
         }
 
-        if (ModulePlacementController.Instance != null)
+        if (backpackController != null)
         {
-            ModulePlacementController.Instance.AddModuleToInventory(entry.module);
+            backpackController.AddModuleToInventory(entry.module);
         }
 
         if (markItemSoldOutOnPurchase)
@@ -210,7 +227,8 @@ public class ShopModuleManager : MonoBehaviour
             entry.soldOut = true;
         }
 
-        ItemPurchased?.Invoke(entry.module, entry.price, slotIndex);
+        ItemPurchased?.Invoke(entry.module, entry.price, slotIndex);//激活事件
+        Datas.Instance.AddOwnedModule(entry.module);
         SetStatusText("购买成功: " + entry.module.moduleName);
         RefreshVisualState();
         return true;
@@ -218,6 +236,8 @@ public class ShopModuleManager : MonoBehaviour
 
     private void RefreshVisualState()//重新初始化当前商品信息
     {
+        int currentCurrency = GetCurrentCurrency();
+
         for (int i = 0; i < m_runtimeEntries.Count; i++)
         {
             ShopRuntimeEntry entry = m_runtimeEntries[i];
@@ -230,7 +250,7 @@ public class ShopModuleManager : MonoBehaviour
             entry.itemUI.Bind(
                 entry.module,
                 entry.price,
-                Datas.Instance.GetGold() >= entry.price,
+                currentCurrency >= entry.price,
                 entry.soldOut,
                 GetPreviewCellSize(entry.module),
                 delegate
@@ -307,9 +327,10 @@ public class ShopModuleManager : MonoBehaviour
         {
             return 0;
         }
+
         List<Vector2Int> m_priceCellBuffer = new List<Vector2Int>();
         module.GetNormalizedCells(m_priceCellBuffer);
-        return Mathf.Max(0, m_priceCellBuffer.Count) * pricePerCell;
+        return Mathf.Max(0, m_priceCellBuffer.Count) * module.GetPricePerCell();
     }
 
     private void ClearRuntimeEntries()
@@ -327,13 +348,17 @@ public class ShopModuleManager : MonoBehaviour
 
     private void ClampConfig()//只是保证所有参数不会低于最低值
     {
-        pricePerCell = Mathf.Max(0, pricePerCell);
         itemsPerRefresh = Mathf.Max(0, itemsPerRefresh);
         previewMaxCellSize.x = Mathf.Max(1f, previewMaxCellSize.x);
         previewMaxCellSize.y = Mathf.Max(1f, previewMaxCellSize.y);
         previewMinCellSize.x = Mathf.Max(1f, previewMinCellSize.x);
         previewMinCellSize.y = Mathf.Max(1f, previewMinCellSize.y);
         previewScaleMaxDimension = Mathf.Max(1, previewScaleMaxDimension);
+    }
+
+    private int GetCurrentCurrency()
+    {
+        return Datas.Instance != null ? Datas.Instance.GetGold() : 0;
     }
 
     private void SetStatusText(string message)
@@ -350,7 +375,7 @@ public class ShopModuleManager : MonoBehaviour
     {
         if (currencyText != null)
         {
-            currencyText.text = "货币: " + Datas.Instance.GetGold();
+            currencyText.text = "货币: " + GetCurrentCurrency();
         }
     }
 

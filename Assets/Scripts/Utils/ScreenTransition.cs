@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using MoreMountains.Feedbacks;
+using System;
 
 /// <summary>
 /// 屏幕转场（协程）：动画分两部分——先屏幕渐黑，然后颜色过渡到白色并淡出。
@@ -11,18 +12,13 @@ using MoreMountains.Feedbacks;
 public class ScreenTransition : MonoBehaviour
 {
     public static ScreenTransition Instance { get; private set; }
-    [Header("颜色")]
-    [SerializeField] private Color phase1Color = Color.black;
-    [SerializeField] private Color phase2Color = Color.white;
+
 
     [Header("时长（秒）")]
     [SerializeField] private float fadeToPhase1Duration = 0.5f;
-    [SerializeField] private float holdPhase1Duration = 0.0f;
-    [SerializeField] private float transitionPhase1To2Duration = 0.6f;
     [SerializeField] private float fadeOutDuration = 0.25f;
 
     [Header("覆盖层设置")]
-    [SerializeField] private bool createOverlayIfMissing = true;
     [SerializeField, Tooltip("优先使用已指定的 Image，若为空则自动创建全屏 Image")]
     private Coroutine runningCoroutine;
     [SerializeField] private Canvas overlayCanvas;
@@ -51,13 +47,24 @@ public class ScreenTransition : MonoBehaviour
     {
         return FadeOut();
     }
-    public Coroutine FadeIn()
+    public Coroutine Transition(Action action,float duration=0)
+    {
+        return StartCoroutine(TransitionIE(action,duration));
+    }
+    private IEnumerator TransitionIE(Action action,float duration=0)
+    {
+        yield return FadeIn();
+        action?.Invoke();
+        yield return new WaitForSeconds(duration);
+        yield return FadeOut();
+    }
+    private Coroutine FadeIn()
     {
         if (runningCoroutine != null) StopCoroutine(runningCoroutine);
         runningCoroutine = StartCoroutine(FadeInFeedback());
         return runningCoroutine;
     }
-    public Coroutine FadeOut()
+    private Coroutine FadeOut()
     {
         if (runningCoroutine != null) StopCoroutine(runningCoroutine);
         runningCoroutine = StartCoroutine(FadeOutFeedback());

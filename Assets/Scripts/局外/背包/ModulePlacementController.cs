@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
-public class ModulePlacementController : MonoBehaviour
+public class ModulePlacementController : MonoBehaviour//背包
 {
     public static ModulePlacementController Instance { get; private set; }
     [Header("基础引用")]
@@ -21,12 +21,9 @@ public class ModulePlacementController : MonoBehaviour
     [SerializeField] private Color validPlacementColor = new Color(0.35f, 0.95f, 0.45f, 0.72f);
     [SerializeField] private Color invalidPlacementColor = new Color(1f, 0.28f, 0.28f, 0.72f);
 
-    private readonly List<GridModuleDefinition> m_runtimeModules = new List<GridModuleDefinition>();
-    private readonly HashSet<GridModuleDefinition> m_loadedModules = new HashSet<GridModuleDefinition>();
     private readonly List<Vector2Int> m_shapeBuffer = new List<Vector2Int>();
     private readonly List<Image> m_cursorCells = new List<Image>();
-    private readonly List<PlacedModuleData> m_savedPlacementBuffer = new List<PlacedModuleData>();
-    private readonly List<ModulePlacementBoard.PlacedModuleState> m_placedModuleBuffer = new List<ModulePlacementBoard.PlacedModuleState>();
+    private readonly List<PlacedModuleData> m_placedDataBuffer = new List<PlacedModuleData>();
 
     private GridModuleDefinition m_selectedModule;
     private RectTransform m_cursorRoot;
@@ -35,7 +32,7 @@ public class ModulePlacementController : MonoBehaviour
     private Vector2 m_currentPreviewDrawSize = Vector2.one;
     private int m_selectionChangedFrame = -1;
 
-    public int ModuleCount => m_runtimeModules.Count;
+    public int ModuleCount => Datas.Instance != null ? Datas.Instance.GetOwnedModules().Count : 0;
 
     private void Awake()
     {
@@ -56,14 +53,15 @@ public class ModulePlacementController : MonoBehaviour
 
         if (placementBoard != null)
         {
-            placementBoard.InitializeBoard();
+            placementBoard.BuildBoard();
         }
+
+        SubscribeToDataSource();
         EnsureCursorRoot();
     }
 
     private void Start()
     {
-        BuildRuntimeInventory();
         RestorePlacedModulesFromData();
         RefreshViews();
         SetSelection(null);
@@ -76,15 +74,12 @@ public class ModulePlacementController : MonoBehaviour
             inventoryView.ModuleClicked -= HandleModuleClicked;
         }
 
-        if (placementBoard != null)
-        {
-        }
+        UnsubscribeFromDataSource();
     }
 
     private void Update()
     {
         UpdateHoveredBoardCell();
-
         if (m_selectedModule != null)
         {
             UpdateCursorPreviewPosition();
@@ -103,7 +98,7 @@ public class ModulePlacementController : MonoBehaviour
 
     private void HandleModuleClicked(GridModuleDefinition module)
     {
-        if (module == null || m_loadedModules.Contains(module))
+        if (module == null || module.IsLoaded)
         {
             return;
         }
@@ -124,12 +119,24 @@ public class ModulePlacementController : MonoBehaviour
             return;
         }
 
+        Datas datas = Datas.Instance;
+        if (datas == null)
+        {
+            Debug.LogWarning("[ModulePlacementController] Datas.Instance 为空，无法修改模块状态。", this);
+            return;
+        }
+
         if (m_selectedModule == null)
         {
             if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
             {
-                m_loadedModules.Remove(pickedModule);
-                SyncModuleStateToData();
+                if (!datas.TryPickupOwnedModule(pickedModule))
+                {
+                    Debug.LogWarning("[ModulePlacementController] 从 Datas 取回模块失败，已按数据源重建网格。", this);
+                    RestorePlacedModulesFromData();
+                    RefreshViews();
+                    return;
+                }
 
                 SetSelection(pickedModule);
                 if (selectionText != null)
@@ -151,10 +158,14 @@ public class ModulePlacementController : MonoBehaviour
             return;
         }
 
-        m_loadedModules.Add(m_selectedModule);
-        SyncModuleStateToData();
+        if (!datas.TryPlaceOwnedModule(m_selectedModule, cell))
+        {
+            placementBoard.TryPickupModuleAt(cell, out _);
+            Debug.LogWarning("[ModulePlacementController] 向 Datas 写入放置结果失败，已回滚本次放置。", this);
+            return;
+        }
+
         SetSelection(null);
-        RefreshViews();
 
         if (selectionText != null)
         {
@@ -184,7 +195,7 @@ public class ModulePlacementController : MonoBehaviour
             : "已选中：" + m_selectedModule.moduleName + "，点击网格尝试放置";
     }
 
-    private void UpdateHoveredBoardCell()
+    private void UpdateHoveredBoardCell()//更新鼠标悬停的网格单元格
     {
         m_hoveredBoardCell = null;
 
@@ -204,43 +215,27 @@ public class ModulePlacementController : MonoBehaviour
     {
         if (inventoryView != null)
         {
-            inventoryView.Rebuild(m_runtimeModules, m_selectedModule, m_loadedModules);
+            inventoryView.Rebuild(Datas.Instance != null ? Datas.Instance.GetOwnedModules() : null, m_selectedModule);
         }
-    }
-
-    private void BuildRuntimeInventory()
-    {
-        m_runtimeModules.Clear();
-        m_loadedModules.Clear();
-
-        if (Datas.Instance != null && Datas.Instance.HasModuleState())
-        {
-            List<GridModuleDefinition> savedModules = Datas.Instance.CreateOwnedModuleDefinitions();
-            for (int i = 0; i < savedModules.Count; i++)
-            {
-                if (savedModules[i] != null)
-                {
-                    m_runtimeModules.Add(savedModules[i]);
-                }
-            }
-
-            return;
-        }
-
-        SyncModuleStateToData();
     }
 
     public void AddModuleToInventory(GridModuleDefinition module, bool autoSelect = false)
     {
-        if (module == null)
+        if (module == null || Datas.Instance == null)
         {
             return;
         }
 
-        GridModuleDefinition runtimeModule = module.Clone();
-        m_runtimeModules.Add(runtimeModule);
-        SyncModuleStateToData();
-        RefreshViews();
+        GridModuleDefinition runtimeModule = Datas.Instance.AddOwnedModule(module);
+        if (runtimeModule == null)
+        {
+            return;
+        }
+
+        if (autoSelect)
+        {
+            SetSelection(runtimeModule);
+        }
 
         if (selectionText != null)
         {
@@ -250,30 +245,35 @@ public class ModulePlacementController : MonoBehaviour
 
     private void RestorePlacedModulesFromData()
     {
-        if (placementBoard == null || Datas.Instance == null || !Datas.Instance.HasModuleState())
+        if (placementBoard == null)
         {
             return;
         }
 
         placementBoard.ClearBoard();
-        m_loadedModules.Clear();
-        Datas.Instance.GetPlacedModuleData(m_savedPlacementBuffer);
-
-        for (int i = 0; i < m_savedPlacementBuffer.Count; i++)
+        if (Datas.Instance == null)
         {
-            PlacedModuleData placedModule = m_savedPlacementBuffer[i];
+            return;
+        }
+
+        IReadOnlyList<GridModuleDefinition> ownedModules = Datas.Instance.GetOwnedModules();
+        Datas.Instance.GetPlacedModuleData(m_placedDataBuffer);
+
+        for (int i = 0; i < m_placedDataBuffer.Count; i++)
+        {
+            PlacedModuleData placedModule = m_placedDataBuffer[i];
             if (placedModule == null)
             {
                 continue;
             }
 
             int moduleIndex = placedModule.ModuleIndex;
-            if (moduleIndex < 0 || moduleIndex >= m_runtimeModules.Count)
+            if (moduleIndex < 0 || moduleIndex >= ownedModules.Count)
             {
                 continue;
             }
 
-            GridModuleDefinition module = m_runtimeModules[moduleIndex];
+            GridModuleDefinition module = ownedModules[moduleIndex];
             if (module == null)
             {
                 continue;
@@ -281,36 +281,43 @@ public class ModulePlacementController : MonoBehaviour
 
             if (placementBoard.TryPlace(module, placedModule.AnchorCell))
             {
-                m_loadedModules.Add(module);
+                module.ApplyToBoard();
             }
         }
-
-        SyncModuleStateToData();
     }
 
-    private void SyncModuleStateToData()
+    private void SubscribeToDataSource()
     {
         if (Datas.Instance == null)
         {
             return;
         }
 
-        m_savedPlacementBuffer.Clear();
-        if (placementBoard != null)
+        Datas.Instance.ModuleStateChanged -= HandleModuleStateChanged;
+        Datas.Instance.ModuleStateChanged += HandleModuleStateChanged;
+    }
+
+    private void UnsubscribeFromDataSource()
+    {
+        if (Datas.Instance == null)
         {
-            placementBoard.GetPlacedModules(m_placedModuleBuffer);
-            for (int i = 0; i < m_placedModuleBuffer.Count; i++)
-            {
-                ModulePlacementBoard.PlacedModuleState placedModule = m_placedModuleBuffer[i];
-                int moduleIndex = m_runtimeModules.IndexOf(placedModule.module);
-                if (moduleIndex >= 0)
-                {
-                    m_savedPlacementBuffer.Add(new PlacedModuleData(moduleIndex, placedModule.anchorCell));
-                }
-            }
+            return;
         }
 
-        Datas.Instance.SaveModuleState(m_runtimeModules, m_savedPlacementBuffer);
+        Datas.Instance.ModuleStateChanged -= HandleModuleStateChanged;
+    }
+
+    private void HandleModuleStateChanged()
+    {
+        RestorePlacedModulesFromData();
+
+        if (m_selectedModule != null && m_selectedModule.IsLoaded)
+        {
+            m_selectedModule = null;
+        }
+
+        RefreshViews();
+        RefreshCursorPreview();
     }
 
     private void EnsureCursorRoot()
@@ -386,7 +393,7 @@ public class ModulePlacementController : MonoBehaviour
         UpdateCursorPreviewPosition();
     }
 
-    private void UpdateCursorPreviewPosition()
+    private void UpdateCursorPreviewPosition()//更新光标预览位置
     {
         if (targetCanvas == null || m_cursorRoot == null || m_selectedModule == null)
         {
@@ -404,7 +411,7 @@ public class ModulePlacementController : MonoBehaviour
         bool canPlace = false;
         bool isHoveringBoard = false;
 
-        if (m_hoveredBoardCell.HasValue)
+        if (m_hoveredBoardCell.HasValue)//如果鼠标悬停在网格上，渲染网格
         {
             isHoveringBoard = true;
             Vector2Int hoveredCell = m_hoveredBoardCell.Value;
@@ -426,7 +433,7 @@ public class ModulePlacementController : MonoBehaviour
         UpdateCursorPreviewColor(canPlace, m_hoveredBoardCell.HasValue);
     }
 
-    private void ApplyCursorPreviewLayout(bool alignToBoard)
+    private void ApplyCursorPreviewLayout(bool alignToBoard)//应用光标预览布局
     {
         if (m_cursorRoot == null || m_selectedModule == null)
         {
@@ -454,7 +461,7 @@ public class ModulePlacementController : MonoBehaviour
         float rootWidth = Mathf.Max(m_currentPreviewDrawSize.x, (size.x - 1) * m_currentPreviewStep.x + m_currentPreviewDrawSize.x);
         float rootHeight = Mathf.Max(m_currentPreviewDrawSize.y, (size.y - 1) * m_currentPreviewStep.y + m_currentPreviewDrawSize.y);
         m_cursorRoot.sizeDelta = new Vector2(rootWidth, rootHeight);
-
+        //设置每个预览单元格的位置和大小
         for (int i = 0; i < m_cursorCells.Count && i < m_shapeBuffer.Count; i++)
         {
             RectTransform cellRect = m_cursorCells[i].rectTransform;

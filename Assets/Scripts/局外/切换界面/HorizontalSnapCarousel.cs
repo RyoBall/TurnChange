@@ -181,6 +181,7 @@ public class HorizontalSnapCarousel : MonoBehaviour, IBeginDragHandler, IDragHan
             return;
         }
 
+        Debug.Log("OnScrolling");
         float scrollDeltaY = eventData.scrollDelta.y;
         if (Mathf.Abs(scrollDeltaY) < scrollWheelThreshold)
         {

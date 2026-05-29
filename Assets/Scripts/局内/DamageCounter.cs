@@ -47,18 +47,20 @@ public class DamageCounter : MonoBehaviour
             Debug.LogWarning("[DamageCounter] 无效的参数");
             return new UnitCombatant.DamageInfo(0, attacker);
         }
-    //计算系数
+        //计算系数
         EnvironmentManager environmentManager = EnvironmentManager.Instance;
         bool isTrueDamage = IsTrueDamage(attacker, false, ifTrueDamage);
         //根据环境作用修正暴击系数，并判断是否暴击
         float effectiveCritRate = attacker.critRate + (environmentManager != null ? environmentManager.GetCritRateBonus(attacker) : 0f);
         float effectiveCritDamage = attacker.critDamage + (environmentManager != null ? environmentManager.GetCritDamageBonus(attacker) : 0f);
+        //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
+        effectiveCritDamage += attacker is Character && Datas.Instance != null ? Datas.Instance.GetPlayerCritDamageBonus() : 0f;
         isCrit = canCrit && Random.value < Mathf.Clamp01(effectiveCritRate);
         //获取防御系数与随机系数
         float randomFactor = applyRandomVariance ? Random.Range(0.85f, 1.15f) : 1f;
         float defenseFactor = isTrueDamage ? 1f : (defender.K / (defender.K + defender.defense));
-    
-    //计算伤害
+
+        //计算伤害
         //先计算基础伤害
         float raw = (attacker.attack * skillCoef + skillBase) * randomFactor;
         //计算暴击影响
@@ -70,6 +72,8 @@ public class DamageCounter : MonoBehaviour
         raw *= defender.GetIncomingDamageMultiplier(false, isTrueDamage);
         //计算环境增伤影响
         raw *= environmentManager != null ? environmentManager.GetIncomingDamageMultiplier(attacker, defender, false, isTrueDamage) : 1f;
+        //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
+        raw *= attacker is Character && Datas.Instance != null ? Datas.Instance.GetPlayerDirectDamageMultiplier() : 1f;
 
         var damageInfo = new UnitCombatant.DamageInfo(Mathf.Max(0, Mathf.RoundToInt(raw)), attacker);
         if (isTrueDamage)
@@ -95,6 +99,8 @@ public class DamageCounter : MonoBehaviour
         damage *= attacker.GetOutgoingDamageMultiplier(true);
         damage *= defender.GetIncomingDamageMultiplier(true, isTrueDamage);
         damage *= EnvironmentManager.Instance != null ? EnvironmentManager.Instance.GetIncomingDamageMultiplier(attacker, defender, true, isTrueDamage) : 1f;
+        //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
+        damage *= attacker is Character && Datas.Instance != null ? Datas.Instance.GetPlayerDotDamageMultiplier() : 1f;
 
         var damageInfo = new UnitCombatant.DamageInfo(Mathf.RoundToInt(damage), attacker)
             .AsDot()

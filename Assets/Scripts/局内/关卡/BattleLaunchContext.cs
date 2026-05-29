@@ -13,7 +13,6 @@ public class BattleEnemySpawnData
 [Serializable]
 public class BattleEnemyWaveData
 {
-    public string waveId;
     public List<BattleEnemySpawnData> enemies = new List<BattleEnemySpawnData>();
 }
 
@@ -82,7 +81,6 @@ public static class BattleLaunchContext
 
                 var battleWave = new BattleEnemyWaveData
                 {
-                    waveId = sourceWave.waveId,
                     enemies = new List<BattleEnemySpawnData>()
                 };
 

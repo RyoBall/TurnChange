@@ -1,6 +1,5 @@
 ﻿状态名,对应枚举变量字符串,状态介绍,基础倍率,是否是Debuff(填是或否),是否是Dot(填是或否),最大有效层数,持续时间类型(Turn/ActionValue/Special),默认持续回合数,默认持续行动值,额外变量1,注释,额外变量2,注释,额外变量3,注释,额外变量4,注释
 Name,EnumName,Description,BaseMultiplier,IsDebuff,IsDot,MaxStacks,DurationType,DefaultTurns,DefaultActionValue,Extra_Data_1,,Extra_Data_2,,Extra_Data_3,,Extra_Data_4,
-血契,BloodContract,拥有者造成伤害时令施加者回复等于本次伤害20%的生命。,0,否,否,1,ActionValue,1,250,0.2,伤害回血比例,0,预留,0,预留,0,预留
 追惩,PursuitPunish,敌方获得减益时为其施加惩戒标记并插入一次追加回合；处于非自身回合时伤害提高15%。,0.2,否,否,1,Turn,2,100,0.15,回合外增伤,0,预留,0,预留,0,预留
 惩戒标记,PunishMark,由追惩施加的特殊减益标记，用于被追惩追加技选中并在结算后移除。,0,是,否,1,Special,0,100,0,预留,0,预留,0,预留,0,预留
 持续煎熬,PersistentTorment,按层数降低目标输出，并在目标行动时按层数概率施加震慑。,0,是,否,5,ActionValue,1,300,0.05,每层减伤,0.1,每层震慑概率,1,震慑持续回合,0,预留
@@ -32,4 +31,3 @@ Name,EnumName,Description,BaseMultiplier,IsDebuff,IsDot,MaxStacks,DurationType,D
 下次行动增伤,NextActionDamageBoost,使目标下一次行动造成的伤害提高20%，行动结束后移除。,0,否,否,1,Special,1,100,1.2,下次行动输出倍率,0,预留,0,预留,0,预留
 单回合减攻,ActionWeakened,使目标本次行动造成的伤害降低60%，行动结束后移除。,0,是,否,1,Special,1,100,0.4,本次行动输出倍率,0,预留,0,预留,0,预留
 弱化,Weakened,使目标造成伤害时伤害降低至80%，并消耗1层。该效果可叠加。,0,是,否,99,Special,0,100,0.8,每层输出倍率,0,预留,0,预留,0,预留
-惩戒标记,PunishMark,,0,否,否,1,Special,0,100,,,,,,,,

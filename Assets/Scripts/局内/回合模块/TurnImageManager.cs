@@ -40,6 +40,7 @@ public class TurnImageManager : MonoBehaviour
 
     private List<TurnImage> removedImages = new List<TurnImage>();
     private List<TurnImage> addedImages = new List<TurnImage>();
+    private bool haveReorderOrder = false;
 
     /// 单例初始化：如果已存在另一个实例，则销毁当前对象。
     private void Awake()
@@ -57,12 +58,6 @@ public class TurnImageManager : MonoBehaviour
     /// 清理单例引用，避免场景切换后遗留引用。
     private void OnDestroy()
     {
-        if (autoReorderCoroutine != null)
-        {
-            StopCoroutine(autoReorderCoroutine);
-            autoReorderCoroutine = null;
-        }
-
         if (Instance == this)
         {
             Instance = null;
@@ -124,9 +119,9 @@ public class TurnImageManager : MonoBehaviour
     {
         StopCurrentReorder();
         reorderCoroutine = StartCoroutine(ReorderCoroutine());
+        haveReorderOrder = true;
         return reorderCoroutine;
     }
-
     private void StopCurrentReorder()
     {
         if (reorderCoroutine != null)
@@ -144,12 +139,14 @@ public class TurnImageManager : MonoBehaviour
 
     private IEnumerator ReorderCoroutine()
     {
+        yield return null;
         SyncOrderFromTurnManager(out var naddedImages, out var nremovedImages);
         addedImages.AddRange(naddedImages);
         removedImages.AddRange(nremovedImages);
 
         var targetScales = BuildTargetScales();
         var targetPositions = BuildTargetPositions(targetScales);
+        Debug.Log($"targetCounts:{targetPositions.Count}");
 
         if (currentAnimationSequence != null && currentAnimationSequence.IsActive())
         {
@@ -158,44 +155,26 @@ public class TurnImageManager : MonoBehaviour
         }
 
         currentAnimationSequence = DOTween.Sequence();
-        float delay=0;
+        float delay = 0;
 
         if (removedImages.Count > 0)
         {
             currentAnimationSequence.Join(BuildFadeOutSequence(removedImages));
-            delay=.1f;
+            delay = .1f;
         }
 
-        currentAnimationSequence.Insert(delay,BuildReflowSequence(targetPositions, targetScales));
-        delay+=.1f;
+        currentAnimationSequence.Insert(delay, BuildReflowSequence(targetPositions, targetScales));
+        delay += .1f;
 
         if (addedImages.Count > 0)
         {
-            currentAnimationSequence.Insert(delay,BuildFadeInSequence(addedImages, targetPositions, targetScales));
-
+            currentAnimationSequence.Insert(delay, BuildFadeInSequence(addedImages, targetPositions, targetScales));
         }
 
         yield return currentAnimationSequence.WaitForCompletion();
 
-        LogCurrentTurnOrder();
         currentAnimationSequence = null;
         reorderCoroutine = null;
-    }
-
-    private void LogCurrentTurnOrder()
-    {
-        if (TurnManager.Instance == null)
-        {
-            Debug.Log("TurnImageManager: Cannot log turn order because TurnManager.Instance is null.");
-            return;
-        }
-
-        var orderNames = TurnManager.Instance.CurrentTurnOrder
-            .Select(combatant => combatant != null ? combatant.name : "<null>")
-            .ToArray();
-
-        var uniqueTag = System.Guid.NewGuid().ToString("N").Substring(0, 8);
-        Debug.Log($"TurnImageManager: Current turn order after reorder [{uniqueTag}]: {string.Join(", ", orderNames)}");
     }
     #region 动画工具
     // 读取 TurnManager 的回合链表，并把图像链表同步成完全一致的顺序。
@@ -275,15 +254,17 @@ public class TurnImageManager : MonoBehaviour
         sequence.JoinCallback(() => PrepareNewTurnImagesForFadeIn(addedImages, targetPositions));
         foreach (var turnImage in addedImages)
         {
+            Debug.Log($"动画开始:{turnImage.combatant.combatantName}");
             if (!targetScales.TryGetValue(turnImage, out var targetScale))
             {
                 targetScale = normalScale;
             }
-            sequence.Join(TweenAlpha(turnImage, 0f, 1f, moveDuration, fadeEase)).SetDelay(enterDelay * c);
-            sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase,0)).SetDelay(enterDelay * c);
-            sequence.Join(turnImage.MoveTo(targetPositions[turnImage], moveDuration).SetEase(moveEase).SetDelay(enterDelay * c));
+            sequence.Insert(0.2f+c*enterDelay,TweenAlpha(turnImage, 0f, 1f, moveDuration, fadeEase));
+            sequence.Insert(0.2f+c*enterDelay,TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase, 0));
+            sequence.Insert(0.2f+c*enterDelay,turnImage.MoveTo(targetPositions[turnImage], moveDuration).SetEase(moveEase));
             c++;
         }
+        sequence.AppendCallback(() => Debug.Log($"TurnImageManager: Completed fade-in sequence for {addedImages.Count} added turn images."));
         sequence.AppendCallback(() => addedImages.Clear());
         return sequence;
     }
@@ -317,7 +298,10 @@ public class TurnImageManager : MonoBehaviour
         foreach (var turnImage in turnOrder)
         {
             turnImage.SetTopRightAnchor();
-
+            if (addedImages.Contains(turnImage) || removedImages.Contains(turnImage))
+            {
+                continue;
+            }
             if (targetPositions.TryGetValue(turnImage, out var targetPos))
             {
                 sequence.Join(turnImage.MoveTo(targetPos, moveDuration).SetEase(moveEase));
@@ -342,7 +326,7 @@ public class TurnImageManager : MonoBehaviour
         sequence.Join(TweenAlpha(turnImage, startAlpha, endAlpha, fadeDuration, fadeEase));
         sequence.Join(turnImage.MoveTo(new Vector2(endX, turnImage.GetAnchoredPosition().y), moveDuration).SetEase(moveEase));
         sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
-        
+
 
         turnImage.SetAlpha(startAlpha);
         turnImage.SetLayoutScale(cellSize, startScale);
@@ -395,7 +379,7 @@ public class TurnImageManager : MonoBehaviour
     }
 
 
-    private Tween TweenLayoutScale(TurnImage turnImage, float targetScale, float duration, Ease ease,float startScale = -1f)
+    private Tween TweenLayoutScale(TurnImage turnImage, float targetScale, float duration, Ease ease, float startScale = -1f)
     {
         if (startScale < 0f)
         {
@@ -404,11 +388,12 @@ public class TurnImageManager : MonoBehaviour
 
         turnImage.SetLayoutScale(cellSize, startScale);
         float value = startScale;
+        Debug.Log($"targetScale:{targetScale}, startScale:{startScale}, currentScale:{turnImage.GetComponent<RectTransform>().localScale}");
         return DOTween.To(() => value, v =>
         {
             value = v;
             turnImage.SetLayoutScale(cellSize, value);
-        }, targetScale, duration).SetEase(ease);
+        }, targetScale, duration).SetEase(ease).OnUpdate(() => Debug.Log($"TurnImageManager: Updating layout scale {turnImage.combatant.combatantName} for {turnImage.GetComponent<RectTransform>().localScale}")); ;
     }
 
     private Tween TweenAlpha(TurnImage turnImage, float from, float to, float duration, Ease ease)

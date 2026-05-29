@@ -18,11 +18,11 @@ public class BackpackModuleItemUI : MonoBehaviour
 
     private readonly List<Image> m_shapeCells = new List<Image>();
 
-    private Image m_background;
-    private Button m_button;
-    private CanvasGroup m_canvasGroup;
-    private TMP_Text m_titleText;
-    private RectTransform m_shapeRoot;
+    [SerializeField] private Image m_background;
+    [SerializeField] private Button m_button;
+    [SerializeField] private CanvasGroup m_canvasGroup;
+    [SerializeField] private TMP_Text m_titleText;
+    [SerializeField] private RectTransform m_shapeRoot;
     private Action<GridModuleDefinition> m_onClicked;
     private GridModuleDefinition m_module;
 

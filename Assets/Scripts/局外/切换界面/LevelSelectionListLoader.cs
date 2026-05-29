@@ -4,8 +4,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class LevelSelectionListLoader : MonoBehaviour
 {
-    [Header("关卡列表")]
-    [SerializeField] private List<LevelSelectionData> levels = new List<LevelSelectionData>();
+    public static LevelSelectionListLoader instance;
+    [Header("楼层关卡配置")]
+    [SerializeField] private List<LevelSelectionFloorData> levelFloors = new List<LevelSelectionFloorData>();
 
     [Header("UI引用")]
     [SerializeField] private RectTransform itemsRoot;
@@ -14,8 +15,17 @@ public class LevelSelectionListLoader : MonoBehaviour
     [Header("生成选项")]
     [SerializeField] private bool populateOnStart = true;
     [SerializeField] private bool disableExtraItems = true;
+    [SerializeField] private bool initializeDatasFromLocalConfig = true;
 
-    public IReadOnlyList<LevelSelectionData> Levels => levels;
+    private Datas m_dataSource;
+
+    public IReadOnlyList<LevelSelectionFloorData> LevelFloors => levelFloors;
+
+    private void Awake()
+    {
+        instance=this;
+        SubscribeToDataSource();
+    }
 
     private void Start()
     {
@@ -27,15 +37,20 @@ public class LevelSelectionListLoader : MonoBehaviour
         ApplyLevels();
     }
 
+    private void OnDestroy()
+    {
+        UnsubscribeFromDataSource();
+    }
+
     public void ApplyLevels()
     {
         ResolveReferences();
 
-        List<LevelSelectionData> sourceLevels = GetSourceLevels();
+        List<LevelSelectionData> sourceLevels = GetSourceLevels();//获取关卡列表
 
         if (carousel != null)
         {
-            carousel.RegenerateItems(sourceLevels.Count);
+            carousel.RegenerateItems(sourceLevels.Count);   
             itemsRoot = carousel.ItemsRoot;
         }
 
@@ -76,11 +91,21 @@ public class LevelSelectionListLoader : MonoBehaviour
     {
         if (Datas.Instance != null)
         {
-            Datas.Instance.SetAllLevels(levels);
-            return new List<LevelSelectionData>(Datas.Instance.GetAllLevels());
+            if (initializeDatasFromLocalConfig && levelFloors != null && levelFloors.Count > 0 && Datas.Instance.GetLevelFloorCount() == 0)
+            {
+                Datas.Instance.SetLevelFloors(levelFloors);
+            }
+
+            return new List<LevelSelectionData>(Datas.Instance.GetCurrentFloorLevels());
         }
 
-        return levels != null ? new List<LevelSelectionData>(levels) : new List<LevelSelectionData>();
+        if (levelFloors == null || levelFloors.Count == 0)
+        {
+            return new List<LevelSelectionData>();
+        }
+
+        LevelSelectionFloorData floorData = levelFloors[0];
+        return floorData != null ? new List<LevelSelectionData>(floorData.GetLevels()) : new List<LevelSelectionData>();
     }
 
     private void ResolveReferences()
@@ -94,5 +119,45 @@ public class LevelSelectionListLoader : MonoBehaviour
         {
             itemsRoot = carousel != null ? carousel.ItemsRoot : transform as RectTransform;
         }
+    }
+
+    private void SubscribeToDataSource()
+    {
+        Datas dataSource = Datas.Instance;
+        if (m_dataSource == dataSource)
+        {
+            return;
+        }
+
+        UnsubscribeFromDataSource();
+        m_dataSource = dataSource;
+        if (m_dataSource == null)
+        {
+            return;
+        }
+
+        m_dataSource.LevelCompleted -= RebuildLevelListAfterCompletion;
+        m_dataSource.LevelCompleted += RebuildLevelListAfterCompletion;
+    }
+
+    private void UnsubscribeFromDataSource()
+    {
+        if (m_dataSource == null)
+        {
+            return;
+        }
+
+        m_dataSource.LevelCompleted -= RebuildLevelListAfterCompletion;
+        m_dataSource = null;
+    }
+
+    private void RebuildLevelListAfterCompletion(string levelId)
+    {
+        if (string.IsNullOrWhiteSpace(levelId))
+        {
+            return;
+        }
+
+        ApplyLevels();
     }
 }

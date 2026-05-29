@@ -2,61 +2,51 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class ModuleData
+public enum TemporaryBattleModifierRuntimeEventType
 {
-    [SerializeField] private string moduleName = "新模块";
-    [SerializeField] private Color color = new Color(0.28f, 0.78f, 1f, 0.9f);
-    [SerializeField] private List<Vector2Int> cells = new List<Vector2Int>();
+    PlayerCharacterSwapped
+}
 
-    public static ModuleData FromDefinition(GridModuleDefinition module)
+public static class BattleRuntimeEvents//战斗事件
+{
+    public static event Action PlayerCharacterSwapped;
+
+    public static void RaisePlayerCharacterSwapped()
     {
-        ModuleData data = new ModuleData();
-        if (module == null)
-        {
-            data.cells.Add(Vector2Int.zero);
-            return data;
-        }
-
-        data.moduleName = module.moduleName;
-        data.color = module.color;
-        data.cells.Clear();
-
-        if (module.cells != null && module.cells.Count > 0)
-        {
-            for (int i = 0; i < module.cells.Count; i++)
-            {
-                data.cells.Add(module.cells[i]);
-            }
-        }
-        else
-        {
-            data.cells.Add(Vector2Int.zero);
-        }
-
-        return data;
+        PlayerCharacterSwapped?.Invoke();
     }
+}
 
-    public GridModuleDefinition ToDefinition()
+public interface ITemporaryBattleModifierBehavior//战斗增益行为接口
+{
+    void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeEventType runtimeEventType);
+}
+
+public sealed class SwapGoldTemporaryBattleModifierBehavior : ITemporaryBattleModifierBehavior
+{
+    public void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeEventType runtimeEventType)
     {
-        GridModuleDefinition definition = new GridModuleDefinition();
-        definition.moduleName = moduleName;
-        definition.color = color;
-        definition.cells = new List<Vector2Int>();
-
-        if (cells != null && cells.Count > 0)
+        if (datas == null || modifier == null || runtimeEventType != TemporaryBattleModifierRuntimeEventType.PlayerCharacterSwapped)
         {
-            for (int i = 0; i < cells.Count; i++)
-            {
-                definition.cells.Add(cells[i]);
-            }
-        }
-        else
-        {
-            definition.cells.Add(Vector2Int.zero);
+            return;
         }
 
-        return definition;
+        datas.ModifyGold(modifier.goldPerSwap - modifier.goldPenaltyPerSwap);
+    }
+}
+
+public static class TemporaryBattleModifierBehaviorRegistry
+{
+    private static readonly Dictionary<LevelEventOptionType, ITemporaryBattleModifierBehavior> s_runtimeBehaviors =
+        new Dictionary<LevelEventOptionType, ITemporaryBattleModifierBehavior>
+        {
+            { LevelEventOptionType.SwapForProfit, new SwapGoldTemporaryBattleModifierBehavior() },
+            { LevelEventOptionType.CashOutSwap, new SwapGoldTemporaryBattleModifierBehavior() }
+        };
+
+    public static bool TryGetRuntimeBehavior(LevelEventOptionType optionType, out ITemporaryBattleModifierBehavior behavior)
+    {
+        return s_runtimeBehaviors.TryGetValue(optionType, out behavior);
     }
 }
 
@@ -80,12 +70,41 @@ public class PlacedModuleData
     }
 }
 
+[Serializable]
+public class TemporaryBattleModifierData
+{
+    public LevelEventOptionType optionType;
+    [Min(0)] public int remainingBattles;
+    public float playerSpeedMultiplier = 1f;
+    public float playerDirectDamageMultiplier = 1f;
+    public float playerDotDamageMultiplier = 1f;
+    public float playerCritDamageBonus;
+    public int goldPerSwap;
+    public int goldPenaltyPerSwap;
+
+    public TemporaryBattleModifierData Clone()
+    {
+        return new TemporaryBattleModifierData
+        {
+            optionType = optionType,
+            remainingBattles = remainingBattles,
+            playerSpeedMultiplier = playerSpeedMultiplier,
+            playerDirectDamageMultiplier = playerDirectDamageMultiplier,
+            playerDotDamageMultiplier = playerDotDamageMultiplier,
+            playerCritDamageBonus = playerCritDamageBonus,
+            goldPerSwap = goldPerSwap,
+            goldPenaltyPerSwap = goldPenaltyPerSwap
+        };
+    }
+}
+
 public class Datas : MonoBehaviour
 {
     private const int MaxTeamLevel = 99;
 
     public static Datas Instance;
     public event Action CharacterRosterChanged;
+    public event Action ModuleStateChanged;
     public event Action<string> LevelCompleted;
 
     [Header("角色列表")]
@@ -97,8 +116,10 @@ public class Datas : MonoBehaviour
     [SerializeField] private string selectedStarterBranchId;
 
     [Header("关卡进度")]
-    [SerializeField] private List<LevelSelectionData> allLevels = new List<LevelSelectionData>();
+    [SerializeField] private List<LevelSelectionFloorData> levelFloors = new List<LevelSelectionFloorData>();
+    [SerializeField] private int currentFloorIndex;
     [SerializeField] private List<string> completedLevelIds = new List<string>();
+    [SerializeField] private List<TemporaryBattleModifierData> activeBattleModifiers = new List<TemporaryBattleModifierData>();
 
     [Header("队伍成长")]
     [SerializeField] private int teamLevel = 1;
@@ -109,10 +130,17 @@ public class Datas : MonoBehaviour
 
     [Header("模块数据")]
     [SerializeField] private bool hasModuleState;
-    [SerializeField] private List<ModuleData> ownedModules = new List<ModuleData>();
+    [SerializeField] private List<GridModuleDefinition> ownedModules = new List<GridModuleDefinition>();
     [SerializeField] private List<PlacedModuleData> placedModules = new List<PlacedModuleData>();
+
+    [SerializeField] private int backpackWidth = 4;
+    
     private readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
+    private readonly List<TemporaryBattleModifierData> m_battleModifierSnapshot = new List<TemporaryBattleModifierData>();
     private bool m_characterLookupBuilt;
+    private bool m_ownedModulesRuntimePrepared;
+    private bool m_hasBattleModifierSnapshot;
+    private bool m_isSubscribedToBattleRuntimeEvents;
 
     public bool HasSelectedStarterBranch => !string.IsNullOrWhiteSpace(selectedStarterBranchId);
     public string SelectedStarterBranchId => selectedStarterBranchId;
@@ -130,6 +158,7 @@ public class Datas : MonoBehaviour
         InitializeCharacterLookup();
         NormalizeUnlockedCharacters();
 
+        currentFloorIndex = Mathf.Clamp(currentFloorIndex, 0, Mathf.Max(0, levelFloors.Count - 1));
         teamLevel = Mathf.Clamp(teamLevel, 1, MaxTeamLevel);
         currentExp = Mathf.Max(0f, currentExp);
         gold = Mathf.Max(0, gold);
@@ -143,7 +172,16 @@ public class Datas : MonoBehaviour
             Instance = null;
         }
     }
-
+    #region 背包扩容
+    public void AddBackpackSlot()
+    {
+        backpackWidth++;
+    }
+    public int GetBackpackWidth()
+    {
+        return backpackWidth;
+    }
+    #endregion
     public bool AddCharacterData(CharacterType characterType)
     {
         InitializeCharacterLookup();
@@ -193,9 +231,36 @@ public class Datas : MonoBehaviour
         return starterBranches;
     }
 
-    public IReadOnlyList<LevelSelectionData> GetAllLevels()
+    public IReadOnlyList<LevelSelectionFloorData> GetLevelFloors()
     {
-        return allLevels;
+        return levelFloors;
+    }
+
+    public int GetLevelFloorCount()
+    {
+        return levelFloors != null ? levelFloors.Count : 0;
+    }
+
+    public int GetCurrentFloorIndex()
+    {
+        return Mathf.Clamp(currentFloorIndex, 0, Mathf.Max(0, GetLevelFloorCount() - 1));
+    }
+
+    public LevelSelectionFloorData GetCurrentFloorData()
+    {
+        if (levelFloors == null || levelFloors.Count == 0)
+        {
+            return null;
+        }
+
+        int floorIndex = GetCurrentFloorIndex();
+        return floorIndex >= 0 && floorIndex < levelFloors.Count ? levelFloors[floorIndex] : null;
+    }
+
+    public IReadOnlyList<LevelSelectionData> GetCurrentFloorLevels()
+    {
+        LevelSelectionFloorData floorData = GetCurrentFloorData();
+        return floorData != null ? floorData.GetLevels() : Array.Empty<LevelSelectionData>();
     }
 
     public IReadOnlyList<string> GetCompletedLevelIds()
@@ -208,30 +273,58 @@ public class Datas : MonoBehaviour
         return completedLevelIds != null ? completedLevelIds.Count : 0;
     }
 
-    public void SetAllLevels(IEnumerable<LevelSelectionData> levels)
+    public void SetLevelFloors(IEnumerable<LevelSelectionFloorData> floors)
     {
-        allLevels.Clear();
-        if (levels == null)
+        levelFloors.Clear();
+        currentFloorIndex = 0;
+
+        if (floors == null)
         {
             return;
         }
 
         var registeredIds = new HashSet<string>();
-        foreach (LevelSelectionData level in levels)
+        foreach (LevelSelectionFloorData floor in floors)
         {
-            if (level == null)
+            if (floor == null)
             {
                 continue;
             }
 
-            string levelId = level.levelId ?? string.Empty;
-            if (!registeredIds.Add(levelId))
+            string floorId = string.IsNullOrWhiteSpace(floor.floorId)
+                ? $"Floor_{levelFloors.Count + 1}"
+                : floor.floorId;
+            if (!registeredIds.Add(floorId))
             {
                 continue;
             }
 
-            allLevels.Add(level);
+            levelFloors.Add(floor);
         }
+
+        currentFloorIndex = Mathf.Clamp(currentFloorIndex, 0, Mathf.Max(0, levelFloors.Count - 1));
+    }
+
+    public bool SetCurrentFloorIndex(int floorIndex)
+    {
+        if (levelFloors == null || floorIndex < 0 || floorIndex >= levelFloors.Count)
+        {
+            return false;
+        }
+
+        currentFloorIndex = floorIndex;
+        return true;
+    }
+
+    public bool AdvanceToNextFloor()
+    {
+        if (levelFloors == null || currentFloorIndex >= levelFloors.Count - 1)
+        {
+            return false;
+        }
+
+        currentFloorIndex++;
+        return true;
     }
 
     public bool IsLevelCompleted(string levelId)
@@ -284,6 +377,16 @@ public class Datas : MonoBehaviour
             return;
         }
 
+        ModifyGold(amount);
+    }
+
+    public void ModifyGold(int amount)
+    {
+        if (amount == 0)
+        {
+            return;
+        }
+
         gold = Mathf.Max(0, gold + amount);
     }
 
@@ -308,34 +411,199 @@ public class Datas : MonoBehaviour
         AddGold(goldReward);
         AddExperience(experienceReward);
     }
+    #region 局外接入战斗增益
+    public void AddTemporaryBattleModifier(TemporaryBattleModifierData modifier)
+    {
+        if (modifier == null || modifier.remainingBattles <= 0)
+        {
+            return;
+        }
 
+        activeBattleModifiers.Add(modifier.Clone());
+    }
+
+    public void BeginBattleModifierSession()
+    {
+        SubscribeBattleRuntimeEvents();
+        m_battleModifierSnapshot.Clear();
+
+        for (int i = 0; i < activeBattleModifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = activeBattleModifiers[i];
+            if (modifier == null || modifier.remainingBattles <= 0)
+            {
+                continue;
+            }
+
+            m_battleModifierSnapshot.Add(modifier.Clone());
+        }
+
+        m_hasBattleModifierSnapshot = m_battleModifierSnapshot.Count > 0;
+    }
+
+    public void CompleteBattleModifierSession(bool consumeBattleCount = true)
+    {
+        UnsubscribeBattleRuntimeEvents();
+
+        if (consumeBattleCount)
+        {
+            for (int i = activeBattleModifiers.Count - 1; i >= 0; i--)
+            {
+                TemporaryBattleModifierData modifier = activeBattleModifiers[i];
+                if (modifier == null)
+                {
+                    activeBattleModifiers.RemoveAt(i);
+                    continue;
+                }
+
+                modifier.remainingBattles = Mathf.Max(0, modifier.remainingBattles - 1);
+                if (modifier.remainingBattles <= 0)
+                {
+                    activeBattleModifiers.RemoveAt(i);
+                }
+            }
+        }
+
+        m_battleModifierSnapshot.Clear();
+        m_hasBattleModifierSnapshot = false;
+    }
+
+    public float GetPlayerSpeedMultiplier()
+    {
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        float multiplier = 1f;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier != null)
+            {
+                multiplier *= Mathf.Max(0.01f, modifier.playerSpeedMultiplier);
+            }
+        }
+
+        return multiplier;
+    }
+
+    public float GetPlayerDirectDamageMultiplier()
+    {
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        float multiplier = 1f;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier != null)
+            {
+                multiplier *= Mathf.Max(0.01f, modifier.playerDirectDamageMultiplier);
+            }
+        }
+
+        return multiplier;
+    }
+
+    public float GetPlayerDotDamageMultiplier()
+    {
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        float multiplier = 1f;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier != null)
+            {
+                multiplier *= Mathf.Max(0.01f, modifier.playerDotDamageMultiplier);
+            }
+        }
+
+        return multiplier;
+    }
+
+    public float GetPlayerCritDamageBonus()
+    {
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        float bonus = 0f;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier != null)
+            {
+                bonus += modifier.playerCritDamageBonus;
+            }
+        }
+
+        return bonus;
+    }
+
+    public void NotifyBattleModifierRuntimeEvent(TemporaryBattleModifierRuntimeEventType runtimeEventType)
+    {
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier == null)
+            {
+                continue;
+            }
+
+            if (!TemporaryBattleModifierBehaviorRegistry.TryGetRuntimeBehavior(modifier.optionType, out ITemporaryBattleModifierBehavior behavior))
+            {
+                continue;
+            }
+
+            behavior.HandleRuntimeEvent(this, modifier, runtimeEventType);
+        }
+    }
+
+    private void SubscribeBattleRuntimeEvents()
+    {
+        if (m_isSubscribedToBattleRuntimeEvents)
+        {
+            return;
+        }
+
+        BattleRuntimeEvents.PlayerCharacterSwapped += HandlePlayerCharacterSwapped;
+        m_isSubscribedToBattleRuntimeEvents = true;
+    }
+
+    private void UnsubscribeBattleRuntimeEvents()
+    {
+        if (!m_isSubscribedToBattleRuntimeEvents)
+        {
+            return;
+        }
+
+        BattleRuntimeEvents.PlayerCharacterSwapped -= HandlePlayerCharacterSwapped;
+        m_isSubscribedToBattleRuntimeEvents = false;
+    }
+
+    private void HandlePlayerCharacterSwapped()
+    {
+        NotifyBattleModifierRuntimeEvent(TemporaryBattleModifierRuntimeEventType.PlayerCharacterSwapped);
+    }
+
+    private IReadOnlyList<TemporaryBattleModifierData> GetEffectiveBattleModifiers()
+    {
+        return m_hasBattleModifierSnapshot ? m_battleModifierSnapshot : activeBattleModifiers;
+    }
+    #endregion
     public void SetSelectedStarterBranchId(string branchId)
     {
         selectedStarterBranchId = branchId;
     }
-
+#region 模块系统
     public bool HasModuleState()
     {
-        return hasModuleState;
+        return hasModuleState || ownedModules.Count > 0 || placedModules.Count > 0;
     }
 
-    public List<GridModuleDefinition> CreateOwnedModuleDefinitions()
+    public IReadOnlyList<GridModuleDefinition> GetOwnedModules()
     {
-        List<GridModuleDefinition> modules = new List<GridModuleDefinition>();
-
-        for (int i = 0; i < ownedModules.Count; i++)
-        {
-            if (ownedModules[i] != null)
-            {
-                modules.Add(ownedModules[i].ToDefinition());
-            }
-        }
-
-        return modules;
+        EnsureOwnedModulesRuntimePrepared();
+        return ownedModules;
     }
 
     public void GetPlacedModuleData(List<PlacedModuleData> results)
     {
+        EnsureOwnedModulesRuntimePrepared();
+
         if (results == null)
         {
             return;
@@ -351,36 +619,121 @@ public class Datas : MonoBehaviour
         }
     }
 
-    public void SaveModuleState(IReadOnlyList<GridModuleDefinition> modules, IReadOnlyList<PlacedModuleData> placements)
+    public GridModuleDefinition AddOwnedModule(GridModuleDefinition module)
     {
-        ownedModules.Clear();
-        placedModules.Clear();
-
-        if (modules != null)
+        if (module == null)
         {
-            for (int i = 0; i < modules.Count; i++)
-            {
-                if (modules[i] != null)
-                {
-                    ownedModules.Add(ModuleData.FromDefinition(modules[i]));
-                }
-            }
+            return null;
         }
 
-        if (placements != null)
-        {
-            for (int i = 0; i < placements.Count; i++)
-            {
-                if (placements[i] != null)
-                {
-                    placedModules.Add(new PlacedModuleData(placements[i].ModuleIndex, placements[i].AnchorCell));
-                }
-            }
-        }
+        EnsureOwnedModulesRuntimePrepared();
 
+        GridModuleDefinition runtimeModule = module.Clone();
+        runtimeModule.RemoveFromBoard();
+        ownedModules.Add(runtimeModule);
         hasModuleState = true;
+        ModuleStateChanged?.Invoke();
+        return runtimeModule;
     }
 
+    public bool TryPlaceOwnedModule(GridModuleDefinition module, Vector2Int anchorCell)
+    {
+        EnsureOwnedModulesRuntimePrepared();
+
+        int moduleIndex = ownedModules.IndexOf(module);
+        if (moduleIndex < 0 || module == null || module.IsLoaded)
+        {
+            return false;
+        }
+
+        for (int i = placedModules.Count - 1; i >= 0; i--)
+        {
+            if (placedModules[i] != null && placedModules[i].ModuleIndex == moduleIndex)
+            {
+                placedModules.RemoveAt(i);
+            }
+        }
+
+        placedModules.Add(new PlacedModuleData(moduleIndex, anchorCell));
+        module.ApplyToBoard();
+        hasModuleState = true;
+        ModuleStateChanged?.Invoke();
+        return true;
+    }
+
+    public bool TryPickupOwnedModule(GridModuleDefinition module)
+    {
+        EnsureOwnedModulesRuntimePrepared();
+
+        int moduleIndex = ownedModules.IndexOf(module);
+        if (moduleIndex < 0 || module == null)
+        {
+            return false;
+        }
+
+        bool removedPlacement = false;
+        for (int i = placedModules.Count - 1; i >= 0; i--)
+        {
+            if (placedModules[i] != null && placedModules[i].ModuleIndex == moduleIndex)
+            {
+                placedModules.RemoveAt(i);
+                removedPlacement = true;
+            }
+        }
+
+        if (!removedPlacement && !module.IsLoaded)
+        {
+            return false;
+        }
+
+        module.RemoveFromBoard();
+        hasModuleState = HasModuleState();
+        ModuleStateChanged?.Invoke();
+        return true;
+    }
+
+    private void EnsureOwnedModulesRuntimePrepared()
+    {
+        if (m_ownedModulesRuntimePrepared)
+        {
+            return;
+        }
+
+        m_ownedModulesRuntimePrepared = true;
+
+        for (int i = 0; i < ownedModules.Count; i++)
+        {
+            if (ownedModules[i] != null)
+            {
+                GridModuleDefinition runtimeModule = ownedModules[i].Clone();
+                runtimeModule.RemoveFromBoard();
+                ownedModules[i] = runtimeModule;
+            }
+        }
+
+        for (int i = 0; i < placedModules.Count; i++)
+        {
+            if (placedModules[i] == null)
+            {
+                continue;
+            }
+
+            int moduleIndex = placedModules[i].ModuleIndex;
+            if (moduleIndex < 0 || moduleIndex >= ownedModules.Count)
+            {
+                continue;
+            }
+
+            GridModuleDefinition module = ownedModules[moduleIndex];
+            if (module != null && !module.IsLoaded)
+            {
+                module.ApplyToBoard();
+            }
+        }
+
+        hasModuleState = HasModuleState();
+    }
+#endregion
     private void InitializeCharacterLookup()
     {
         if (m_characterLookupBuilt)

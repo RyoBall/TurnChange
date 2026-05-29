@@ -35,28 +35,18 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
     private PlacedModuleEntry[,] m_placedEntries;
 
     public event Action<Vector2Int> CellClicked;
-
-    public int Width => width;
-    public int Height => height;
-
-    private void Awake()
-    {
-        InitializeBoard();
-    }
-
     private void OnValidate()
     {
         width = Mathf.Max(1, width);
         height = Mathf.Max(1, height);
     }
 
-    public void InitializeBoard()
+    public void BuildBoard()
     {
         if (boardRoot == null)
         {
             boardRoot = transform as RectTransform;
         }
-
         EnsureBoardRaycastTarget();
         EnsureCellsRoot();
         BuildCells();
@@ -239,7 +229,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             CellClicked?.Invoke(cell);
         }
     }
-
+#region 预防性函数
     private void EnsureBoardRaycastTarget()
     {
         Image image = boardRoot.GetComponent<Image>();
@@ -272,7 +262,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         m_cellsRoot.offsetMin = Vector2.zero;
         m_cellsRoot.offsetMax = Vector2.zero;
     }
-
+#endregion
     private void BuildCells()
     {
         for (int i = m_cellsRoot.childCount - 1; i >= 0; i--)

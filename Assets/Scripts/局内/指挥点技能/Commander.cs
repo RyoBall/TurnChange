@@ -47,12 +47,11 @@ public class Commander : MonoBehaviour
 
     public bool RecoverCommandPoints(int amount, string tipText = null)
     {
-        return RecoverCommandPointsInternal(amount, true, tipText);
+        return RecoverCommandPointsInternal(amount, tipText);
     }
 
     public void NotifyEnemyKilled(UnitCombatant source, UnitCombatant target)
     {
-        return; // 目前击杀回点功能关闭，后续可以根据需要重新启用
         if (!(source is Character) || !(target is Enemy))
         {
             return;
@@ -72,11 +71,11 @@ public class Commander : MonoBehaviour
         while (actionValueSinceLastRecovery >= GuaranteeActionValueThreshold)
         {
             actionValueSinceLastRecovery -= GuaranteeActionValueThreshold;
-            RecoverCommandPointsInternal(GuaranteeRecoveryAmount, false, $"指挥点+{GuaranteeRecoveryAmount}");
+            RecoverCommandPointsInternal(GuaranteeRecoveryAmount, $"指挥点+{GuaranteeRecoveryAmount}");
         }
     }
 
-    private bool RecoverCommandPointsInternal(int amount, bool resetGuaranteeCounter, string tipText)
+    private bool RecoverCommandPointsInternal(int amount, string tipText)
     {
         if (amount <= 0)
         {
@@ -90,12 +89,6 @@ public class Commander : MonoBehaviour
         {
             return false;
         }
-
-        if (resetGuaranteeCounter)
-        {
-            actionValueSinceLastRecovery = 0f;
-        }
-
         FloatingTipGenerator.Instance?.ShowDefaultTip(string.IsNullOrEmpty(tipText)
             ? $"指挥点+{actualRecovered}"
             : tipText);
