@@ -300,7 +300,7 @@ public class ChessBossEnemy : Enemy
         FloatingTipGenerator.Instance?.ShowTipAtObject(kingCharacter.transform, "王棋位");
         FloatingTipGenerator.Instance?.ShowTipAtObject(rookCharacter.transform, "车棋位");
 
-        State.NotifyDamageSkillUsed(this);
+        State.NotifyDamageSkillUsed(this, new List<UnitCombatant> { kingCharacter });
         DamageInfo damageInfo = DamageCounter.CountDamage(this, kingCharacter, skill.skillCoef, skill.skillBase, true, false, false);
         kingCharacter.TakeDamage(damageInfo);
 
@@ -323,8 +323,8 @@ public class ChessBossEnemy : Enemy
         float totalSkillCoef = skill != null ? skill.skillCoef * (1f + m_chessPrestigeStacks * bonusPerPrestige) : 1f;
         int totalSkillBase = skill != null ? skill.skillBase : 0;
 
-        State.NotifyDamageSkillUsed(this);
         List<Character> targets = GetAliveFieldCharacters();
+        State.NotifyDamageSkillUsed(this, targets);
         for (int i = 0; i < targets.Count; i++)
         {
             Character target = targets[i];

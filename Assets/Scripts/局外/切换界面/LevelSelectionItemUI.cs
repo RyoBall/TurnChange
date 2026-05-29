@@ -43,6 +43,7 @@ public class LevelSelectionData//关卡数据
 {
     public string levelId;
     public string levelName;
+    public bool isUnlocked;
     public LevelSelectionButtonType buttonType;
     public LevelEventData eventData;
     public List<LevelEnemyWaveData> enemyWaves = new List<LevelEnemyWaveData>();
@@ -105,6 +106,7 @@ public class LevelSelectionItemUI : MonoBehaviour
     [SerializeField] private Text completedLegacyText;
 
     private bool m_isCompleted;
+    private bool m_isUnlocked = true;
 
     public LevelSelectionData LevelData => levelData;
     public LevelSelectionButtonType LevelType => levelType;
@@ -157,7 +159,7 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     private void OpenBattleLevel()
     {
-        if (m_isCompleted)
+        if (m_isCompleted || !m_isUnlocked)
         {
             return;
         }
@@ -167,11 +169,21 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     private void OpenEventLevel()
     {
+        if (!m_isUnlocked)
+        {
+            return;
+        }
+
         StartCoroutine(ExecuteWithTransition(OpenEventPanel));
     }
 
     private void EnterNextFloor()
     {
+        if (!m_isUnlocked)
+        {
+            return;
+        }
+
         StartCoroutine(ExecuteWithTransition(AdvanceToNextFloor));
     }
 
@@ -240,6 +252,7 @@ public class LevelSelectionItemUI : MonoBehaviour
     {
         levelData = data ?? new LevelSelectionData();
         levelType = levelData.buttonType;
+        m_isUnlocked = levelData.isUnlocked;
         RefreshView();
     }
 
@@ -257,6 +270,17 @@ public class LevelSelectionItemUI : MonoBehaviour
     public void SetCompletedState(bool isCompleted)
     {
         m_isCompleted = isCompleted;
+        RefreshView();
+    }
+
+    public void SetUnlockedState(bool isUnlocked)
+    {
+        m_isUnlocked = isUnlocked;
+        if (levelData != null)
+        {
+            levelData.isUnlocked = isUnlocked;
+        }
+
         RefreshView();
     }
 
@@ -315,7 +339,9 @@ public class LevelSelectionItemUI : MonoBehaviour
     private void RefreshView()
     {
         string displayName = GetDisplayName();
-        bool showCompletedState = m_isCompleted;
+        bool canInteract = m_isUnlocked && !m_isCompleted;
+        bool showStatusText = m_isCompleted || !m_isUnlocked;
+        string statusTextValue = m_isCompleted ? "已通过" : "未解锁";
 
         if (levelNameText != null)
         {
@@ -329,24 +355,24 @@ public class LevelSelectionItemUI : MonoBehaviour
 
         if (prepareButton != null)
         {
-            prepareButton.interactable = !m_isCompleted;
+            prepareButton.interactable = canInteract;
         }
 
         if (completedText != null)
         {
-            completedText.gameObject.SetActive(showCompletedState);
-            if (showCompletedState)
+            completedText.gameObject.SetActive(showStatusText);
+            if (showStatusText)
             {
-                completedText.text = "已通过";
+                completedText.text = statusTextValue;
             }
         }
 
         if (completedLegacyText != null)
         {
-            completedLegacyText.gameObject.SetActive(showCompletedState);
-            if (showCompletedState)
+            completedLegacyText.gameObject.SetActive(showStatusText);
+            if (showStatusText)
             {
-                completedLegacyText.text = "已通过";
+                completedLegacyText.text = statusTextValue;
             }
         }
     }

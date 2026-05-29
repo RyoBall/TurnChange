@@ -221,6 +221,10 @@ public class ShopModuleManager : MonoBehaviour
         {
             backpackController.AddModuleToInventory(entry.module);
         }
+        else if (Datas.Instance != null)
+        {
+            Datas.Instance.AddOwnedModule(entry.module);
+        }
 
         if (markItemSoldOutOnPurchase)
         {
@@ -228,7 +232,6 @@ public class ShopModuleManager : MonoBehaviour
         }
 
         ItemPurchased?.Invoke(entry.module, entry.price, slotIndex);//激活事件
-        Datas.Instance.AddOwnedModule(entry.module);
         SetStatusText("购买成功: " + entry.module.moduleName);
         RefreshVisualState();
         return true;

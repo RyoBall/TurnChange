@@ -90,7 +90,13 @@ public class CharacterManager : MonoBehaviour
 			UpdatePromptText("请选择一个场上角色进行更换");
 			SetPromptVisible(true);
 			Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
-			yield return new WaitUntil(() => m_selectedFieldCharacter != null);
+			yield return new WaitUntil(() => m_selectedFieldCharacter != null||Input.GetKeyDown(KeyCode.Mouse1));
+			if(m_selectedFieldCharacter == null)
+			{
+				Debug.Log("[CharacterManager] 换人流程取消：未选择场上角色");
+				SetPromptVisible(false);
+				yield break;
+			}
 		}
 		m_isSelectingFieldCharacter = false;
 		m_isSelectingReserveCharacter = true;
@@ -99,7 +105,13 @@ public class CharacterManager : MonoBehaviour
 		PlayReserveButtonsEnterAnim();
 		UpdatePromptText($"请选择替换 {m_selectedFieldCharacter.combatantName} 的候补角色");
 
-		yield return new WaitUntil(() => m_selectedReserveCharacter != null);
+		yield return new WaitUntil(() => m_selectedReserveCharacter != null||Input.GetKeyDown(KeyCode.Mouse1));
+		if(m_selectedReserveCharacter == null)
+		{
+			Debug.Log("[CharacterManager] 换人流程取消：未选择候补角色");
+			SetPromptVisible(false);
+			yield break;
+		}
 
 		m_isSelectingReserveCharacter = false;
 

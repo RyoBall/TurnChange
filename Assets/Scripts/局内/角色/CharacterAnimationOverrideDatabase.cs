@@ -29,7 +29,7 @@ public class AnimationClipOverrideEntry
 [Serializable]
 public class CharacterAnimationOverrideEntry
 {
-    public string characterID;
+    public CharacterType characterType;
     public List<AnimationClipOverrideEntry> clipOverrides = new List<AnimationClipOverrideEntry>();
 }
 
@@ -39,10 +39,29 @@ public class CharacterAnimationOverrideDatabase : ScriptableObject
     [SerializeField] private RuntimeAnimatorController baseController;
     [SerializeField] private List<CharacterAnimationOverrideEntry> characterOverrides = new List<CharacterAnimationOverrideEntry>();
 
+    public bool TryGetCharacterOverrides(CharacterType targetCharacterType, out List<AnimationClipOverrideEntry> clipOverrides)
+    {
+        clipOverrides = null;
+
+        for (int i = 0; i < characterOverrides.Count; i++)
+        {
+            CharacterAnimationOverrideEntry entry = characterOverrides[i];
+            if (entry == null || entry.characterType != targetCharacterType)
+            {
+                continue;
+            }
+
+            clipOverrides = entry.clipOverrides;
+            return clipOverrides != null && clipOverrides.Count > 0;
+        }
+
+        return false;
+    }
+
     public bool TryGetCharacterOverrides(string targetCharacterID, out List<AnimationClipOverrideEntry> clipOverrides)
     {
         clipOverrides = null;
-        if (string.IsNullOrWhiteSpace(targetCharacterID))
+        if (string.IsNullOrWhiteSpace(targetCharacterID) || Datas.Instance == null)
         {
             return false;
         }
@@ -50,12 +69,17 @@ public class CharacterAnimationOverrideDatabase : ScriptableObject
         for (int i = 0; i < characterOverrides.Count; i++)
         {
             CharacterAnimationOverrideEntry entry = characterOverrides[i];
-            if (entry == null || string.IsNullOrWhiteSpace(entry.characterID))
+            if (entry == null)
             {
                 continue;
             }
 
-            if (!string.Equals(entry.characterID, targetCharacterID, StringComparison.Ordinal))
+            if (!Datas.Instance.TryGetCharacterId(entry.characterType, out string resolvedCharacterID))
+            {
+                continue;
+            }
+
+            if (!string.Equals(resolvedCharacterID, targetCharacterID, StringComparison.Ordinal))
             {
                 continue;
             }

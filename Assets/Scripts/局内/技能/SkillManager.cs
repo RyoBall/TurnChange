@@ -64,8 +64,7 @@ public class SkillManager : MonoBehaviour
         UpdatePromptText($"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}");
         SetPromptVisible(true);
 
-        yield return new WaitUntil(() => m_selectedEnemies.Count >= m_requiredEnemyCount);
-
+        yield return new WaitUntil(() => m_selectedEnemies.Count >= m_requiredEnemyCount||Input.GetKeyDown(KeyCode.Mouse1));
         selectedResult?.Clear();
         if (selectedResult != null)
         {
@@ -146,7 +145,7 @@ public class SkillManager : MonoBehaviour
         m_isSelectingCharacters = true;
         UpdatePromptText($"请选择技能作用的我方角色:{m_selectedCharacters.Count}/{m_requiredCharacterCount}");
         SetPromptVisible(true);
-        yield return new WaitUntil(() => m_selectedCharacters.Count >= m_requiredCharacterCount);
+        yield return new WaitUntil(() => m_selectedCharacters.Count >= m_requiredCharacterCount||Input.GetKeyDown(KeyCode.Mouse1));
 
         selectedResult?.Clear();
         if (selectedResult != null)

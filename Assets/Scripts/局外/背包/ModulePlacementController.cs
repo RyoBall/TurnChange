@@ -24,6 +24,7 @@ public class ModulePlacementController : MonoBehaviour//背包
     private readonly List<Vector2Int> m_shapeBuffer = new List<Vector2Int>();
     private readonly List<Image> m_cursorCells = new List<Image>();
     private readonly List<PlacedModuleData> m_placedDataBuffer = new List<PlacedModuleData>();
+    private readonly List<GridModuleDefinition> m_runtimeOwnedModules = new List<GridModuleDefinition>();
 
     private GridModuleDefinition m_selectedModule;
     private RectTransform m_cursorRoot;
@@ -31,8 +32,9 @@ public class ModulePlacementController : MonoBehaviour//背包
     private Vector2 m_currentPreviewStep = Vector2.one;
     private Vector2 m_currentPreviewDrawSize = Vector2.one;
     private int m_selectionChangedFrame = -1;
+    private bool m_runtimeModulesPrepared;
 
-    public int ModuleCount => Datas.Instance != null ? Datas.Instance.GetOwnedModules().Count : 0;
+    public int ModuleCount => GetOwnedModules().Count;
 
     private void Awake()
     {
@@ -130,7 +132,7 @@ public class ModulePlacementController : MonoBehaviour//背包
         {
             if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
             {
-                if (!datas.TryPickupOwnedModule(pickedModule))
+                if (!TryGetRuntimeModuleIndex(pickedModule, out int moduleIndex) || !TryRemovePlacedModuleData(datas, moduleIndex))
                 {
                     Debug.LogWarning("[ModulePlacementController] 从 Datas 取回模块失败，已按数据源重建网格。", this);
                     RestorePlacedModulesFromData();
@@ -138,7 +140,7 @@ public class ModulePlacementController : MonoBehaviour//背包
                     return;
                 }
 
-                SetSelection(pickedModule);
+                SetSelection(GetOwnedModule(moduleIndex));
                 if (selectionText != null)
                 {
                     selectionText.text = "已从网格取回：" + pickedModule.moduleName;
@@ -158,7 +160,7 @@ public class ModulePlacementController : MonoBehaviour//背包
             return;
         }
 
-        if (!datas.TryPlaceOwnedModule(m_selectedModule, cell))
+        if (!TryGetRuntimeModuleIndex(m_selectedModule, out int selectedModuleIndex) || !TryStorePlacedModuleData(datas, selectedModuleIndex, cell))
         {
             placementBoard.TryPickupModuleAt(cell, out _);
             Debug.LogWarning("[ModulePlacementController] 向 Datas 写入放置结果失败，已回滚本次放置。", this);
@@ -215,7 +217,7 @@ public class ModulePlacementController : MonoBehaviour//背包
     {
         if (inventoryView != null)
         {
-            inventoryView.Rebuild(Datas.Instance != null ? Datas.Instance.GetOwnedModules() : null, m_selectedModule);
+            inventoryView.Rebuild(GetOwnedModules(), m_selectedModule);
         }
     }
 
@@ -226,11 +228,14 @@ public class ModulePlacementController : MonoBehaviour//背包
             return;
         }
 
-        GridModuleDefinition runtimeModule = Datas.Instance.AddOwnedModule(module);
-        if (runtimeModule == null)
+        int addedModuleIndex = Datas.Instance.GetOwnedModuleDefinitions().Count;
+        GridModuleDefinition storedModule = Datas.Instance.AddOwnedModule(module);
+        if (storedModule == null)
         {
             return;
         }
+
+        GridModuleDefinition runtimeModule = GetOwnedModule(addedModuleIndex);
 
         if (autoSelect)
         {
@@ -256,8 +261,8 @@ public class ModulePlacementController : MonoBehaviour//背包
             return;
         }
 
-        IReadOnlyList<GridModuleDefinition> ownedModules = Datas.Instance.GetOwnedModules();
-        Datas.Instance.GetPlacedModuleData(m_placedDataBuffer);
+        IReadOnlyList<GridModuleDefinition> ownedModules = GetOwnedModules();
+        CopyPlacedModuleData(m_placedDataBuffer);
 
         for (int i = 0; i < m_placedDataBuffer.Count; i++)
         {
@@ -309,9 +314,16 @@ public class ModulePlacementController : MonoBehaviour//背包
 
     private void HandleModuleStateChanged()
     {
+        int selectedModuleIndex = m_selectedModule != null ? m_runtimeOwnedModules.IndexOf(m_selectedModule) : -1;
+        m_runtimeModulesPrepared = false;
         RestorePlacedModulesFromData();
 
-        if (m_selectedModule != null && m_selectedModule.IsLoaded)
+        if (selectedModuleIndex >= 0)
+        {
+            GridModuleDefinition refreshedModule = GetOwnedModule(selectedModuleIndex);
+            m_selectedModule = refreshedModule != null && !refreshedModule.IsLoaded ? refreshedModule : null;
+        }
+        else if (m_selectedModule != null)
         {
             m_selectedModule = null;
         }
@@ -537,5 +549,160 @@ public class ModulePlacementController : MonoBehaviour//背包
         float t = cursorPreviewScaleMaxDimension <= 1 ? 1f : Mathf.InverseLerp(1f, cursorPreviewScaleMaxDimension, maxDimension);
         float scale = Mathf.Lerp(1.15f, 0.7f, t);
         return new Vector2(Mathf.Max(1f, baseWidth * scale), Mathf.Max(1f, baseHeight * scale));
+    }
+
+    public IReadOnlyList<GridModuleDefinition> GetOwnedModules()
+    {
+        EnsureRuntimeModulesPrepared();
+        return m_runtimeOwnedModules;
+    }
+
+    private GridModuleDefinition GetOwnedModule(int moduleIndex)
+    {
+        EnsureRuntimeModulesPrepared();
+        return moduleIndex >= 0 && moduleIndex < m_runtimeOwnedModules.Count ? m_runtimeOwnedModules[moduleIndex] : null;
+    }
+
+    private bool TryGetRuntimeModuleIndex(GridModuleDefinition module, out int moduleIndex)
+    {
+        EnsureRuntimeModulesPrepared();
+        moduleIndex = module != null ? m_runtimeOwnedModules.IndexOf(module) : -1;
+        return moduleIndex >= 0;
+    }
+
+    private void EnsureRuntimeModulesPrepared()
+    {
+        if (m_runtimeModulesPrepared)
+        {
+            return;
+        }
+
+        m_runtimeModulesPrepared = true;
+        m_runtimeOwnedModules.Clear();
+
+        Datas datas = Datas.Instance;
+        if (datas == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<GridModuleDefinition> ownedModuleDefinitions = datas.GetOwnedModuleDefinitions();
+        for (int i = 0; i < ownedModuleDefinitions.Count; i++)
+        {
+            GridModuleDefinition sourceModule = ownedModuleDefinitions[i];
+            m_runtimeOwnedModules.Add(sourceModule != null ? sourceModule.Clone() : null);
+        }
+
+        CopyPlacedModuleData(m_placedDataBuffer);
+        for (int i = 0; i < m_placedDataBuffer.Count; i++)
+        {
+            PlacedModuleData placedModule = m_placedDataBuffer[i];
+            if (placedModule == null)
+            {
+                continue;
+            }
+
+            GridModuleDefinition runtimeModule = GetOwnedModuleUnsafe(placedModule.ModuleIndex);
+            if (runtimeModule != null && !runtimeModule.IsLoaded)
+            {
+                runtimeModule.ApplyToBoard();
+            }
+        }
+    }
+
+    private GridModuleDefinition GetOwnedModuleUnsafe(int moduleIndex)
+    {
+        return moduleIndex >= 0 && moduleIndex < m_runtimeOwnedModules.Count ? m_runtimeOwnedModules[moduleIndex] : null;
+    }
+
+    private void CopyPlacedModuleData(List<PlacedModuleData> results)
+    {
+        if (results == null)
+        {
+            return;
+        }
+
+        results.Clear();
+
+        Datas datas = Datas.Instance;
+        if (datas == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<PlacedModuleData> placedModuleEntries = datas.GetPlacedModuleEntries();
+        for (int i = 0; i < placedModuleEntries.Count; i++)
+        {
+            PlacedModuleData placedModule = placedModuleEntries[i];
+            if (placedModule != null)
+            {
+                results.Add(new PlacedModuleData(placedModule.ModuleIndex, placedModule.AnchorCell));
+            }
+        }
+    }
+
+    private bool TryStorePlacedModuleData(Datas datas, int moduleIndex, Vector2Int anchorCell)
+    {
+        if (datas == null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<GridModuleDefinition> ownedModuleDefinitions = datas.GetOwnedModuleDefinitions();
+        if (moduleIndex < 0 || moduleIndex >= ownedModuleDefinitions.Count)
+        {
+            return false;
+        }
+
+        RemovePlacedEntriesForModule(datas, moduleIndex);
+        datas.AddPlacedModuleEntry(new PlacedModuleData(moduleIndex, anchorCell));
+        datas.SetHasModuleState(ownedModuleDefinitions.Count > 0 || datas.GetPlacedModuleEntries().Count > 0);
+        datas.NotifyModuleStateChanged();
+        return true;
+    }
+
+    private bool TryRemovePlacedModuleData(Datas datas, int moduleIndex)
+    {
+        if (datas == null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<GridModuleDefinition> ownedModuleDefinitions = datas.GetOwnedModuleDefinitions();
+        if (moduleIndex < 0 || moduleIndex >= ownedModuleDefinitions.Count)
+        {
+            return false;
+        }
+
+        bool removedAnyEntry = RemovePlacedEntriesForModule(datas, moduleIndex);
+        if (!removedAnyEntry)
+        {
+            return false;
+        }
+
+        datas.SetHasModuleState(ownedModuleDefinitions.Count > 0 || datas.GetPlacedModuleEntries().Count > 0);
+        datas.NotifyModuleStateChanged();
+        return true;
+    }
+
+    private bool RemovePlacedEntriesForModule(Datas datas, int moduleIndex)
+    {
+        bool removedAnyEntry = false;
+        IReadOnlyList<PlacedModuleData> placedModuleEntries = datas.GetPlacedModuleEntries();
+        for (int i = placedModuleEntries.Count - 1; i >= 0; i--)
+        {
+            PlacedModuleData placedModule = placedModuleEntries[i];
+            if (placedModule == null || placedModule.ModuleIndex != moduleIndex)
+            {
+                continue;
+            }
+
+            if (datas.RemovePlacedModuleEntryAt(i))
+            {
+                removedAnyEntry = true;
+            }
+        }
+
+        return removedAnyEntry;
     }
 }

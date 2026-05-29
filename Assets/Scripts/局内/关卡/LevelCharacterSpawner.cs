@@ -309,6 +309,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         instance.combatantName = string.IsNullOrEmpty(data.characterName) ? data.characterID : data.characterName;
         instance.skills = new List<CharacterSkillType>(data.skills);
         instance.enterSkill = data.enterSkill;
+        instance.additionalSkillType = data.additionalSkill;
         instance.participateInTurnLoopAtStart = participateInTurnLoop;
         instance.standPosition = standPosition;
         instance.level = Datas.Instance != null ? Datas.Instance.GetTeamLevel() : Mathf.Max(1, instance.level);
