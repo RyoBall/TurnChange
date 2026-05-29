@@ -2662,7 +2662,6 @@ MonoBehaviour:
   targetTransformOverride: {fileID: 0}
   useUnscaledTime: 1
   resetOnDisable: 1
-  uiEffect: {fileID: 0}
 --- !u!1 &470811352
 GameObject:
   m_ObjectHideFlags: 0
