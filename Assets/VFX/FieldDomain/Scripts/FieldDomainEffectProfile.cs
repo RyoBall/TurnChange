@@ -27,8 +27,8 @@ public class FieldDomainEffectProfile : ScriptableObject
     public Color borderVfxCoreColor = new Color(0.75f, 0.1f, 0.02f, 1f);
     public Texture2D flameNoiseTexture;
     [Tooltip("噪声贴图：X=沿屏幕边方向 Tiling，Y=向屏内渗透方向 Tiling")]
-    public Vector2 flameNoiseTiling = new Vector2(5.5f, 14f);
-    [Range(0.5f, 3f)] public float flameNoiseInwardStretch = 1.8f;
+    public Vector2 flameNoiseTiling = new Vector2(5f, 11f);
+    [Range(0.5f, 3f)] public float flameNoiseInwardStretch = 2f;
     [Tooltip("向屏内流动的滚动倍率（× borderVfxSpeed）")]
     [Range(0.1f, 2f)] public float flameNoiseInwardScroll = 0.4f;
 
@@ -119,8 +119,8 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.borderVfxSpeed = 2.2f;
         profile.borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
         profile.borderVfxCoreColor = new Color(0.75f, 0.1f, 0.02f, 1f);
-        profile.flameNoiseTiling = new Vector2(5.5f, 14f);
-        profile.flameNoiseInwardStretch = 1.8f;
+        profile.flameNoiseTiling = new Vector2(5f, 11f);
+        profile.flameNoiseInwardStretch = 2f;
         profile.flameNoiseInwardScroll = 0.4f;
 #if UNITY_EDITOR
         if (profile.flameNoiseTexture == null)

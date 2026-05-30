@@ -199,20 +199,33 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
             float2 BuildInwardFlameUV(float alongCoord, float inwardNorm)
             {
                 float along = alongCoord * _FlameNoiseTiling.x;
-                float inward = inwardNorm * _FlameNoiseTiling.y * _FlameNoiseInwardStretch;
+                float inward = inwardNorm * _FlameNoiseTiling.y * _FlameNoiseInwardStretch * 2.4;
                 float scroll = GetFlameInwardScroll();
                 return float2(along, inward - scroll);
             }
 
-            float SampleFlameRidgedInward(float2 flameUV, float inwardNorm)
+            float SampleFlameDensityInward(float2 flameUV, float inwardNorm)
             {
-                float n1 = SampleFlameNoise(flameUV);
-                float2 detailUV = float2(flameUV.x * 2.3, flameUV.y * 2.3 - GetFlameInwardScroll() * 0.35);
-                float n2 = SampleFlameNoise(detailUV);
-                float combined = n1 * 0.65 + n2 * 0.35;
-                float ridged = 1.0 - abs(combined * 2.0 - 1.0);
-                float flicker = 0.72 + 0.28 * sin(_EffectTime * _BorderVfxSpeed * 2.5 + inwardNorm * 12.0);
-                return ridged * flicker;
+                float warpIn = SampleFlameNoise(float2(flameUV.x * 0.35 + 6.0, flameUV.y * 0.55 + 3.0)) - 0.5;
+                float2 uv = float2(flameUV.x + warpIn * 0.022, flameUV.y + warpIn * 0.065);
+
+                float primary = SampleFlameNoise(uv);
+                float detail = SampleFlameNoise(float2(uv.x * 1.6, uv.y * 2.75));
+
+                float ridged = 1.0 - abs(primary * 2.0 - 1.0);
+                float ridgedDetail = 1.0 - abs(detail * 2.0 - 1.0);
+                float tongues = saturate(ridged * 0.72 + ridgedDetail * 0.48);
+                tongues = pow(tongues, 1.4);
+
+                float softFill = smoothstep(0.22, 0.7, primary * 0.55 + detail * 0.45);
+                float density = saturate(tongues * 0.92 + softFill * 0.26);
+
+                float edgeWeight = 1.0 - inwardNorm * 0.55;
+                density *= 0.5 + 0.5 * edgeWeight;
+                density = max(density, edgeWeight * 0.2);
+
+                float flicker = 0.88 + 0.12 * sin(_EffectTime * _BorderVfxSpeed * 2.4 + inwardNorm * 9.5);
+                return saturate(density * flicker);
             }
 
             float EvaluateEdgeFlame(float alongCoord, float edgeDist)
@@ -226,7 +239,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 float inwardNorm = saturate(edgeDist / depth);
                 float2 flameUV = BuildInwardFlameUV(alongCoord, inwardNorm);
-                return SampleFlameRidgedInward(flameUV, inwardNorm) * edgeMask;
+                return SampleFlameDensityInward(flameUV, inwardNorm) * edgeMask;
             }
 
             void ApplyVerdictBorderFlame(inout float3 result, float2 uv, float borderMaskBase, float breath)
@@ -246,12 +259,12 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float flameBottom = EvaluateEdgeFlame(uv.x, distBottom);
                 float flameTop = EvaluateEdgeFlame(uv.x, distTop);
 
-                float ridged = max(max(flameLeft, flameRight), max(flameBottom, flameTop));
+                float density = max(max(flameLeft, flameRight), max(flameBottom, flameTop));
 
                 float borderMask = borderMaskBase * _BorderVfxStrength;
-                float flame = borderMask * saturate(ridged * 1.6 - 0.38);
-                float3 flameColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(ridged), 0.7));
-                result += flameColor * flame * (1.0 + breath * 0.5);
+                float flame = borderMask * smoothstep(0.1, 0.92, density);
+                float3 flameColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(density), 0.72));
+                result += flameColor * flame * (1.1 + breath * 0.4);
             }
 
             void ApplyDesperationBorderMist(inout float3 result, float2 uv, float borderMaskBase, float pulse)
@@ -281,9 +294,9 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float ringBandNorm = saturate((dist - _Radius) / max(_WaveWidth, 0.001));
                 float alongRing = angle * 0.286; // ~1.8 / (2*pi) for tiling along circumference
                 float2 ringUV = BuildInwardFlameUV(alongRing, ringBandNorm);
-                float ridged = SampleFlameRidgedInward(ringUV, ringBandNorm);
-                float burn = waveRing * _RingBurnStrength * saturate(ridged * 1.55 - 0.38);
-                float3 burnColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(ridged), 0.7));
+                float density = SampleFlameDensityInward(ringUV, ringBandNorm);
+                float burn = waveRing * _RingBurnStrength * smoothstep(0.1, 0.92, density);
+                float3 burnColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(density), 0.72));
                 result += burnColor * burn * (1.2 + breath);
             }
 
