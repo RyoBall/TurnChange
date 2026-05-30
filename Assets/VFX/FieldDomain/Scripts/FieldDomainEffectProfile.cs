@@ -21,8 +21,8 @@ public class FieldDomainEffectProfile : ScriptableObject
     [Header("Border VFX")]
     [Range(0f, 1.5f)] public float borderVfxStrength = 0.6f;
     [Range(0.02f, 0.35f)] public float borderVfxDepth = 0.12f;
-    [Tooltip("越大火焰内缘越柔和（暗角式衰减），越小越贴边成硬框")]
-    [Range(0.25f, 1.5f)] public float borderVfxEdgeSoftness = 0.72f;
+    [Tooltip("重裁/绝境：越大火焰内缘越柔和。奇迹：玻璃内侧衰减幂次，越大过渡越长（建议 2.5~4）")]
+    [Range(0.25f, 4f)] public float borderVfxEdgeSoftness = 0.72f;
     [Range(0f, 1.5f)] public float ringBurnStrength;
     [Range(0.5f, 4f)] public float borderVfxSpeed = 1.2f;
     public Color borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
@@ -173,17 +173,17 @@ public class FieldDomainEffectProfile : ScriptableObject
     {
         profile.visualStyle = FieldDomainVisualStyle.MiracleRadiance;
         profile.grainStrength = 0f;
-        profile.chromaticStrength = 0f;
-        profile.radialGlowStrength = 0.42f;
+        profile.chromaticStrength = 0.35f;
+        profile.radialGlowStrength = 0.1f;
         profile.heatShimmerStrength = 0f;
         profile.secondaryAccentColor = new Color(0.92f, 1f, 0.88f, 1f);
-        profile.tint = new Color(0.5f, 0.95f, 0.7f, 0.45f);
+        profile.tint = new Color(0.5f, 0.95f, 0.7f, 0.14f);
         profile.saturation = 1.05f;
         profile.contrast = 0.94f;
         profile.exposure = 1.1f;
         profile.distortionStrength = 0f;
         profile.vignetteColor = new Color(0.05f, 0.14f, 0.22f, 1f);
-        profile.vignetteIntensity = 0.1f;
+        profile.vignetteIntensity = 0.06f;
         profile.gridColor = new Color(0.82f, 0.98f, 0.92f, 0.75f);
         profile.gridLineWidth = 1.6f;
         profile.gridScale = 0.85f;
@@ -194,11 +194,14 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.breathAmplitude = 0.32f;
         profile.heartbeatBpm = 0f;
         profile.heartbeatStrength = 0f;
-        profile.bloomStrength = 0.9f;
-        profile.volumeBloomIntensity = 2.2f;
-        profile.borderVfxStrength = 0f;
-        profile.borderVfxDepth = 0.12f;
+        profile.bloomStrength = 0.5f;
+        profile.volumeBloomIntensity = 0.85f;
+        profile.borderVfxStrength = 0.8f;
+        profile.borderVfxDepth = 0.22f;
+        profile.borderVfxEdgeSoftness = 3f;
         profile.ringBurnStrength = 0f;
-        profile.borderVfxSpeed = 1f;
+        profile.borderVfxSpeed = 1.15f;
+        profile.borderVfxHotColor = new Color(1f, 0.52f, 0.88f, 1f);
+        profile.borderVfxCoreColor = new Color(0.35f, 0.82f, 1f, 1f);
     }
 }
