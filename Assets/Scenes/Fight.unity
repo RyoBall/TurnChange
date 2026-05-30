@@ -4974,7 +4974,6 @@ GameObject:
   - component: {fileID: 888888802}
   - component: {fileID: 888888803}
   - component: {fileID: 888888804}
-  - component: {fileID: 888888805}
   m_Layer: 0
   m_Name: FieldDomainScreenEffect
   m_TagString: Untagged
@@ -5035,27 +5034,10 @@ MonoBehaviour:
   enableQuickTest: 1
   showOnScreenPanel: 1
   logStatusToConsole: 1
-  testOrigin: {fileID: 0}
+  burstOrigin: {fileID: 0}
   activeHoldDuration: 2
-  useFirstFieldCharacterAsOrigin: 0
-  useScreenCenterIfNoOrigin: 1
-  screenCenterDepth: 8
+  useFirstFieldCharacterForBurst: 1
   effectController: {fileID: 888888803}
-  previewCamera: {fileID: 330585545}
---- !u!114 &888888805
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 888888801}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e0f1a2b3c4d5e6f7890abcdef123456, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  effectController: {fileID: 888888803}
-  targetCamera: {fileID: 330585545}
 --- !u!1 &894470443
 GameObject:
   m_ObjectHideFlags: 0

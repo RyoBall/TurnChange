@@ -3,7 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// Fight 场景运行时快速预览三种场域展开效果。
-/// 快捷键：1/2/3 完整循环，Q 收缩，R 停止，C 切换扩散中心。
+/// 快捷键：1/2/3 完整循环，Q 收缩，R 停止。
+/// 后处理扩散/收缩固定从屏幕中心 (0.5, 0.5)；可选 Transform 仅用于爆发粒子位置。
 /// </summary>
 public class FieldDomainEffectTester : MonoBehaviour
 {
@@ -13,17 +14,13 @@ public class FieldDomainEffectTester : MonoBehaviour
     [SerializeField] private bool logStatusToConsole = true;
 
     [Header("预览参数")]
-    [SerializeField] private Transform testOrigin;
+    [SerializeField] private Transform burstOrigin;
     [SerializeField] private float activeHoldDuration = 2f;
-    [SerializeField] private bool useFirstFieldCharacterAsOrigin = true;
-    [SerializeField] private bool useScreenCenterIfNoOrigin = true;
-    [SerializeField] private float screenCenterDepth = 8f;
+    [SerializeField] private bool useFirstFieldCharacterForBurst = true;
 
     [Header("References")]
     [SerializeField] private FieldDomainScreenEffectController effectController;
-    [SerializeField] private Camera previewCamera;
 
-    private Transform m_RuntimeOrigin;
     private Coroutine m_PreviewCoroutine;
     private GUIStyle m_PanelStyle;
     private GUIStyle m_ButtonStyle;
@@ -41,13 +38,6 @@ public class FieldDomainEffectTester : MonoBehaviour
         {
             effectController = FieldDomainScreenEffectController.Instance;
         }
-
-        if (previewCamera == null)
-        {
-            previewCamera = Camera.main;
-        }
-
-        EnsureRuntimeOrigin();
     }
 
     private void Update()
@@ -77,10 +67,6 @@ public class FieldDomainEffectTester : MonoBehaviour
         {
             StopPreview();
         }
-        else if (Input.GetKeyDown(KeyCode.C))
-        {
-            CycleOriginMode();
-        }
     }
 
     private void OnGUI()
@@ -93,7 +79,7 @@ public class FieldDomainEffectTester : MonoBehaviour
         InitStyles();
 
         const float panelWidth = 320f;
-        const float panelHeight = 300f;
+        const float panelHeight = 260f;
         Rect panelRect = new Rect(16f, 16f, panelWidth, panelHeight);
         GUI.Box(panelRect, GUIContent.none, m_PanelStyle);
 
@@ -133,13 +119,8 @@ public class FieldDomainEffectTester : MonoBehaviour
             }
         }
 
-        if (GUILayout.Button("C · 切换扩散中心", m_ButtonStyle))
-        {
-            CycleOriginMode();
-        }
-
         GUILayout.Space(6f);
-        GUILayout.Label("快捷键：1/2/3 预览  Q收缩  R停止  C换中心", m_LabelStyle);
+        GUILayout.Label("快捷键：1/2/3 预览  Q收缩  R停止\n后处理中心：屏幕正中", m_LabelStyle);
         GUILayout.EndArea();
     }
 
@@ -175,12 +156,7 @@ public class FieldDomainEffectTester : MonoBehaviour
             return;
         }
 
-        Transform origin = ResolveOrigin();
-        if (origin == null)
-        {
-            Debug.LogWarning("[FieldDomainEffectTester] 无法确定扩散中心，请在 Inspector 指定 Test Origin。");
-            return;
-        }
+        Transform origin = ResolveBurstOrigin();
 
         if (m_PreviewCoroutine != null)
         {
@@ -189,7 +165,8 @@ public class FieldDomainEffectTester : MonoBehaviour
 
         if (logStatusToConsole)
         {
-            Debug.Log($"[FieldDomainEffectTester] 开始预览 {GetEnvironmentDisplayName(environmentType)}，中心={origin.name}，位置={origin.position}");
+            string burstInfo = origin != null ? $"粒子中心={origin.name}" : "无爆发粒子";
+            Debug.Log($"[FieldDomainEffectTester] 开始预览 {GetEnvironmentDisplayName(environmentType)}，屏幕中心扩散，{burstInfo}");
         }
 
         m_PreviewCoroutine = StartCoroutine(RunPreviewCycle(environmentType, origin));
@@ -208,8 +185,7 @@ public class FieldDomainEffectTester : MonoBehaviour
             m_PreviewCoroutine = null;
         }
 
-        Transform origin = ResolveOrigin();
-        m_PreviewCoroutine = StartCoroutine(RunContract(origin));
+        m_PreviewCoroutine = StartCoroutine(RunContract());
     }
 
     public void StopPreview()
@@ -239,7 +215,7 @@ public class FieldDomainEffectTester : MonoBehaviour
         }
     }
 
-    private IEnumerator RunContract(Transform origin)
+    private IEnumerator RunContract()
     {
         if (!effectController.HasActiveFieldVisual)
         {
@@ -251,34 +227,23 @@ public class FieldDomainEffectTester : MonoBehaviour
             yield break;
         }
 
-        yield return effectController.PlayContract(origin);
+        yield return effectController.PlayContract(null);
         m_PreviewCoroutine = null;
     }
 
-    private Transform ResolveOrigin()
+    private Transform ResolveBurstOrigin()
     {
-        if (testOrigin != null)
+        if (burstOrigin != null)
         {
-            return testOrigin;
+            return burstOrigin;
         }
 
-        if (useFirstFieldCharacterAsOrigin)
+        if (!useFirstFieldCharacterForBurst)
         {
-            Transform characterOrigin = TryGetFirstFieldCharacterTransform();
-            if (characterOrigin != null)
-            {
-                return characterOrigin;
-            }
+            return null;
         }
 
-        if (useScreenCenterIfNoOrigin)
-        {
-            EnsureRuntimeOrigin();
-            UpdateScreenCenterOrigin();
-            return m_RuntimeOrigin;
-        }
-
-        return null;
+        return TryGetFirstFieldCharacterTransform();
     }
 
     private Transform TryGetFirstFieldCharacterTransform()
@@ -297,67 +262,6 @@ public class FieldDomainEffectTester : MonoBehaviour
         return character != null ? character.transform : null;
     }
 
-    private void EnsureRuntimeOrigin()
-    {
-        if (m_RuntimeOrigin != null)
-        {
-            return;
-        }
-
-        GameObject originObject = new GameObject("FieldDomainTestOrigin");
-        originObject.hideFlags = HideFlags.HideAndDontSave;
-        m_RuntimeOrigin = originObject.transform;
-    }
-
-    private void UpdateScreenCenterOrigin()
-    {
-        if (m_RuntimeOrigin == null)
-        {
-            return;
-        }
-
-        Camera camera = previewCamera != null ? previewCamera : Camera.main;
-        if (camera == null)
-        {
-            m_RuntimeOrigin.position = Vector3.zero;
-            return;
-        }
-
-        Vector3 viewportCenter = new Vector3(0.5f, 0.42f, screenCenterDepth);
-        m_RuntimeOrigin.position = camera.ViewportToWorldPoint(viewportCenter);
-    }
-
-    private void CycleOriginMode()
-    {
-        if (testOrigin != null)
-        {
-            testOrigin = null;
-            useFirstFieldCharacterAsOrigin = true;
-            useScreenCenterIfNoOrigin = false;
-        }
-        else if (useFirstFieldCharacterAsOrigin)
-        {
-            useFirstFieldCharacterAsOrigin = false;
-            useScreenCenterIfNoOrigin = true;
-        }
-        else
-        {
-            useScreenCenterIfNoOrigin = false;
-            useFirstFieldCharacterAsOrigin = true;
-        }
-
-        Transform origin = ResolveOrigin();
-        if (logStatusToConsole)
-        {
-            string mode = testOrigin != null
-                ? "手动 Transform"
-                : useFirstFieldCharacterAsOrigin
-                    ? "首个在场角色"
-                    : "屏幕中心";
-            Debug.Log($"[FieldDomainEffectTester] 扩散中心模式：{mode}（当前={(origin != null ? origin.name : "无")}）");
-        }
-    }
-
     private string GetStatusText()
     {
         if (effectController == null)
@@ -372,15 +276,8 @@ public class FieldDomainEffectTester : MonoBehaviour
             : "无";
 
         string materialStatus = effectController.HasValidEffectMaterial ? "OK" : "缺失/编译失败";
-        string hookStatus = GetComponent<FieldDomainCameraRenderHook>() != null ? "已启用" : "未挂载";
 
-        string originMode = testOrigin != null
-            ? "手动"
-            : useFirstFieldCharacterAsOrigin
-                ? "角色"
-                : "屏幕中心";
-
-        return $"渲染:{rendering}  阶段:{phase}\n场域:{type}  半径:{effectController.CurrentRadius:F2}\nShader材质:{materialStatus}  运行时Hook:{hookStatus}\n中心模式:{originMode}";
+        return $"渲染:{rendering}  阶段:{phase}\n场域:{type}  半径:{effectController.CurrentRadius:F2}\nShader材质:{materialStatus}\n后处理中心:屏幕正中 (0.5, 0.5)";
     }
 
     private static string GetEnvironmentDisplayName(EnvironmentType environmentType)
@@ -434,14 +331,5 @@ public class FieldDomainEffectTester : MonoBehaviour
         texture.SetPixels(pixels);
         texture.Apply();
         return texture;
-    }
-
-    private void OnDestroy()
-    {
-        if (m_RuntimeOrigin != null)
-        {
-            Destroy(m_RuntimeOrigin.gameObject);
-            m_RuntimeOrigin = null;
-        }
     }
 }

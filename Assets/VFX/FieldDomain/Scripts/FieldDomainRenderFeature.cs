@@ -2,6 +2,10 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
+/// <summary>
+/// Full-screen post-processing after opaque+transparent, before URP post-processing (UI renders later).
+/// Matches URP FullScreenPassRendererFeature: copy camera color → DrawProcedural. No SwapColorBuffer.
+/// </summary>
 public class FieldDomainRenderFeature : ScriptableRendererFeature
 {
     [SerializeField] private Shader effectShader;
@@ -13,11 +17,15 @@ public class FieldDomainRenderFeature : ScriptableRendererFeature
     {
         m_RenderPass ??= new FieldDomainRenderPass();
         EnsureFallbackMaterial();
-        m_RenderPass.Setup(ResolveMaterial());
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
+        if (UniversalRenderer.IsOffscreenDepthTexture(in renderingData.cameraData))
+        {
+            return;
+        }
+
         Material material = ResolveMaterial();
         if (material == null || m_RenderPass == null)
         {
@@ -35,13 +43,13 @@ public class FieldDomainRenderFeature : ScriptableRendererFeature
         }
 
         m_RenderPass.Setup(material);
-        m_RenderPass.renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
         renderer.EnqueuePass(m_RenderPass);
     }
 
     protected override void Dispose(bool disposing)
     {
         m_RenderPass?.DisposePass();
+        m_RenderPass = null;
         CoreUtils.Destroy(m_FallbackMaterial);
         m_FallbackMaterial = null;
     }
@@ -78,50 +86,70 @@ public class FieldDomainRenderFeature : ScriptableRendererFeature
 
     private sealed class FieldDomainRenderPass : ScriptableRenderPass
     {
-        private const string ProfilerTag = "FieldDomainEffect";
+        private static readonly int BlitTextureId = Shader.PropertyToID("_BlitTexture");
+        private static readonly int BlitScaleBiasId = Shader.PropertyToID("_BlitScaleBias");
+        private static readonly MaterialPropertyBlock s_PropertyBlock = new MaterialPropertyBlock();
 
         private Material m_Material;
-        private RTHandle m_TempColorTarget;
+        private RTHandle m_CopiedColor;
+
+        public FieldDomainRenderPass()
+        {
+            renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
+            profilingSampler = new ProfilingSampler("FieldDomainEffect");
+        }
 
         public void Setup(Material material)
         {
             m_Material = material;
-            profilingSampler = new ProfilingSampler(ProfilerTag);
         }
 
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            if (m_Material == null)
-            {
-                return;
-            }
-
-            FieldDomainScreenEffectController.Instance?.ApplyToMaterial(m_Material);
+            ResetTarget();
 
             RenderTextureDescriptor descriptor = renderingData.cameraData.cameraTargetDescriptor;
+            descriptor.msaaSamples = 1;
             descriptor.depthBufferBits = 0;
             RenderingUtils.ReAllocateIfNeeded(
-                ref m_TempColorTarget,
+                ref m_CopiedColor,
                 descriptor,
                 FilterMode.Bilinear,
                 TextureWrapMode.Clamp,
-                name: "_FieldDomainTempColor");
+                name: "_FieldDomainColorCopy");
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            if (m_Material == null || !FieldDomainScreenEffectController.IsRendering)
+            if (m_Material == null || m_CopiedColor == null || !FieldDomainScreenEffectController.IsRendering)
             {
                 return;
             }
 
-            FieldDomainScreenEffectController.Instance?.ApplyToMaterial(m_Material);
+            FieldDomainScreenEffectController controller = FieldDomainScreenEffectController.Instance;
+            controller?.ApplyToMaterial(m_Material);
 
-            CommandBuffer cmd = CommandBufferPool.Get(ProfilerTag);
-            RTHandle source = renderingData.cameraData.renderer.cameraColorTargetHandle;
+            CommandBuffer cmd = CommandBufferPool.Get("FieldDomainEffect");
+            RTHandle cameraColor = renderingData.cameraData.renderer.cameraColorTargetHandle;
 
-            Blitter.BlitCameraTexture(cmd, source, m_TempColorTarget, m_Material, 0);
-            Blitter.BlitCameraTexture(cmd, m_TempColorTarget, source);
+            using (new ProfilingScope(cmd, profilingSampler))
+            {
+                Blitter.BlitCameraTexture(cmd, cameraColor, m_CopiedColor, 0f, false);
+
+                CoreUtils.SetRenderTarget(cmd, cameraColor);
+                s_PropertyBlock.Clear();
+                controller?.ApplyToPropertyBlock(s_PropertyBlock);
+                s_PropertyBlock.SetTexture(BlitTextureId, m_CopiedColor);
+                s_PropertyBlock.SetVector(BlitScaleBiasId, new Vector4(1f, 1f, 0f, 0f));
+                cmd.DrawProcedural(
+                    Matrix4x4.identity,
+                    m_Material,
+                    0,
+                    MeshTopology.Triangles,
+                    3,
+                    1,
+                    s_PropertyBlock);
+            }
 
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
@@ -129,8 +157,8 @@ public class FieldDomainRenderFeature : ScriptableRendererFeature
 
         public void DisposePass()
         {
-            m_TempColorTarget?.Release();
-            m_TempColorTarget = null;
+            m_CopiedColor?.Release();
+            m_CopiedColor = null;
         }
     }
 }

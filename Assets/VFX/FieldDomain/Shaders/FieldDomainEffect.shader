@@ -2,7 +2,31 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        [HideInInspector] _BlitTexture ("Blit Texture", 2D) = "white" {}
+        _Origin ("Origin", Vector) = (0.5, 0.5, 0, 0)
+        _Radius ("Radius", Float) = 0
+        _MaxRadius ("Max Radius", Float) = 1.5
+        _WaveWidth ("Wave Width", Float) = 0.035
+        _Phase ("Phase", Float) = 0
+        _Intensity ("Intensity", Float) = 1
+        _TintColor ("Tint Color", Color) = (1, 1, 1, 1)
+        _Saturation ("Saturation", Float) = 1
+        _Contrast ("Contrast", Float) = 1
+        _Exposure ("Exposure", Float) = 1
+        _DistortionStrength ("Distortion Strength", Float) = 0
+        _VignetteColor ("Vignette Color", Color) = (0, 0, 0, 1)
+        _VignetteIntensity ("Vignette Intensity", Float) = 0
+        _GridColor ("Grid Color", Color) = (1, 1, 1, 1)
+        _GridLineWidth ("Grid Line Width", Float) = 3
+        _GridScale ("Grid Scale", Float) = 1
+        _EdgeGridWidth ("Edge Grid Width", Float) = 0.025
+        _EdgeGridSoftness ("Edge Grid Softness", Float) = 0.02
+        _BreathSpeed ("Breath Speed", Float) = 1
+        _BreathAmplitude ("Breath Amplitude", Float) = 0.25
+        _HeartbeatPhase ("Heartbeat Phase", Float) = 0
+        _HeartbeatStrength ("Heartbeat Strength", Float) = 0
+        _BloomStrength ("Bloom Strength", Float) = 0
+        _EffectTime ("Effect Time", Float) = 0
     }
 
     SubShader
@@ -23,44 +47,32 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
-            TEXTURE2D(_MainTex);
-            SAMPLER(sampler_MainTex);
-
-            float4 SampleSourceColor(float2 uv)
-            {
-                // Blitter(RenderFeature) 使用 Blit.hlsl 中的 _BlitTexture；CommandBuffer.Blit(Hook) 使用 _MainTex。
-                float4 blitColor = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
-                float4 mainColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv);
-                return dot(blitColor, blitColor) >= dot(mainColor, mainColor) ? blitColor : mainColor;
-            }
-
-            float4 _Origin;
-            float _Radius;
-            float _MaxRadius;
-            float _WaveWidth;
-            float _Phase;
-            float _Intensity;
-
-            float4 _TintColor;
-            float _Saturation;
-            float _Contrast;
-            float _Exposure;
-            float _DistortionStrength;
-
-            float4 _VignetteColor;
-            float _VignetteIntensity;
-
-            float4 _GridColor;
-            float _GridLineWidth;
-            float _GridScale;
-            float _EdgeGridWidth;
-
-            float _BreathSpeed;
-            float _BreathAmplitude;
-            float _HeartbeatPhase;
-            float _HeartbeatStrength;
-            float _BloomStrength;
-            float _EffectTime;
+            CBUFFER_START(UnityPerMaterial)
+                float4 _Origin;
+                float _Radius;
+                float _MaxRadius;
+                float _WaveWidth;
+                float _Phase;
+                float _Intensity;
+                float4 _TintColor;
+                float _Saturation;
+                float _Contrast;
+                float _Exposure;
+                float _DistortionStrength;
+                float4 _VignetteColor;
+                float _VignetteIntensity;
+                float4 _GridColor;
+                float _GridLineWidth;
+                float _GridScale;
+                float _EdgeGridWidth;
+                float _EdgeGridSoftness;
+                float _BreathSpeed;
+                float _BreathAmplitude;
+                float _HeartbeatPhase;
+                float _HeartbeatStrength;
+                float _BloomStrength;
+                float _EffectTime;
+            CBUFFER_END
 
             float GridLine(float2 uv, float lineWidth)
             {
@@ -156,7 +168,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                     sampleUV += dir * sin(dist * 18.0 - _EffectTime * 4.0) * _DistortionStrength * insideMask * 0.01;
                 }
 
-                float4 source = SampleSourceColor(sampleUV);
+                float4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, sampleUV);
                 float3 graded = ApplyColorGrade(source.rgb, uv, insideMask, pulse);
                 graded = ApplyBloomApprox(graded, insideMask);
 
@@ -180,8 +192,10 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 if (_Phase >= 0.5 && _Phase < 1.5)
                 {
-                    float edgeDist = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
-                    float edgeMask = 1.0 - smoothstep(0.0, max(_EdgeGridWidth, 0.001), edgeDist);
+                    float ringDist = abs(dist - safeMaxRadius);
+                    float edgeInner = max(_EdgeGridWidth, 0.001);
+                    float edgeOuter = edgeInner + max(_EdgeGridSoftness, 0.001);
+                    float edgeMask = 1.0 - smoothstep(edgeInner, edgeOuter, ringDist);
                     edgeMask *= _Intensity;
 
                     float edgeBreath = 0.5 + 0.5 * sin(_EffectTime * _BreathSpeed);

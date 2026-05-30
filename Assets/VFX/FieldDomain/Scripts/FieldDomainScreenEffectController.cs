@@ -40,6 +40,9 @@ public class FieldDomainScreenEffectController : MonoBehaviour
     private static readonly int HeartbeatStrengthId = Shader.PropertyToID("_HeartbeatStrength");
     private static readonly int BloomStrengthId = Shader.PropertyToID("_BloomStrength");
     private static readonly int EffectTimeId = Shader.PropertyToID("_EffectTime");
+    private static readonly int EdgeGridSoftnessId = Shader.PropertyToID("_EdgeGridSoftness");
+
+    private static readonly Vector2 ScreenCenterOrigin = new Vector2(0.5f, 0.5f);
 
     [Header("References")]
     [SerializeField] private Camera targetCamera;
@@ -209,7 +212,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
 
         if (m_HasActiveFieldVisual && m_Phase == FieldDomainVisualPhase.Active)
         {
-            yield return PlayContractInternal(m_ContractOriginUv, contractDuration);
+            yield return PlayContractInternal(GetEffectOrigin(), contractDuration);
         }
 
         FieldDomainEffectProfile profile = ResolveProfile(environmentType);
@@ -220,9 +223,10 @@ public class FieldDomainScreenEffectController : MonoBehaviour
 
         m_ActiveEnvironmentType = environmentType;
         m_ActiveProfile = profile;
-        m_OriginUv = GetViewportOrigin(origin);
-        m_ContractOriginUv = m_OriginUv;
-        m_MaxRadius = ComputeMaxRadius(m_OriginUv);
+        Vector2 effectOrigin = GetEffectOrigin();
+        m_OriginUv = effectOrigin;
+        m_ContractOriginUv = effectOrigin;
+        m_MaxRadius = ComputeMaxRadius(effectOrigin);
         m_EffectTime = 0f;
         m_HeartbeatPhase = 0f;
         m_EffectIntensity = 1f;
@@ -239,14 +243,13 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             float progress = Mathf.Clamp01(elapsed / Mathf.Max(duration, 0.0001f));
             float eased = Mathf.SmoothStep(0f, 1f, progress);
             m_Radius = Mathf.Lerp(0f, m_MaxRadius, eased);
-            m_OriginUv = GetViewportOrigin(origin);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
         m_Radius = m_MaxRadius;
         m_Phase = FieldDomainVisualPhase.Active;
-        m_ContractOriginUv = m_OriginUv;
+        m_ContractOriginUv = GetEffectOrigin();
     }
 
     /// <summary>快速预览：扩散 → 保持激活 → 收缩，不依赖 EnvironmentManager。</summary>
@@ -292,13 +295,12 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             StopCoroutine(m_SequenceCoroutine);
         }
 
-        m_SequenceCoroutine = StartCoroutine(PlayContractRoutine(m_ContractOriginUv, contractDuration));
+        m_SequenceCoroutine = StartCoroutine(PlayContractRoutine(GetEffectOrigin(), contractDuration));
     }
 
     public IEnumerator PlayContract(Transform origin, float duration = -1f)
     {
-        Vector2 originUv = origin != null ? GetViewportOrigin(origin) : m_ContractOriginUv;
-        yield return PlayContractInternal(originUv, duration > 0f ? duration : contractDuration);
+        yield return PlayContractInternal(GetEffectOrigin(), duration > 0f ? duration : contractDuration);
     }
 
     public void ForceStop()
@@ -325,6 +327,30 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             return;
         }
 
+        ApplyShaderUniforms(
+            (id, v) => material.SetVector(id, v),
+            (id, f) => material.SetFloat(id, f),
+            (id, c) => material.SetColor(id, c));
+    }
+
+    public void ApplyToPropertyBlock(MaterialPropertyBlock block)
+    {
+        if (block == null || m_ActiveProfile == null)
+        {
+            return;
+        }
+
+        ApplyShaderUniforms(
+            (id, v) => block.SetVector(id, v),
+            (id, f) => block.SetFloat(id, f),
+            (id, c) => block.SetColor(id, c));
+    }
+
+    private void ApplyShaderUniforms(
+        System.Action<int, Vector4> setVector,
+        System.Action<int, float> setFloat,
+        System.Action<int, Color> setColor)
+    {
         float shaderPhase = m_Phase switch
         {
             FieldDomainVisualPhase.Expanding => 0f,
@@ -333,30 +359,33 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             _ => 0f
         };
 
-        material.SetVector(OriginId, new Vector4(m_OriginUv.x, m_OriginUv.y, 0f, 0f));
-        material.SetFloat(RadiusId, m_Radius);
-        material.SetFloat(MaxRadiusId, m_MaxRadius);
-        material.SetFloat(WaveWidthId, m_ActiveProfile.waveWidth);
-        material.SetFloat(PhaseId, shaderPhase);
-        material.SetFloat(IntensityId, m_EffectIntensity);
-        material.SetColor(TintColorId, m_ActiveProfile.tint);
-        material.SetFloat(SaturationId, m_ActiveProfile.saturation);
-        material.SetFloat(ContrastId, m_ActiveProfile.contrast);
-        material.SetFloat(ExposureId, m_ActiveProfile.exposure);
-        material.SetFloat(DistortionStrengthId, m_ActiveProfile.distortionStrength);
-        material.SetColor(VignetteColorId, m_ActiveProfile.vignetteColor);
-        material.SetFloat(VignetteIntensityId, m_ActiveProfile.vignetteIntensity);
-        material.SetColor(GridColorId, m_ActiveProfile.gridColor);
-        material.SetFloat(GridLineWidthId, m_ActiveProfile.gridLineWidth);
-        material.SetFloat(GridScaleId, m_ActiveProfile.gridScale);
-        material.SetFloat(EdgeGridWidthId, m_ActiveProfile.edgeGridWidth);
-        material.SetFloat(BreathSpeedId, m_ActiveProfile.breathSpeed);
-        material.SetFloat(BreathAmplitudeId, m_ActiveProfile.breathAmplitude);
-        material.SetFloat(HeartbeatPhaseId, m_HeartbeatPhase);
-        material.SetFloat(HeartbeatStrengthId, m_ActiveProfile.heartbeatStrength);
-        material.SetFloat(BloomStrengthId, m_ActiveProfile.bloomStrength);
-        material.SetFloat(EffectTimeId, m_EffectTime);
+        setVector(OriginId, new Vector4(m_OriginUv.x, m_OriginUv.y, 0f, 0f));
+        setFloat(RadiusId, m_Radius);
+        setFloat(MaxRadiusId, m_MaxRadius);
+        setFloat(WaveWidthId, m_ActiveProfile.waveWidth);
+        setFloat(PhaseId, shaderPhase);
+        setFloat(IntensityId, m_EffectIntensity);
+        setColor(TintColorId, m_ActiveProfile.tint);
+        setFloat(SaturationId, m_ActiveProfile.saturation);
+        setFloat(ContrastId, m_ActiveProfile.contrast);
+        setFloat(ExposureId, m_ActiveProfile.exposure);
+        setFloat(DistortionStrengthId, m_ActiveProfile.distortionStrength);
+        setColor(VignetteColorId, m_ActiveProfile.vignetteColor);
+        setFloat(VignetteIntensityId, m_ActiveProfile.vignetteIntensity);
+        setColor(GridColorId, m_ActiveProfile.gridColor);
+        setFloat(GridLineWidthId, m_ActiveProfile.gridLineWidth);
+        setFloat(GridScaleId, m_ActiveProfile.gridScale);
+        setFloat(EdgeGridWidthId, m_ActiveProfile.edgeGridWidth);
+        setFloat(EdgeGridSoftnessId, m_ActiveProfile.edgeGridSoftness);
+        setFloat(BreathSpeedId, m_ActiveProfile.breathSpeed);
+        setFloat(BreathAmplitudeId, m_ActiveProfile.breathAmplitude);
+        setFloat(HeartbeatPhaseId, m_HeartbeatPhase);
+        setFloat(HeartbeatStrengthId, m_ActiveProfile.heartbeatStrength);
+        setFloat(BloomStrengthId, m_ActiveProfile.bloomStrength);
+        setFloat(EffectTimeId, m_EffectTime);
     }
+
+    private static Vector2 GetEffectOrigin() => ScreenCenterOrigin;
 
     private IEnumerator PlayContractRoutine(Vector2 originUv, float duration)
     {
@@ -413,23 +442,6 @@ public class FieldDomainScreenEffectController : MonoBehaviour
         };
 
         return profile != null ? profile : FieldDomainEffectProfile.CreateRuntimePreset(environmentType);
-    }
-
-    private Vector2 GetViewportOrigin(Transform origin)
-    {
-        if (origin == null)
-        {
-            return m_OriginUv;
-        }
-
-        Camera camera = targetCamera != null ? targetCamera : Camera.main;
-        if (camera == null)
-        {
-            return new Vector2(0.5f, 0.5f);
-        }
-
-        Vector3 viewport = camera.WorldToViewportPoint(origin.position);
-        return new Vector2(Mathf.Clamp01(viewport.x), Mathf.Clamp01(viewport.y));
     }
 
     private static float ComputeMaxRadius(Vector2 originUv)

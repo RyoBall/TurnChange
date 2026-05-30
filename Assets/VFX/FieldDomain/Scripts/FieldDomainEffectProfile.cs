@@ -22,6 +22,7 @@ public class FieldDomainEffectProfile : ScriptableObject
     [Range(0.1f, 5f)] public float gridScale = 1f;
     [Range(0.001f, 0.2f)] public float waveWidth = 0.035f;
     [Range(0.001f, 0.15f)] public float edgeGridWidth = 0.025f;
+    [Range(0.001f, 0.08f)] public float edgeGridSoftness = 0.02f;
 
     [Header("Breathing")]
     [Range(0f, 5f)] public float breathSpeed = 1.2f;
@@ -47,7 +48,7 @@ public class FieldDomainEffectProfile : ScriptableObject
                 profile.saturation = 0.72f;
                 profile.contrast = 1.15f;
                 profile.exposure = 0.95f;
-                profile.distortionStrength = 1.1f;
+                profile.distortionStrength = 0.55f;
                 profile.vignetteColor = new Color(0.2f, 0.02f, 0.02f, 1f);
                 profile.vignetteIntensity = 0.25f;
                 profile.gridColor = new Color(1f, 0.35f, 0.12f, 1f);
@@ -62,7 +63,7 @@ public class FieldDomainEffectProfile : ScriptableObject
 
             case EnvironmentType.DesperationField:
                 profile.tint = new Color(0.08f, 0.02f, 0.02f, 0.35f);
-                profile.saturation = 0.05f;
+                profile.saturation = 0.35f;
                 profile.contrast = 1.55f;
                 profile.exposure = 1.05f;
                 profile.distortionStrength = 0.15f;
@@ -81,7 +82,7 @@ public class FieldDomainEffectProfile : ScriptableObject
                 break;
 
             case EnvironmentType.MiracleField:
-                profile.tint = new Color(0.75f, 0.92f, 1f, 0.45f);
+                profile.tint = new Color(0.55f, 0.95f, 0.72f, 0.5f);
                 profile.saturation = 1.05f;
                 profile.contrast = 0.95f;
                 profile.exposure = 1.12f;
