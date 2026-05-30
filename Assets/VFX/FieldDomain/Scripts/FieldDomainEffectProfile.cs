@@ -48,7 +48,7 @@ public class FieldDomainEffectProfile : ScriptableObject
                 profile.saturation = 0.72f;
                 profile.contrast = 1.15f;
                 profile.exposure = 0.95f;
-                profile.distortionStrength = 0.55f;
+                profile.distortionStrength = 0.2f;
                 profile.vignetteColor = new Color(0.2f, 0.02f, 0.02f, 1f);
                 profile.vignetteIntensity = 0.25f;
                 profile.gridColor = new Color(1f, 0.35f, 0.12f, 1f);
@@ -63,8 +63,8 @@ public class FieldDomainEffectProfile : ScriptableObject
 
             case EnvironmentType.DesperationField:
                 profile.tint = new Color(0.08f, 0.02f, 0.02f, 0.35f);
-                profile.saturation = 0.35f;
-                profile.contrast = 1.55f;
+                profile.saturation = 0.48f;
+                profile.contrast = 1.28f;
                 profile.exposure = 1.05f;
                 profile.distortionStrength = 0.15f;
                 profile.vignetteColor = new Color(0.35f, 0.02f, 0.02f, 1f);
