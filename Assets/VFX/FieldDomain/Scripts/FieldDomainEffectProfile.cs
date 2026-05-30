@@ -21,6 +21,8 @@ public class FieldDomainEffectProfile : ScriptableObject
     [Header("Border VFX")]
     [Range(0f, 1.5f)] public float borderVfxStrength = 0.6f;
     [Range(0.02f, 0.35f)] public float borderVfxDepth = 0.12f;
+    [Tooltip("越大火焰内缘越柔和（暗角式衰减），越小越贴边成硬框")]
+    [Range(0.25f, 1.5f)] public float borderVfxEdgeSoftness = 0.72f;
     [Range(0f, 1.5f)] public float ringBurnStrength;
     [Range(0.5f, 4f)] public float borderVfxSpeed = 1.2f;
     public Color borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
@@ -92,7 +94,7 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.grainStrength = 0f;
         profile.chromaticStrength = 0f;
         profile.radialGlowStrength = 0f;
-        profile.heatShimmerStrength = 0.85f;
+        profile.heatShimmerStrength = 0.58f;
         profile.secondaryAccentColor = new Color(1f, 0.78f, 0.22f, 1f);
         profile.tint = new Color(0.28f, 0.08f, 0.02f, 0.6f);
         profile.saturation = 0.7f;
@@ -115,6 +117,7 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.volumeBloomIntensity = 0f;
         profile.borderVfxStrength = 0.75f;
         profile.borderVfxDepth = 0.14f;
+        profile.borderVfxEdgeSoftness = 0.72f;
         profile.ringBurnStrength = 0.7f;
         profile.borderVfxSpeed = 2.2f;
         profile.borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);

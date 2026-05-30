@@ -35,6 +35,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
         _SecondaryAccentColor ("Secondary Accent Color", Color) = (1, 0.75, 0.2, 1)
         _BorderVfxStrength ("Border VFX Strength", Float) = 0.6
         _BorderVfxDepth ("Border VFX Depth", Float) = 0.12
+        _BorderVfxEdgeSoftness ("Border VFX Edge Softness", Float) = 0.72
         _RingBurnStrength ("Ring Burn Strength", Float) = 0.5
         _BorderVfxSpeed ("Border VFX Speed", Float) = 1.2
         _BorderVfxHotColor ("Border VFX Hot Color", Color) = (1, 0.95, 0.5, 1)
@@ -100,6 +101,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float4 _SecondaryAccentColor;
                 float _BorderVfxStrength;
                 float _BorderVfxDepth;
+                float _BorderVfxEdgeSoftness;
                 float _RingBurnStrength;
                 float _BorderVfxSpeed;
                 float4 _BorderVfxHotColor;
@@ -160,16 +162,32 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return frac(sin(dot(uv * 900.0 + time * 47.0, float2(12.9898, 78.233))) * 43758.5453) * 2.0 - 1.0;
             }
 
-            float EdgeDistanceUv(float2 uv)
+            float GetScreenAspect()
             {
-                float distX = min(uv.x, 1.0 - uv.x) / 0.85;
-                float distY = min(uv.y, 1.0 - uv.y) / 1.3;
+                return _ScreenParams.x / max(_ScreenParams.y, 1.0);
+            }
+
+            // 向内距离按「高度归一化」：左右边乘 aspect，与上下边在像素尺度上一致
+            float EdgeDistanceUv(float2 uv, float aspect)
+            {
+                float distX = min(uv.x, 1.0 - uv.x) * aspect;
+                float distY = min(uv.y, 1.0 - uv.y);
                 return min(distX, distY);
             }
 
             float BorderMaskFromEdge(float edgeDist, float depth)
             {
                 return 1.0 - smoothstep(0.0, depth, edgeDist);
+            }
+
+            // 沿最近边的向内距离（min），整条边都有遮罩；勿用 length(edgeVec)，那只会亮四角
+            float GetSoftEdgeBorderMask(float2 uv, float depth, float aspect)
+            {
+                float edgeDist = EdgeDistanceUv(uv, aspect);
+                float t = saturate(edgeDist / max(depth, 0.001));
+                float mask = 1.0 - smoothstep(0.0, 1.0, t);
+                float softness = max(_BorderVfxEdgeSoftness, 0.2);
+                return pow(saturate(mask), softness);
             }
 
             float Fbm(float2 uv)
@@ -228,40 +246,89 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return saturate(density * flicker);
             }
 
-            float EvaluateEdgeFlame(float alongCoord, float edgeDist)
+            int GetDominantEdge(float2 uv, float aspect)
             {
-                float depth = max(_BorderVfxDepth, 0.001);
-                float edgeMask = BorderMaskFromEdge(edgeDist, depth);
-                if (edgeMask <= 0.001)
+                float left = uv.x * aspect;
+                float right = (1.0 - uv.x) * aspect;
+                float bottom = uv.y;
+                float top = 1.0 - uv.y;
+                float minDist = left;
+                int edge = EDGE_LEFT;
+                if (right < minDist)
+                {
+                    minDist = right;
+                    edge = EDGE_RIGHT;
+                }
+                if (bottom < minDist)
+                {
+                    minDist = bottom;
+                    edge = EDGE_BOTTOM;
+                }
+                if (top < minDist)
+                {
+                    edge = EDGE_TOP;
+                }
+                return edge;
+            }
+
+            float GetEdgeDistForEdge(float2 uv, int edge, float aspect)
+            {
+                if (edge == EDGE_LEFT)
+                {
+                    return uv.x * aspect;
+                }
+                if (edge == EDGE_RIGHT)
+                {
+                    return (1.0 - uv.x) * aspect;
+                }
+                if (edge == EDGE_BOTTOM)
+                {
+                    return uv.y;
+                }
+                return (1.0 - uv.y);
+            }
+
+            float GetAlongEdgeCoord(float2 uv, int edge, float aspect)
+            {
+                if (edge == EDGE_LEFT || edge == EDGE_RIGHT)
+                {
+                    return uv.y;
+                }
+                return uv.x * aspect;
+            }
+
+            float EvaluateEdgeFlame(float alongCoord, float inwardNorm)
+            {
+                if (inwardNorm <= 0.001)
                 {
                     return 0.0;
                 }
 
-                float inwardNorm = saturate(edgeDist / depth);
                 float2 flameUV = BuildInwardFlameUV(alongCoord, inwardNorm);
-                return SampleFlameDensityInward(flameUV, inwardNorm) * edgeMask;
+                return SampleFlameDensityInward(flameUV, inwardNorm);
             }
 
-            void ApplyVerdictBorderFlame(inout float3 result, float2 uv, float borderMaskBase, float breath)
+            void ApplyVerdictBorderFlame(inout float3 result, float2 uv, float insideMask, float breath, float aspect)
             {
-                if (_BorderVfxStrength <= 0.001 || borderMaskBase <= 0.001)
+                if (_BorderVfxStrength <= 0.001 || insideMask <= 0.001)
                 {
                     return;
                 }
 
-                float distLeft = uv.x / 0.85;
-                float distRight = (1.0 - uv.x) / 0.85;
-                float distBottom = uv.y / 1.3;
-                float distTop = (1.0 - uv.y) / 1.3;
+                float depth = max(_BorderVfxDepth, 0.001);
+                float softBorderMask = GetSoftEdgeBorderMask(uv, depth, aspect);
+                if (softBorderMask <= 0.001)
+                {
+                    return;
+                }
 
-                float flameLeft = EvaluateEdgeFlame(uv.y, distLeft);
-                float flameRight = EvaluateEdgeFlame(uv.y, distRight);
-                float flameBottom = EvaluateEdgeFlame(uv.x, distBottom);
-                float flameTop = EvaluateEdgeFlame(uv.x, distTop);
+                int edge = GetDominantEdge(uv, aspect);
+                float edgeDist = GetEdgeDistForEdge(uv, edge, aspect);
+                float inwardNorm = saturate(edgeDist / depth);
+                float along = GetAlongEdgeCoord(uv, edge, aspect);
+                float density = EvaluateEdgeFlame(along, inwardNorm);
 
-                float density = max(max(flameLeft, flameRight), max(flameBottom, flameTop));
-
-                float borderMask = borderMaskBase * _BorderVfxStrength;
+                float borderMask = insideMask * softBorderMask * _BorderVfxStrength;
                 float flame = borderMask * smoothstep(0.1, 0.92, density);
                 float3 flameColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(density), 0.72));
                 result += flameColor * flame * (1.1 + breath * 0.4);
@@ -313,10 +380,10 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 {
                     float heat = _HeatShimmerStrength * insideMask;
                     float n = Noise(uv * 6.0 + _EffectTime * 1.2);
-                    sampleUV.y += sin(uv.x * 24.0 - _EffectTime * 3.5) * heat * 0.006;
-                    sampleUV.x += (n - 0.5) * heat * 0.004;
+                    sampleUV.y += sin(uv.x * 24.0 - _EffectTime * 3.5) * heat * 0.004;
+                    sampleUV.x += (n - 0.5) * heat * 0.0025;
                     float2 dir = normalize(aspectCorrected + float2(0.0001, 0.0));
-                    sampleUV += dir * sin(dist * 14.0 - _EffectTime * 3.0) * heat * 0.008;
+                    sampleUV += dir * sin(dist * 14.0 - _EffectTime * 3.0) * heat * 0.005;
                 }
                 else if (style != STYLE_DESPERATION && _DistortionStrength > 0.001 && insideMask > 0.001)
                 {
@@ -478,8 +545,9 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float2 uv = input.texcoord;
                 int style = (int)round(_VisualStyle);
 
+                float aspect = GetScreenAspect();
                 float2 aspectCorrected = uv - _Origin.xy;
-                aspectCorrected.x *= _ScreenParams.x / max(_ScreenParams.y, 1.0);
+                aspectCorrected.x *= aspect;
                 float dist = length(aspectCorrected);
 
                 float safeMaxRadius = max(_MaxRadius, 0.0001);
@@ -534,14 +602,14 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                     ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style);
                 }
 
-                float borderEdge = EdgeDistanceUv(uv);
-                float borderMaskBase = BorderMaskFromEdge(borderEdge, _BorderVfxDepth) * insideMask;
                 if (style == STYLE_VERDICT)
                 {
-                    ApplyVerdictBorderFlame(result, uv, borderMaskBase, breath);
+                    ApplyVerdictBorderFlame(result, uv, insideMask, breath, aspect);
                 }
                 else if (style == STYLE_DESPERATION)
                 {
+                    float borderEdge = EdgeDistanceUv(uv, aspect);
+                    float borderMaskBase = BorderMaskFromEdge(borderEdge, _BorderVfxDepth) * insideMask;
                     ApplyDesperationBorderMist(result, uv, borderMaskBase, pulse);
                 }
 

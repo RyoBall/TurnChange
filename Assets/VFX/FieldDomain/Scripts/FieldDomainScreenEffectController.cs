@@ -49,6 +49,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
     private static readonly int SecondaryAccentColorId = Shader.PropertyToID("_SecondaryAccentColor");
     private static readonly int BorderVfxStrengthId = Shader.PropertyToID("_BorderVfxStrength");
     private static readonly int BorderVfxDepthId = Shader.PropertyToID("_BorderVfxDepth");
+    private static readonly int BorderVfxEdgeSoftnessId = Shader.PropertyToID("_BorderVfxEdgeSoftness");
     private static readonly int RingBurnStrengthId = Shader.PropertyToID("_RingBurnStrength");
     private static readonly int BorderVfxSpeedId = Shader.PropertyToID("_BorderVfxSpeed");
     private static readonly int BorderVfxHotColorId = Shader.PropertyToID("_BorderVfxHotColor");
@@ -449,6 +450,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
         setColor(SecondaryAccentColorId, m_ActiveProfile.secondaryAccentColor);
         setFloat(BorderVfxStrengthId, m_ActiveProfile.borderVfxStrength);
         setFloat(BorderVfxDepthId, m_ActiveProfile.borderVfxDepth);
+        setFloat(BorderVfxEdgeSoftnessId, m_ActiveProfile.borderVfxEdgeSoftness);
         setFloat(RingBurnStrengthId, m_ActiveProfile.ringBurnStrength);
         setFloat(BorderVfxSpeedId, m_ActiveProfile.borderVfxSpeed);
         setColor(BorderVfxHotColorId, m_ActiveProfile.borderVfxHotColor);
