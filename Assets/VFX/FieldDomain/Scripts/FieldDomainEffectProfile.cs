@@ -1,8 +1,37 @@
 using UnityEngine;
 
+public enum FieldDomainVisualStyle
+{
+    VerdictFlame = 0,
+    DesperationPulse = 1,
+    MiracleRadiance = 2
+}
+
 [CreateAssetMenu(fileName = "FieldDomainEffectProfile", menuName = "TurnChange/Field Domain Effect Profile")]
 public class FieldDomainEffectProfile : ScriptableObject
 {
+    [Header("Style")]
+    public FieldDomainVisualStyle visualStyle = FieldDomainVisualStyle.VerdictFlame;
+    [Range(0f, 1f)] public float grainStrength;
+    [Range(0f, 1f)] public float chromaticStrength;
+    [Range(0f, 1f)] public float radialGlowStrength;
+    [Range(0f, 2f)] public float heatShimmerStrength;
+    public Color secondaryAccentColor = new Color(1f, 0.75f, 0.2f, 1f);
+
+    [Header("Border VFX")]
+    [Range(0f, 1.5f)] public float borderVfxStrength = 0.6f;
+    [Range(0.02f, 0.35f)] public float borderVfxDepth = 0.12f;
+    [Range(0f, 1.5f)] public float ringBurnStrength;
+    [Range(0.5f, 4f)] public float borderVfxSpeed = 1.2f;
+    public Color borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
+    public Color borderVfxCoreColor = new Color(0.75f, 0.1f, 0.02f, 1f);
+    public Texture2D flameNoiseTexture;
+    [Tooltip("噪声贴图：X=沿屏幕边方向 Tiling，Y=向屏内渗透方向 Tiling")]
+    public Vector2 flameNoiseTiling = new Vector2(5.5f, 14f);
+    [Range(0.5f, 3f)] public float flameNoiseInwardStretch = 1.8f;
+    [Tooltip("向屏内流动的滚动倍率（× borderVfxSpeed）")]
+    [Range(0.1f, 2f)] public float flameNoiseInwardScroll = 0.4f;
+
     [Header("Color Grading")]
     public Color tint = new Color(0.23f, 0.04f, 0.04f, 0.65f);
     [Range(0f, 2f)] public float saturation = 0.75f;
@@ -44,65 +73,129 @@ public class FieldDomainEffectProfile : ScriptableObject
         switch (environmentType)
         {
             case EnvironmentType.Gravity:
-                profile.tint = new Color(0.23f, 0.04f, 0.04f, 0.65f);
-                profile.saturation = 0.72f;
-                profile.contrast = 1.15f;
-                profile.exposure = 0.95f;
-                profile.distortionStrength = 0.2f;
-                profile.vignetteColor = new Color(0.2f, 0.02f, 0.02f, 1f);
-                profile.vignetteIntensity = 0.25f;
-                profile.gridColor = new Color(1f, 0.35f, 0.12f, 1f);
-                profile.gridLineWidth = 3.5f;
-                profile.gridScale = 1.1f;
-                profile.waveWidth = 0.04f;
-                profile.edgeGridWidth = 0.028f;
-                profile.breathSpeed = 1.4f;
-                profile.breathAmplitude = 0.2f;
-                profile.bloomStrength = 0.1f;
+                ConfigureVerdictPreset(profile);
                 break;
-
             case EnvironmentType.DesperationField:
-                profile.tint = new Color(0.08f, 0.02f, 0.02f, 0.35f);
-                profile.saturation = 0.48f;
-                profile.contrast = 1.28f;
-                profile.exposure = 1.05f;
-                profile.distortionStrength = 0.15f;
-                profile.vignetteColor = new Color(0.35f, 0.02f, 0.02f, 1f);
-                profile.vignetteIntensity = 0.65f;
-                profile.gridColor = new Color(0.85f, 0.1f, 0.1f, 0.9f);
-                profile.gridLineWidth = 2.8f;
-                profile.gridScale = 1.3f;
-                profile.waveWidth = 0.035f;
-                profile.edgeGridWidth = 0.03f;
-                profile.breathSpeed = 1.1f;
-                profile.breathAmplitude = 0.15f;
-                profile.heartbeatBpm = 72f;
-                profile.heartbeatStrength = 0.85f;
-                profile.bloomStrength = 0f;
+                ConfigureDesperationPreset(profile);
                 break;
-
             case EnvironmentType.MiracleField:
-                profile.tint = new Color(0.55f, 0.95f, 0.72f, 0.5f);
-                profile.saturation = 1.05f;
-                profile.contrast = 0.95f;
-                profile.exposure = 1.12f;
-                profile.distortionStrength = 0.05f;
-                profile.vignetteColor = new Color(0.05f, 0.15f, 0.25f, 1f);
-                profile.vignetteIntensity = 0.12f;
-                profile.gridColor = new Color(0.85f, 0.95f, 1f, 0.95f);
-                profile.gridLineWidth = 2.2f;
-                profile.gridScale = 0.9f;
-                profile.waveWidth = 0.045f;
-                profile.edgeGridWidth = 0.022f;
-                profile.breathSpeed = 0.55f;
-                profile.breathAmplitude = 0.35f;
-                profile.heartbeatBpm = 0f;
-                profile.heartbeatStrength = 0f;
-                profile.bloomStrength = 0.75f;
-                profile.volumeBloomIntensity = 2.2f;
+                ConfigureMiraclePreset(profile);
                 break;
         }
 
         return profile;
+    }
+
+    private static void ConfigureVerdictPreset(FieldDomainEffectProfile profile)
+    {
+        profile.visualStyle = FieldDomainVisualStyle.VerdictFlame;
+        profile.grainStrength = 0f;
+        profile.chromaticStrength = 0f;
+        profile.radialGlowStrength = 0f;
+        profile.heatShimmerStrength = 0.85f;
+        profile.secondaryAccentColor = new Color(1f, 0.78f, 0.22f, 1f);
+        profile.tint = new Color(0.28f, 0.08f, 0.02f, 0.6f);
+        profile.saturation = 0.7f;
+        profile.contrast = 1.12f;
+        profile.exposure = 0.96f;
+        profile.distortionStrength = 0f;
+        profile.vignetteColor = new Color(0.22f, 0.05f, 0.01f, 1f);
+        profile.vignetteIntensity = 0.18f;
+        profile.gridColor = new Color(1f, 0.55f, 0.15f, 1f);
+        profile.gridLineWidth = 3.2f;
+        profile.gridScale = 1.15f;
+        profile.waveWidth = 0.042f;
+        profile.edgeGridWidth = 0.026f;
+        profile.edgeGridSoftness = 0.018f;
+        profile.breathSpeed = 1.65f;
+        profile.breathAmplitude = 0.22f;
+        profile.heartbeatBpm = 0f;
+        profile.heartbeatStrength = 0f;
+        profile.bloomStrength = 0.15f;
+        profile.volumeBloomIntensity = 0f;
+        profile.borderVfxStrength = 0.75f;
+        profile.borderVfxDepth = 0.14f;
+        profile.ringBurnStrength = 0.7f;
+        profile.borderVfxSpeed = 2.2f;
+        profile.borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
+        profile.borderVfxCoreColor = new Color(0.75f, 0.1f, 0.02f, 1f);
+        profile.flameNoiseTiling = new Vector2(5.5f, 14f);
+        profile.flameNoiseInwardStretch = 1.8f;
+        profile.flameNoiseInwardScroll = 0.4f;
+#if UNITY_EDITOR
+        if (profile.flameNoiseTexture == null)
+        {
+            profile.flameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
+                "Assets/VFX/Textures/NoiseSmooth04.png");
+        }
+#endif
+    }
+
+    private static void ConfigureDesperationPreset(FieldDomainEffectProfile profile)
+    {
+        profile.visualStyle = FieldDomainVisualStyle.DesperationPulse;
+        profile.grainStrength = 0.3f;
+        profile.chromaticStrength = 0.45f;
+        profile.radialGlowStrength = 0f;
+        profile.heatShimmerStrength = 0f;
+        profile.secondaryAccentColor = new Color(0.55f, 0.05f, 0.08f, 1f);
+        profile.tint = new Color(0.1f, 0.02f, 0.03f, 0.32f);
+        profile.saturation = 0.46f;
+        profile.contrast = 1.25f;
+        profile.exposure = 1.04f;
+        profile.distortionStrength = 0f;
+        profile.vignetteColor = new Color(0.4f, 0.02f, 0.05f, 1f);
+        profile.vignetteIntensity = 0.62f;
+        profile.gridColor = new Color(0.7f, 0.08f, 0.12f, 0.92f);
+        profile.gridLineWidth = 2.4f;
+        profile.gridScale = 1.35f;
+        profile.waveWidth = 0.028f;
+        profile.edgeGridWidth = 0.022f;
+        profile.edgeGridSoftness = 0.015f;
+        profile.breathSpeed = 1.05f;
+        profile.breathAmplitude = 0.12f;
+        profile.heartbeatBpm = 72f;
+        profile.heartbeatStrength = 0.85f;
+        profile.bloomStrength = 0f;
+        profile.volumeBloomIntensity = 0f;
+        profile.borderVfxStrength = 0.65f;
+        profile.borderVfxDepth = 0.18f;
+        profile.ringBurnStrength = 0f;
+        profile.borderVfxSpeed = 0.55f;
+        profile.borderVfxHotColor = new Color(0.15f, 0.02f, 0.03f, 1f);
+        profile.borderVfxCoreColor = new Color(0.35f, 0.02f, 0.05f, 1f);
+    }
+
+    private static void ConfigureMiraclePreset(FieldDomainEffectProfile profile)
+    {
+        profile.visualStyle = FieldDomainVisualStyle.MiracleRadiance;
+        profile.grainStrength = 0f;
+        profile.chromaticStrength = 0f;
+        profile.radialGlowStrength = 0.42f;
+        profile.heatShimmerStrength = 0f;
+        profile.secondaryAccentColor = new Color(0.92f, 1f, 0.88f, 1f);
+        profile.tint = new Color(0.5f, 0.95f, 0.7f, 0.45f);
+        profile.saturation = 1.05f;
+        profile.contrast = 0.94f;
+        profile.exposure = 1.1f;
+        profile.distortionStrength = 0f;
+        profile.vignetteColor = new Color(0.05f, 0.14f, 0.22f, 1f);
+        profile.vignetteIntensity = 0.1f;
+        profile.gridColor = new Color(0.82f, 0.98f, 0.92f, 0.75f);
+        profile.gridLineWidth = 1.6f;
+        profile.gridScale = 0.85f;
+        profile.waveWidth = 0.055f;
+        profile.edgeGridWidth = 0.035f;
+        profile.edgeGridSoftness = 0.04f;
+        profile.breathSpeed = 0.48f;
+        profile.breathAmplitude = 0.32f;
+        profile.heartbeatBpm = 0f;
+        profile.heartbeatStrength = 0f;
+        profile.bloomStrength = 0.9f;
+        profile.volumeBloomIntensity = 2.2f;
+        profile.borderVfxStrength = 0f;
+        profile.borderVfxDepth = 0.12f;
+        profile.ringBurnStrength = 0f;
+        profile.borderVfxSpeed = 1f;
     }
 }

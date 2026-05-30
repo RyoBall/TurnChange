@@ -9,6 +9,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
         _WaveWidth ("Wave Width", Float) = 0.035
         _Phase ("Phase", Float) = 0
         _Intensity ("Intensity", Float) = 1
+        _VisualStyle ("Visual Style", Float) = 0
         _TintColor ("Tint Color", Color) = (1, 1, 1, 1)
         _Saturation ("Saturation", Float) = 1
         _Contrast ("Contrast", Float) = 1
@@ -27,6 +28,21 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
         _HeartbeatStrength ("Heartbeat Strength", Float) = 0
         _BloomStrength ("Bloom Strength", Float) = 0
         _EffectTime ("Effect Time", Float) = 0
+        _GrainStrength ("Grain Strength", Float) = 0
+        _ChromaticStrength ("Chromatic Strength", Float) = 0
+        _RadialGlowStrength ("Radial Glow Strength", Float) = 0
+        _HeatShimmerStrength ("Heat Shimmer Strength", Float) = 0
+        _SecondaryAccentColor ("Secondary Accent Color", Color) = (1, 0.75, 0.2, 1)
+        _BorderVfxStrength ("Border VFX Strength", Float) = 0.6
+        _BorderVfxDepth ("Border VFX Depth", Float) = 0.12
+        _RingBurnStrength ("Ring Burn Strength", Float) = 0.5
+        _BorderVfxSpeed ("Border VFX Speed", Float) = 1.2
+        _BorderVfxHotColor ("Border VFX Hot Color", Color) = (1, 0.95, 0.5, 1)
+        _BorderVfxCoreColor ("Border VFX Core Color", Color) = (1, 0.45, 0.08, 1)
+        _FlameNoiseTex ("Flame Noise", 2D) = "white" {}
+        _FlameNoiseTiling ("Flame Noise Tiling", Vector) = (5.5, 14, 0, 0)
+        _FlameNoiseInwardStretch ("Flame Noise Inward Stretch", Float) = 1.8
+        _FlameNoiseInwardScroll ("Flame Noise Inward Scroll", Float) = 0.4
     }
 
     SubShader
@@ -47,6 +63,10 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
+            #define STYLE_VERDICT 0
+            #define STYLE_DESPERATION 1
+            #define STYLE_MIRACLE 2
+
             CBUFFER_START(UnityPerMaterial)
                 float4 _Origin;
                 float _Radius;
@@ -54,6 +74,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float _WaveWidth;
                 float _Phase;
                 float _Intensity;
+                float _VisualStyle;
                 float4 _TintColor;
                 float _Saturation;
                 float _Contrast;
@@ -72,13 +93,46 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float _HeartbeatStrength;
                 float _BloomStrength;
                 float _EffectTime;
+                float _GrainStrength;
+                float _ChromaticStrength;
+                float _RadialGlowStrength;
+                float _HeatShimmerStrength;
+                float4 _SecondaryAccentColor;
+                float _BorderVfxStrength;
+                float _BorderVfxDepth;
+                float _RingBurnStrength;
+                float _BorderVfxSpeed;
+                float4 _BorderVfxHotColor;
+                float4 _BorderVfxCoreColor;
+                float4 _FlameNoiseTiling;
+                float _FlameNoiseInwardStretch;
+                float _FlameNoiseInwardScroll;
             CBUFFER_END
+
+            TEXTURE2D(_FlameNoiseTex);
+            SAMPLER(sampler_FlameNoiseTex);
+
+            #define EDGE_LEFT 0
+            #define EDGE_RIGHT 1
+            #define EDGE_BOTTOM 2
+            #define EDGE_TOP 3
 
             float GridLine(float2 uv, float lineWidth)
             {
                 float2 grid = abs(frac(uv - 0.5) - 0.5) / fwidth(uv);
                 float gridDist = min(grid.x, grid.y);
                 return 1.0 - saturate(gridDist - (10.0 - lineWidth * 2.0));
+            }
+
+            float RadialGridLine(float2 uv, float lineWidth)
+            {
+                float angle = atan2(uv.y, uv.x);
+                float radial = frac(length(uv) * 3.5 - _EffectTime * 0.15);
+                float spokes = abs(frac(angle * 0.15915494 + 0.5) - 0.5) / fwidth(angle);
+                float spokeLine = 1.0 - saturate(spokes - (8.0 - lineWidth));
+                float ring = abs(radial - 0.5) / fwidth(radial);
+                float ringLine = 1.0 - saturate(ring - (6.0 - lineWidth * 0.5));
+                return saturate(max(spokeLine, ringLine * 0.65));
             }
 
             float2 Hash22(float2 p)
@@ -101,26 +155,207 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return lerp(lerp(a, b, u.x), lerp(c, d, u.x), u.y) * 0.5 + 0.5;
             }
 
-            float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse)
+            float FilmGrain(float2 uv, float time)
             {
-                color *= _Exposure * (1.0 + pulse * _HeartbeatStrength * 0.15);
+                return frac(sin(dot(uv * 900.0 + time * 47.0, float2(12.9898, 78.233))) * 43758.5453) * 2.0 - 1.0;
+            }
+
+            float EdgeDistanceUv(float2 uv)
+            {
+                float distX = min(uv.x, 1.0 - uv.x) / 0.85;
+                float distY = min(uv.y, 1.0 - uv.y) / 1.3;
+                return min(distX, distY);
+            }
+
+            float BorderMaskFromEdge(float edgeDist, float depth)
+            {
+                return 1.0 - smoothstep(0.0, depth, edgeDist);
+            }
+
+            float Fbm(float2 uv)
+            {
+                float value = 0.0;
+                float amplitude = 0.5;
+                float2 shift = float2(100.0, 100.0);
+                for (int i = 0; i < 3; i++)
+                {
+                    value += amplitude * Noise(uv);
+                    uv = uv * 2.02 + shift;
+                    amplitude *= 0.5;
+                }
+                return value;
+            }
+
+            float SampleFlameNoise(float2 uv)
+            {
+                return SAMPLE_TEXTURE2D(_FlameNoiseTex, sampler_FlameNoiseTex, uv).r;
+            }
+
+            float GetFlameInwardScroll()
+            {
+                return _EffectTime * _BorderVfxSpeed * _FlameNoiseInwardScroll;
+            }
+
+            float2 BuildInwardFlameUV(float alongCoord, float inwardNorm)
+            {
+                float along = alongCoord * _FlameNoiseTiling.x;
+                float inward = inwardNorm * _FlameNoiseTiling.y * _FlameNoiseInwardStretch;
+                float scroll = GetFlameInwardScroll();
+                return float2(along, inward - scroll);
+            }
+
+            float SampleFlameRidgedInward(float2 flameUV, float inwardNorm)
+            {
+                float n1 = SampleFlameNoise(flameUV);
+                float2 detailUV = float2(flameUV.x * 2.3, flameUV.y * 2.3 - GetFlameInwardScroll() * 0.35);
+                float n2 = SampleFlameNoise(detailUV);
+                float combined = n1 * 0.65 + n2 * 0.35;
+                float ridged = 1.0 - abs(combined * 2.0 - 1.0);
+                float flicker = 0.72 + 0.28 * sin(_EffectTime * _BorderVfxSpeed * 2.5 + inwardNorm * 12.0);
+                return ridged * flicker;
+            }
+
+            float EvaluateEdgeFlame(float alongCoord, float edgeDist)
+            {
+                float depth = max(_BorderVfxDepth, 0.001);
+                float edgeMask = BorderMaskFromEdge(edgeDist, depth);
+                if (edgeMask <= 0.001)
+                {
+                    return 0.0;
+                }
+
+                float inwardNorm = saturate(edgeDist / depth);
+                float2 flameUV = BuildInwardFlameUV(alongCoord, inwardNorm);
+                return SampleFlameRidgedInward(flameUV, inwardNorm) * edgeMask;
+            }
+
+            void ApplyVerdictBorderFlame(inout float3 result, float2 uv, float borderMaskBase, float breath)
+            {
+                if (_BorderVfxStrength <= 0.001 || borderMaskBase <= 0.001)
+                {
+                    return;
+                }
+
+                float distLeft = uv.x / 0.85;
+                float distRight = (1.0 - uv.x) / 0.85;
+                float distBottom = uv.y / 1.3;
+                float distTop = (1.0 - uv.y) / 1.3;
+
+                float flameLeft = EvaluateEdgeFlame(uv.y, distLeft);
+                float flameRight = EvaluateEdgeFlame(uv.y, distRight);
+                float flameBottom = EvaluateEdgeFlame(uv.x, distBottom);
+                float flameTop = EvaluateEdgeFlame(uv.x, distTop);
+
+                float ridged = max(max(flameLeft, flameRight), max(flameBottom, flameTop));
+
+                float borderMask = borderMaskBase * _BorderVfxStrength;
+                float flame = borderMask * saturate(ridged * 1.6 - 0.38);
+                float3 flameColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(ridged), 0.7));
+                result += flameColor * flame * (1.0 + breath * 0.5);
+            }
+
+            void ApplyDesperationBorderMist(inout float3 result, float2 uv, float borderMaskBase, float pulse)
+            {
+                if (_BorderVfxStrength <= 0.001 || borderMaskBase <= 0.001)
+                {
+                    return;
+                }
+
+                float borderMask = borderMaskBase * _BorderVfxStrength * (1.0 + pulse * 0.2);
+                float2 nuv = float2(uv.x * 2.0 + _EffectTime * _BorderVfxSpeed * 0.3, uv.y * 4.0 - _EffectTime * _BorderVfxSpeed * 0.15);
+                float fbm = Fbm(nuv * 3.0);
+                float mist = borderMask * smoothstep(0.15, 0.75, fbm);
+                float3 mistColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, fbm * 0.4);
+                result = lerp(result, mistColor, mist * 0.5);
+                result += mistColor * mist * 0.15;
+            }
+
+            void ApplyRingFlameBurn(inout float3 result, float2 aspectCorrected, float dist, float waveRing, float breath)
+            {
+                if (_RingBurnStrength <= 0.001 || waveRing <= 0.001)
+                {
+                    return;
+                }
+
+                float angle = atan2(aspectCorrected.y, aspectCorrected.x);
+                float ringBandNorm = saturate((dist - _Radius) / max(_WaveWidth, 0.001));
+                float alongRing = angle * 0.286; // ~1.8 / (2*pi) for tiling along circumference
+                float2 ringUV = BuildInwardFlameUV(alongRing, ringBandNorm);
+                float ridged = SampleFlameRidgedInward(ringUV, ringBandNorm);
+                float burn = waveRing * _RingBurnStrength * saturate(ridged * 1.55 - 0.38);
+                float3 burnColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(ridged), 0.7));
+                result += burnColor * burn * (1.2 + breath);
+            }
+
+            float3 SampleSourceRgb(float2 uv)
+            {
+                return SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).rgb;
+            }
+
+            float3 ApplyDistortion(float2 uv, float2 aspectCorrected, float dist, float insideMask, int style)
+            {
+                float2 sampleUV = uv;
+
+                if (style == STYLE_VERDICT && _HeatShimmerStrength > 0.001 && insideMask > 0.001)
+                {
+                    float heat = _HeatShimmerStrength * insideMask;
+                    float n = Noise(uv * 6.0 + _EffectTime * 1.2);
+                    sampleUV.y += sin(uv.x * 24.0 - _EffectTime * 3.5) * heat * 0.006;
+                    sampleUV.x += (n - 0.5) * heat * 0.004;
+                    float2 dir = normalize(aspectCorrected + float2(0.0001, 0.0));
+                    sampleUV += dir * sin(dist * 14.0 - _EffectTime * 3.0) * heat * 0.008;
+                }
+                else if (style != STYLE_DESPERATION && _DistortionStrength > 0.001 && insideMask > 0.001)
+                {
+                    float n = Noise(uv * 8.0 + _EffectTime * 1.5);
+                    float2 dir = normalize(aspectCorrected + float2(0.0001, 0.0));
+                    sampleUV += dir * (n - 0.5) * _DistortionStrength * insideMask * 0.03;
+                    sampleUV += dir * sin(dist * 18.0 - _EffectTime * 4.0) * _DistortionStrength * insideMask * 0.01;
+                }
+
+                if (style == STYLE_DESPERATION && _ChromaticStrength > 0.001 && _HeartbeatStrength > 0.001)
+                {
+                    float pulse = saturate(sin(_HeartbeatPhase) * 0.5 + 0.5);
+                    if (pulse > 0.7)
+                    {
+                        float chroma = _ChromaticStrength * (pulse - 0.7) / 0.3 * insideMask * 0.004;
+                        float r = SampleSourceRgb(sampleUV + float2(chroma, 0.0)).r;
+                        float g = SampleSourceRgb(sampleUV).g;
+                        float b = SampleSourceRgb(sampleUV - float2(chroma, 0.0)).b;
+                        return float3(r, g, b);
+                    }
+                }
+
+                return SampleSourceRgb(sampleUV);
+            }
+
+            float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style)
+            {
+                color *= _Exposure * (1.0 + pulse * _HeartbeatStrength * 0.18);
 
                 float luma = dot(color, float3(0.2126, 0.7152, 0.0722));
                 color = lerp(luma.xxx, color, _Saturation);
 
-                color = (color - 0.5) * (_Contrast + pulse * _HeartbeatStrength * 0.25) + 0.5;
+                if (style == STYLE_DESPERATION)
+                {
+                    color.r = lerp(color.r, max(color.r, luma * 0.85), gradeMask * 0.12);
+                    color.r *= 1.0 + gradeMask * 0.08;
+                }
+
+                color = (color - 0.5) * (_Contrast + pulse * _HeartbeatStrength * 0.28) + 0.5;
                 color = lerp(color, color * _TintColor.rgb, _TintColor.a * gradeMask);
 
                 float2 centered = (uv - _Origin.xy);
                 centered.x *= _ScreenParams.x / max(_ScreenParams.y, 1.0);
                 float vignetteDist = length(centered);
                 float vignette = smoothstep(0.2, 1.2, vignetteDist);
-                color = lerp(color, color * _VignetteColor.rgb, vignette * _VignetteIntensity * gradeMask * (1.0 + pulse * _HeartbeatStrength));
+                float vignetteBoost = 1.0 + pulse * _HeartbeatStrength * (style == STYLE_DESPERATION ? 1.2 : 0.0);
+                color = lerp(color, color * _VignetteColor.rgb, vignette * _VignetteIntensity * gradeMask * vignetteBoost);
 
                 return color;
             }
 
-            float3 ApplyBloomApprox(float3 color, float bloomMask)
+            float3 ApplyBloomApprox(float3 color, float bloomMask, int style)
             {
                 if (_BloomStrength <= 0.001 || bloomMask <= 0.001)
                 {
@@ -129,13 +364,107 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 float brightness = max(color.r, max(color.g, color.b));
                 float bloom = saturate((brightness - 0.65) * 2.5) * _BloomStrength * bloomMask;
-                return color + bloom * float3(0.85, 0.95, 1.0);
+                float3 bloomTint = style == STYLE_MIRACLE
+                    ? float3(0.72, 1.0, 0.82)
+                    : float3(0.85, 0.95, 1.0);
+                return color + bloom * bloomTint;
+            }
+
+            float3 ApplyCenterGlow(float2 uv, float2 aspectCorrected, float dist, float mask, int style)
+            {
+                if (style != STYLE_MIRACLE || _RadialGlowStrength <= 0.001 || mask <= 0.001)
+                {
+                    return float3(0.0, 0.0, 0.0);
+                }
+
+                float glow = exp(-dist * 2.2) * _RadialGlowStrength * mask;
+                float breath = 0.85 + 0.15 * sin(_EffectTime * _BreathSpeed);
+                return _SecondaryAccentColor.rgb * glow * breath;
+            }
+
+            void ApplyWaveRingOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float waveRing, float breath, int style)
+            {
+                if (waveRing <= 0.001)
+                {
+                    return;
+                }
+
+                if (style == STYLE_VERDICT)
+                {
+                    float2 radialUV = aspectCorrected * _GridScale * 28.0;
+                    float radial = RadialGridLine(radialUV, _GridLineWidth + breath * 1.5);
+                    float flicker = 0.75 + 0.25 * sin(_EffectTime * 9.0 + dist * 12.0);
+                    result = lerp(result, _GridColor.rgb, radial * waveRing * _GridColor.a * flicker);
+                    result += _SecondaryAccentColor.rgb * waveRing * radial * flicker * 0.4;
+                }
+                else if (style == STYLE_DESPERATION)
+                {
+                    float2 gridUV = uv * _GridScale * 48.0;
+                    float grid = GridLine(gridUV, _GridLineWidth * 0.85);
+                    result = lerp(result, _GridColor.rgb, grid * waveRing * _GridColor.a);
+                    result += _GridColor.rgb * waveRing * 0.2;
+                }
+                else
+                {
+                    float softBand = waveRing * (0.65 + 0.35 * sin(_EffectTime * _BreathSpeed * 0.8));
+                    float3 waveColor = lerp(_GridColor.rgb, _SecondaryAccentColor.rgb, 0.55);
+                    result = lerp(result, waveColor, softBand * _GridColor.a * 0.7);
+                    result += waveColor * softBand * 0.18;
+                }
+            }
+
+            void ApplyActiveEdgeOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float safeMaxRadius, float insideMask, float breath, float pulse, int style)
+            {
+                float ringDist = abs(dist - safeMaxRadius);
+                float edgeInner = max(_EdgeGridWidth, 0.001);
+                float edgeOuter = edgeInner + max(_EdgeGridSoftness, 0.001);
+                float edgeMask = 1.0 - smoothstep(edgeInner, edgeOuter, ringDist);
+                edgeMask *= _Intensity;
+
+                if (edgeMask <= 0.001)
+                {
+                    return;
+                }
+
+                float edgeBreath = 0.5 + 0.5 * sin(_EffectTime * _BreathSpeed);
+
+                if (style == STYLE_VERDICT)
+                {
+                    float2 radialUV = aspectCorrected * _GridScale * 42.0;
+                    float radial = RadialGridLine(radialUV, _GridLineWidth * (0.9 + edgeBreath * 0.5 + breath));
+                    float edgeGlow = radial * edgeMask * (_GridColor.a + breath * 0.4) * edgeBreath;
+                    result = lerp(result, _GridColor.rgb, edgeGlow);
+                    result += _SecondaryAccentColor.rgb * edgeMask * edgeBreath * 0.18;
+                }
+                else if (style == STYLE_DESPERATION)
+                {
+                    float2 edgeGridUV = uv * _GridScale * 65.0;
+                    float edgeGrid = GridLine(edgeGridUV, _GridLineWidth * (0.7 + edgeBreath * 0.35));
+                    float edgeGlow = edgeGrid * edgeMask * (_GridColor.a * 0.9) * (0.6 + pulse * 0.5);
+                    result = lerp(result, _GridColor.rgb, edgeGlow);
+                    result += _SecondaryAccentColor.rgb * edgeMask * pulse * 0.08;
+
+                    if (_GrainStrength > 0.001)
+                    {
+                        float grain = FilmGrain(uv, _EffectTime) * _GrainStrength * insideMask * 0.04;
+                        result += grain;
+                    }
+                }
+                else
+                {
+                    float softEdge = edgeMask * (0.55 + 0.45 * edgeBreath);
+                    float3 edgeColor = lerp(_GridColor.rgb, _SecondaryAccentColor.rgb, 0.6);
+                    result = lerp(result, edgeColor, softEdge * _GridColor.a * 0.55);
+                    result += edgeColor * softEdge * 0.1;
+                }
             }
 
             float4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.texcoord;
+                int style = (int)round(_VisualStyle);
+
                 float2 aspectCorrected = uv - _Origin.xy;
                 aspectCorrected.x *= _ScreenParams.x / max(_ScreenParams.y, 1.0);
                 float dist = length(aspectCorrected);
@@ -159,20 +488,18 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 float breath = sin(_EffectTime * _BreathSpeed) * _BreathAmplitude;
 
-                float2 sampleUV = uv;
-                if (_DistortionStrength > 0.001 && insideMask > 0.001)
+                float3 sourceRgb = ApplyDistortion(uv, aspectCorrected, dist, insideMask, style);
+                float3 graded = ApplyColorGrade(sourceRgb, uv, insideMask, pulse, style);
+                graded = ApplyBloomApprox(graded, insideMask, style);
+                graded += ApplyCenterGlow(uv, aspectCorrected, dist, insideMask, style);
+
+                float3 result = lerp(sourceRgb, graded, insideMask * _Intensity);
+
+                if (style == STYLE_DESPERATION && _GrainStrength > 0.001 && insideMask > 0.001)
                 {
-                    float n = Noise(uv * 8.0 + _EffectTime * 1.5);
-                    float2 dir = normalize(aspectCorrected + float2(0.0001, 0.0));
-                    sampleUV += dir * (n - 0.5) * _DistortionStrength * insideMask * 0.03;
-                    sampleUV += dir * sin(dist * 18.0 - _EffectTime * 4.0) * _DistortionStrength * insideMask * 0.01;
+                    float grain = FilmGrain(uv, _EffectTime) * _GrainStrength * insideMask * 0.035;
+                    result += grain;
                 }
-
-                float4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, sampleUV);
-                float3 graded = ApplyColorGrade(source.rgb, uv, insideMask, pulse);
-                graded = ApplyBloomApprox(graded, insideMask);
-
-                float3 result = lerp(source.rgb, graded, insideMask * _Intensity);
 
                 float waveRing = 0.0;
                 if (_Phase < 0.5 || _Phase >= 1.5)
@@ -182,30 +509,30 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                     waveRing *= _Intensity;
                 }
 
-                if (waveRing > 0.001)
+                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style);
+
+                if (style == STYLE_VERDICT && waveRing > 0.001)
                 {
-                    float2 gridUV = uv * _GridScale * 40.0;
-                    float grid = GridLine(gridUV, _GridLineWidth + breath * 2.0);
-                    result = lerp(result, _GridColor.rgb, grid * waveRing * _GridColor.a);
-                    result += _GridColor.rgb * waveRing * 0.35;
+                    ApplyRingFlameBurn(result, aspectCorrected, dist, waveRing, breath);
                 }
 
                 if (_Phase >= 0.5 && _Phase < 1.5)
                 {
-                    float ringDist = abs(dist - safeMaxRadius);
-                    float edgeInner = max(_EdgeGridWidth, 0.001);
-                    float edgeOuter = edgeInner + max(_EdgeGridSoftness, 0.001);
-                    float edgeMask = 1.0 - smoothstep(edgeInner, edgeOuter, ringDist);
-                    edgeMask *= _Intensity;
-
-                    float edgeBreath = 0.5 + 0.5 * sin(_EffectTime * _BreathSpeed);
-                    float2 edgeGridUV = uv * _GridScale * 60.0;
-                    float edgeGrid = GridLine(edgeGridUV, _GridLineWidth * (0.8 + edgeBreath * 0.6 + breath));
-                    float edgeGlow = edgeGrid * edgeMask * (_GridColor.a + breath * 0.5) * edgeBreath;
-                    result = lerp(result, _GridColor.rgb, edgeGlow);
-                    result += _GridColor.rgb * edgeMask * edgeBreath * 0.12;
+                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style);
                 }
 
+                float borderEdge = EdgeDistanceUv(uv);
+                float borderMaskBase = BorderMaskFromEdge(borderEdge, _BorderVfxDepth) * insideMask;
+                if (style == STYLE_VERDICT)
+                {
+                    ApplyVerdictBorderFlame(result, uv, borderMaskBase, breath);
+                }
+                else if (style == STYLE_DESPERATION)
+                {
+                    ApplyDesperationBorderMist(result, uv, borderMaskBase, pulse);
+                }
+
+                float4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
                 return float4(result, source.a);
             }
             ENDHLSL

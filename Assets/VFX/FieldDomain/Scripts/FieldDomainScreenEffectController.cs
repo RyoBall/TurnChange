@@ -41,6 +41,22 @@ public class FieldDomainScreenEffectController : MonoBehaviour
     private static readonly int BloomStrengthId = Shader.PropertyToID("_BloomStrength");
     private static readonly int EffectTimeId = Shader.PropertyToID("_EffectTime");
     private static readonly int EdgeGridSoftnessId = Shader.PropertyToID("_EdgeGridSoftness");
+    private static readonly int VisualStyleId = Shader.PropertyToID("_VisualStyle");
+    private static readonly int GrainStrengthId = Shader.PropertyToID("_GrainStrength");
+    private static readonly int ChromaticStrengthId = Shader.PropertyToID("_ChromaticStrength");
+    private static readonly int RadialGlowStrengthId = Shader.PropertyToID("_RadialGlowStrength");
+    private static readonly int HeatShimmerStrengthId = Shader.PropertyToID("_HeatShimmerStrength");
+    private static readonly int SecondaryAccentColorId = Shader.PropertyToID("_SecondaryAccentColor");
+    private static readonly int BorderVfxStrengthId = Shader.PropertyToID("_BorderVfxStrength");
+    private static readonly int BorderVfxDepthId = Shader.PropertyToID("_BorderVfxDepth");
+    private static readonly int RingBurnStrengthId = Shader.PropertyToID("_RingBurnStrength");
+    private static readonly int BorderVfxSpeedId = Shader.PropertyToID("_BorderVfxSpeed");
+    private static readonly int BorderVfxHotColorId = Shader.PropertyToID("_BorderVfxHotColor");
+    private static readonly int BorderVfxCoreColorId = Shader.PropertyToID("_BorderVfxCoreColor");
+    private static readonly int FlameNoiseTexId = Shader.PropertyToID("_FlameNoiseTex");
+    private static readonly int FlameNoiseTilingId = Shader.PropertyToID("_FlameNoiseTiling");
+    private static readonly int FlameNoiseInwardStretchId = Shader.PropertyToID("_FlameNoiseInwardStretch");
+    private static readonly int FlameNoiseInwardScrollId = Shader.PropertyToID("_FlameNoiseInwardScroll");
 
     private static readonly Vector2 ScreenCenterOrigin = new Vector2(0.5f, 0.5f);
 
@@ -81,6 +97,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
 
     private Bloom m_BloomOverride;
     private Material m_EffectMaterial;
+    private Texture2D m_DefaultFlameNoiseTexture;
 
     public bool HasValidEffectMaterial => GetEffectMaterial() != null;
 
@@ -331,6 +348,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             (id, v) => material.SetVector(id, v),
             (id, f) => material.SetFloat(id, f),
             (id, c) => material.SetColor(id, c));
+        ApplyFlameNoiseTexture(material.SetTexture);
     }
 
     public void ApplyToPropertyBlock(MaterialPropertyBlock block)
@@ -344,6 +362,46 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             (id, v) => block.SetVector(id, v),
             (id, f) => block.SetFloat(id, f),
             (id, c) => block.SetColor(id, c));
+        ApplyFlameNoiseTexture(block.SetTexture);
+    }
+
+    private void ApplyFlameNoiseTexture(System.Action<int, Texture> setTexture)
+    {
+        if (setTexture == null || m_ActiveProfile == null)
+        {
+            return;
+        }
+
+        Texture2D flameTexture = m_ActiveProfile.flameNoiseTexture;
+        if (flameTexture == null && m_ActiveProfile.visualStyle == FieldDomainVisualStyle.VerdictFlame)
+        {
+            flameTexture = GetDefaultFlameNoiseTexture();
+        }
+
+        if (flameTexture != null)
+        {
+            setTexture(FlameNoiseTexId, flameTexture);
+        }
+    }
+
+    private Texture2D GetDefaultFlameNoiseTexture()
+    {
+        if (m_DefaultFlameNoiseTexture != null)
+        {
+            return m_DefaultFlameNoiseTexture;
+        }
+
+        if (verdictProfile != null && verdictProfile.flameNoiseTexture != null)
+        {
+            m_DefaultFlameNoiseTexture = verdictProfile.flameNoiseTexture;
+            return m_DefaultFlameNoiseTexture;
+        }
+
+#if UNITY_EDITOR
+        m_DefaultFlameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
+            "Assets/VFX/Textures/NoiseSmooth04.png");
+#endif
+        return m_DefaultFlameNoiseTexture;
     }
 
     private void ApplyShaderUniforms(
@@ -383,6 +441,25 @@ public class FieldDomainScreenEffectController : MonoBehaviour
         setFloat(HeartbeatStrengthId, m_ActiveProfile.heartbeatStrength);
         setFloat(BloomStrengthId, m_ActiveProfile.bloomStrength);
         setFloat(EffectTimeId, m_EffectTime);
+        setFloat(VisualStyleId, (float)m_ActiveProfile.visualStyle);
+        setFloat(GrainStrengthId, m_ActiveProfile.grainStrength);
+        setFloat(ChromaticStrengthId, m_ActiveProfile.chromaticStrength);
+        setFloat(RadialGlowStrengthId, m_ActiveProfile.radialGlowStrength);
+        setFloat(HeatShimmerStrengthId, m_ActiveProfile.heatShimmerStrength);
+        setColor(SecondaryAccentColorId, m_ActiveProfile.secondaryAccentColor);
+        setFloat(BorderVfxStrengthId, m_ActiveProfile.borderVfxStrength);
+        setFloat(BorderVfxDepthId, m_ActiveProfile.borderVfxDepth);
+        setFloat(RingBurnStrengthId, m_ActiveProfile.ringBurnStrength);
+        setFloat(BorderVfxSpeedId, m_ActiveProfile.borderVfxSpeed);
+        setColor(BorderVfxHotColorId, m_ActiveProfile.borderVfxHotColor);
+        setColor(BorderVfxCoreColorId, m_ActiveProfile.borderVfxCoreColor);
+        setVector(FlameNoiseTilingId, new Vector4(
+            m_ActiveProfile.flameNoiseTiling.x,
+            m_ActiveProfile.flameNoiseTiling.y,
+            0f,
+            0f));
+        setFloat(FlameNoiseInwardStretchId, m_ActiveProfile.flameNoiseInwardStretch);
+        setFloat(FlameNoiseInwardScrollId, m_ActiveProfile.flameNoiseInwardScroll);
     }
 
     private static Vector2 GetEffectOrigin() => ScreenCenterOrigin;
