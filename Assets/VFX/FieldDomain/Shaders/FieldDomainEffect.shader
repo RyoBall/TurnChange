@@ -297,6 +297,24 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return uv.x * aspect;
             }
 
+            // 自底边从左下角起，沿屏幕顺时针一周的连续弧长坐标（与 aspect 校正一致）
+            float GetAlongEdgeCoordClockwise(float2 uv, int edge, float aspect)
+            {
+                if (edge == EDGE_BOTTOM)
+                {
+                    return uv.x * aspect;
+                }
+                if (edge == EDGE_RIGHT)
+                {
+                    return aspect + uv.y;
+                }
+                if (edge == EDGE_TOP)
+                {
+                    return aspect + 1.0 + (1.0 - uv.x) * aspect;
+                }
+                return aspect + 1.0 + aspect + (1.0 - uv.y);
+            }
+
             float2 GetEdgeNormalUv(float2 uv, float aspect)
             {
                 int edge = GetDominantEdge(uv, aspect);
@@ -411,7 +429,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 }
 
                 int edge = GetDominantEdge(uv, aspect);
-                float along = GetAlongEdgeCoord(uv, edge, aspect);
+                float along = GetAlongEdgeCoordClockwise(uv, edge, aspect);
                 float2 edgeNormal = GetEdgeNormalUv(uv, aspect);
 
                 float chromaScale = _BorderVfxStrength * (0.0055 + _ChromaticStrength * 0.008);
