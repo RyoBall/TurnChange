@@ -134,7 +134,7 @@ public class ChaosPointSlotUI : MonoBehaviour
                 continue;
             }
 
-            image.color = currentValue < i ? Color.black : Color.white;
+            image.color = currentValue <= i ? Color.black : Color.white;
         }
     }
     #endregion

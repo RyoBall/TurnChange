@@ -109,7 +109,7 @@ public class TurnManager : MonoBehaviour
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
         TemporaryBattleModifierRuntimeManager.NotifyBattleStarted();
-        yield return StartCoroutine(TriggerOpeningEnterSkills());
+        yield return StartCoroutine(TriggerOpeningEnterSkills());   
         //回合开始
         isTurnInitialized = true;
         yield return StartCoroutine(RunTurnLoop());

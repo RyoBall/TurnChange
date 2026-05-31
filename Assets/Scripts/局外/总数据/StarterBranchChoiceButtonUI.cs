@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 [DisallowMultipleComponent]
 public class StarterBranchChoiceButtonUI : MonoBehaviour
@@ -10,6 +11,7 @@ public class StarterBranchChoiceButtonUI : MonoBehaviour
     [SerializeField] private Image backgroundImage;
     [SerializeField] private TMP_Text titleText;
     [SerializeField] private TMP_Text descriptionText;
+    [SerializeField] private List<Image> characterImages;
 
     private string m_branchId;
     private Action<string> m_onSelected;
@@ -41,6 +43,8 @@ public class StarterBranchChoiceButtonUI : MonoBehaviour
             backgroundImage.color = branch.accentColor;
         }
 
+        ApplyCharacterImages(branch);
+
         if (button != null)
         {
             button.onClick.RemoveListener(HandleClick);
@@ -59,5 +63,52 @@ public class StarterBranchChoiceButtonUI : MonoBehaviour
     private void HandleClick()
     {
         m_onSelected?.Invoke(m_branchId);
+    }
+
+    private void ApplyCharacterImages(StarterBranchDefinition branch)
+    {
+        if (characterImages == null || characterImages.Count == 0)
+        {
+            return;
+        }
+
+        ApplyCharacterImage(0, branch.primaryCharacterType);
+        ApplyCharacterImage(1, branch.secondaryCharacterType);
+        ApplyCharacterImage(2, branch.supportCharacterType);
+
+        for (int i = 3; i < characterImages.Count; i++)
+        {
+            ApplyCharacterImage(i, default);
+        }
+    }
+
+    private void ApplyCharacterImage(int index, CharacterType characterType)
+    {
+        if (characterImages == null || index < 0 || index >= characterImages.Count)
+        {
+            return;
+        }
+
+        Image targetImage = characterImages[index];
+        if (targetImage == null)
+        {
+            return;
+        }
+
+        Sprite portraitSprite = ResolvePortraitSprite(characterType);
+        targetImage.sprite = portraitSprite;
+        targetImage.enabled = portraitSprite != null;
+    }
+
+    private static Sprite ResolvePortraitSprite(CharacterType characterType)
+    {
+        Datas datas = Datas.Instance;
+        if (datas == null)
+        {
+            return null;
+        }
+
+        CharacterRosterData rosterData = datas.GetCharacterRoster(characterType);
+        return rosterData != null ? rosterData.GetPortraitSprite() : null;
     }
 }

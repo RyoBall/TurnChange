@@ -40,7 +40,13 @@ public enum CharacterSkillType
     HealerSkillOne,
     HealerSkillTwo
 }
-
+public enum CharacterSkillTag
+{
+    Attack,
+    DotAttack,
+    Buff,
+    Debuff
+}
 [CreateAssetMenu(fileName = "NewSkill", menuName = "技能/CharacterSkill"), System.Serializable]
 public class CharacterSkillBase : SkillBase
 {
@@ -51,7 +57,8 @@ public class CharacterSkillBase : SkillBase
     public float extraData2;
     public float extraData3;
     public float extraData4;
-
+    [Header("标签")]
+    public List<string> tags = new List<string>();
     [Header("目标选择设置")]
     public bool requiresEnemyTarget = false;
     [Min(1)]
@@ -371,26 +378,24 @@ public class CharacterSkillBase : SkillBase
         }
 
         NotifyDamageSkillUsed(character, markedEnemies);
-        State.RunBatchedDotEvent(character, () =>
+        for (int i = 0; i < markedEnemies.Count; i++)
         {
-            for (int i = 0; i < markedEnemies.Count; i++)
+            Enemy enemy = markedEnemies[i];
+            if (enemy == null)
             {
-                Enemy enemy = markedEnemies[i];
-                if (enemy == null)
-                {
-                    continue;
-                }
-
-                var damageInfo = DamageCounter.CountDamage(character, enemy, extraData1, 0f, false, false, false)
-                    .WithState(StateType.PursuitPunish);
-                enemy.TakeDamage(damageInfo);
-                State punishMark = enemy.GetState(StateType.PunishMark);
-                if (punishMark != null)
-                {
-                    enemy.RemoveState(punishMark);
-                }
+                continue;
             }
-        });
+
+            var damageInfo = DamageCounter.CountDamage(character, enemy, extraData1, 0f, false, false, false)
+                .WithState(StateType.PursuitPunish);
+            enemy.TakeDamage(damageInfo);
+            State punishMark = enemy.GetState(StateType.PunishMark);
+            if (punishMark != null)
+            {
+                enemy.RemoveState(punishMark);
+            }
+        }
+        State.NotifyDamageSkillUsed(character, markedEnemies);
         yield break;
     }
     private IEnumerator EnterSkillTwo(Character character)
@@ -908,40 +913,40 @@ public class CharacterSkillBase : SkillBase
         yield break;
     }
 
-   /* private IEnumerator HealerExit(Character character)
-    {
-        if (character == null || CharacterManager.Instance == null)
-        {
-            yield break;
-        }
+    /* private IEnumerator HealerExit(Character character)
+     {
+         if (character == null || CharacterManager.Instance == null)
+         {
+             yield break;
+         }
 
-        Character target = CharacterManager.Instance.GetPendingSwapInCharacter(character);
+         Character target = CharacterManager.Instance.GetPendingSwapInCharacter(character);
 
-        if (target == null)
-        {
-            yield break;
-        }
+         if (target == null)
+         {
+             yield break;
+         }
 
-        float highHpThreshold = extraData1;
-        float midHpThreshold = extraData2;
-        int weakGiftActions = Mathf.Max(1, Mathf.RoundToInt(extraData3));
-        int sharedGiftActions = Mathf.Max(1, Mathf.RoundToInt(extraData4));
-        float hpRatio = character.maxHP > 0 ? (float)character.currentHP / character.maxHP : 0f;
-        if (hpRatio >= highHpThreshold)
-        {
-            target.AddState(StateType.GiftWeak, character, 99, weakGiftActions);
-        }
-        else if (hpRatio >= midHpThreshold)
-        {
-            target.AddState(StateType.GiftMid, character, 99, sharedGiftActions);
-        }
-        else
-        {
-            target.AddState(StateType.GiftStrong, character, 99, sharedGiftActions);
-        }
+         float highHpThreshold = extraData1;
+         float midHpThreshold = extraData2;
+         int weakGiftActions = Mathf.Max(1, Mathf.RoundToInt(extraData3));
+         int sharedGiftActions = Mathf.Max(1, Mathf.RoundToInt(extraData4));
+         float hpRatio = character.maxHP > 0 ? (float)character.currentHP / character.maxHP : 0f;
+         if (hpRatio >= highHpThreshold)
+         {
+             target.AddState(StateType.GiftWeak, character, 99, weakGiftActions);
+         }
+         else if (hpRatio >= midHpThreshold)
+         {
+             target.AddState(StateType.GiftMid, character, 99, sharedGiftActions);
+         }
+         else
+         {
+             target.AddState(StateType.GiftStrong, character, 99, sharedGiftActions);
+         }
 
-        yield break;
-    }*/
+         yield break;
+     }*/
 
     private IEnumerator HealerSkillOne(Character character, List<Character> selectedCharacters)
     {

@@ -2086,7 +2086,7 @@ MonoBehaviour:
   enterSkill: 22
   additionalSkillType: 0
   additionalSkill: {fileID: 0}
-  chaosValue: 1
+  chaosValue: 0
   pendingChaosRecover: 0
   switchCooldownRemaining: 0
   switchCooldownMax: 200

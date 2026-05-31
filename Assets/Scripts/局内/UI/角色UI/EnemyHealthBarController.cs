@@ -6,6 +6,7 @@ public class EnemyHealthUIController : MonoBehaviour
     [Header("绑定")]
     [SerializeField] private Enemy targetEnemy;
     [SerializeField] private Slider hpSlider;
+    [SerializeField] private ShieldSlider shieldSlider;
 
     private void Reset()
     {
@@ -19,7 +20,7 @@ public class EnemyHealthUIController : MonoBehaviour
         {
             hpSlider = GetComponent<Slider>();
         }
-
+        shieldSlider.SetTarget(targetEnemy);
         ConfigureSlider();
         Refresh();
     }
