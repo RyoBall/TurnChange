@@ -7,6 +7,7 @@ public class PreparationPanelView : MonoBehaviour
 {
     public GameObject panelRoot;
     public static PreparationPanelView Instance { get; private set; }
+    private static event System.Action FirstPreparationOpened;
 
     [Header("角色选择")]
     [SerializeField] private Button toggleCharacterListButton;
@@ -47,10 +48,12 @@ public class PreparationPanelView : MonoBehaviour
         {
             return m_selectedCharacters;
         }
+
     }
 
     private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
-    private readonly List<CharacterRosterData> m_selectedCharacters = new List<CharacterRosterData>();
+    private static readonly List<CharacterRosterData> m_selectedCharacters = new List<CharacterRosterData>();
+    private static bool s_HasRaisedFirstPreparationOpenEvent;
     private Vector2 m_ListVelocity;
     private bool m_IsCharacterListVisible;
 
@@ -60,7 +63,9 @@ public class PreparationPanelView : MonoBehaviour
         {
             panelRoot = gameObject;
         }
+
         Instance = this;
+        BindInternalEvents();
         BindToggleButton();
         SetCharacterListVisible(false, true);
         RefreshSelectedCharacterImages();
@@ -77,6 +82,16 @@ public class PreparationPanelView : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromDataSource();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+
+        UnbindInternalEvents();
     }
 
     private void Update()
@@ -96,6 +111,8 @@ public class PreparationPanelView : MonoBehaviour
         {
             panelRoot = gameObject;
         }
+
+        RaiseFirstPreparationOpenEventIfNeeded();
 
         panelRoot.SetActive(true);
         RebuildCharacterButtons();
@@ -129,6 +146,28 @@ public class PreparationPanelView : MonoBehaviour
         toggleCharacterListButton.onClick.AddListener(ToggleCharacterList);
     }
 
+    private void BindInternalEvents()
+    {
+        FirstPreparationOpened -= HandleFirstPreparationOpened;
+        FirstPreparationOpened += HandleFirstPreparationOpened;
+    }
+
+    private void UnbindInternalEvents()
+    {
+        FirstPreparationOpened -= HandleFirstPreparationOpened;
+    }
+
+    private void RaiseFirstPreparationOpenEventIfNeeded()
+    {
+        if (s_HasRaisedFirstPreparationOpenEvent)
+        {
+            return;
+        }
+
+        s_HasRaisedFirstPreparationOpenEvent = true;
+        FirstPreparationOpened?.Invoke();
+    }
+
     private void SubscribeToDataSource()
     {
         if (Datas.Instance == null)
@@ -155,6 +194,11 @@ public class PreparationPanelView : MonoBehaviour
         RemoveUnavailableSelectedCharacters();
         RebuildCharacterButtons();
         RefreshSelectedCharacterImages();
+    }
+
+    private void HandleFirstPreparationOpened()
+    {
+        TryFillSelectedCharactersToMinimum();
     }
 
     private void RebuildCharacterButtons()
@@ -238,6 +282,41 @@ public class PreparationPanelView : MonoBehaviour
             {
                 m_selectedCharacters.RemoveAt(i);
             }
+        }
+    }
+
+    private void TryFillSelectedCharactersToMinimum()
+    {
+        RemoveUnavailableSelectedCharacters();
+
+        if (Datas.Instance == null || m_selectedCharacters.Count >= 2)
+        {
+            return;
+        }
+
+        IReadOnlyList<CharacterRosterData> currentCharacters = Datas.Instance.GetUnlockedCharacterRosters();
+        if (currentCharacters == null || currentCharacters.Count == 0)
+        {
+            return;
+        }
+
+        List<CharacterRosterData> candidates = new List<CharacterRosterData>(currentCharacters.Count);
+        for (int i = 0; i < currentCharacters.Count; i++)
+        {
+            CharacterRosterData character = currentCharacters[i];
+            if (character == null || m_selectedCharacters.Contains(character))
+            {
+                continue;
+            }
+
+            candidates.Add(character);
+        }
+
+        while (m_selectedCharacters.Count < 2 && candidates.Count > 0)
+        {
+            int randomIndex = Random.Range(0, candidates.Count);
+            m_selectedCharacters.Add(candidates[randomIndex]);
+            candidates.RemoveAt(randomIndex);
         }
     }
 

@@ -27,11 +27,15 @@ public class BattleSettlementView : MonoBehaviour//结算界面
     [Header("退出行为")]
     [SerializeField] private string exitSceneName;
     [SerializeField] private UnityEvent onExitRequested;
+    [SerializeField] private BGMPlayer.BGMType exitBgmType = BGMPlayer.BGMType.Lobby;
+    [SerializeField] private float exitBgmDelay;
     [Header("经验条")]
     [SerializeField] private Slider expSlider;
     [SerializeField] private TMP_Text expSliderText;
     [SerializeField] private float expSliderFillDuration = 1.5f;
     private bool m_isShowing;
+    private bool m_rewardsApplied;
+    private float m_expBeforeReward;
 
     private void Awake()
     {
@@ -57,6 +61,8 @@ public class BattleSettlementView : MonoBehaviour//结算界面
         }
 
         m_isShowing = true;
+        m_expBeforeReward = Datas.Instance != null ? Datas.Instance.GetCurrentExp() : 0f;
+        ApplyRewardsIfNeeded(experienceReward, goldReward);
         BindExitButton();
         UpdateRewardTexts(experienceReward, goldReward);
 
@@ -83,9 +89,9 @@ public class BattleSettlementView : MonoBehaviour//结算界面
     }
     IEnumerator UpdateExpSlider(float experienceReward = 0,float duration=-1)
     {
-        if (Datas.Instance != null)
+        if (Datas.Instance != null && expSlider != null && expSliderText != null)
         {
-            float startExp = Datas.Instance.GetCurrentExp();
+            float startExp = m_expBeforeReward;
             float advanceExp = experienceReward;
             float expToNextLevel = Datas.Instance.GetExpToNextLevel();
             DOTween.To(() => startExp, x => { expSlider.value = x / expToNextLevel % 1f; expSliderText.text = $"{Mathf.FloorToInt(x%expToNextLevel)} / {Mathf.FloorToInt(Datas.Instance.GetExpToNextLevel())}"; }, startExp + advanceExp, duration > 0 ? duration : expSliderFillDuration).SetEase(DG.Tweening.Ease.Linear);
@@ -104,6 +110,19 @@ public class BattleSettlementView : MonoBehaviour//结算界面
         }
 
         m_isShowing = false;
+        m_rewardsApplied = false;
+        m_expBeforeReward = 0f;
+    }
+
+    private void ApplyRewardsIfNeeded(int experienceReward, int goldReward)
+    {
+        if (m_rewardsApplied || Datas.Instance == null)
+        {
+            return;
+        }
+
+        Datas.Instance.ApplyBattleRewards(experienceReward, goldReward);
+        m_rewardsApplied = true;
     }
 
     private void BindExitButton()
@@ -119,6 +138,11 @@ public class BattleSettlementView : MonoBehaviour//结算界面
 
     private void HandleExitButtonClicked()
     {
+        if (BGMPlayer.Instance != null)
+        {
+            BGMPlayer.Instance.PlayBGM(exitBgmType, exitBgmDelay);
+        }
+
         if (!string.IsNullOrWhiteSpace(exitSceneName))
         {
             StartCoroutine(LoadExitSceneCoroutine());

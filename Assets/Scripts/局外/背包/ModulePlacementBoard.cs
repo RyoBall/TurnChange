@@ -22,8 +22,6 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
     }
 
     [SerializeField] private RectTransform boardRoot;
-    [SerializeField] private int width = 5;
-    [SerializeField] private int height = 5;
     [SerializeField] private float spacing = 4f;
     [SerializeField] private Color emptyCellColor = new Color(0.15f, 0.18f, 0.22f, 0.95f);
 
@@ -37,8 +35,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
     public event Action<Vector2Int> CellClicked;
     private void OnValidate()
     {
-        width = Mathf.Max(1, width);
-        height = Mathf.Max(1, height);
+        spacing = Mathf.Max(0f, spacing);
     }
 
     public void BuildBoard()
@@ -59,11 +56,12 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             return false;
         }
 
+        int boardSize = GetBoardSize();
         module.GetNormalizedCells(m_shapeBuffer);
         for (int i = 0; i < m_shapeBuffer.Count; i++)
         {
             Vector2Int boardCell = anchorCell + m_shapeBuffer[i];
-            if (boardCell.x < 0 || boardCell.x >= width || boardCell.y < 0 || boardCell.y >= height)
+            if (boardCell.x < 0 || boardCell.x >= boardSize || boardCell.y < 0 || boardCell.y >= boardSize)
             {
                 return false;
             }
@@ -112,7 +110,8 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             return false;
         }
 
-        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height)
+        int boardSize = GetBoardSize();
+        if (cell.x < 0 || cell.x >= boardSize || cell.y < 0 || cell.y >= boardSize)
         {
             return false;
         }
@@ -149,7 +148,8 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             return false;
         }
 
-        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height)
+        int boardSize = GetBoardSize();
+        if (cell.x < 0 || cell.x >= boardSize || cell.y < 0 || cell.y >= boardSize)
         {
             return false;
         }
@@ -177,9 +177,10 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        for (int y = 0; y < height; y++)
+        int boardSize = GetBoardSize();
+        for (int y = 0; y < boardSize; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < boardSize; x++)
             {
                 m_occupied[x, y] = false;
                 m_placedEntries[x, y] = null;
@@ -201,10 +202,11 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             return;
         }
 
+        int boardSize = GetBoardSize();
         HashSet<PlacedModuleEntry> visitedEntries = new HashSet<PlacedModuleEntry>();
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < boardSize; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < boardSize; x++)
             {
                 PlacedModuleEntry entry = m_placedEntries[x, y];
                 if (entry == null || !visitedEntries.Add(entry))
@@ -265,6 +267,8 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
 #endregion
     private void BuildCells()
     {
+        int boardSize = GetBoardSize();
+
         for (int i = m_cellsRoot.childCount - 1; i >= 0; i--)
         {
             Destroy(m_cellsRoot.GetChild(i).gameObject);
@@ -272,7 +276,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
 
         GridLayoutGroup gridLayout = m_cellsRoot.GetComponent<GridLayoutGroup>();
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        gridLayout.constraintCount = width;
+        gridLayout.constraintCount = boardSize;
         gridLayout.spacing = new Vector2(spacing, spacing);
         gridLayout.startCorner = GridLayoutGroup.Corner.UpperLeft;
         gridLayout.startAxis = GridLayoutGroup.Axis.Horizontal;
@@ -281,13 +285,13 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         float cellSize = CalculateCellSize();
         gridLayout.cellSize = new Vector2(cellSize, cellSize);
 
-        m_cells = new Image[width, height];
-        m_occupied = new bool[width, height];
-        m_placedEntries = new PlacedModuleEntry[width, height];
+        m_cells = new Image[boardSize, boardSize];
+        m_occupied = new bool[boardSize, boardSize];
+        m_placedEntries = new PlacedModuleEntry[boardSize, boardSize];
 
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < boardSize; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < boardSize; x++)
             {
                 GameObject cellObject = new GameObject("Cell_" + x + "_" + y, typeof(RectTransform), typeof(Image), typeof(Outline));
                 cellObject.transform.SetParent(m_cellsRoot, false);
@@ -333,10 +337,11 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         float localX = localPoint.x - rect.xMin;
         float localY = rect.yMax - localPoint.y;
 
+        int boardSize = GetBoardSize();
         int x = Mathf.FloorToInt(localX / stride);
         int y = Mathf.FloorToInt(localY / stride);
 
-        if (x < 0 || x >= width || y < 0 || y >= height)
+        if (x < 0 || x >= boardSize || y < 0 || y >= boardSize)
         {
             return false;
         }
@@ -365,8 +370,20 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
     private float CalculateCellSize()
     {
         Rect rect = boardRoot.rect;
-        float widthSize = (rect.width - spacing * (width - 1)) / width;
-        float heightSize = (rect.height - spacing * (height - 1)) / height;
+        int boardSize = GetBoardSize();
+        float widthSize = (rect.width - spacing * (boardSize - 1)) / boardSize;
+        float heightSize = (rect.height - spacing * (boardSize - 1)) / boardSize;
         return Mathf.Max(1f, Mathf.Min(widthSize, heightSize));
+    }
+
+    private int GetBoardSize()
+    {
+        Datas datas = Datas.Instance;
+        if (datas == null)
+        {
+            return 1;
+        }
+
+        return Mathf.Max(1, datas.GetBackpackWidth());
     }
 }

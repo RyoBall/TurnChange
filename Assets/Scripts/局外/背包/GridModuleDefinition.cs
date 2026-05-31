@@ -4,7 +4,43 @@ using UnityEngine;
 
 public enum GridModuleType
 {
-    DotDamage,
+    None,
+    LegacyDotDamage,
+    BattleCommandBonus,
+    OpeningAdvance,
+    ExtraCommand,
+    SwapDamageBoost,
+    SwapSpeedBoost,
+    SwapSelfHeal,
+    HealingBoost,
+    HealChaosCleanse,
+    DotBoost,
+    DirectDamageBoost,
+    EmergencyEvade,
+    FatalGuard,
+    MaxHealthBoost,
+    DefenseBoost,
+    CritDamageBoost,
+    CritRateBoost,
+    HeavyPoison,
+    HeavyTurret,
+    GamblerStride,
+    BloodReverse,
+    DomainResonance,
+    ChargeCounterResonance,
+    HybridDamage,
+    SupportSwapAdvance,
+    ChaosImmunity,
+    SwapChargeBurst,
+    EmergencySwapIn,
+    CritDotSpread,
+}
+
+public enum GridModuleLevel
+{
+    Small,
+    Normal,
+    Large
 }
 
 [CreateAssetMenu(fileName = "GridModule", menuName = "背包/新模块")]
@@ -13,7 +49,10 @@ public class GridModuleDefinition : ScriptableObject
     [Header("模块配置")]
     public GridModuleType moduleType;
     public string moduleName = "新模块";
+    [TextArea(2, 5)] public string description;
+    public GridModuleLevel level = GridModuleLevel.Small;
     public Color color = new Color(0.28f, 0.78f, 1f, 0.9f);
+    public TemporaryBattleModifierData modifierData = new TemporaryBattleModifierData();
     public float baseExtraData1;
     public float baseExtraData2;
     public float baseExtraData3;
@@ -62,11 +101,15 @@ public class GridModuleDefinition : ScriptableObject
         clone.hideFlags = HideFlags.HideAndDontSave;
         clone.moduleName = moduleName;
         clone.moduleType = moduleType;
+        clone.description = description;
+        clone.level = level;
         clone.color = color;
+        clone.modifierData = modifierData != null ? modifierData.Clone() : null;
         clone.baseExtraData1 = baseExtraData1;
         clone.baseExtraData2 = baseExtraData2;
         clone.baseExtraData3 = baseExtraData3;
         clone.baseExtraData4 = baseExtraData4;
+        clone.privePerCell = privePerCell;
         clone.cells = new List<Vector2Int>(cells.Count);
         clone.m_behavior = null;
         clone.m_isLoaded = false;
@@ -87,6 +130,7 @@ public class GridModuleDefinition : ScriptableObject
         }
 
         m_isLoaded = true;
+        TemporaryBattleModifierRuntimeManager.SyncModuleModifier(this);
         Behavior.OnApplyToBoard();
     }
 
@@ -97,6 +141,7 @@ public class GridModuleDefinition : ScriptableObject
             return;
         }
 
+        TemporaryBattleModifierRuntimeManager.RemoveModuleModifier(this);
         Behavior.OnRemoveFromBoard();
         m_isLoaded = false;
     }
@@ -240,7 +285,7 @@ public static class GridModuleBehaviorFactory
     {
         switch (moduleType)
         {
-            case GridModuleType.DotDamage:
+            case GridModuleType.LegacyDotDamage:
                 return new DotDamageGridModuleBehavior();
             default:
                 return new DefaultGridModuleBehavior();

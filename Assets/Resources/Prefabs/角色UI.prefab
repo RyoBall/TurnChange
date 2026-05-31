@@ -1086,7 +1086,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1570540527, guid: 28ca089733c829a408c7dcdf4a1b4fae, type: 3}
+  m_Sprite: {fileID: -2038399888, guid: 0446dc2a94c040f48ac8ac266ff33d19, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1146,10 +1146,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ba078ad4a361aa4c9bc46e2ad36ee01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canvasGroup: {fileID: 0}
+  canvasGroup: {fileID: 3775208783883423892}
   healthBar: {fileID: 4976892407836668993}
   chaosPointSlotUI: {fileID: 6446257986890665624}
-  shieldSlider: {fileID: 0}
+  shieldSlider: {fileID: 5311269116661511638}
+  characterIcon: {fileID: 1069163302279936328}
 --- !u!225 &3775208783883423892
 CanvasGroup:
   m_ObjectHideFlags: 0

@@ -306,6 +306,7 @@ public class LevelCharacterSpawner : MonoBehaviour
         }
 
         instance.characterID = data.characterID;
+        instance.characterType = data.characterType;
         instance.combatantName = string.IsNullOrEmpty(data.characterName) ? data.characterID : data.characterName;
         instance.skills = new List<CharacterSkillType>(data.skills);
         instance.enterSkill = data.enterSkill;

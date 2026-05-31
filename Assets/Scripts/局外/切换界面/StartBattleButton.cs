@@ -8,6 +8,8 @@ public class StartBattleButton : MonoBehaviour
     [SerializeField] private Button startButton;
     [SerializeField] private PreparationPanelView preparationPanel;
     [SerializeField] private string battleSceneName;
+    [SerializeField] private BGMPlayer.BGMType battleBgmType = BGMPlayer.BGMType.Battle;
+    [SerializeField] private float battleBgmDelay;
 
     private void Awake()
     {
@@ -51,9 +53,16 @@ public class StartBattleButton : MonoBehaviour
             Debug.LogWarning("[StartBattleButton] 未配置战斗场景名，无法载入战斗场景。", this);
             return;
         }
+        ScreenTransition.Instance.Transition(() =>  
+        {
+            if (BGMPlayer.Instance != null)
+            {
+                BGMPlayer.Instance.PlayBGM(battleBgmType, battleBgmDelay);
+            }
 
-        BattleLaunchContext.SetPendingLevelData(preparationPanel.CurrentLevelData, preparationPanel.SelectedFieldCharacters);
-        SceneManager.LoadScene(battleSceneName);
+            BattleLaunchContext.SetPendingLevelData(preparationPanel.CurrentLevelData, preparationPanel.SelectedFieldCharacters);
+            SceneManager.LoadScene(battleSceneName);
+        });
     }
 
     private void BindButton()

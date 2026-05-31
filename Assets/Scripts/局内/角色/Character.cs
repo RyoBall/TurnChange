@@ -10,6 +10,7 @@ public class Character : UnitCombatant
 {
     public Transform spriteTransform;
     public string characterID;
+    public CharacterType characterType;
     [Header("动画覆盖")]
     [SerializeField] private Animator animator;
     [SerializeField] private CharacterAnimationOverrideDatabase animationOverrideDatabase;
@@ -73,46 +74,7 @@ public class Character : UnitCombatant
             return;
         }
 
-        RuntimeAnimatorController runtimeController = animator.runtimeAnimatorController;
-        if (runtimeController == null)
-        {
-            return;
-        }
-
-        m_animatorOverrideController = new AnimatorOverrideController(runtimeController);
-        List<KeyValuePair<AnimationClip, AnimationClip>> overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>(m_animatorOverrideController.overridesCount);
-        m_animatorOverrideController.GetOverrides(overrides);
-
-        Dictionary<AnimationClip, AnimationClip> overrideLookup = new Dictionary<AnimationClip, AnimationClip>();
-        for (int i = 0; i < clipOverrides.Count; i++)
-        {
-            AnimationClipOverrideEntry entry = clipOverrides[i];
-            if (entry == null || entry.OriginalClip == null || entry.overrideClip == null)
-            {
-                continue;
-            }
-
-            overrideLookup[entry.OriginalClip] = entry.overrideClip;
-        }
-
-        if (overrideLookup.Count == 0)
-        {
-            return;
-        }
-
-        for (int i = 0; i < overrides.Count; i++)
-        {
-            KeyValuePair<AnimationClip, AnimationClip> currentOverride = overrides[i];
-            if (!overrideLookup.TryGetValue(currentOverride.Key, out AnimationClip overrideClip))
-            {
-                continue;
-            }
-
-            overrides[i] = new KeyValuePair<AnimationClip, AnimationClip>(currentOverride.Key, overrideClip);
-        }
-
-        m_animatorOverrideController.ApplyOverrides(overrides);
-        animator.runtimeAnimatorController = m_animatorOverrideController;
+        AnimatorOverrideUtility.TryApplyOverrides(animator, clipOverrides, out m_animatorOverrideController);
     }
 
     public override IEnumerator PerformTurn()
@@ -200,6 +162,11 @@ public class Character : UnitCombatant
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"混沌+{chaosValue - before} ({chaosValue}/{MaxChaosValue})");
         if (chaosValue >= MaxChaosValue)
         {
+            if (TemporaryBattleModifierRuntimeManager.TryHandleChaosMaxReached(this))
+            {
+                return true;
+            }
+
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "混沌达到上限，下回合将无法行动");
         }
 
@@ -230,6 +197,7 @@ public class Character : UnitCombatant
 
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"混沌-{reducedValue} ({chaosValue}/{MaxChaosValue})");
         UpdateChaosStates();
+        TemporaryBattleModifierRuntimeManager.NotifyChaosReduced(this, reducedValue);
         return reducedValue;
     }
     #region  换人cd相关
@@ -511,6 +479,12 @@ public class Character : UnitCombatant
         CleanupSkillInstances();
         base.OnDestroy();
     }
+
+    public override float ConsumeTurnEndActionValue()
+    {
+        return TemporaryBattleModifierRuntimeManager.GetCharacterTurnEndActionValue(base.ConsumeTurnEndActionValue(), this);
+    }
+
     public void LoadDataFromCSV()
     {
         if (string.IsNullOrEmpty(characterID))
@@ -525,14 +499,14 @@ public class Character : UnitCombatant
             return;
         }
 
-        maxHP = levelData.maxHP;
+        maxHP = Mathf.RoundToInt(levelData.maxHP * TemporaryBattleModifierRuntimeManager.GetPlayerMaxHealthMultiplier(this));
         currentHP = maxHP;
         attack = levelData.attack;
-        defense = levelData.defense;
+        defense = Mathf.RoundToInt(levelData.defense * TemporaryBattleModifierRuntimeManager.GetPlayerDefenseMultiplier(this));
         critRate = levelData.critRate;
         critDamage = levelData.critDamage;
         //耦合度有点高了
-        speed = Mathf.Max(1, Mathf.RoundToInt(levelData.speed / (Datas.Instance != null ? Datas.Instance.GetPlayerSpeedMultiplier() : 1f)));
+        speed = Mathf.Max(1, Mathf.RoundToInt(levelData.speed / TemporaryBattleModifierRuntimeManager.GetPlayerSpeedMultiplier(this)));
         K = levelData.K;
     }
 }

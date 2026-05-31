@@ -14,6 +14,9 @@ public enum ExplodeType
 public class Enemy : UnitCombatant
 {
     public string enemyID;
+    [Header("动画覆盖")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private EnemyAnimationOverrideDatabase animationOverrideDatabase;
     public float selectedScale = 1.1f;
     public float selectAnimDuration = 0.12f;
 
@@ -24,6 +27,7 @@ public class Enemy : UnitCombatant
     private Dictionary<EnemySkillType, EnemySkillBase> m_skillInstanceMap = new Dictionary<EnemySkillType, EnemySkillBase>();
     protected bool m_runtimeInitialized;
     private bool m_isBattleVisible = true;
+    private bool m_animationOverridesApplied;
     public virtual bool ShouldRegisterAtBattleStart => true;
     protected bool IsBattleVisible => m_isBattleVisible;
 
@@ -32,7 +36,7 @@ public class Enemy : UnitCombatant
     #endregion
     protected virtual void Start()
     {
-        InitializeEnemyRuntime();
+        ;
     }
 
     public virtual void ConfigureFromBattleSpawnData(BattleEnemySpawnData spawnData, int standPosition)
@@ -63,7 +67,33 @@ public class Enemy : UnitCombatant
         this.standPosition = standPosition;
         this.level = Mathf.Max(1, level);
         participateInTurnLoopAtStart = ShouldRegisterAtBattleStart;
+        InitializeAnimatorOverrides();
         InitializeEnemyRuntime();
+    }
+
+    private void InitializeAnimatorOverrides()
+    {
+        if (m_animationOverridesApplied)
+        {
+            return;
+        }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator == null || animationOverrideDatabase == null)
+        {
+            return;
+        }
+
+        if (!animationOverrideDatabase.TryGetEnemyOverrides(enemyID, out List<AnimationClipOverrideEntry> clipOverrides))
+        {
+            return;
+        }
+
+        m_animationOverridesApplied = AnimatorOverrideUtility.TryApplyOverrides(animator, clipOverrides, out var m_animatorOverrideController);
     }
 
     protected virtual void InitializeEnemyRuntime()
@@ -116,6 +146,11 @@ public class Enemy : UnitCombatant
         }
         //执行行动
         yield return ActionCoroutine();
+    }
+
+    public override float ConsumeTurnEndActionValue()
+    {
+        return TemporaryBattleModifierRuntimeManager.GetEnemyTurnEndActionValue(base.ConsumeTurnEndActionValue(), this);
     }
 
     protected virtual void OnTurnStartBeforeStateSettlement()

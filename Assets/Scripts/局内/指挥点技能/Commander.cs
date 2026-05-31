@@ -36,6 +36,7 @@ public class Commander : MonoBehaviour
         if (amount > 0 && amount <= commandPoints)
         {
             commandPoints -= amount;
+            TemporaryBattleModifierRuntimeManager.NotifyCommandPointsSpent(amount);
             return true;
             //这里可以添加一些使用指示点后的逻辑，比如UI更新等
         }

@@ -142,7 +142,9 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
                 var commandSkill = m_skill as CommandSkillBase;
                 if (commandSkill != null && commandSkill.commandSkillType == CommandSkillType.Change)
                 {
-                    button.interactable = TurnManager.Instance == null || !TurnManager.Instance.HasChangerTurn();
+                    bool hasChangerTurn = TurnManager.Instance != null && TurnManager.Instance.HasChangerTurn();
+                    bool canStartSwapFlow = CharacterManager.Instance != null && CharacterManager.Instance.CanStartSwapFlow();
+                    button.interactable = !hasChangerTurn && canStartSwapFlow;
                 }
                 else
                 {

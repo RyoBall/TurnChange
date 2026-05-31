@@ -13,12 +13,6 @@ public class ShopModuleManager : MonoBehaviour
         RandomUnique
     }
 
-    [Serializable]
-    public class ShopProductDefinition
-    {
-        public GridModuleDefinition module;
-    }
-
     private class ShopRuntimeEntry
     {
         public int slotIndex;
@@ -33,7 +27,7 @@ public class ShopModuleManager : MonoBehaviour
     [SerializeField] private List<RectTransform> spawnPoints = new List<RectTransform>();
 
     [Header("商品池")]
-    [SerializeField] private List<ShopProductDefinition> productPool = new List<ShopProductDefinition>();
+    [SerializeField] private List<GridModuleDefinition> productPool = new List<GridModuleDefinition>();
     [SerializeField] private GameObject shopItemPrefab;
     [SerializeField] private int itemsPerRefresh = 3;
     [SerializeField] private bool autoInitializeOnAwake = true;
@@ -52,6 +46,8 @@ public class ShopModuleManager : MonoBehaviour
     private readonly List<ShopRuntimeEntry> m_runtimeEntries = new List<ShopRuntimeEntry>();
 
     private int m_nextSequentialIndex;
+    private string m_statusMessage = string.Empty;
+    private string m_hoverDescription;
 
     public event Action<GridModuleDefinition, int, int> ItemPurchased;
     public event Action<GridModuleDefinition, int, int> PurchaseFailed;
@@ -74,23 +70,6 @@ public class ShopModuleManager : MonoBehaviour
     {
         UnbindRefreshButton();
     }
-
-    public void SetCurrency(int currency)
-    {
-        if (Datas.Instance != null)
-        {
-            int delta = Mathf.Max(0, currency) - Datas.Instance.GetGold();
-            Datas.Instance.ModifyGold(delta);
-        }
-
-        RefreshVisualState();
-    }
-
-    public void SetBackpackController(ModulePlacementController controller)
-    {
-        backpackController = controller;
-    }
-
     public void SetSpawnPoints(IReadOnlyList<RectTransform> points)
     {
         spawnPoints.Clear();
@@ -139,14 +118,14 @@ public class ShopModuleManager : MonoBehaviour
         ClearRuntimeEntries();//清除商品
 
         List<RectTransform> validSpawnPoints = GetValidSpawnPoints();
-        List<int> selectedProductIndices = SelectProductIndices();
-        int spawnCount = selectedProductIndices.Count;
+        List<GridModuleDefinition> selectedModules = SelectModulesForRefresh(validSpawnPoints.Count);
+        int spawnCount = selectedModules.Count;
 
         for (int i = 0; i < spawnCount; i++)
         {
             RectTransform spawnPoint = validSpawnPoints[i];
-            ShopProductDefinition product = productPool[selectedProductIndices[i]];
-            if (spawnPoint == null || product == null || product.module == null)
+            GridModuleDefinition selectedModule = selectedModules[i];
+            if (spawnPoint == null || selectedModule == null)
             {
                 continue;
             }
@@ -170,7 +149,7 @@ public class ShopModuleManager : MonoBehaviour
                 Debug.LogWarning("Shop item prefab does not contain ShopModuleItemUI. Component was added automatically.", itemObject);
             }
 
-            GridModuleDefinition runtimeModule = product.module.Clone();
+            GridModuleDefinition runtimeModule = selectedModule.Clone();
 
             ShopRuntimeEntry entry = new ShopRuntimeEntry
             {
@@ -259,24 +238,47 @@ public class ShopModuleManager : MonoBehaviour
                 delegate
                 {
                     TryPurchaseItem(slotIndex);
-                });
+                },
+                HandleItemPointerEnter,
+                HandleItemPointerExit);
         }
 
         UpdateCurrencyText();
         ShopStateChanged?.Invoke();
     }
 
-    private List<int> SelectProductIndices(int count = -1)
+    private List<GridModuleDefinition> SelectModulesForRefresh(int spawnPointCount)
     {
-        if(count==-1)
-        count=spawnPoints.Count;
-        List<int> indices = new List<int>();
-        for(int i=0;i<count;i++)
+        List<GridModuleDefinition> candidateModules = BuildModuleCandidateList();
+        List<GridModuleDefinition> selectedModules = new List<GridModuleDefinition>();
+        int targetCount = Mathf.Min(itemsPerRefresh, spawnPointCount, candidateModules.Count);
+
+        for (int i = 0; i < targetCount; i++)
         {
-            int rand=UnityEngine.Random.Range(0, productPool.Count);
-            indices.Add(rand);
+            int selectedIndex = UnityEngine.Random.Range(0, candidateModules.Count);
+            selectedModules.Add(candidateModules[selectedIndex]);
+            candidateModules.RemoveAt(selectedIndex);
         }
-        return indices;
+
+        return selectedModules;
+    }
+
+    private List<GridModuleDefinition> BuildModuleCandidateList()
+    {
+        List<GridModuleDefinition> candidateModules = new List<GridModuleDefinition>();
+
+        for (int i = 0; i < productPool.Count; i++)
+        {
+            GridModuleDefinition product = productPool[i];
+            if (product == null)
+            {
+                continue;
+            }
+
+            candidateModules.Add(product);
+        }
+
+        return candidateModules;
     }
 
     private ShopRuntimeEntry GetRuntimeEntry(int slotIndex)
@@ -366,12 +368,53 @@ public class ShopModuleManager : MonoBehaviour
 
     private void SetStatusText(string message)
     {
-        if (statusText != null)
+        m_statusMessage = message ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(m_hoverDescription) && statusText != null)
         {
-            statusText.text = message;
+            statusText.text = m_statusMessage;
         }
 
         ShopStateChanged?.Invoke();
+    }
+
+    private void HandleItemPointerEnter(GridModuleDefinition module)
+    {
+        m_hoverDescription = GetModuleDescription(module);
+
+        if (statusText != null)
+        {
+            statusText.text = m_hoverDescription;
+        }
+
+        ShopStateChanged?.Invoke();
+    }
+
+    private void HandleItemPointerExit()
+    {
+        m_hoverDescription = null;
+
+        if (statusText != null)
+        {
+            statusText.text = m_statusMessage;
+        }
+
+        ShopStateChanged?.Invoke();
+    }
+
+    private static string GetModuleDescription(GridModuleDefinition module)
+    {
+        if (module == null)
+        {
+            return string.Empty;
+        }
+
+        if (!string.IsNullOrWhiteSpace(module.description))
+        {
+            return module.description;
+        }
+
+        return module.moduleName;
     }
 
     private void UpdateCurrencyText()

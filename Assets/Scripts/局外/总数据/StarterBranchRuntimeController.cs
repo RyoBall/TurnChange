@@ -22,14 +22,13 @@ public class StarterBranchRuntimeController : MonoBehaviour
     private const string DirectDamageBranchId = "直伤";
 
     [Header("开局选择UI")]
+    [SerializeField] private RectTransform backGround;
     [SerializeField] private StarterBranchConfig starterBranchConfig;
-    [SerializeField] private Canvas choiceCanvas;
     [SerializeField] private RectTransform choiceRoot;
     [SerializeField] private RectTransform choicePanel;
     [SerializeField] private CanvasGroup choiceCanvasGroup;
     [SerializeField] private TMP_Text titleText;
     [SerializeField] private TMP_Text subtitleText;
-    [SerializeField] private Transform choiceButtonContainer;
     [SerializeField] private StarterBranchChoiceButtonUI choiceButtonPrefab;
 
     [Header("动画参数")]
@@ -271,6 +270,7 @@ public class StarterBranchRuntimeController : MonoBehaviour
         if (m_datas == null || !ShouldShowStarterChoiceInScene(SceneManager.GetActiveScene()))
         {
             Debug.Log("1[StarterBranchRuntimeController] 当前场景不适合显示开局选择界面，跳过显示。", this);
+            choiceRoot.gameObject.SetActive(false);
             return;
         }
 
@@ -328,12 +328,15 @@ public class StarterBranchRuntimeController : MonoBehaviour
 
         m_datas.SetSelectedStarterBranchId(branch.branchId);
         SynchronizeStarterBranchProgression();
-        PlayStarterChoiceExitAnimation(() =>
+        ScreenTransition.Instance?.Transition(() =>
         {
-            if (choiceRoot != null)
+            PlayStarterChoiceExitAnimation(() =>
             {
-                choiceRoot.gameObject.SetActive(false);
-            }
+                if (choiceRoot != null)
+                {
+                    choiceRoot.gameObject.SetActive(false);
+                }
+            });
         });
         return true;
     }

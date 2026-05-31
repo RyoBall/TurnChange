@@ -75,6 +75,7 @@ public class UIButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointer
     {
         if (target == null) target = transform;
         if (runningCoroutine != null) StopCoroutine(runningCoroutine);
+        GameAudioEvents.Raise(GameAudioEventType.ButtonHoverEnter, this, this);
         runningCoroutine = StartCoroutine(EnterRoutine());
     }
 
@@ -85,6 +86,7 @@ public class UIButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointer
     {
         if (target == null) target = transform;
         if (runningCoroutine != null) StopCoroutine(runningCoroutine);
+        GameAudioEvents.Raise(GameAudioEventType.ButtonHoverExit, this, this);
         runningCoroutine = StartCoroutine(ExitRoutine());
     }
 
@@ -93,7 +95,6 @@ public class UIButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointer
         float elapsed = 0f;
         Vector3 from = target.localScale;
         Vector3 to = Vector3.Scale(originalLocalScale, new Vector3(hoverScale, hoverScale, hoverScale));
-
         // 先用一个带回弹的 ease 将缩放推到目标附近，然后再用衰减正弦震荡让其回落到目标值
         while (elapsed < enterDuration)
         {

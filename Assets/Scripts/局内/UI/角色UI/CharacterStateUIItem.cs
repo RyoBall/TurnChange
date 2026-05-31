@@ -2,6 +2,7 @@ using System.Collections;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CharacterStateUIItem : MonoBehaviour
 {
@@ -10,23 +11,19 @@ public class CharacterStateUIItem : MonoBehaviour
     [SerializeField] private UnitHealthUIController healthBar;
     [SerializeField] private ChaosPointSlotUI chaosPointSlotUI;
     [SerializeField] private ShieldSlider shieldSlider;
+    [SerializeField] private Image characterIcon;
 
     private Character currentCharacter;
 
     public Character CurrentCharacter => currentCharacter;
-
-    private void Awake()
-    {
-        if (canvasGroup == null)
-        {
-            canvasGroup = GetComponent<CanvasGroup>();
-        }
-    }
-
     public void Initialize(Character character)
     {
         currentCharacter = character;
         IntializeChildUI();
+        if (characterIcon != null && currentCharacter != null)
+        {
+            characterIcon.sprite = Datas.Instance.m_characterTypeLookup[currentCharacter.characterType].portraitSprite;
+        }
 
         if (canvasGroup != null)
         {

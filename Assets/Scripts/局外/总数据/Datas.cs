@@ -2,54 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TemporaryBattleModifierRuntimeEventType
-{
-    PlayerCharacterSwapped
-}
-
-public static class BattleRuntimeEvents//战斗事件
-{
-    public static event Action PlayerCharacterSwapped;
-
-    public static void RaisePlayerCharacterSwapped()
-    {
-        PlayerCharacterSwapped?.Invoke();
-    }
-}
-
-public interface ITemporaryBattleModifierBehavior//战斗增益行为接口
-{
-    void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeEventType runtimeEventType);
-}
-
-public sealed class SwapGoldTemporaryBattleModifierBehavior : ITemporaryBattleModifierBehavior
-{
-    public void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeEventType runtimeEventType)
-    {
-        if (datas == null || modifier == null || runtimeEventType != TemporaryBattleModifierRuntimeEventType.PlayerCharacterSwapped)
-        {
-            return;
-        }
-
-        datas.ModifyGold(modifier.goldPerSwap - modifier.goldPenaltyPerSwap);
-    }
-}
-
-public static class TemporaryBattleModifierBehaviorRegistry
-{
-    private static readonly Dictionary<LevelEventOptionType, ITemporaryBattleModifierBehavior> s_runtimeBehaviors =
-        new Dictionary<LevelEventOptionType, ITemporaryBattleModifierBehavior>
-        {
-            { LevelEventOptionType.SwapForProfit, new SwapGoldTemporaryBattleModifierBehavior() },
-            { LevelEventOptionType.CashOutSwap, new SwapGoldTemporaryBattleModifierBehavior() }
-        };
-
-    public static bool TryGetRuntimeBehavior(LevelEventOptionType optionType, out ITemporaryBattleModifierBehavior behavior)
-    {
-        return s_runtimeBehaviors.TryGetValue(optionType, out behavior);
-    }
-}
-
 [System.Serializable]
 public class PlacedModuleData
 {
@@ -70,34 +22,6 @@ public class PlacedModuleData
     }
 }
 
-[Serializable]
-public class TemporaryBattleModifierData
-{
-    public LevelEventOptionType optionType;
-    [Min(0)] public int remainingBattles;
-    public float playerSpeedMultiplier = 1f;
-    public float playerDirectDamageMultiplier = 1f;
-    public float playerDotDamageMultiplier = 1f;
-    public float playerCritDamageBonus;
-    public int goldPerSwap;
-    public int goldPenaltyPerSwap;
-
-    public TemporaryBattleModifierData Clone()
-    {
-        return new TemporaryBattleModifierData
-        {
-            optionType = optionType,
-            remainingBattles = remainingBattles,
-            playerSpeedMultiplier = playerSpeedMultiplier,
-            playerDirectDamageMultiplier = playerDirectDamageMultiplier,
-            playerDotDamageMultiplier = playerDotDamageMultiplier,
-            playerCritDamageBonus = playerCritDamageBonus,
-            goldPerSwap = goldPerSwap,
-            goldPenaltyPerSwap = goldPenaltyPerSwap
-        };
-    }
-}
-
 public class Datas : MonoBehaviour
 {
     private const int MaxTeamLevel = 99;
@@ -105,6 +29,7 @@ public class Datas : MonoBehaviour
     public static Datas Instance;
     public event Action CharacterRosterChanged;
     public event Action ModuleStateChanged;
+    public event Action BackpackWidthChanged;
     public event Action<string> LevelCompleted;
 
     [Header("角色列表")]
@@ -135,10 +60,7 @@ public class Datas : MonoBehaviour
     [SerializeField] private int backpackWidth = 4;
 
     public readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
-    private readonly List<TemporaryBattleModifierData> m_battleModifierSnapshot = new List<TemporaryBattleModifierData>();
     private bool m_characterLookupBuilt;
-    private bool m_hasBattleModifierSnapshot;
-    private bool m_isSubscribedToBattleRuntimeEvents;
 
     public bool HasSelectedStarterBranch => !string.IsNullOrWhiteSpace(selectedStarterBranchId);
     public string SelectedStarterBranchId => selectedStarterBranchId;
@@ -174,6 +96,7 @@ public class Datas : MonoBehaviour
     public void AddBackpackSlot()
     {
         backpackWidth++;
+        BackpackWidthChanged?.Invoke();
     }
     public int GetBackpackWidth()
     {
@@ -485,176 +408,31 @@ public class Datas : MonoBehaviour
     }
     #endregion
     #region 局外接入战斗增益
-    public void AddTemporaryBattleModifier(TemporaryBattleModifierData modifier)
+    public IReadOnlyList<TemporaryBattleModifierData> GetActiveBattleModifiers()
+    {
+        return activeBattleModifiers;
+    }
+
+    public bool AddActiveBattleModifier(TemporaryBattleModifierData modifier)
     {
         if (modifier == null || modifier.remainingBattles <= 0)
         {
-            return;
+            return false;
         }
 
         activeBattleModifiers.Add(modifier.Clone());
+        return true;
     }
 
-    public void BeginBattleModifierSession()
+    public bool RemoveActiveBattleModifierAt(int modifierIndex)
     {
-        SubscribeBattleRuntimeEvents();
-        m_battleModifierSnapshot.Clear();
-
-        for (int i = 0; i < activeBattleModifiers.Count; i++)
+        if (modifierIndex < 0 || modifierIndex >= activeBattleModifiers.Count)
         {
-            TemporaryBattleModifierData modifier = activeBattleModifiers[i];
-            if (modifier == null || modifier.remainingBattles <= 0)
-            {
-                continue;
-            }
-
-            m_battleModifierSnapshot.Add(modifier.Clone());
+            return false;
         }
 
-        m_hasBattleModifierSnapshot = m_battleModifierSnapshot.Count > 0;
-    }
-
-    public void CompleteBattleModifierSession(bool consumeBattleCount = true)
-    {
-        UnsubscribeBattleRuntimeEvents();
-
-        if (consumeBattleCount)
-        {
-            for (int i = activeBattleModifiers.Count - 1; i >= 0; i--)
-            {
-                TemporaryBattleModifierData modifier = activeBattleModifiers[i];
-                if (modifier == null)
-                {
-                    activeBattleModifiers.RemoveAt(i);
-                    continue;
-                }
-
-                modifier.remainingBattles = Mathf.Max(0, modifier.remainingBattles - 1);
-                if (modifier.remainingBattles <= 0)
-                {
-                    activeBattleModifiers.RemoveAt(i);
-                }
-            }
-        }
-
-        m_battleModifierSnapshot.Clear();
-        m_hasBattleModifierSnapshot = false;
-    }
-
-    public float GetPlayerSpeedMultiplier()
-    {
-        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
-        float multiplier = 1f;
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            TemporaryBattleModifierData modifier = modifiers[i];
-            if (modifier != null)
-            {
-                multiplier *= Mathf.Max(0.01f, modifier.playerSpeedMultiplier);
-            }
-        }
-
-        return multiplier;
-    }
-
-    public float GetPlayerDirectDamageMultiplier()
-    {
-        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
-        float multiplier = 1f;
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            TemporaryBattleModifierData modifier = modifiers[i];
-            if (modifier != null)
-            {
-                multiplier *= Mathf.Max(0.01f, modifier.playerDirectDamageMultiplier);
-            }
-        }
-
-        return multiplier;
-    }
-
-    public float GetPlayerDotDamageMultiplier()
-    {
-        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
-        float multiplier = 1f;
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            TemporaryBattleModifierData modifier = modifiers[i];
-            if (modifier != null)
-            {
-                multiplier *= Mathf.Max(0.01f, modifier.playerDotDamageMultiplier);
-            }
-        }
-
-        return multiplier;
-    }
-
-    public float GetPlayerCritDamageBonus()
-    {
-        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
-        float bonus = 0f;
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            TemporaryBattleModifierData modifier = modifiers[i];
-            if (modifier != null)
-            {
-                bonus += modifier.playerCritDamageBonus;
-            }
-        }
-
-        return bonus;
-    }
-
-    public void NotifyBattleModifierRuntimeEvent(TemporaryBattleModifierRuntimeEventType runtimeEventType)
-    {
-        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            TemporaryBattleModifierData modifier = modifiers[i];
-            if (modifier == null)
-            {
-                continue;
-            }
-
-            if (!TemporaryBattleModifierBehaviorRegistry.TryGetRuntimeBehavior(modifier.optionType, out ITemporaryBattleModifierBehavior behavior))
-            {
-                continue;
-            }
-
-            behavior.HandleRuntimeEvent(this, modifier, runtimeEventType);
-        }
-    }
-
-    private void SubscribeBattleRuntimeEvents()
-    {
-        if (m_isSubscribedToBattleRuntimeEvents)
-        {
-            return;
-        }
-
-        BattleRuntimeEvents.PlayerCharacterSwapped += HandlePlayerCharacterSwapped;
-        m_isSubscribedToBattleRuntimeEvents = true;
-    }
-
-    private void UnsubscribeBattleRuntimeEvents()
-    {
-        if (!m_isSubscribedToBattleRuntimeEvents)
-        {
-            return;
-        }
-
-        BattleRuntimeEvents.PlayerCharacterSwapped -= HandlePlayerCharacterSwapped;
-        m_isSubscribedToBattleRuntimeEvents = false;
-    }
-
-    private void HandlePlayerCharacterSwapped()
-    {
-        NotifyBattleModifierRuntimeEvent(TemporaryBattleModifierRuntimeEventType.PlayerCharacterSwapped);
-    }
-
-    private IReadOnlyList<TemporaryBattleModifierData> GetEffectiveBattleModifiers()
-    {
-        return m_hasBattleModifierSnapshot ? m_battleModifierSnapshot : activeBattleModifiers;
+        activeBattleModifiers.RemoveAt(modifierIndex);
+        return true;
     }
     #endregion
     #region 模块系统

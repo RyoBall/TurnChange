@@ -201,6 +201,7 @@ public class HorizontalSnapCarousel : MonoBehaviour, IBeginDragHandler, IDragHan
             return;
         }
 
+        GameAudioEvents.Raise(GameAudioEventType.LevelScroll, this, null, targetIndex);
         m_IsDragging = false;
         m_IsInertiaMoving = false;
         m_InertiaVelocityX = 0f;

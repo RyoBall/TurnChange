@@ -132,6 +132,8 @@ public class ModulePlacementController : MonoBehaviour//背包
         {
             if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
             {
+                pickedModule.RemoveFromBoard();
+
                 if (!TryGetRuntimeModuleIndex(pickedModule, out int moduleIndex) || !TryRemovePlacedModuleData(datas, moduleIndex))
                 {
                     Debug.LogWarning("[ModulePlacementController] 从 Datas 取回模块失败，已按数据源重建网格。", this);
@@ -300,6 +302,8 @@ public class ModulePlacementController : MonoBehaviour//背包
 
         Datas.Instance.ModuleStateChanged -= HandleModuleStateChanged;
         Datas.Instance.ModuleStateChanged += HandleModuleStateChanged;
+        Datas.Instance.BackpackWidthChanged -= HandleBackpackWidthChanged;
+        Datas.Instance.BackpackWidthChanged += HandleBackpackWidthChanged;
     }
 
     private void UnsubscribeFromDataSource()
@@ -310,6 +314,7 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
 
         Datas.Instance.ModuleStateChanged -= HandleModuleStateChanged;
+        Datas.Instance.BackpackWidthChanged -= HandleBackpackWidthChanged;
     }
 
     private void HandleModuleStateChanged()
@@ -329,6 +334,17 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
 
         RefreshViews();
+        RefreshCursorPreview();
+    }
+
+    private void HandleBackpackWidthChanged()
+    {
+        if (placementBoard != null)
+        {
+            placementBoard.BuildBoard();
+        }
+
+        RestorePlacedModulesFromData();
         RefreshCursorPreview();
     }
 
@@ -568,6 +584,11 @@ public class ModulePlacementController : MonoBehaviour//背包
         EnsureRuntimeModulesPrepared();
         moduleIndex = module != null ? m_runtimeOwnedModules.IndexOf(module) : -1;
         return moduleIndex >= 0;
+    }
+
+    public bool TryGetOwnedModuleIndex(GridModuleDefinition module, out int moduleIndex)
+    {
+        return TryGetRuntimeModuleIndex(module, out moduleIndex);
     }
 
     private void EnsureRuntimeModulesPrepared()

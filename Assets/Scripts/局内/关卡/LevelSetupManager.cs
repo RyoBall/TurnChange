@@ -67,7 +67,7 @@ public class LevelSetupManager : MonoBehaviour
 
         m_pendingBattleLevelData = BattleLaunchContext.ConsumePendingLevelData();
         //导入局外数据，注意这里的时机是在角色生成之前，因此会影响角色生成的结果（如玩家角色池的确定），后续如果有需要也可以考虑增加一个接口在角色生成之后再导入一次，以覆盖掉角色生成时无法预知的数据（如玩家选择的上阵角色）
-        Datas.Instance?.BeginBattleModifierSession();
+        TemporaryBattleModifierRuntimeManager.BeginBattleModifierSession();
         allPlayerCharacters = ResolveRuntimePlayerCharacters();
         IReadOnlyList<BattleEnemySpawnData> runtimeEnemies = m_pendingBattleLevelData != null
             ? m_pendingBattleLevelData.GetWaveEnemies(0)
@@ -224,14 +224,13 @@ public class LevelSetupManager : MonoBehaviour
         int rewardGold = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardGold : 0;
         Datas.Instance?.MarkLevelCompleted(m_pendingBattleLevelData != null ? m_pendingBattleLevelData.levelId : string.Empty);
         //结束战斗增益会话，结算界面可能需要读取一些数据来显示，因此放在前面执行，耦合度略高
-        Datas.Instance?.CompleteBattleModifierSession();
+        TemporaryBattleModifierRuntimeManager.CompleteBattleModifierSession();
 
         if (settlementView != null)
         {
             yield return settlementView.PlaySettlementSequence(rewardExperience, rewardGold);
             yield break;
         }
-        Datas.Instance?.ApplyBattleRewards(rewardExperience, rewardGold);
 
         Debug.LogWarning("[LevelSetupManager] 缺少 BattleSettlementView，已结算奖励但未显示结算界面。", this);
     }

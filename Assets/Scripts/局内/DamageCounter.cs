@@ -54,7 +54,12 @@ public class DamageCounter : MonoBehaviour
         float effectiveCritRate = attacker.critRate + (environmentManager != null ? environmentManager.GetCritRateBonus(attacker) : 0f);
         float effectiveCritDamage = attacker.critDamage + (environmentManager != null ? environmentManager.GetCritDamageBonus(attacker) : 0f);
         //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
-        effectiveCritDamage += attacker is Character && Datas.Instance != null ? Datas.Instance.GetPlayerCritDamageBonus() : 0f;
+        if (attacker is Character)
+        {
+            effectiveCritRate += TemporaryBattleModifierRuntimeManager.GetPlayerCritRateBonus(attacker);
+            effectiveCritDamage += TemporaryBattleModifierRuntimeManager.GetPlayerCritDamageBonus(attacker);
+        }
+
         isCrit = canCrit && Random.value < Mathf.Clamp01(effectiveCritRate);
         //获取防御系数与随机系数
         float randomFactor = applyRandomVariance ? Random.Range(0.85f, 1.15f) : 1f;
@@ -73,12 +78,21 @@ public class DamageCounter : MonoBehaviour
         //计算环境增伤影响
         raw *= environmentManager != null ? environmentManager.GetIncomingDamageMultiplier(attacker, defender, false, isTrueDamage) : 1f;
         //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
-        raw *= attacker is Character && Datas.Instance != null ? Datas.Instance.GetPlayerDirectDamageMultiplier() : 1f;
+        if (attacker is Character)
+        {
+            raw *= TemporaryBattleModifierRuntimeManager.ConsumePendingNextDamageMultiplier(attacker);
+            raw *= TemporaryBattleModifierRuntimeManager.GetPlayerDirectDamageMultiplier(attacker, defender, isCrit);
+        }
 
         var damageInfo = new UnitCombatant.DamageInfo(Mathf.Max(0, Mathf.RoundToInt(raw)), attacker);
         if (isTrueDamage)
         {
             damageInfo = damageInfo.AsTrueDamage();
+        }
+
+        if (isCrit && attacker is Character)
+        {
+            TemporaryBattleModifierRuntimeManager.NotifyCriticalHit(attacker, defender);
         }
 
         return damageInfo;
@@ -100,7 +114,7 @@ public class DamageCounter : MonoBehaviour
         damage *= defender.GetIncomingDamageMultiplier(true, isTrueDamage);
         damage *= EnvironmentManager.Instance != null ? EnvironmentManager.Instance.GetIncomingDamageMultiplier(attacker, defender, true, isTrueDamage) : 1f;
         //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
-        damage *= attacker is Character && Datas.Instance != null ? Datas.Instance.GetPlayerDotDamageMultiplier() : 1f;
+        damage *= attacker is Character ? TemporaryBattleModifierRuntimeManager.GetPlayerDotDamageMultiplier(attacker, defender) : 1f;
 
         var damageInfo = new UnitCombatant.DamageInfo(Mathf.RoundToInt(damage), attacker)
             .AsDot()

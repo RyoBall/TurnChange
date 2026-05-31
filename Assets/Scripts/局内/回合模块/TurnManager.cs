@@ -108,6 +108,7 @@ public class TurnManager : MonoBehaviour
         yield return new WaitUntil(() => CinemachineCameraManager.Instance == null || CinemachineCameraManager.Instance.HasCompletedOpeningIntro);
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
+        TemporaryBattleModifierRuntimeManager.NotifyBattleStarted();
         yield return StartCoroutine(TriggerOpeningEnterSkills());
         //回合开始
         isTurnInitialized = true;
@@ -179,7 +180,7 @@ public class TurnManager : MonoBehaviour
 
         foreach (var combatant in combatants)
         {
-            combatant.ChangeActionValue(combatant.BaseActionValue, false);
+            combatant.ChangeActionValue(combatant.ConsumeTurnEndActionValue(), false);
         }
 
         BuildTurnOrder();
@@ -241,6 +242,10 @@ public class TurnManager : MonoBehaviour
                 {
                     Character reserveCharacter = CharacterManager.Instance.reserveCharacters[i];
                     reserveCharacter?.ReduceSwitchCooldown(advanceValue);
+                    if (reserveCharacter != null)
+                    {
+                        TemporaryBattleModifierRuntimeManager.NotifyReserveActionValueAdvanced(reserveCharacter, advanceValue);
+                    }
                 }
             }
             //推进状态持续时间

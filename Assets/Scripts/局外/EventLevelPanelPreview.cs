@@ -181,7 +181,7 @@ public class EventLevelPanelView : MonoBehaviour
         switch (option.optionType)
         {
             case LevelEventOptionType.WorshipSpeedGod:
-                Datas.Instance?.AddTemporaryBattleModifier(new TemporaryBattleModifierData
+                TemporaryBattleModifierRuntimeManager.AddTemporaryBattleModifier(new TemporaryBattleModifierData
                 {
                     optionType = option.optionType,
                     remainingBattles = Mathf.Max(1, option.battleCount),
@@ -189,7 +189,7 @@ public class EventLevelPanelView : MonoBehaviour
                 });
                 break;
             case LevelEventOptionType.WorshipPowerGod:
-                Datas.Instance?.AddTemporaryBattleModifier(new TemporaryBattleModifierData
+                TemporaryBattleModifierRuntimeManager.AddTemporaryBattleModifier(new TemporaryBattleModifierData
                 {
                     optionType = option.optionType,
                     remainingBattles = Mathf.Max(1, option.battleCount),
@@ -200,7 +200,7 @@ public class EventLevelPanelView : MonoBehaviour
                 Datas.Instance?.AddGold(Mathf.Max(0, option.battleCount) * 20);
                 break;
             case LevelEventOptionType.SwapForProfit:
-                Datas.Instance?.AddTemporaryBattleModifier(new TemporaryBattleModifierData
+                TemporaryBattleModifierRuntimeManager.AddTemporaryBattleModifier(new TemporaryBattleModifierData
                 {
                     optionType = option.optionType,
                     remainingBattles = Mathf.Max(1, option.battleCount),
@@ -208,8 +208,7 @@ public class EventLevelPanelView : MonoBehaviour
                 });
                 break;
             case LevelEventOptionType.CashOutSwap:
-                Datas.Instance?.AddGold(Mathf.Max(0, option.battleCount) * Mathf.Max(0, option.value));
-                Datas.Instance?.AddTemporaryBattleModifier(new TemporaryBattleModifierData
+                TemporaryBattleModifierRuntimeManager.AddTemporaryBattleModifier(new TemporaryBattleModifierData
                 {
                     optionType = option.optionType,
                     remainingBattles = Mathf.Max(1, option.battleCount),
@@ -217,7 +216,7 @@ public class EventLevelPanelView : MonoBehaviour
                 });
                 break;
             case LevelEventOptionType.TakeWindingPath:
-                Datas.Instance?.AddTemporaryBattleModifier(new TemporaryBattleModifierData
+                TemporaryBattleModifierRuntimeManager.AddTemporaryBattleModifier(new TemporaryBattleModifierData
                 {
                     optionType = option.optionType,
                     remainingBattles = Mathf.Max(1, option.battleCount),
@@ -226,7 +225,7 @@ public class EventLevelPanelView : MonoBehaviour
                 });
                 break;
             case LevelEventOptionType.TakeBroadRoad:
-                Datas.Instance?.AddTemporaryBattleModifier(new TemporaryBattleModifierData
+                TemporaryBattleModifierRuntimeManager.AddTemporaryBattleModifier(new TemporaryBattleModifierData
                 {
                     optionType = option.optionType,
                     remainingBattles = Mathf.Max(1, option.battleCount),

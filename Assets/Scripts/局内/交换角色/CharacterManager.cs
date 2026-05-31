@@ -74,9 +74,11 @@ public class CharacterManager : MonoBehaviour
 			yield break;
 		}
 
-		if (reserveCharacters.Count <= 0)
+		if (!CanStartSwapFlow())
 		{
-			Debug.LogWarning("[CharacterManager] 候补角色列表为空，无法执行换人");
+			Debug.LogWarning(reserveCharacters.Count <= 0
+				? "[CharacterManager] 候补角色列表为空，无法执行换人"
+				: "[CharacterManager] 所有候补角色均处于换人冷却中，无法执行换人");
 			yield break;
 		}
 
@@ -90,8 +92,8 @@ public class CharacterManager : MonoBehaviour
 			UpdatePromptText("请选择一个场上角色进行更换");
 			SetPromptVisible(true);
 			Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
-			yield return new WaitUntil(() => m_selectedFieldCharacter != null||Input.GetKeyDown(KeyCode.Mouse1));
-			if(m_selectedFieldCharacter == null)
+			yield return new WaitUntil(() => m_selectedFieldCharacter != null || Input.GetKeyDown(KeyCode.Mouse1));
+			if (m_selectedFieldCharacter == null)
 			{
 				Debug.Log("[CharacterManager] 换人流程取消：未选择场上角色");
 				SetPromptVisible(false);
@@ -105,10 +107,11 @@ public class CharacterManager : MonoBehaviour
 		PlayReserveButtonsEnterAnim();
 		UpdatePromptText($"请选择替换 {m_selectedFieldCharacter.combatantName} 的候补角色");
 
-		yield return new WaitUntil(() => m_selectedReserveCharacter != null||Input.GetKeyDown(KeyCode.Mouse1));
-		if(m_selectedReserveCharacter == null)
+		yield return new WaitUntil(() => m_selectedReserveCharacter != null || Input.GetKeyDown(KeyCode.Mouse1));
+		if (m_selectedReserveCharacter == null)
 		{
 			Debug.Log("[CharacterManager] 换人流程取消：未选择候补角色");
+			HideReserveButtonsImmediate();
 			SetPromptVisible(false);
 			yield break;
 		}
@@ -121,7 +124,7 @@ public class CharacterManager : MonoBehaviour
 		}
 		//第三步:执行替换
 		HideReserveButtonsImmediate();
-		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter));
+		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter, true));
 		//第四步:清理UI
 		SetPromptVisible(false);
 		m_selectedFieldCharacter = null;
@@ -195,7 +198,7 @@ public class CharacterManager : MonoBehaviour
 		return true;
 	}
 
-	private IEnumerator ReplaceCharacter(Character oldCharacter, Character newCharacter)//执行角色替换
+	private IEnumerator ReplaceCharacter(Character oldCharacter, Character newCharacter, bool applySwapOutPenalty)//执行角色替换
 	{
 		if (oldCharacter == null || newCharacter == null)
 		{
@@ -209,6 +212,7 @@ public class CharacterManager : MonoBehaviour
 			yield break;
 		}
 		//设置入场角色位置
+		var exitPosition = oldCharacter.transform.position;
 		int targetStandPosition = oldCharacter.standPosition;
 		if (LevelCharacterSpawner.TryGetSpawnPosition(targetStandPosition, out Vector3 spawnPosition))
 		{
@@ -216,7 +220,8 @@ public class CharacterManager : MonoBehaviour
 		}
 		else
 		{
-			newCharacter.transform.position = oldCharacter.transform.position;
+			Debug.LogWarning($"[CharacterManager] 替换警告：无法找到站位 {targetStandPosition} 的出生点，入场角色将直接出现在退场角色位置");
+			newCharacter.transform.position = exitPosition;
 		}
 
 		newCharacter.standPosition = targetStandPosition;
@@ -226,11 +231,15 @@ public class CharacterManager : MonoBehaviour
 			TurnManager.Instance.RemoveCombatant(oldCharacter);
 		}
 		yield return oldCharacter.PlayExitAnimation();
+		oldCharacter.transform.position = exitPosition;
 		//交换角色列表中的角色
 		int fieldIndex = fieldCharacters.IndexOf(oldCharacter);
 		fieldCharacters[fieldIndex] = newCharacter;
-		oldCharacter.TriggerSwapCooldown();
-		oldCharacter.ReduceChaos(3);
+		if (applySwapOutPenalty)
+		{
+			oldCharacter.TriggerSwapCooldown();
+			oldCharacter.ReduceChaos(3);
+		}
 
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
@@ -249,8 +258,26 @@ public class CharacterManager : MonoBehaviour
 
 		Debug.Log($"[CharacterManager] 已将场上角色 {oldCharacter.name} 替换为 {newCharacter.name}");
 		BattleRuntimeEvents.RaisePlayerCharacterSwapped();
+		TemporaryBattleModifierRuntimeManager.NotifyPlayerCharacterSwapped(oldCharacter, newCharacter);
 		OnFieldCharacterSwapped?.Invoke(oldCharacter, newCharacter);
 		yield break;
+	}
+
+	public bool TryAutoSwapToFirstReserve(Character oldCharacter, bool applySwapOutPenalty = false)
+	{
+		if (oldCharacter == null || m_isSelectingFieldCharacter || m_isSelectingReserveCharacter)
+		{
+			return false;
+		}
+
+		Character reserveCharacter = GetFirstAvailableReserveCharacter(requireAvailableForSwap: true);
+		if (reserveCharacter == null || !fieldCharacters.Contains(oldCharacter) || !reserveCharacters.Contains(reserveCharacter))
+		{
+			return false;
+		}
+
+		StartCoroutine(ReplaceCharacter(oldCharacter, reserveCharacter, applySwapOutPenalty));
+		return true;
 	}
 
 	private void BuildReserveButtons()//构建候补角色选择按钮
@@ -449,11 +476,26 @@ public class CharacterManager : MonoBehaviour
 		return null;
 	}
 
-	private Character GetFirstAvailableReserveCharacter()
+	public bool CanStartSwapFlow()
+	{
+		return GetFirstAvailableReserveCharacter(requireAvailableForSwap: true) != null;
+	}
+
+	private Character GetFirstAvailableReserveCharacter(bool requireAvailableForSwap = false)
 	{
 		for (int i = 0; i < reserveCharacters.Count; i++)
 		{
 			Character reserveCharacter = reserveCharacters[i];
+			if (reserveCharacter == null)
+			{
+				continue;
+			}
+
+			if (requireAvailableForSwap && reserveCharacter.IsSwapOnCooldown)
+			{
+				continue;
+			}
+
 			if (reserveCharacter != null)
 			{
 				return reserveCharacter;

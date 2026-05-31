@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class ShopModuleItemUI : MonoBehaviour
+public class ShopModuleItemUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Color normalBackgroundColor = new Color(0.18f, 0.12f, 0.10f, 0.94f);
     [SerializeField] private Color highlightedBackgroundColor = new Color(0.32f, 0.20f, 0.12f, 0.98f);
@@ -33,6 +34,8 @@ public class ShopModuleItemUI : MonoBehaviour
 
     // 以下变量属于运行期状态，只能由脚本初始化和维护。
     private Action<GridModuleDefinition> m_onPurchaseRequested;
+    private Action<GridModuleDefinition> m_onPointerEntered;
+    private Action m_onPointerExited;
     private GridModuleDefinition m_module;
     private bool m_canBuy;
     private bool m_isSoldOut;
@@ -42,7 +45,15 @@ public class ShopModuleItemUI : MonoBehaviour
         EnsureView();
     }
 
-    public void Bind(GridModuleDefinition module, int price, bool canBuy, bool isSoldOut, Vector2 drawCellSize, Action<GridModuleDefinition> onPurchaseRequested)
+    public void Bind(
+        GridModuleDefinition module,
+        int price,
+        bool canBuy,
+        bool isSoldOut,
+        Vector2 drawCellSize,
+        Action<GridModuleDefinition> onPurchaseRequested,
+        Action<GridModuleDefinition> onPointerEntered,
+        Action onPointerExited)
     {
         EnsureView();
 
@@ -50,6 +61,8 @@ public class ShopModuleItemUI : MonoBehaviour
         m_canBuy = canBuy;
         m_isSoldOut = isSoldOut;
         m_onPurchaseRequested = onPurchaseRequested;
+        m_onPointerEntered = onPointerEntered;
+        m_onPointerExited = onPointerExited;
 
         bool interactable = module != null && canBuy && !isSoldOut;
         m_background.color = isSoldOut || !canBuy ? disabledBackgroundColor : (interactable ? highlightedBackgroundColor : normalBackgroundColor);
@@ -77,6 +90,21 @@ public class ShopModuleItemUI : MonoBehaviour
         }
 
         m_onPurchaseRequested?.Invoke(m_module);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (m_module == null)
+        {
+            return;
+        }
+
+        m_onPointerEntered?.Invoke(m_module);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        m_onPointerExited?.Invoke();
     }
 #region 确认视图不为空
     private void EnsureView()

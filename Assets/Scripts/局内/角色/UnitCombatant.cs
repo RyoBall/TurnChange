@@ -104,6 +104,7 @@ public class UnitCombatant : Combatant
         }
         //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
+        GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
         if (currentHP <= 0)
         {
@@ -222,6 +223,11 @@ public class UnitCombatant : Combatant
             {
                 tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, skillCoef);
                 DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
+                GameAudioEvents.Raise(
+                    tstate.isDebuff ? GameAudioEventType.CombatDebuffGain : GameAudioEventType.CombatBuffGain,
+                    giver,
+                    this,
+                    stacks);
                 if (tstate.isDebuff)
                 {
                     NotifyDebuffApplied(this, giver);
@@ -252,6 +258,11 @@ public class UnitCombatant : Combatant
             buffAppliedFeedback?.PlayFeedbacks();
         }
 
+        GameAudioEvents.Raise(
+            state.isDebuff ? GameAudioEventType.CombatDebuffGain : GameAudioEventType.CombatBuffGain,
+            giver,
+            this,
+            stacks);
         DamageTextPool.Instance?.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
         return state;
     }

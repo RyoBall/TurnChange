@@ -2026,7 +2026,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 10, y: 10, z: 1}
+  m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2872808744388773533}
@@ -2078,14 +2078,18 @@ MonoBehaviour:
   states: []
   spriteTransform: {fileID: 6454902621345208546}
   characterID: 
+  characterType: 0
   animator: {fileID: 4359547188109584310}
   animationOverrideDatabase: {fileID: 11400000, guid: 793cf4cb81914cf4a83cfeb975f64fd7,
     type: 2}
   skills: 
   enterSkill: 22
+  additionalSkillType: 0
   additionalSkill: {fileID: 0}
   chaosValue: 1
   pendingChaosRecover: 0
+  switchCooldownRemaining: 0
+  switchCooldownMax: 200
   selectedScale: 1
   selectAnimDuration: 0.12
   spriteRenderer: {fileID: 3207555847263050971}
@@ -2141,7 +2145,7 @@ PrefabInstance:
     - target: {fileID: 3797045528953454533, guid: 81af7486f102d364eb642b344dd208d9,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 10
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3797045528953454533, guid: 81af7486f102d364eb642b344dd208d9,
         type: 3}
