@@ -1,21 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+public enum DamageType
+{
+    Physical,
+    Magical
+}
+
 public class DamageCounter : MonoBehaviour
 {
-    public static UnitCombatant.DamageInfo CountDamage(UnitCombatant attacker, UnitCombatant defender, SkillBase skill, bool ifTrueDamage = false, float extraDamage = 0f)
+    public static UnitCombatant.DamageInfo CountDamage(UnitCombatant attacker, UnitCombatant defender, SkillBase skill, DamageType damageType, bool ifTrueDamage = false, float extraDamage = 0f)
     {
         if (attacker == null || defender == null)
         {
             Debug.LogWarning("[DamageCounter] 无效的参数");
-            return new UnitCombatant.DamageInfo(0, attacker);
+            return new UnitCombatant.DamageInfo(0, attacker, damageType);
         }
         if (skill == null)
         {
             Debug.LogWarning("[DamageCounter] 技能参数为null，使用默认伤害计算");
             skill = new SkillBase { skillCoef = 1f, skillBase = 0 };
         }
-        return CountDamage(attacker, defender, skill.skillCoef, skill.skillBase + extraDamage, ifTrueDamage);
+        return CountDamage(attacker, defender, skill.skillCoef, skill.skillBase + extraDamage, damageType, ifTrueDamage);
     }
 
     public static UnitCombatant.DamageInfo CountDamage(
@@ -23,12 +30,13 @@ public class DamageCounter : MonoBehaviour
         UnitCombatant defender,
         float skillCoef,
         float skillBase = 0f,
+        DamageType damageType = DamageType.Physical,
         bool ifTrueDamage = false,
         bool canCrit = true,
         bool applyRandomVariance = true)
     {
         bool isCrit;
-        return CountDamage(attacker, defender, skillCoef, skillBase, ifTrueDamage, canCrit, applyRandomVariance, out isCrit);
+        return CountDamage(attacker, defender, skillCoef, skillBase, damageType, ifTrueDamage, canCrit, applyRandomVariance, out isCrit);
     }
 
     public static UnitCombatant.DamageInfo CountDamage(
@@ -36,6 +44,7 @@ public class DamageCounter : MonoBehaviour
         UnitCombatant defender,
         float skillCoef,
         float skillBase,
+        DamageType damageType,
         bool ifTrueDamage,
         bool canCrit,
         bool applyRandomVariance,
@@ -45,7 +54,7 @@ public class DamageCounter : MonoBehaviour
         if (attacker == null || defender == null)
         {
             Debug.LogWarning("[DamageCounter] 无效的参数");
-            return new UnitCombatant.DamageInfo(0, attacker);
+            return new UnitCombatant.DamageInfo(0, attacker, damageType);
         }
         //计算系数
         EnvironmentManager environmentManager = EnvironmentManager.Instance;
@@ -81,10 +90,10 @@ public class DamageCounter : MonoBehaviour
         if (attacker is Character)
         {
             raw *= TemporaryBattleModifierRuntimeManager.ConsumePendingNextDamageMultiplier(attacker);
-            raw *= TemporaryBattleModifierRuntimeManager.GetPlayerDirectDamageMultiplier(attacker, defender, isCrit);
+            raw *= TemporaryBattleModifierRuntimeManager.GetPlayerDamageMultiplier(attacker, defender, damageType, isCrit);
         }
 
-        var damageInfo = new UnitCombatant.DamageInfo(Mathf.Max(0, Mathf.RoundToInt(raw)), attacker);
+        var damageInfo = new UnitCombatant.DamageInfo(Mathf.Max(0, Mathf.RoundToInt(raw)), attacker, damageType);
         if (isTrueDamage)
         {
             damageInfo = damageInfo.AsTrueDamage();
@@ -103,7 +112,7 @@ public class DamageCounter : MonoBehaviour
         if (state == null || attacker == null || defender == null)
         {
             Debug.LogWarning("[DamageCounter] 无效的参数");
-            return new UnitCombatant.DamageInfo(0, attacker).AsDot();
+            return new UnitCombatant.DamageInfo(0, attacker, DamageType.Magical).AsDot();
         }
 
         float rand = Random.Range(0.85f, 1.15f);
@@ -114,9 +123,9 @@ public class DamageCounter : MonoBehaviour
         damage *= defender.GetIncomingDamageMultiplier(true, isTrueDamage);
         damage *= EnvironmentManager.Instance != null ? EnvironmentManager.Instance.GetIncomingDamageMultiplier(attacker, defender, true, isTrueDamage) : 1f;
         //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
-        damage *= attacker is Character ? TemporaryBattleModifierRuntimeManager.GetPlayerDotDamageMultiplier(attacker, defender) : 1f;
+        damage *= attacker is Character ? TemporaryBattleModifierRuntimeManager.GetPlayerDamageMultiplier(attacker, defender, DamageType.Magical, false) : 1f;
 
-        var damageInfo = new UnitCombatant.DamageInfo(Mathf.RoundToInt(damage), attacker)
+        var damageInfo = new UnitCombatant.DamageInfo(Mathf.RoundToInt(damage), attacker, DamageType.Magical)
             .AsDot()
             .WithState(state.stateType);
         if (isTrueDamage)

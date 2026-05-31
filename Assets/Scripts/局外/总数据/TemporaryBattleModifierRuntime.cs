@@ -40,6 +40,7 @@ public sealed class TemporaryBattleModifierRuntimeContext
     public bool IsDotDamage;
     public bool IsTrueDamage;
     public bool IsCriticalHit;
+    public DamageType DamageType;
     public bool Handled;
 }
 
@@ -79,8 +80,7 @@ public interface ITemporaryBattleModifierBehavior
 {
     void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeContext context);
     float GetPlayerSpeedMultiplier(TemporaryBattleModifierData modifier, Character character);
-    float GetPlayerDirectDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, bool isCriticalHit);
-    float GetPlayerDotDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target);
+    float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit);
     float GetPlayerCritDamageBonus(TemporaryBattleModifierData modifier, UnitCombatant attacker);
     float GetPlayerCritRateBonus(TemporaryBattleModifierData modifier, UnitCombatant attacker);
     float GetPlayerHealingReceivedMultiplier(TemporaryBattleModifierData modifier, UnitCombatant target);
@@ -95,8 +95,7 @@ public abstract class BattleModifierBehaviorBase : ITemporaryBattleModifierBehav
 {
     public virtual void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeContext context) { }
     public virtual float GetPlayerSpeedMultiplier(TemporaryBattleModifierData modifier, Character character) { return 1f; }
-    public virtual float GetPlayerDirectDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, bool isCriticalHit) { return 1f; }
-    public virtual float GetPlayerDotDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target) { return 1f; }
+    public virtual float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit) { return 1f; }
     public virtual float GetPlayerCritDamageBonus(TemporaryBattleModifierData modifier, UnitCombatant attacker) { return 0f; }
     public virtual float GetPlayerCritRateBonus(TemporaryBattleModifierData modifier, UnitCombatant attacker) { return 0f; }
     public virtual float GetPlayerHealingReceivedMultiplier(TemporaryBattleModifierData modifier, UnitCombatant target) { return 1f; }
@@ -418,7 +417,7 @@ public static class TemporaryBattleModifierRuntimeManager
         });
     }
 
-    public static void NotifyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    public static void NotifyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage, DamageType damageType)
     {
         if (target == null)
         {
@@ -433,6 +432,7 @@ public static class TemporaryBattleModifierRuntimeManager
             Amount = damage,
             IsDotDamage = isDotDamage,
             IsTrueDamage = isTrueDamage,
+            DamageType = damageType,
         });
     }
 
@@ -521,7 +521,7 @@ public static class TemporaryBattleModifierRuntimeManager
         return multiplier;
     }
 
-    public static float GetPlayerDirectDamageMultiplier(UnitCombatant attacker = null, UnitCombatant target = null, bool isCriticalHit = false)
+    public static float GetPlayerDamageMultiplier(UnitCombatant attacker = null, UnitCombatant target = null, DamageType damageType = DamageType.Physical, bool isCriticalHit = false)
     {
         IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
         float multiplier = 1f;
@@ -533,32 +533,13 @@ public static class TemporaryBattleModifierRuntimeManager
                 continue;
             }
 
-            multiplier *= Mathf.Max(0.01f, modifier.playerDirectDamageMultiplier);
+            float baseMultiplier = damageType == DamageType.Magical
+                ? modifier.playerDotDamageMultiplier
+                : modifier.playerDirectDamageMultiplier;
+            multiplier *= Mathf.Max(0.01f, baseMultiplier);
             if (TemporaryBattleModifierBehaviorRegistry.TryGetRuntimeBehavior(modifier, out ITemporaryBattleModifierBehavior behavior))
             {
-                multiplier *= Mathf.Max(0.01f, behavior.GetPlayerDirectDamageMultiplier(modifier, attacker, target, isCriticalHit));
-            }
-        }
-
-        return multiplier;
-    }
-
-    public static float GetPlayerDotDamageMultiplier(UnitCombatant attacker = null, UnitCombatant target = null)
-    {
-        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
-        float multiplier = 1f;
-        for (int i = 0; i < modifiers.Count; i++)
-        {
-            TemporaryBattleModifierData modifier = modifiers[i];
-            if (modifier == null)
-            {
-                continue;
-            }
-
-            multiplier *= Mathf.Max(0.01f, modifier.playerDotDamageMultiplier);
-            if (TemporaryBattleModifierBehaviorRegistry.TryGetRuntimeBehavior(modifier, out ITemporaryBattleModifierBehavior behavior))
-            {
-                multiplier *= Mathf.Max(0.01f, behavior.GetPlayerDotDamageMultiplier(modifier, attacker, target));
+                multiplier *= Mathf.Max(0.01f, behavior.GetPlayerDamageMultiplier(modifier, attacker, target, damageType, isCriticalHit));
             }
         }
 

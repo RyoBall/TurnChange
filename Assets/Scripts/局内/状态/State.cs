@@ -1457,7 +1457,7 @@ public class ElementalDetonationStateBehavior : StateBehaviorBase
                 continue;
             }
 
-            enemy.TakeDamage(DamageCounter.CountDamage(state.giver, enemy, 0, finalDamage, true, false));
+            enemy.TakeDamage(DamageCounter.CountDamage(state.giver, enemy, 0, finalDamage, DamageType.Magical, true, false));
         }
     }
 
@@ -1622,7 +1622,7 @@ public class ChargeStateBehavior : StateBehaviorBase
                     continue;
                 }
 
-                enemy.TakeDamage(DamageCounter.CountDamage(state.owner, enemy, state.skillCoef, 0f, false, false, true));
+                enemy.TakeDamage(DamageCounter.CountDamage(state.owner, enemy, state.skillCoef, 0f, DamageType.Physical, false, false, true));
                 enemy.ChangeActionValue(enemy.currentActionValue + enemy.currentActionValue * state.baseExtraData4);
                 //推条
             }

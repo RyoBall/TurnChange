@@ -59,21 +59,24 @@ public class UnitCombatant : Combatant
         public UnitCombatant Source;
         public bool IsDotDamage;
         public bool IsTrueDamage;
+        public DamageType DamageType;
         public StateType StateType;
 
         // 便捷构造
-        public DamageInfo(int damage, UnitCombatant source = null)
+        public DamageInfo(int damage, UnitCombatant source = null, DamageType damageType = DamageType.Physical)
         {
             Damage = damage;
             Source = source;
             IsDotDamage = false;
             IsTrueDamage = false;
+            DamageType = damageType;
             StateType = StateType.None;
         }
 
         // 链式配置（流畅接口）
         public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
         public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
+        public DamageInfo WithDamageType(DamageType damageType) { DamageType = damageType; return this; }
         public DamageInfo WithState(StateType state) { StateType = state; return this; }//用于注明伤害来自于哪个状态
     }
     public virtual void TakeDamage(DamageInfo damageInfo)
@@ -99,12 +102,14 @@ public class UnitCombatant : Combatant
         //如果伤害小于0直接结束
         if (finalDamage <= 0)
         {
+            TemporaryBattleModifierRuntimeManager.NotifyDamageSettled(damageInfo.Source, this, 0, damageInfo.IsDotDamage, damageInfo.IsTrueDamage, damageInfo.DamageType);
             NotifyAnyDamageSettled(damageInfo.Source, this, 0, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
             return;
         }
         //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
+        TemporaryBattleModifierRuntimeManager.NotifyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage, damageInfo.DamageType);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
         if (currentHP <= 0)
         {
@@ -136,7 +141,6 @@ public class UnitCombatant : Combatant
             return;
         }
         dead = true;
-        StopMouseHoverEffect();
         TurnManager.Instance?.RemoveCombatant(this);
         hitFeedback?.StopFeedbacks();
         dieFeedback?.PlayFeedbacks();

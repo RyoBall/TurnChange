@@ -10,6 +10,7 @@ public class CharacterManager : MonoBehaviour
 	public static CharacterManager Instance { get; private set; }
 	public event System.Action<Character, Character> OnFieldCharacterSwapped;
 	public event System.Action OnFieldCharactersReordered;
+	public event System.Action OnReserveSwapAvailabilityChanged;
 
 	[Header("角色列表")]
 	[Tooltip("所有可用角色，通常在 Inspector 中配置后不再改变")]
@@ -40,6 +41,7 @@ public class CharacterManager : MonoBehaviour
 	public bool IsSelectingReserveCharacter => m_isSelectingReserveCharacter;
 	private Character m_selectedFieldCharacter;
 	private Character m_selectedReserveCharacter;
+	private readonly List<Character> m_boundReserveCharacters = new List<Character>();
 
 	private void Awake()
 	{
@@ -60,6 +62,8 @@ public class CharacterManager : MonoBehaviour
 
 	private void OnDestroy()
 	{
+		UnbindReserveCharacterEvents();
+
 		if (Instance == this)
 		{
 			Instance = null;
@@ -212,7 +216,7 @@ public class CharacterManager : MonoBehaviour
 			yield break;
 		}
 		//设置入场角色位置
-		var exitPosition = oldCharacter.transform.position;
+		var exitPosition = newCharacter.transform.position;
 		int targetStandPosition = oldCharacter.standPosition;
 		if (LevelCharacterSpawner.TryGetSpawnPosition(targetStandPosition, out Vector3 spawnPosition))
 		{
@@ -221,10 +225,9 @@ public class CharacterManager : MonoBehaviour
 		else
 		{
 			Debug.LogWarning($"[CharacterManager] 替换警告：无法找到站位 {targetStandPosition} 的出生点，入场角色将直接出现在退场角色位置");
-			newCharacter.transform.position = exitPosition;
+			newCharacter.transform.position = oldCharacter.transform.position;
 		}
-
-		newCharacter.standPosition = targetStandPosition;
+		oldCharacter.transform.position = exitPosition;
 		//执行退场动画
 		if (TurnManager.Instance != null)
 		{
@@ -243,6 +246,8 @@ public class CharacterManager : MonoBehaviour
 
 		reserveCharacters.Remove(newCharacter);
 		reserveCharacters.Add(oldCharacter);
+		RefreshReserveCharacterBindings();
+		OnReserveSwapAvailabilityChanged?.Invoke();
 		newCharacter.ChangeActionValue(newCharacter.BaseActionValue, false);
 		//执行入场动画
 		yield return newCharacter.PlayEnterAnimation();
@@ -411,7 +416,47 @@ public class CharacterManager : MonoBehaviour
 
 			reserveCharacters.Add(character);
 		}
+
+			RefreshReserveCharacterBindings();
 	}
+
+		private void RefreshReserveCharacterBindings()
+		{
+			UnbindReserveCharacterEvents();
+
+			for (int i = 0; i < reserveCharacters.Count; i++)
+			{
+				Character reserveCharacter = reserveCharacters[i];
+				if (reserveCharacter == null)
+				{
+					continue;
+				}
+
+				reserveCharacter.OnSwapCooldownAvailabilityChanged += HandleReserveSwapCooldownAvailabilityChanged;
+				m_boundReserveCharacters.Add(reserveCharacter);
+			}
+		}
+
+		private void UnbindReserveCharacterEvents()
+		{
+			for (int i = 0; i < m_boundReserveCharacters.Count; i++)
+			{
+				Character reserveCharacter = m_boundReserveCharacters[i];
+				if (reserveCharacter == null)
+				{
+					continue;
+				}
+
+				reserveCharacter.OnSwapCooldownAvailabilityChanged -= HandleReserveSwapCooldownAvailabilityChanged;
+			}
+
+			m_boundReserveCharacters.Clear();
+		}
+
+		private void HandleReserveSwapCooldownAvailabilityChanged(Character reserveCharacter)
+		{
+			OnReserveSwapAvailabilityChanged?.Invoke();
+		}
 
 	#region 角色相关工具
 	public Character GetPendingSwapInCharacter(Character swappingOutCharacter = null)

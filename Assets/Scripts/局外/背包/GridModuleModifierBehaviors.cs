@@ -3,8 +3,8 @@ using UnityEngine;
 public sealed class PassiveStatModuleBehavior : BattleModifierBehaviorBase
 {
     private readonly float m_speedMultiplier;
-    private readonly float m_directDamageMultiplier;
-    private readonly float m_dotDamageMultiplier;
+    private readonly float m_physicalDamageMultiplier;
+    private readonly float m_magicalDamageMultiplier;
     private readonly float m_critDamageBonus;
     private readonly float m_critRateBonus;
     private readonly float m_healingReceivedMultiplier;
@@ -24,8 +24,8 @@ public sealed class PassiveStatModuleBehavior : BattleModifierBehaviorBase
         float defenseMultiplier = 1f)
     {
         m_speedMultiplier = speedMultiplier;
-        m_directDamageMultiplier = directDamageMultiplier;
-        m_dotDamageMultiplier = dotDamageMultiplier;
+        m_physicalDamageMultiplier = directDamageMultiplier;
+        m_magicalDamageMultiplier = dotDamageMultiplier;
         m_critDamageBonus = critDamageBonus;
         m_critRateBonus = critRateBonus;
         m_healingReceivedMultiplier = healingReceivedMultiplier;
@@ -35,8 +35,10 @@ public sealed class PassiveStatModuleBehavior : BattleModifierBehaviorBase
     }
 
     public override float GetPlayerSpeedMultiplier(TemporaryBattleModifierData modifier, Character character) { return m_speedMultiplier; }
-    public override float GetPlayerDirectDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, bool isCriticalHit) { return m_directDamageMultiplier; }
-    public override float GetPlayerDotDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target) { return m_dotDamageMultiplier; }
+    public override float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit)
+    {
+        return damageType == DamageType.Magical ? m_magicalDamageMultiplier : m_physicalDamageMultiplier;
+    }
     public override float GetPlayerCritDamageBonus(TemporaryBattleModifierData modifier, UnitCombatant attacker) { return m_critDamageBonus; }
     public override float GetPlayerCritRateBonus(TemporaryBattleModifierData modifier, UnitCombatant attacker) { return m_critRateBonus; }
     public override float GetPlayerHealingReceivedMultiplier(TemporaryBattleModifierData modifier, UnitCombatant target) { return m_healingReceivedMultiplier; }
@@ -293,12 +295,7 @@ public sealed class HeavyTurretModuleBehavior : BattleModifierBehaviorBase
         m_shieldBreakAdvanceRatio = Mathf.Max(0f, shieldBreakAdvanceRatio);
     }
 
-    public override float GetPlayerDirectDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, bool isCriticalHit)
-    {
-        return attacker != null && attacker.currentShield > 0 ? m_damageMultiplierWhileShielded : 1f;
-    }
-
-    public override float GetPlayerDotDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target)
+    public override float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit)
     {
         return attacker != null && attacker.currentShield > 0 ? m_damageMultiplierWhileShielded : 1f;
     }

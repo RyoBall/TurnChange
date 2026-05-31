@@ -46,6 +46,11 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         {
             TurnManager.Instance.OnTurnOrderChanged += HandleTurnOrderChanged;
         }
+
+        if (CharacterManager.Instance != null)
+        {
+            CharacterManager.Instance.OnReserveSwapAvailabilityChanged += HandleReserveSwapAvailabilityChanged;
+        }
     }
 
     private void OnDisable()
@@ -54,6 +59,11 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         if (TurnManager.Instance != null)
         {
             TurnManager.Instance.OnTurnOrderChanged -= HandleTurnOrderChanged;
+        }
+
+        if (CharacterManager.Instance != null)
+        {
+            CharacterManager.Instance.OnReserveSwapAvailabilityChanged -= HandleReserveSwapAvailabilityChanged;
         }
     }
 
@@ -175,6 +185,11 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     }
 
     private void HandleTurnOrderChanged()
+    {
+        RefreshInformation();
+    }
+
+    private void HandleReserveSwapAvailabilityChanged()
     {
         RefreshInformation();
     }

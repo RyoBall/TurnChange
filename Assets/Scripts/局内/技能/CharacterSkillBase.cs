@@ -79,6 +79,25 @@ public class CharacterSkillBase : SkillBase
         State.NotifyDamageSkillUsed(unitCombatant, damagedUnits);
     }
 
+    private DamageType GetCurrentSkillDamageType()
+    {
+        switch (skillType)
+        {
+            case CharacterSkillType.EnterSkillOne:
+            case CharacterSkillType.ExitSkillOne:
+            case CharacterSkillType.AllAttack:
+            case CharacterSkillType.PursuitPunish:
+            case CharacterSkillType.PursuitPunishAdditional:
+            case CharacterSkillType.EnterSkillTwo:
+            case CharacterSkillType.ExitSkillTwo:
+            case CharacterSkillType.DebuffSpreadAttack:
+            case CharacterSkillType.ElementDetonate:
+                return DamageType.Magical;
+            default:
+                return DamageType.Physical;
+        }
+    }
+
     public override IEnumerator Execute(UnitCombatant unitCombatant)
     {
         yield return ExecuteInternal(unitCombatant, null, false);
@@ -256,6 +275,7 @@ public class CharacterSkillBase : SkillBase
     {
         const int durationActionValue = 200;
         float verdictDotMultiplier = extraData2;
+        DamageType damageType = GetCurrentSkillDamageType();
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}释放重裁域场");
         if (FieldDomainScreenEffectController.Instance != null)
         {
@@ -274,7 +294,7 @@ public class CharacterSkillBase : SkillBase
             }
             if (debuffStack > 0)
             {
-                enemy.TakeDamage(DamageCounter.CountDamage(character, enemy, 0, debuffStack * extraData3, false, true, true));
+                enemy.TakeDamage(DamageCounter.CountDamage(character, enemy, 0, debuffStack * extraData3, damageType, false, true, true));
                 enemy.AddState(StateType.Weakened, character, 99, 1);
             }
             else
@@ -312,6 +332,7 @@ public class CharacterSkillBase : SkillBase
     {
         int dotDuration = Mathf.RoundToInt(extraData1);
         float refreshMultiplier = extraData2;
+        DamageType damageType = GetCurrentSkillDamageType();
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         NotifyDamageSkillUsed(character, enemies);
         State.RunBatchedDotEvent(character, () =>
@@ -320,7 +341,7 @@ public class CharacterSkillBase : SkillBase
             {
                 if (enemy != null)
                 {
-                    var damageInfo = DamageCounter.CountDamage(character, enemy, this);
+                    var damageInfo = DamageCounter.CountDamage(character, enemy, this, damageType);
                     enemy.TakeDamage(damageInfo);
                     bool hadSeqFlame = enemy.HasState(StateType.SeqFlame);
                     State state = enemy.AddState(StateType.SeqFlame, character, dotDuration, 1);
@@ -354,6 +375,8 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
+        DamageType damageType = GetCurrentSkillDamageType();
+
         List<Enemy> markedEnemies = new List<Enemy>();
         IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
         for (int i = 0; i < aliveEnemies.Count; i++)
@@ -386,7 +409,7 @@ public class CharacterSkillBase : SkillBase
                 continue;
             }
 
-            var damageInfo = DamageCounter.CountDamage(character, enemy, extraData1, 0f, false, false, false)
+            var damageInfo = DamageCounter.CountDamage(character, enemy, extraData1, 0f, damageType, false, false, false)
                 .WithState(StateType.PursuitPunish);
             enemy.TakeDamage(damageInfo);
             State punishMark = enemy.GetState(StateType.PunishMark);
@@ -463,6 +486,7 @@ public class CharacterSkillBase : SkillBase
         int dotDuration = Mathf.RoundToInt(extraData2);
         float dotSkillCoef = extraData1;
         float refreshMultiplier = extraData3;
+        DamageType damageType = GetCurrentSkillDamageType();
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         NotifyDamageSkillUsed(character, enemies);
         State.RunBatchedDotEvent(character, () =>
@@ -474,7 +498,7 @@ public class CharacterSkillBase : SkillBase
                     continue;
                 }
 
-                var damageInfo = DamageCounter.CountDamage(character, enemy, this);
+                var damageInfo = DamageCounter.CountDamage(character, enemy, this, damageType);
                 enemy.TakeDamage(damageInfo);
 
                 StateType dotType = PickRandomDotState(enemy);
@@ -656,7 +680,7 @@ public class CharacterSkillBase : SkillBase
         float normalHpCoef = extraData3;
         float bossHpCoef = 0.15f;
         float hpCoef = IsBoss(target) ? bossHpCoef : normalHpCoef;
-        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), true, false, true);
+        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), DamageType.Physical, true, false, true);
         target.TakeDamage(damageInfo);
         yield break;
     }
@@ -692,7 +716,7 @@ public class CharacterSkillBase : SkillBase
         float normalHpCoef = extraData3;
         float bossHpCoef = extraData4;
         float hpCoef = IsBoss(target) ? bossHpCoef : normalHpCoef;
-        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), true, false, true);
+        var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), DamageType.Physical, true, false, true);
         target.TakeDamage(damageInfo);
         yield break;
     }
@@ -723,7 +747,7 @@ public class CharacterSkillBase : SkillBase
         int scaledSkillBase = Mathf.RoundToInt(skillBase * damageScale);
 
         bool isCrit;
-        var damageInfo = DamageCounter.CountDamage(character, target, coef, scaledSkillBase, false, true, true, out isCrit);
+        var damageInfo = DamageCounter.CountDamage(character, target, coef, scaledSkillBase, DamageType.Physical, false, true, true, out isCrit);
 
         target.TakeDamage(damageInfo);
         State berserkState = character.GetState(StateType.BerserkFeast);
@@ -834,7 +858,7 @@ public class CharacterSkillBase : SkillBase
             {
                 continue;
             }
-            var damageInfo = DamageCounter.CountDamage(character, enemy, skillCoef, skillBase, false, true, true);
+            var damageInfo = DamageCounter.CountDamage(character, enemy, skillCoef, skillBase, DamageType.Physical, false, true, true);
             enemy.TakeDamage(damageInfo);
         }
 
@@ -852,7 +876,7 @@ public class CharacterSkillBase : SkillBase
         NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         int armorBreakStacks = Mathf.Max(1, Mathf.RoundToInt(extraData1));
         target.AddState(StateType.ArmorBreak, character, 99, armorBreakStacks);
-        var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, false, true, true);
+        var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, DamageType.Physical, false, true, true);
         target.TakeDamage(damageInfo);
         yield break;
     }

@@ -301,7 +301,7 @@ public class ChessBossEnemy : Enemy
         FloatingTipGenerator.Instance?.ShowTipAtObject(rookCharacter.transform, "车棋位");
 
         State.NotifyDamageSkillUsed(this, new List<UnitCombatant> { kingCharacter });
-        DamageInfo damageInfo = DamageCounter.CountDamage(this, kingCharacter, skill.skillCoef, skill.skillBase, true, false, false);
+        DamageInfo damageInfo = DamageCounter.CountDamage(this, kingCharacter, skill.skillCoef, skill.skillBase, DamageType.Physical, true, false, false);
         kingCharacter.TakeDamage(damageInfo);
 
         float delayRatio = skill != null && skill.extraData1 > 0f ? skill.extraData1 : 1f;
@@ -333,7 +333,7 @@ public class ChessBossEnemy : Enemy
                 continue;
             }
 
-            DamageInfo damageInfo = DamageCounter.CountDamage(this, target, totalSkillCoef, totalSkillBase, true, false, false);
+            DamageInfo damageInfo = DamageCounter.CountDamage(this, target, totalSkillCoef, totalSkillBase, DamageType.Physical, true, false, false);
             target.TakeDamage(damageInfo);
         }
 

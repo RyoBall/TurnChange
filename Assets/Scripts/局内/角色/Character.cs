@@ -8,6 +8,7 @@ using System;
 public class Character : UnitCombatant
 
 {
+    public event Action<Character> OnSwapCooldownAvailabilityChanged;
     public Transform spriteTransform;
     public string characterID;
     public CharacterType characterType;
@@ -204,16 +205,21 @@ public class Character : UnitCombatant
 
     public void TriggerSwapCooldown()
     {
+        bool wasOnCooldown = IsSwapOnCooldown;
         switchCooldownRemaining = Mathf.Max(0f, switchCooldownMax);
+        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
     }
 
     public void SetSwitchCooldownMax(float value, bool clampCurrent = true)
     {
+        bool wasOnCooldown = IsSwapOnCooldown;
         switchCooldownMax = Mathf.Max(0f, value);
         if (clampCurrent)
         {
             switchCooldownRemaining = Mathf.Min(switchCooldownRemaining, switchCooldownMax);
         }
+
+        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
     }
 
     public float ReduceSwitchCooldown(float amount)
@@ -223,9 +229,21 @@ public class Character : UnitCombatant
             return 0f;
         }
 
+        bool wasOnCooldown = IsSwapOnCooldown;
         float before = switchCooldownRemaining;
         switchCooldownRemaining = Mathf.Max(0f, switchCooldownRemaining - amount);
+        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
         return before - switchCooldownRemaining;
+    }
+
+    private void NotifySwapCooldownAvailabilityChangedIfNeeded(bool wasOnCooldown)
+    {
+        if (wasOnCooldown == IsSwapOnCooldown)
+        {
+            return;
+        }
+
+        OnSwapCooldownAvailabilityChanged?.Invoke(this);
     }
 
     #endregion

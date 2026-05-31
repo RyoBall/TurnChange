@@ -81,7 +81,7 @@ PrefabInstance:
     - target: {fileID: 2955623459812423943, guid: f5507a8c6a22c404ab324980c4e8a11b,
         type: 3}
       propertyPath: m_Name
-      value: Hit_03 Variant
+      value: "\u51FB\u4E2D"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -125,7 +125,7 @@ public class EnemySkillBase : SkillBase
         Enemy target = null;
         foreach (Enemy enemy in EnemyManager.Instance.AliveEnemies)
         {
-            if (target == null || target.currentHP > enemy.currentHP)
+            if (target != null && target.currentHP > enemy.currentHP)
             {
                 target = enemy;
             }
@@ -145,7 +145,7 @@ public class EnemySkillBase : SkillBase
         foreach (var ally in allies)
         {
             if (ally == null) continue;
-            var damageInfo = DamageCounter.CountDamage(self, ally, this);
+            var damageInfo = DamageCounter.CountDamage(self, ally, this, DamageType.Physical);
             ally.TakeDamage(damageInfo);
             ally.ChangeActionValue(ally.currentActionValue + ally.BaseActionValue * 0.2f);
         }
@@ -157,7 +157,7 @@ public class EnemySkillBase : SkillBase
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
-        var damageInfo = DamageCounter.CountDamage(self, target, this, true);
+        var damageInfo = DamageCounter.CountDamage(self, target, this, DamageType.Physical, true);
         target.TakeDamage(damageInfo);
         target.TryAddChaos(1);
         yield break;
@@ -227,7 +227,7 @@ public class EnemySkillBase : SkillBase
         foreach (var ally in allies)
         {
             if (ally == null) continue;
-            var damageInfo = DamageCounter.CountDamage(self, ally, 0.6f, 0f, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, ally, 0.6f, 0f, DamageType.Physical, true, false, false);
             ally.TakeDamage(damageInfo);
             ally.TryAddChaos(1);
         }
@@ -287,7 +287,7 @@ public class EnemySkillBase : SkillBase
                 continue;
             }
 
-            var damageInfo = DamageCounter.CountDamage(self, ally, skillCoef, skillBase, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, ally, skillCoef, skillBase, DamageType.Physical, true, false, false);
             ally.TakeDamage(damageInfo);
             ally.TryAddChaos(chaosAmount);
         }
