@@ -27,6 +27,8 @@ public class EnvironmentManager : MonoBehaviour
         {
             Instance = null;
         }
+
+        FieldDomainScreenEffectController.Instance?.ForceStop();
     }
 
     public void AddEnvironment(
@@ -71,6 +73,13 @@ public class EnvironmentManager : MonoBehaviour
         }
 
         activeEnvironments.Add(environment);
+
+        if (FieldDomainScreenEffectController.Instance != null)
+        {
+            FieldDomainScreenEffectController.Instance.NotifyEnvironmentRegistered(
+                environment.environmentType,
+                environment.Applier);
+        }
     }
 
     public void UnregisterEnvironment(BattleEnvironment environment)
@@ -81,6 +90,13 @@ public class EnvironmentManager : MonoBehaviour
         }
 
         activeEnvironments.Remove(environment);
+
+        if (FieldDomainScreenEffectController.Instance != null)
+        {
+            FieldDomainScreenEffectController.Instance.NotifyEnvironmentUnregistered(
+                environment.environmentType,
+                environment.Applier);
+        }
     }
 
     public void TickEnvironments(float passedActionValue)

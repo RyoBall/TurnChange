@@ -68,11 +68,22 @@ public class CinemachineCameraManager : MonoBehaviour
 
 	private Vignette m_mainCameraVignette;
 	private bool m_skillVignetteOverrideActive;
+	private bool m_fieldDomainVignetteSuppressed;
 	private float m_mainCameraSwayCycleStartTime;
 	private bool m_isPlayingOpeningIntro;
 	private bool m_hasCompletedOpeningIntro;
 	public bool isOP=>m_isPlayingOpeningIntro;
 	public bool HasCompletedOpeningIntro => m_hasCompletedOpeningIntro;
+
+	public void SetFieldDomainVignetteSuppressed(bool suppressed)
+	{
+		m_fieldDomainVignetteSuppressed = suppressed;
+
+		if (!suppressed && !m_skillVignetteOverrideActive)
+		{
+			ApplyMainCameraMinimumVignette();
+		}
+	}
 
 	public ManagedCameraType CurrentCameraType { get; private set; } = ManagedCameraType.None;
 
@@ -535,7 +546,7 @@ public class CinemachineCameraManager : MonoBehaviour
 
 	private void UpdateMainCameraVignette(float horizontalProgress)
 	{
-		if (m_skillVignetteOverrideActive)
+		if (m_skillVignetteOverrideActive || m_fieldDomainVignetteSuppressed)
 		{
 			return;
 		}

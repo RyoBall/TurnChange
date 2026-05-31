@@ -4983,6 +4983,81 @@ MonoBehaviour:
   buttonMoveDistance: 300
   fadeDuration: 0.25
   buttonFinalPos: {x: -800, y: 0}
+--- !u!1 &888888801
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 888888802}
+  - component: {fileID: 888888803}
+  - component: {fileID: 888888804}
+  m_Layer: 0
+  m_Name: FieldDomainScreenEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &888888802
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 888888801}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1321639318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &888888803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 888888801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c4d5e6f7890abcd1234ef5678901234, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCamera: {fileID: 330585545}
+  globalVolume: {fileID: 832575518}
+  effectShader: {fileID: 4800000, guid: f1e2d3c4b5a6978869504321abcdef01, type: 3}
+  verdictProfile: {fileID: 11400000, guid: aa111111111111111111111111111111, type: 2}
+  desperationProfile: {fileID: 11400000, guid: bb222222222222222222222222222222, type: 2}
+  miracleProfile: {fileID: 11400000, guid: cc333333333333333333333333333333, type: 2}
+  expandDuration: 1
+  contractDuration: 1
+  verdictBurstPrefab: {fileID: 0}
+  desperationBurstPrefab: {fileID: 0}
+  miracleBurstPrefab: {fileID: 0}
+--- !u!114 &888888804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 888888801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d9e0f1a2b3c4d5e6f7890abcdef1234, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableQuickTest: 1
+  showOnScreenPanel: 1
+  logStatusToConsole: 1
+  burstOrigin: {fileID: 0}
+  activeHoldDuration: 2
+  useFirstFieldCharacterForBurst: 1
+  effectController: {fileID: 888888803}
 --- !u!1 &894470443
 GameObject:
   m_ObjectHideFlags: 0
@@ -6167,6 +6242,7 @@ Transform:
   - {fileID: 1712015384}
   - {fileID: 1688359390}
   - {fileID: 566772528}
+  - {fileID: 888888802}
   - {fileID: 1517433198}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -7877,7 +7953,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCanvasRect: {fileID: 1720563549}
-  globalVolume: {fileID: 0}
+  globalVolume: {fileID: 832575518}
 --- !u!1 &1720563548
 GameObject:
   m_ObjectHideFlags: 0

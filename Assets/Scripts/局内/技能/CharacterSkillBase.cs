@@ -250,6 +250,10 @@ public class CharacterSkillBase : SkillBase
         const int durationActionValue = 200;
         float verdictDotMultiplier = extraData2;
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}释放重裁域场");
+        if (FieldDomainScreenEffectController.Instance != null)
+        {
+            yield return FieldDomainScreenEffectController.Instance.PlayExpand(EnvironmentType.Gravity, character.transform);
+        }
         EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.Gravity, durationActionValue, character, verdictDotMultiplier);
         foreach (var enemy in EnemyManager.Instance.AliveEnemies)
         {
@@ -754,6 +758,10 @@ public class CharacterSkillBase : SkillBase
         }
 
         int durationActionValue = Mathf.RoundToInt(extraData1);
+        if (FieldDomainScreenEffectController.Instance != null)
+        {
+            yield return FieldDomainScreenEffectController.Instance.PlayExpand(EnvironmentType.DesperationField, character.transform);
+        }
         EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.DesperationField, durationActionValue, character);
         character.AddState(StateType.CritRhythm, character, 99, 1);
 
@@ -961,6 +969,10 @@ public class CharacterSkillBase : SkillBase
         }
 
         const int durationActionValue = 100;
+        if (FieldDomainScreenEffectController.Instance != null)
+        {
+            yield return FieldDomainScreenEffectController.Instance.PlayExpand(EnvironmentType.MiracleField, character.transform);
+        }
         EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.MiracleField, durationActionValue, character);
 
         TurnStateManager.Instance?.ChangeState(TurnState.OutCharacterTurn, character);
