@@ -354,6 +354,52 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return glassMask;
             }
 
+            // 场域中心更贴近原画面：0=圆心，1=靠外圈/边框一带
+            float GetMiracleCenterPreserve(float dist, float maxRadius, float insideMask)
+            {
+                if (insideMask <= 0.001)
+                {
+                    return 0.0;
+                }
+
+                float t = saturate(dist / max(maxRadius * 0.52, 0.0001));
+                return insideMask * smoothstep(0.06, 0.82, t);
+            }
+
+            // 简化水体焦散（3 次迭代），沿顺时针边空间滚动；Miracle 用 flameNoiseTiling 作尺度
+            float SampleMiracleBorderCaustics(float along, float tNorm, float timeFlow)
+            {
+                float causticAlongScale = max(_FlameNoiseTiling.x, 0.5);
+                float causticInwardScale = max(_FlameNoiseTiling.y, 0.5);
+
+                float2 p = float2(along * causticAlongScale, tNorm * causticInwardScale);
+                p.x -= timeFlow * 1.35;
+
+                float2 i = p;
+                float c = 0.0;
+                float inten = 0.012;
+                float warpScale = 0.28;
+
+                [unroll(3)]
+                for (int n = 0; n < 3; n++)
+                {
+                    float layer = (float)n + 1.0;
+                    float t = timeFlow * (1.0 - 0.55 / layer);
+                    float w = warpScale / layer;
+                    i = p + w * float2(
+                        cos(t - i.x) + sin(t + i.y),
+                        sin(t - i.y) + cos(t + i.x));
+
+                    float ox = max(abs(sin(i.x + t) / inten), 0.001);
+                    float oy = max(abs(cos(i.y + t) / inten), 0.001);
+                    c += 1.0 / length(float2(p.x / ox, p.y / oy));
+                }
+
+                c /= 3.0;
+                c = 1.1 - pow(saturate(c), 1.35);
+                return pow(saturate(c), 4.0);
+            }
+
             float EvaluateEdgeFlame(float alongCoord, float inwardNorm)
             {
                 if (inwardNorm <= 0.001)
@@ -432,25 +478,27 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float along = GetAlongEdgeCoordClockwise(uv, edge, aspect);
                 float2 edgeNormal = GetEdgeNormalUv(uv, aspect);
 
+                float timeFlow = _EffectTime * _BorderVfxSpeed;
+                float caustic = SampleMiracleBorderCaustics(along, tNorm, timeFlow);
+
                 float chromaScale = _BorderVfxStrength * (0.0055 + _ChromaticStrength * 0.008);
-                float split = chromaScale * glassMask;
+                float split = chromaScale * glassMask * (1.0 + caustic * 0.15);
                 float3 prismSample;
                 prismSample.r = SampleSourceRgb(uv + edgeNormal * split * 1.35).r;
                 prismSample.g = SampleSourceRgb(uv).g;
                 prismSample.b = SampleSourceRgb(uv - edgeNormal * split * 1.1).b;
 
-                float timeFlow = _EffectTime * _BorderVfxSpeed;
                 float edgeScroll = along * 7.5 - timeFlow * 2.4;
                 float edgeScrollSlow = along * 3.2 - timeFlow * 0.85;
 
                 float fbmFlow = Fbm(float2(edgeScroll * 0.22, tNorm * 2.5 - timeFlow * 0.35));
                 float fbmFlow2 = Fbm(float2(edgeScrollSlow * 0.35 + 4.7, tNorm * 1.8 + timeFlow * 0.2));
 
-                float hue = edgeScroll * 0.55 + fbmFlow * 0.65 + fbmFlow2 * 0.35 + tNorm * 0.18;
+                float hue = edgeScroll * 0.55 + fbmFlow * 0.65 + fbmFlow2 * 0.35 + tNorm * 0.18 + caustic * 0.35;
                 float3 rainbow = 0.5 + 0.5 * cos(6.28318 * (hue + float3(0.0, 0.33, 0.67)));
                 float3 spectral = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, rainbow);
 
-                float tintMix = saturate(sin(edgeScroll * 1.35 + fbmFlow * 0.8) * 0.5 + 0.5);
+                float tintMix = saturate(fbmFlow * 0.55 + fbmFlow2 * 0.35 + caustic * 0.28);
                 float3 iridescentTint = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, tintMix);
 
                 prismSample = lerp(prismSample, spectral, glassMask * rimFactor * 0.48);
@@ -462,30 +510,21 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float fresnel = rimFactor * (0.5 + 0.5 * saturate(1.0 - tNorm * 1.2));
                 float3 rimColor = lerp(spectral, iridescentTint, 0.55);
                 rimColor = lerp(rimColor, float3(0.95, 0.98, 1.0), 0.15);
-                result += rimColor * fresnel * _BorderVfxStrength * 0.32 * (0.88 + breath * 0.18);
+                result += rimColor * fresnel * _BorderVfxStrength * 0.38 * (0.88 + breath * 0.18);
 
-                float bandCoord = frac(edgeScroll * 0.42);
-                float travelBand = smoothstep(0.62, 0.0, abs(bandCoord - 0.5));
-                travelBand += smoothstep(0.22, 0.0, bandCoord) * 0.45;
-                travelBand = saturate(travelBand);
+                float3 causticColor = lerp(spectral, float3(1.0, 0.98, 1.0), 0.35);
+                float causticAmt = caustic * glassMask * (rimFactor * 0.7 + 0.3) * _BorderVfxStrength;
+                result += causticColor * causticAmt * 0.55;
 
-                float streakFast = pow(saturate(sin(edgeScroll * 6.28318) * 0.5 + 0.5), 2.2);
-                float streakSlow = pow(saturate(sin(edgeScrollSlow * 4.188 + fbmFlow * 2.0) * 0.5 + 0.5), 1.5);
-
-                float hueFlow = edgeScroll * 0.9 + 1.2;
-                float3 streamRgb = 0.5 + 0.5 * cos(6.28318 * (hueFlow + float3(0.0, 0.33, 0.67)));
-                float3 flowColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, streamRgb);
-                flowColor = lerp(flowColor, spectral, 0.55);
-
-                float flowIntensity = travelBand * 0.7 + streakFast * 0.55 + streakSlow * 0.4;
-                flowIntensity *= glassMask * (rimFactor * 0.65 + (1.0 - tNorm) * 0.35);
-                flowIntensity *= _BorderVfxStrength * (0.55 + breath * 0.12);
-
-                result += flowColor * flowIntensity;
+                // 流光仅随焦散/噪声变化，不用 frac·sin 周期条（开场易闪几条规则横纹）
+                float flowMix = saturate(caustic * 0.85 + fbmFlow * 0.35);
+                float3 flowColor = lerp(spectral, float3(1.0, 0.98, 1.0), flowMix);
+                float flowIntensity = caustic * glassMask * (rimFactor * 0.7 + (1.0 - tNorm) * 0.3);
+                flowIntensity *= _BorderVfxStrength * (0.42 + breath * 0.1);
+                result += flowColor * flowIntensity * 0.32;
 
                 float3 flowHighlight = lerp(spectral, float3(1.0, 0.98, 1.0), 0.35);
-                float highlightBand = pow(streakFast * travelBand, 1.4);
-                result += flowHighlight * highlightBand * glassMask * rimFactor * _BorderVfxStrength * 0.28;
+                result += flowHighlight * caustic * rimFactor * glassMask * _BorderVfxStrength * 0.3;
             }
 
             void ApplyRingFlameBurn(inout float3 result, float2 aspectCorrected, float dist, float waveRing, float breath)
@@ -542,12 +581,22 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return SampleSourceRgb(sampleUV);
             }
 
-            float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style, float centerClearMask)
+            float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style, float miracleCenterPreserve)
             {
-                color *= _Exposure * (1.0 + pulse * _HeartbeatStrength * 0.18);
+                float exposure = _Exposure * (1.0 + pulse * _HeartbeatStrength * 0.18);
+                if (style == STYLE_MIRACLE)
+                {
+                    exposure = lerp(1.0, exposure, miracleCenterPreserve);
+                }
+                color *= exposure;
 
                 float luma = dot(color, float3(0.2126, 0.7152, 0.0722));
-                color = lerp(luma.xxx, color, _Saturation);
+                float saturation = _Saturation;
+                if (style == STYLE_MIRACLE)
+                {
+                    saturation = lerp(1.0, _Saturation, miracleCenterPreserve);
+                }
+                color = lerp(luma.xxx, color, saturation);
 
                 if (style == STYLE_DESPERATION)
                 {
@@ -555,10 +604,15 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                     color.r *= 1.0 + gradeMask * 0.08;
                 }
 
-                color = (color - 0.5) * (_Contrast + pulse * _HeartbeatStrength * 0.28) + 0.5;
+                float contrast = _Contrast + pulse * _HeartbeatStrength * 0.28;
                 if (style == STYLE_MIRACLE)
                 {
-                    color += _TintColor.rgb * _TintColor.a * gradeMask * centerClearMask * 0.35;
+                    contrast = lerp(1.0, contrast, miracleCenterPreserve);
+                }
+                color = (color - 0.5) * contrast + 0.5;
+                if (style == STYLE_MIRACLE)
+                {
+                    color += _TintColor.rgb * _TintColor.a * gradeMask * miracleCenterPreserve * 0.2;
                 }
                 else
                 {
@@ -570,12 +624,17 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 float vignetteDist = length(centered);
                 float vignette = smoothstep(0.2, 1.2, vignetteDist);
                 float vignetteBoost = 1.0 + pulse * _HeartbeatStrength * (style == STYLE_DESPERATION ? 1.2 : 0.0);
-                color = lerp(color, color * _VignetteColor.rgb, vignette * _VignetteIntensity * gradeMask * vignetteBoost);
+                float vignetteMix = vignette * _VignetteIntensity * gradeMask * vignetteBoost;
+                if (style == STYLE_MIRACLE)
+                {
+                    vignetteMix *= miracleCenterPreserve;
+                }
+                color = lerp(color, color * _VignetteColor.rgb, vignetteMix);
 
                 return color;
             }
 
-            float3 ApplyBloomApprox(float3 color, float bloomMask, int style, float centerClearMask)
+            float3 ApplyBloomApprox(float3 color, float bloomMask, int style, float miracleCenterPreserve, float miracleGlassMask)
             {
                 if (_BloomStrength <= 0.001 || bloomMask <= 0.001)
                 {
@@ -584,7 +643,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 if (style == STYLE_MIRACLE)
                 {
-                    bloomMask *= centerClearMask;
+                    bloomMask *= miracleGlassMask * 0.55 + miracleCenterPreserve * 0.12;
                 }
 
                 if (bloomMask <= 0.001)
@@ -600,19 +659,20 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return color + bloom * bloomTint;
             }
 
-            float3 ApplyCenterGlow(float2 uv, float2 aspectCorrected, float dist, float mask, int style, float centerClearMask)
+            float3 ApplyCenterGlow(float2 uv, float2 aspectCorrected, float dist, float mask, int style, float miracleCenterPreserve, float miracleGlassMask)
             {
                 if (style != STYLE_MIRACLE || _RadialGlowStrength <= 0.001 || mask <= 0.001)
                 {
                     return float3(0.0, 0.0, 0.0);
                 }
 
-                float glow = exp(-dist * 2.2) * _RadialGlowStrength * mask * centerClearMask;
+                float glow = exp(-dist * 2.2) * _RadialGlowStrength * mask;
+                glow *= miracleGlassMask * 0.65 + miracleCenterPreserve * 0.08;
                 float breath = 0.85 + 0.15 * sin(_EffectTime * _BreathSpeed);
                 return _SecondaryAccentColor.rgb * glow * breath * 0.75;
             }
 
-            void ApplyWaveRingOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float waveRing, float breath, int style, float centerClearMask)
+            void ApplyWaveRingOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float waveRing, float breath, int style, float miracleCenterPreserve)
             {
                 if (waveRing <= 0.001)
                 {
@@ -636,14 +696,14 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 }
                 else
                 {
-                    float softBand = waveRing * (0.65 + 0.35 * sin(_EffectTime * _BreathSpeed * 0.8)) * centerClearMask;
+                    float softBand = waveRing * (0.65 + 0.35 * sin(_EffectTime * _BreathSpeed * 0.8)) * miracleCenterPreserve;
                     float3 waveColor = lerp(_GridColor.rgb, _SecondaryAccentColor.rgb, 0.55);
-                    result = lerp(result, waveColor, softBand * _GridColor.a * 0.18);
-                    result += waveColor * softBand * 0.06;
+                    result = lerp(result, waveColor, softBand * _GridColor.a * 0.1);
+                    result += waveColor * softBand * 0.035;
                 }
             }
 
-            void ApplyActiveEdgeOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float safeMaxRadius, float insideMask, float breath, float pulse, int style, float centerClearMask)
+            void ApplyActiveEdgeOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float safeMaxRadius, float insideMask, float breath, float pulse, int style, float miracleCenterPreserve)
             {
                 float ringDist = abs(dist - safeMaxRadius);
                 float edgeInner = max(_EdgeGridWidth, 0.001);
@@ -682,9 +742,9 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 }
                 else
                 {
-                    float softEdge = edgeMask * (0.55 + 0.45 * edgeBreath) * centerClearMask;
+                    float softEdge = edgeMask * (0.55 + 0.45 * edgeBreath) * miracleCenterPreserve;
                     float3 edgeColor = lerp(_GridColor.rgb, _SecondaryAccentColor.rgb, 0.6);
-                    result = lerp(result, edgeColor, softEdge * _GridColor.a * 0.14);
+                    result = lerp(result, edgeColor, softEdge * _GridColor.a * 0.09);
                     result += edgeColor * softEdge * 0.03;
                 }
             }
@@ -719,18 +779,25 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 float breath = sin(_EffectTime * _BreathSpeed) * _BreathAmplitude;
 
-                float centerClearMask = 1.0;
+                float miracleCenterPreserve = 1.0;
+                float miracleGlassMask = 0.0;
                 if (style == STYLE_MIRACLE)
                 {
-                    centerClearMask = 1.0 - GetMiracleGlassMask(uv, aspect, insideMask);
+                    miracleGlassMask = GetMiracleGlassMask(uv, aspect, insideMask);
+                    miracleCenterPreserve = GetMiracleCenterPreserve(dist, safeMaxRadius, insideMask);
                 }
 
                 float3 sourceRgb = ApplyDistortion(uv, aspectCorrected, dist, insideMask, style);
-                float3 graded = ApplyColorGrade(sourceRgb, uv, insideMask, pulse, style, centerClearMask);
-                graded = ApplyBloomApprox(graded, insideMask, style, centerClearMask);
-                graded += ApplyCenterGlow(uv, aspectCorrected, dist, insideMask, style, centerClearMask);
+                float3 graded = ApplyColorGrade(sourceRgb, uv, insideMask, pulse, style, miracleCenterPreserve);
+                graded = ApplyBloomApprox(graded, insideMask, style, miracleCenterPreserve, miracleGlassMask);
+                graded += ApplyCenterGlow(uv, aspectCorrected, dist, insideMask, style, miracleCenterPreserve, miracleGlassMask);
 
-                float3 result = lerp(sourceRgb, graded, insideMask * _Intensity);
+                float gradeMix = insideMask * _Intensity;
+                if (style == STYLE_MIRACLE)
+                {
+                    gradeMix *= lerp(0.22, 1.0, miracleCenterPreserve);
+                }
+                float3 result = lerp(sourceRgb, graded, gradeMix);
 
                 if (style == STYLE_DESPERATION && _GrainStrength > 0.001 && insideMask > 0.001)
                 {
@@ -746,7 +813,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                     waveRing *= _Intensity;
                 }
 
-                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style, centerClearMask);
+                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style, miracleCenterPreserve);
 
                 if (style == STYLE_VERDICT && waveRing > 0.001)
                 {
@@ -755,7 +822,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 if (_Phase >= 0.5 && _Phase < 1.5)
                 {
-                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style, centerClearMask);
+                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style, miracleCenterPreserve);
                 }
 
                 if (style == STYLE_VERDICT)
