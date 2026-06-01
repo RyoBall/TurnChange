@@ -142,13 +142,13 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.radialGlowStrength = 0f;
         profile.heatShimmerStrength = 0f;
         profile.secondaryAccentColor = new Color(0.55f, 0.05f, 0.08f, 1f);
-        profile.tint = new Color(0.1f, 0.02f, 0.03f, 0.32f);
-        profile.saturation = 0.46f;
-        profile.contrast = 1.25f;
-        profile.exposure = 1.04f;
+        profile.tint = new Color(0.42f, 0.12f, 0.1f, 0.18f);
+        profile.saturation = 0.72f;
+        profile.contrast = 1.08f;
+        profile.exposure = 1.02f;
         profile.distortionStrength = 0f;
-        profile.vignetteColor = new Color(0.4f, 0.02f, 0.05f, 1f);
-        profile.vignetteIntensity = 0.62f;
+        profile.vignetteColor = new Color(0.32f, 0.06f, 0.08f, 1f);
+        profile.vignetteIntensity = 0.3f;
         profile.gridColor = new Color(0.7f, 0.08f, 0.12f, 0.92f);
         profile.gridLineWidth = 2.4f;
         profile.gridScale = 1.35f;
@@ -161,12 +161,23 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.heartbeatStrength = 0.85f;
         profile.bloomStrength = 0f;
         profile.volumeBloomIntensity = 0f;
-        profile.borderVfxStrength = 0.65f;
-        profile.borderVfxDepth = 0.18f;
+        profile.borderVfxStrength = 0.58f;
+        profile.borderVfxDepth = 0.22f;
+        profile.borderVfxEdgeSoftness = 1.35f;
         profile.ringBurnStrength = 0f;
-        profile.borderVfxSpeed = 0.55f;
-        profile.borderVfxHotColor = new Color(0.15f, 0.02f, 0.03f, 1f);
-        profile.borderVfxCoreColor = new Color(0.35f, 0.02f, 0.05f, 1f);
+        profile.borderVfxSpeed = 1.05f;
+        profile.borderVfxHotColor = new Color(0.58f, 0.22f, 0.12f, 1f);
+        profile.borderVfxCoreColor = new Color(0.28f, 0.08f, 0.04f, 1f);
+        profile.flameNoiseTiling = new Vector2(5.5f, 13f);
+        profile.flameNoiseInwardStretch = 2.1f;
+        profile.flameNoiseInwardScroll = 0.95f;
+#if UNITY_EDITOR
+        if (profile.flameNoiseTexture == null)
+        {
+            profile.flameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
+                "Assets/VFX/Textures/NoiseSmooth04.png");
+        }
+#endif
     }
 
     private static void ConfigureMiraclePreset(FieldDomainEffectProfile profile)

@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Fight 场景运行时快速预览三种场域展开效果。
-/// 快捷键：1/2/3 完整循环，Q 收缩，R 停止。
+/// 快捷键：1/2/3 持续预览（展开后保持流动，手动退出），Q 收缩退出，R 强制停止。
 /// 后处理扩散/收缩固定从屏幕中心 (0.5, 0.5)；可选 Transform 仅用于爆发粒子位置。
 /// </summary>
 public class FieldDomainEffectTester : MonoBehaviour
@@ -15,6 +15,8 @@ public class FieldDomainEffectTester : MonoBehaviour
 
     [Header("预览参数")]
     [SerializeField] private Transform burstOrigin;
+    [Tooltip("勾选则 1/2/3 为一次性完整循环；不勾选则展开后持续预览直至 Q/R 退出。")]
+    [SerializeField] private bool useOneShotPreviewCycle;
     [SerializeField] private float activeHoldDuration = 2f;
     [SerializeField] private bool useFirstFieldCharacterForBurst = true;
 
@@ -22,6 +24,7 @@ public class FieldDomainEffectTester : MonoBehaviour
     [SerializeField] private FieldDomainScreenEffectController effectController;
 
     private Coroutine m_PreviewCoroutine;
+    private bool m_SustainedPreviewRunning;
     private GUIStyle m_PanelStyle;
     private GUIStyle m_ButtonStyle;
     private GUIStyle m_LabelStyle;
@@ -79,7 +82,7 @@ public class FieldDomainEffectTester : MonoBehaviour
         InitStyles();
 
         const float panelWidth = 320f;
-        const float panelHeight = 260f;
+        const float panelHeight = 280f;
         Rect panelRect = new Rect(16f, 16f, panelWidth, panelHeight);
         GUI.Box(panelRect, GUIContent.none, m_PanelStyle);
 
@@ -89,17 +92,18 @@ public class FieldDomainEffectTester : MonoBehaviour
         GUILayout.Label(GetStatusText(), m_LabelStyle);
         GUILayout.Space(8f);
 
-        if (GUILayout.Button("1 · 重裁域场（完整循环）", m_ButtonStyle))
+        string previewSuffix = useOneShotPreviewCycle ? "（一次循环）" : "（持续预览）";
+        if (GUILayout.Button("1 · 重裁域场" + previewSuffix, m_ButtonStyle))
         {
             StartPreviewCycle(EnvironmentType.Gravity);
         }
 
-        if (GUILayout.Button("2 · 绝境域场（完整循环）", m_ButtonStyle))
+        if (GUILayout.Button("2 · 绝境域场" + previewSuffix, m_ButtonStyle))
         {
             StartPreviewCycle(EnvironmentType.DesperationField);
         }
 
-        if (GUILayout.Button("3 · 奇迹域场（完整循环）", m_ButtonStyle))
+        if (GUILayout.Button("3 · 奇迹域场" + previewSuffix, m_ButtonStyle))
         {
             StartPreviewCycle(EnvironmentType.MiracleField);
         }
@@ -113,14 +117,17 @@ public class FieldDomainEffectTester : MonoBehaviour
                 StartContractOnly();
             }
 
-            if (GUILayout.Button("R · 停止", m_ButtonStyle))
+            if (GUILayout.Button("R · 退出预览", m_ButtonStyle))
             {
                 StopPreview();
             }
         }
 
         GUILayout.Space(6f);
-        GUILayout.Label("快捷键：1/2/3 预览  Q收缩  R停止\n后处理中心：屏幕正中", m_LabelStyle);
+        string modeHint = useOneShotPreviewCycle
+            ? "1/2/3 自动收缩  Q/R 退出"
+            : "1/2/3 持续流动  Q/R 收缩退出";
+        GUILayout.Label($"快捷键：{modeHint}\n后处理中心：屏幕正中", m_LabelStyle);
         GUILayout.EndArea();
     }
 
@@ -166,45 +173,69 @@ public class FieldDomainEffectTester : MonoBehaviour
         if (logStatusToConsole)
         {
             string burstInfo = origin != null ? $"粒子中心={origin.name}" : "无爆发粒子";
-            Debug.Log($"[FieldDomainEffectTester] 开始预览 {GetEnvironmentDisplayName(environmentType)}，屏幕中心扩散，{burstInfo}");
+            string mode = useOneShotPreviewCycle ? "一次循环" : "持续预览（Q/R 退出）";
+            Debug.Log($"[FieldDomainEffectTester] 开始预览 {GetEnvironmentDisplayName(environmentType)}（{mode}），屏幕中心扩散，{burstInfo}");
         }
 
-        m_PreviewCoroutine = StartCoroutine(RunPreviewCycle(environmentType, origin));
+        m_SustainedPreviewRunning = !useOneShotPreviewCycle;
+        m_PreviewCoroutine = useOneShotPreviewCycle
+            ? StartCoroutine(RunOneShotPreviewCycle(environmentType, origin))
+            : StartCoroutine(RunSustainedPreview(environmentType, origin));
     }
 
     public void StartContractOnly()
     {
+        ExitPreview(playContract: true, forceStop: false);
+    }
+
+    public void StopPreview()
+    {
+        ExitPreview(playContract: true, forceStop: false);
+    }
+
+    public void ForceStopPreview()
+    {
+        ExitPreview(playContract: false, forceStop: true);
+    }
+
+    private void ExitPreview(bool playContract, bool forceStop)
+    {
+        m_SustainedPreviewRunning = false;
+
+        if (m_PreviewCoroutine != null)
+        {
+            StopCoroutine(m_PreviewCoroutine);
+            m_PreviewCoroutine = null;
+        }
+
         if (effectController == null)
         {
             return;
         }
 
-        if (m_PreviewCoroutine != null)
+        if (forceStop)
         {
-            StopCoroutine(m_PreviewCoroutine);
-            m_PreviewCoroutine = null;
+            effectController.ForceStop();
+            if (logStatusToConsole)
+            {
+                Debug.Log("[FieldDomainEffectTester] 已强制停止场域效果。");
+            }
+            return;
         }
 
-        m_PreviewCoroutine = StartCoroutine(RunContract());
+        if (!effectController.HasActiveFieldVisual)
+        {
+            if (logStatusToConsole)
+            {
+                Debug.Log("[FieldDomainEffectTester] 当前没有激活的场域效果可收缩。");
+            }
+            return;
+        }
+
+        m_PreviewCoroutine = StartCoroutine(RunContractAndClear());
     }
 
-    public void StopPreview()
-    {
-        if (m_PreviewCoroutine != null)
-        {
-            StopCoroutine(m_PreviewCoroutine);
-            m_PreviewCoroutine = null;
-        }
-
-        effectController?.ForceStop();
-
-        if (logStatusToConsole)
-        {
-            Debug.Log("[FieldDomainEffectTester] 已强制停止场域效果。");
-        }
-    }
-
-    private IEnumerator RunPreviewCycle(EnvironmentType environmentType, Transform origin)
+    private IEnumerator RunOneShotPreviewCycle(EnvironmentType environmentType, Transform origin)
     {
         yield return effectController.PlayPreviewCycle(environmentType, origin, activeHoldDuration, skipOpeningIntroWait: true);
         m_PreviewCoroutine = null;
@@ -215,20 +246,42 @@ public class FieldDomainEffectTester : MonoBehaviour
         }
     }
 
-    private IEnumerator RunContract()
+    private IEnumerator RunSustainedPreview(EnvironmentType environmentType, Transform origin)
     {
+        yield return effectController.PlaySustainedPreview(environmentType, origin, skipOpeningIntroWait: true);
+
         if (!effectController.HasActiveFieldVisual)
         {
-            if (logStatusToConsole)
-            {
-                Debug.Log("[FieldDomainEffectTester] 当前没有激活的场域效果可收缩。");
-            }
-
+            m_SustainedPreviewRunning = false;
+            m_PreviewCoroutine = null;
             yield break;
         }
 
+        while (m_SustainedPreviewRunning
+               && effectController.HasActiveFieldVisual
+               && effectController.CurrentPhase == FieldDomainVisualPhase.Active)
+        {
+            yield return null;
+        }
+
+        m_SustainedPreviewRunning = false;
+        m_PreviewCoroutine = null;
+
+        if (logStatusToConsole && effectController.HasActiveFieldVisual)
+        {
+            Debug.Log($"[FieldDomainEffectTester] 持续预览结束 {GetEnvironmentDisplayName(environmentType)}");
+        }
+    }
+
+    private IEnumerator RunContractAndClear()
+    {
         yield return effectController.PlayContract(null);
         m_PreviewCoroutine = null;
+
+        if (logStatusToConsole)
+        {
+            Debug.Log("[FieldDomainEffectTester] 预览已收缩退出。");
+        }
     }
 
     private Transform ResolveBurstOrigin()
@@ -274,10 +327,11 @@ public class FieldDomainEffectTester : MonoBehaviour
         string type = effectController.HasActiveFieldVisual
             ? GetEnvironmentDisplayName(effectController.ActiveEnvironmentType)
             : "无";
+        string previewMode = m_SustainedPreviewRunning ? "持续预览中" : (useOneShotPreviewCycle ? "一次循环" : "空闲");
 
         string materialStatus = effectController.HasValidEffectMaterial ? "OK" : "缺失/编译失败";
 
-        return $"渲染:{rendering}  阶段:{phase}\n场域:{type}  半径:{effectController.CurrentRadius:F2}\nShader材质:{materialStatus}\n后处理中心:屏幕正中 (0.5, 0.5)";
+        return $"渲染:{rendering}  阶段:{phase}\n场域:{type}  半径:{effectController.CurrentRadius:F2}\n预览:{previewMode}\nShader材质:{materialStatus}\n后处理中心:屏幕正中 (0.5, 0.5)";
     }
 
     private static string GetEnvironmentDisplayName(EnvironmentType environmentType)

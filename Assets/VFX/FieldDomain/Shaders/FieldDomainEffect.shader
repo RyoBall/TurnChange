@@ -437,20 +437,89 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 result += flameColor * flame * (1.1 + breath * 0.4);
             }
 
-            void ApplyDesperationBorderMist(inout float3 result, float2 uv, float borderMaskBase, float pulse)
+            // x=整体雾密度, y=向内流动条带（双采样差分 + 沿边 ridged）
+            float2 SampleDesperationAirflowFields(float alongCoord, float inwardNorm, float pulse)
             {
-                if (_BorderVfxStrength <= 0.001 || borderMaskBase <= 0.001)
+                if (inwardNorm <= 0.001)
+                {
+                    return 0.0;
+                }
+
+                float2 flameUV = BuildInwardFlameUV(alongCoord, inwardNorm);
+                float scroll = GetFlameInwardScroll();
+
+                float warpAlong = SampleFlameNoise(float2(flameUV.x * 0.35 + 6.0, flameUV.y * 0.55 + 3.0)) - 0.5;
+                float2 sampleUV = float2(flameUV.x + warpAlong * 0.028, flameUV.y + warpAlong * 0.05);
+                float2 streakUV = float2(sampleUV.x * 1.1, sampleUV.y * 2.6);
+
+                float primary = SampleFlameNoise(sampleUV);
+                float detail = SampleFlameNoise(float2(sampleUV.x * 0.72, sampleUV.y * 2.1));
+                float nFlowA = SampleFlameNoise(float2(streakUV.x * 0.92, streakUV.y));
+                float nFlowB = SampleFlameNoise(float2(streakUV.x * 0.92 + 2.3, streakUV.y - scroll * 0.65));
+                float nAlong = SampleFlameNoise(float2(streakUV.x * 1.35, streakUV.y * 0.22));
+
+                float ridged = 1.0 - abs(primary * 2.0 - 1.0);
+                float ridgedDetail = 1.0 - abs(detail * 2.0 - 1.0);
+                float flowBand = 1.0 - abs(nFlowA - nFlowB) * 2.35;
+                flowBand = pow(saturate(flowBand), 1.2);
+                float alongStreak = pow(saturate(1.0 - abs(nAlong * 2.0 - 1.0)), 1.45);
+
+                float streakLanes = saturate(flowBand * 0.78 + alongStreak * 0.52 + ridgedDetail * 0.28);
+                streakLanes = pow(streakLanes, 1.1);
+
+                float tongues = saturate(ridged * 0.42 + ridgedDetail * 0.38 + flowBand * 0.45);
+                tongues = pow(tongues, 1.32);
+                float softFill = smoothstep(0.18, 0.68, primary * 0.52 + detail * 0.38);
+                float density = saturate(tongues * 0.7 + softFill * 0.24 + streakLanes * 0.32);
+
+                float edgeWeight = 1.0 - inwardNorm * 0.48;
+                density *= saturate(0.62 + 0.38 * edgeWeight);
+                density *= smoothstep(1.05, 0.25, inwardNorm);
+
+                float flicker = 0.93 + 0.07 * sin(_EffectTime * _BorderVfxSpeed * 2.35 + inwardNorm * 8.5 + alongCoord * 5.0);
+                density *= flicker * (1.0 + pulse * 0.08);
+                streakLanes *= flicker;
+
+                return float2(saturate(density), saturate(streakLanes));
+            }
+
+            void ApplyDesperationBorderAirflow(inout float3 result, float2 uv, float insideMask, float pulse, float aspect)
+            {
+                if (_BorderVfxStrength <= 0.001 || insideMask <= 0.001)
                 {
                     return;
                 }
 
-                float borderMask = borderMaskBase * _BorderVfxStrength * (1.0 + pulse * 0.2);
-                float2 nuv = float2(uv.x * 2.0 + _EffectTime * _BorderVfxSpeed * 0.3, uv.y * 4.0 - _EffectTime * _BorderVfxSpeed * 0.15);
-                float fbm = Fbm(nuv * 3.0);
-                float mist = borderMask * smoothstep(0.15, 0.75, fbm);
-                float3 mistColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, fbm * 0.4);
-                result = lerp(result, mistColor, mist * 0.5);
-                result += mistColor * mist * 0.15;
+                float depth = max(_BorderVfxDepth, 0.001);
+                float softBorderMask = GetSoftEdgeBorderMask(uv, depth, aspect);
+                if (softBorderMask <= 0.001)
+                {
+                    return;
+                }
+
+                int edge = GetDominantEdge(uv, aspect);
+                float edgeDist = GetEdgeDistForEdge(uv, edge, aspect);
+                float inwardNorm = saturate(edgeDist / depth);
+                float along = GetAlongEdgeCoord(uv, edge, aspect);
+                float2 airflowFields = SampleDesperationAirflowFields(along, inwardNorm, pulse);
+                float density = airflowFields.x;
+                float streakLanes = airflowFields.y;
+
+                float borderMask = insideMask * softBorderMask * _BorderVfxStrength;
+                float mist = borderMask * smoothstep(0.06, 0.7, density);
+                float lanes = borderMask * smoothstep(0.1, 0.82, streakLanes);
+
+                result *= 1.0 - mist * 0.09;
+
+                float3 baseColor = lerp(_BorderVfxCoreColor.rgb, _BorderVfxHotColor.rgb, pow(saturate(density), 0.5));
+                result = lerp(result, lerp(result, baseColor, 0.38), mist * 0.2);
+
+                float3 streakColor = lerp(_BorderVfxCoreColor.rgb * 1.15, _BorderVfxHotColor.rgb, pow(saturate(streakLanes), 0.7));
+                streakColor = lerp(streakColor, float3(0.62, 0.28, 0.16), 0.2);
+                result += streakColor * lanes * (0.52 + pulse * 0.05);
+
+                float filament = lanes * lanes * streakLanes;
+                result += _BorderVfxHotColor.rgb * filament * borderMask * 0.22;
             }
 
             float3 SampleSourceRgb(float2 uv)
@@ -581,38 +650,42 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 return SampleSourceRgb(sampleUV);
             }
 
-            float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style, float miracleCenterPreserve)
+            float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style, float fieldCenterPreserve)
             {
                 float exposure = _Exposure * (1.0 + pulse * _HeartbeatStrength * 0.18);
-                if (style == STYLE_MIRACLE)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
                 {
-                    exposure = lerp(1.0, exposure, miracleCenterPreserve);
+                    exposure = lerp(1.0, exposure, fieldCenterPreserve);
                 }
                 color *= exposure;
 
                 float luma = dot(color, float3(0.2126, 0.7152, 0.0722));
                 float saturation = _Saturation;
-                if (style == STYLE_MIRACLE)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
                 {
-                    saturation = lerp(1.0, _Saturation, miracleCenterPreserve);
+                    saturation = lerp(1.0, _Saturation, fieldCenterPreserve);
                 }
                 color = lerp(luma.xxx, color, saturation);
 
                 if (style == STYLE_DESPERATION)
                 {
-                    color.r = lerp(color.r, max(color.r, luma * 0.85), gradeMask * 0.12);
-                    color.r *= 1.0 + gradeMask * 0.08;
+                    color.r = lerp(color.r, max(color.r, luma * 0.9), gradeMask * 0.05);
+                    color.r *= 1.0 + gradeMask * 0.04;
                 }
 
                 float contrast = _Contrast + pulse * _HeartbeatStrength * 0.28;
-                if (style == STYLE_MIRACLE)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
                 {
-                    contrast = lerp(1.0, contrast, miracleCenterPreserve);
+                    contrast = lerp(1.0, contrast, fieldCenterPreserve);
                 }
                 color = (color - 0.5) * contrast + 0.5;
                 if (style == STYLE_MIRACLE)
                 {
-                    color += _TintColor.rgb * _TintColor.a * gradeMask * miracleCenterPreserve * 0.2;
+                    color += _TintColor.rgb * _TintColor.a * gradeMask * fieldCenterPreserve * 0.2;
+                }
+                else if (style == STYLE_DESPERATION)
+                {
+                    color += _TintColor.rgb * _TintColor.a * gradeMask * fieldCenterPreserve * 0.14;
                 }
                 else
                 {
@@ -623,11 +696,11 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 centered.x *= _ScreenParams.x / max(_ScreenParams.y, 1.0);
                 float vignetteDist = length(centered);
                 float vignette = smoothstep(0.2, 1.2, vignetteDist);
-                float vignetteBoost = 1.0 + pulse * _HeartbeatStrength * (style == STYLE_DESPERATION ? 1.2 : 0.0);
+                float vignetteBoost = 1.0 + pulse * _HeartbeatStrength * (style == STYLE_DESPERATION ? 0.65 : 0.0);
                 float vignetteMix = vignette * _VignetteIntensity * gradeMask * vignetteBoost;
-                if (style == STYLE_MIRACLE)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
                 {
-                    vignetteMix *= miracleCenterPreserve;
+                    vignetteMix *= fieldCenterPreserve;
                 }
                 color = lerp(color, color * _VignetteColor.rgb, vignetteMix);
 
@@ -779,23 +852,30 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 float breath = sin(_EffectTime * _BreathSpeed) * _BreathAmplitude;
 
-                float miracleCenterPreserve = 1.0;
+                float fieldCenterPreserve = 1.0;
                 float miracleGlassMask = 0.0;
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
+                {
+                    fieldCenterPreserve = GetMiracleCenterPreserve(dist, safeMaxRadius, insideMask);
+                }
                 if (style == STYLE_MIRACLE)
                 {
                     miracleGlassMask = GetMiracleGlassMask(uv, aspect, insideMask);
-                    miracleCenterPreserve = GetMiracleCenterPreserve(dist, safeMaxRadius, insideMask);
                 }
 
                 float3 sourceRgb = ApplyDistortion(uv, aspectCorrected, dist, insideMask, style);
-                float3 graded = ApplyColorGrade(sourceRgb, uv, insideMask, pulse, style, miracleCenterPreserve);
-                graded = ApplyBloomApprox(graded, insideMask, style, miracleCenterPreserve, miracleGlassMask);
-                graded += ApplyCenterGlow(uv, aspectCorrected, dist, insideMask, style, miracleCenterPreserve, miracleGlassMask);
+                float3 graded = ApplyColorGrade(sourceRgb, uv, insideMask, pulse, style, fieldCenterPreserve);
+                graded = ApplyBloomApprox(graded, insideMask, style, fieldCenterPreserve, miracleGlassMask);
+                graded += ApplyCenterGlow(uv, aspectCorrected, dist, insideMask, style, fieldCenterPreserve, miracleGlassMask);
 
                 float gradeMix = insideMask * _Intensity;
                 if (style == STYLE_MIRACLE)
                 {
-                    gradeMix *= lerp(0.22, 1.0, miracleCenterPreserve);
+                    gradeMix *= lerp(0.22, 1.0, fieldCenterPreserve);
+                }
+                else if (style == STYLE_DESPERATION)
+                {
+                    gradeMix *= lerp(0.55, 1.0, fieldCenterPreserve);
                 }
                 float3 result = lerp(sourceRgb, graded, gradeMix);
 
@@ -813,7 +893,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                     waveRing *= _Intensity;
                 }
 
-                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style, miracleCenterPreserve);
+                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style, fieldCenterPreserve);
 
                 if (style == STYLE_VERDICT && waveRing > 0.001)
                 {
@@ -822,7 +902,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
 
                 if (_Phase >= 0.5 && _Phase < 1.5)
                 {
-                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style, miracleCenterPreserve);
+                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style, fieldCenterPreserve);
                 }
 
                 if (style == STYLE_VERDICT)
@@ -831,9 +911,7 @@ Shader "Hidden/TurnChange/FieldDomainEffect"
                 }
                 else if (style == STYLE_DESPERATION)
                 {
-                    float borderEdge = EdgeDistanceUv(uv, aspect);
-                    float borderMaskBase = BorderMaskFromEdge(borderEdge, _BorderVfxDepth) * insideMask;
-                    ApplyDesperationBorderMist(result, uv, borderMaskBase, pulse);
+                    ApplyDesperationBorderAirflow(result, uv, insideMask, pulse, aspect);
                 }
                 else if (style == STYLE_MIRACLE)
                 {

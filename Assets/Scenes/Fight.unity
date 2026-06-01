@@ -4296,6 +4296,8 @@ MonoBehaviour:
   onExitRequested:
     m_PersistentCalls:
       m_Calls: []
+  exitBgmType: 1
+  exitBgmDelay: 0
   expSlider: {fileID: 863217518}
   expSliderText: {fileID: 1834091264}
   expSliderFillDuration: 1.5
@@ -5055,6 +5057,7 @@ MonoBehaviour:
   showOnScreenPanel: 1
   logStatusToConsole: 1
   burstOrigin: {fileID: 0}
+  useOneShotPreviewCycle: 0
   activeHoldDuration: 2
   useFirstFieldCharacterForBurst: 1
   effectController: {fileID: 888888803}
