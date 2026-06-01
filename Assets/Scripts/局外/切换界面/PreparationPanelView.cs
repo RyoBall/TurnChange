@@ -10,7 +10,8 @@ public class PreparationPanelView : MonoBehaviour
     private static event System.Action FirstPreparationOpened;
 
     [Header("角色选择")]
-    [SerializeField] private Button toggleCharacterListButton;
+    [SerializeField] private Button firstSlotButton;
+    [SerializeField] private Button secondSlotButton;
     [SerializeField] private RectTransform characterListPanel;
     [SerializeField] private Transform characterButtonRoot;
     [SerializeField] private CharacterSelectButtonUI characterButtonPrefab;
@@ -18,12 +19,18 @@ public class PreparationPanelView : MonoBehaviour
     [SerializeField] private Image firstSelectedCharacterImage;
     [SerializeField] private Image secondSelectedCharacterImage;
     [SerializeField] private float listHiddenX = -680f;
-    [SerializeField] private float listShownX = 0f;
+        [SerializeField] private float listShownX = 0f;
     [SerializeField] private float listSlideSmoothTime = 0.12f;
 
     public LevelSelectionData CurrentLevelData { get; private set; }
 
-    public bool HasEnoughSelectedCharacters => m_selectedCharacters.Count >= 2;
+    public bool HasEnoughSelectedCharacters
+    {
+        get
+        {
+            return m_selectedCharacters.Count >= 2 && m_selectedCharacters[0] != null && m_selectedCharacters[1] != null;
+        }
+    }
 
     public IReadOnlyList<LevelEnemyEntry> CurrentEnemies
     {
@@ -56,6 +63,7 @@ public class PreparationPanelView : MonoBehaviour
     private static bool s_HasRaisedFirstPreparationOpenEvent;
     private Vector2 m_ListVelocity;
     private bool m_IsCharacterListVisible;
+    private int m_activeTargetSlot = -1; // 0 = first slot, 1 = second slot, -1 = none
 
     private void Awake()
     {
@@ -66,14 +74,14 @@ public class PreparationPanelView : MonoBehaviour
 
         Instance = this;
         BindInternalEvents();
-        BindToggleButton();
+        BindSlotButtons();
         SetCharacterListVisible(false, true);
         RefreshSelectedCharacterImages();
     }
 
     private void OnEnable()
     {
-        BindToggleButton();
+        BindSlotButtons();
         SubscribeToDataSource();
         RebuildCharacterButtons();
         RefreshSelectedCharacterImages();
@@ -82,6 +90,7 @@ public class PreparationPanelView : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromDataSource();
+        UnbindSlotButtons();
     }
 
     private void OnDestroy()
@@ -92,6 +101,42 @@ public class PreparationPanelView : MonoBehaviour
         }
 
         UnbindInternalEvents();
+        UnbindSlotButtons();
+    }
+
+    private void BindSlotButtons()
+    {
+        if (firstSlotButton != null)
+        {
+            firstSlotButton.onClick.RemoveAllListeners();
+            firstSlotButton.onClick.AddListener(() => OpenCharacterListForSlot(0));
+        }
+
+        if (secondSlotButton != null)
+        {
+            secondSlotButton.onClick.RemoveAllListeners();
+            secondSlotButton.onClick.AddListener(() => OpenCharacterListForSlot(1));
+        }
+    }
+
+    private void UnbindSlotButtons()
+    {
+        if (firstSlotButton != null)
+        {
+            firstSlotButton.onClick.RemoveAllListeners();
+        }
+
+        if (secondSlotButton != null)
+        {
+            secondSlotButton.onClick.RemoveAllListeners();
+        }
+    }
+
+    private void OpenCharacterListForSlot(int slotIndex)
+    {
+        m_activeTargetSlot = slotIndex;
+        SetCharacterListVisible(true);
+        RebuildCharacterButtons();
     }
 
     private void Update()
@@ -129,23 +174,6 @@ public class PreparationPanelView : MonoBehaviour
         SetCharacterListVisible(false, true);
         panelRoot.SetActive(false);
     }
-
-    public void ToggleCharacterList()
-    {
-        SetCharacterListVisible(!m_IsCharacterListVisible);
-    }
-
-    private void BindToggleButton()
-    {
-        if (toggleCharacterListButton == null)
-        {
-            return;
-        }
-
-        toggleCharacterListButton.onClick.RemoveListener(ToggleCharacterList);
-        toggleCharacterListButton.onClick.AddListener(ToggleCharacterList);
-    }
-
     private void BindInternalEvents()
     {
         FirstPreparationOpened -= HandleFirstPreparationOpened;
@@ -288,8 +316,7 @@ public class PreparationPanelView : MonoBehaviour
     private void TryFillSelectedCharactersToMinimum()
     {
         RemoveUnavailableSelectedCharacters();
-
-        if (Datas.Instance == null || m_selectedCharacters.Count >= 2)
+        if (Datas.Instance == null)
         {
             return;
         }
@@ -298,6 +325,12 @@ public class PreparationPanelView : MonoBehaviour
         if (currentCharacters == null || currentCharacters.Count == 0)
         {
             return;
+        }
+
+        // ensure we have two slots in the list
+        while (m_selectedCharacters.Count < 2)
+        {
+            m_selectedCharacters.Add(null);
         }
 
         List<CharacterRosterData> candidates = new List<CharacterRosterData>(currentCharacters.Count);
@@ -312,11 +345,14 @@ public class PreparationPanelView : MonoBehaviour
             candidates.Add(character);
         }
 
-        while (m_selectedCharacters.Count < 2 && candidates.Count > 0)
+        for (int slot = 0; slot < 2 && candidates.Count > 0; slot++)
         {
-            int randomIndex = Random.Range(0, candidates.Count);
-            m_selectedCharacters.Add(candidates[randomIndex]);
-            candidates.RemoveAt(randomIndex);
+            if (m_selectedCharacters[slot] == null)
+            {
+                int randomIndex = Random.Range(0, candidates.Count);
+                m_selectedCharacters[slot] = candidates[randomIndex];
+                candidates.RemoveAt(randomIndex);
+            }
         }
     }
 
@@ -326,7 +362,31 @@ public class PreparationPanelView : MonoBehaviour
         {
             return;
         }
+        // If a target slot is active, place character into that slot
+        if (m_activeTargetSlot >= 0 && m_activeTargetSlot <= 1)
+        {
+            // ensure two slots
+            while (m_selectedCharacters.Count < 2)
+            {
+                m_selectedCharacters.Add(null);
+            }
 
+            // if the character is in the other slot, remove it there first
+            int otherSlot = m_activeTargetSlot == 0 ? 1 : 0;
+            if (otherSlot < m_selectedCharacters.Count && m_selectedCharacters[otherSlot] == characterData)
+            {
+                m_selectedCharacters[otherSlot] = null;
+            }
+
+            m_selectedCharacters[m_activeTargetSlot] = characterData;
+            m_activeTargetSlot = -1;
+            RefreshCharacterButtonSelectionState();
+            RefreshSelectedCharacterImages();
+            SetCharacterListVisible(false);
+            return;
+        }
+
+        // fallback: toggle behavior (keep existing semantics)
         if (m_selectedCharacters.Contains(characterData))
         {
             m_selectedCharacters.Remove(characterData);

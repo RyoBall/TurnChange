@@ -50,7 +50,7 @@ public class ModulePlacementController : MonoBehaviour//背包
         
         if (inventoryView != null)
         {
-            inventoryView.ModuleClicked += HandleModuleClicked;
+            inventoryView.ModulePressed += HandleModulePressed;
         }
 
         if (placementBoard != null)
@@ -73,7 +73,7 @@ public class ModulePlacementController : MonoBehaviour//背包
     {
         if (inventoryView != null)
         {
-            inventoryView.ModuleClicked -= HandleModuleClicked;
+            inventoryView.ModulePressed -= HandleModulePressed;
         }
 
         UnsubscribeFromDataSource();
@@ -89,7 +89,12 @@ public class ModulePlacementController : MonoBehaviour//背包
 
         if (Input.GetMouseButtonDown(0))
         {
-            HandleLeftMouseClick();
+            HandleLeftMousePressed();
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            HandleLeftMouseReleased();
         }
 
         if (m_selectedModule != null && (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1)))
@@ -98,23 +103,17 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
     }
 
-    private void HandleModuleClicked(GridModuleDefinition module)
+    private void HandleModulePressed(GridModuleDefinition module)
     {
         if (module == null || module.IsLoaded)
         {
             return;
         }
 
-        if (module == m_selectedModule)
-        {
-            SetSelection(null);
-            return;
-        }
-
         SetSelection(module);
     }
 
-    private void HandleBoardCellClicked(Vector2Int cell)
+    private void TryPickupModuleAtCell(Vector2Int cell)
     {
         if (placementBoard == null)
         {
@@ -128,45 +127,70 @@ public class ModulePlacementController : MonoBehaviour//背包
             return;
         }
 
-        if (m_selectedModule == null)
+        if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
         {
-            if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
+            pickedModule.RemoveFromBoard();
+
+            if (!TryGetRuntimeModuleIndex(pickedModule, out int moduleIndex) || !TryRemovePlacedModuleData(datas, moduleIndex))
             {
-                pickedModule.RemoveFromBoard();
-
-                if (!TryGetRuntimeModuleIndex(pickedModule, out int moduleIndex) || !TryRemovePlacedModuleData(datas, moduleIndex))
-                {
-                    Debug.LogWarning("[ModulePlacementController] 从 Datas 取回模块失败，已按数据源重建网格。", this);
-                    RestorePlacedModulesFromData();
-                    RefreshViews();
-                    return;
-                }
-
-                SetSelection(GetOwnedModule(moduleIndex));
-                if (selectionText != null)
-                {
-                    selectionText.text = "已从网格取回：" + pickedModule.moduleName;
-                }
+                Debug.LogWarning("[ModulePlacementController] 从 Datas 取回模块失败，已按数据源重建网格。", this);
+                RestorePlacedModulesFromData();
+                RefreshViews();
+                return;
             }
 
+            SetSelection(GetOwnedModule(moduleIndex));
+            if (selectionText != null)
+            {
+                selectionText.text = "已从网格取回：" + pickedModule.moduleName;
+            }
+        }
+    }
+
+    private void TryPlaceSelectedModuleOrReturnToInventory()
+    {
+        if (m_selectedModule == null)
+        {
             return;
+        }
+
+        if (m_hoveredBoardCell.HasValue && TryPlaceSelectedModule(m_hoveredBoardCell.Value))
+        {
+            return;
+        }
+
+        if (selectionText != null)
+        {
+            selectionText.text = "模块已返回背包";
+        }
+
+        SetSelection(null);
+    }
+
+    private bool TryPlaceSelectedModule(Vector2Int cell)
+    {
+        if (placementBoard == null || m_selectedModule == null)
+        {
+            return false;
+        }
+
+        Datas datas = Datas.Instance;
+        if (datas == null)
+        {
+            Debug.LogWarning("[ModulePlacementController] Datas.Instance 为空，无法修改模块状态。", this);
+            return false;
         }
 
         if (!placementBoard.TryPlace(m_selectedModule, cell))
         {
-            if (selectionText != null)
-            {
-                selectionText.text = "该位置无法放置当前模块";
-            }
-
-            return;
+            return false;
         }
 
         if (!TryGetRuntimeModuleIndex(m_selectedModule, out int selectedModuleIndex) || !TryStorePlacedModuleData(datas, selectedModuleIndex, cell))
         {
             placementBoard.TryPickupModuleAt(cell, out _);
             Debug.LogWarning("[ModulePlacementController] 向 Datas 写入放置结果失败，已回滚本次放置。", this);
-            return;
+            return false;
         }
 
         SetSelection(null);
@@ -175,6 +199,8 @@ public class ModulePlacementController : MonoBehaviour//背包
         {
             selectionText.text = "模块放置成功";
         }
+
+        return true;
     }
 
     private void SetSelection(GridModuleDefinition module)
@@ -195,8 +221,8 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
 
         selectionText.text = m_selectedModule == null
-            ? "点击背包中的模块后，再点击右侧 5x5 网格进行放置"
-            : "已选中：" + m_selectedModule.moduleName + "，点击网格尝试放置";
+            ? "按住左键拿起背包中的模块，松开左键时自动尝试放置"
+            : "已拿起：" + m_selectedModule.moduleName + "，松开左键时自动尝试放置";
     }
 
     private void UpdateHoveredBoardCell()//更新鼠标悬停的网格单元格
@@ -526,30 +552,32 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
     }
 
-    private void HandleLeftMouseClick()
+    private void HandleLeftMousePressed()
     {
         if (m_selectionChangedFrame == Time.frameCount)
         {
             return;
         }
 
-        if (m_hoveredBoardCell.HasValue)
+        if (m_selectedModule != null)
         {
-            HandleBoardCellClicked(m_hoveredBoardCell.Value);
             return;
         }
 
+        if (m_hoveredBoardCell.HasValue)
+        {
+            TryPickupModuleAtCell(m_hoveredBoardCell.Value);
+        }
+    }
+
+    private void HandleLeftMouseReleased()
+    {
         if (m_selectedModule == null)
         {
             return;
         }
 
-        if (selectionText != null)
-        {
-            selectionText.text = "模块已返回背包";
-        }
-
-        SetSelection(null);
+        TryPlaceSelectedModuleOrReturnToInventory();
     }
 
     private Vector2 GetFloatingPreviewCellSize()

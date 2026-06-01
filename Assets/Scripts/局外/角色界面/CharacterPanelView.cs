@@ -15,13 +15,9 @@ public class CharacterPanelView : MonoBehaviour
     [SerializeField] private List<RectTransform> characterButtonPositions = new List<RectTransform>();
 
     [Header("顶部页签")]
-    [SerializeField] private Button statsTabButton;
-    [SerializeField] private Button skillsTabButton;
-    [SerializeField] private GameObject statsPanel;
-    [SerializeField] private GameObject skillsPanel;
 
     [Header("角色基础信息")]
-    [SerializeField] private Image characterIconImage;
+    private Image characterIconImage;
     [SerializeField] private TMP_Text characterNameText;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text experienceText;
@@ -53,16 +49,6 @@ public class CharacterPanelView : MonoBehaviour
     {
         m_parentCanvas = GetComponentInParent<Canvas>();
 
-        if (statsTabButton != null)
-        {
-            statsTabButton.onClick.AddListener(ShowStatsPanel);
-        }
-
-        if (skillsTabButton != null)
-        {
-            skillsTabButton.onClick.AddListener(ShowSkillsPanel);
-        }
-
         HideSkillDescription();
     }
 
@@ -71,7 +57,6 @@ public class CharacterPanelView : MonoBehaviour
         ResolveDataSource();
         SubscribeToDataSource();
         RebuildCharacterButtons();
-        ShowStatsPanel();
     }
 
     private void OnEnable()
@@ -272,7 +257,7 @@ public class CharacterPanelView : MonoBehaviour
                 }
 
                 CharacterSkillButtonUI button = Instantiate(skillButtonPrefab, skillButtonRoot);
-                button.Bind(skill, ShowSkillDescription);
+                button.Bind(skill);
                 m_skillButtons.Add(button);
                 createdCount++;
                 ApplySkillButtonPosition(button.RectTransform, i);
@@ -280,7 +265,7 @@ public class CharacterPanelView : MonoBehaviour
             //出场技能
             var enterSkill = SkillDictionaryManager.GetSkill(rosterData.enterSkill);
             CharacterSkillButtonUI enterButton = Instantiate(skillButtonPrefab, skillButtonRoot);
-            enterButton.Bind(enterSkill, ShowSkillDescription);
+            enterButton.Bind(enterSkill);
             m_skillButtons.Add(enterButton);
             createdCount++;
             ApplySkillButtonPosition(enterButton.RectTransform, createdCount - 1);
@@ -290,55 +275,22 @@ public class CharacterPanelView : MonoBehaviour
             emptySkillText.gameObject.SetActive(createdCount == 0);
             if (createdCount == 0)
             {
-                if (statsPanel != null)
-                {
-                    statsPanel.SetActive(true);
-                }
-
-                if (skillsPanel != null)
-                {
-                    skillsPanel.SetActive(false);
-                }
-
                 HideSkillDescription();
             }
         }
     }
-    private void ShowStatsPanel()
-    {
-        if (statsPanel != null)
-        {
-            statsPanel.SetActive(true);
-        }
 
-        if (skillsPanel != null)
-        {
-            skillsPanel.SetActive(false);
-        }
-    }
-    private void ShowSkillsPanel()
-    {
-        if (statsPanel != null)
-        {
-            statsPanel.SetActive(false);
-        }
-
-        if (skillsPanel != null)
-        {
-            skillsPanel.SetActive(true);
-        }
-    }
-
-    private void ShowSkillDescription(SkillBase skill)
+    public void ShowSkillDescription(SkillBase skill)
     {
         if (skillDescriptionPanel == null)
         {
             return;
         }
 
-        skillDescriptionPanel.SetActive(skill != null);
         if (skill == null)
         {
+            // treat null as hide request
+            HideSkillDescription();
             return;
         }
 
@@ -354,14 +306,83 @@ public class CharacterPanelView : MonoBehaviour
                 : skill.shortDescription;
             skillDescriptionContentText.text = string.IsNullOrWhiteSpace(description) ? "暂无技能说明" : description;
         }
+
+        StartSkillDescriptionFade(true);
     }
 
-    private void HideSkillDescription()
+    public void HideSkillDescription()
     {
-        if (skillDescriptionPanel != null)
+        StartSkillDescriptionFade(false);
+    }
+
+    [Header("技能描述淡入淡出")]
+    [SerializeField] private float skillFadeDuration = 0.15f;
+    private CanvasGroup m_skillDescriptionCanvasGroup;
+    private Coroutine m_skillDescriptionFadeCoroutine;
+
+    private CanvasGroup EnsureSkillDescriptionCanvasGroup()
+    {
+        if (skillDescriptionPanel == null)
+            return null;
+
+        if (m_skillDescriptionCanvasGroup == null)
+        {
+            m_skillDescriptionCanvasGroup = skillDescriptionPanel.GetComponent<CanvasGroup>();
+            if (m_skillDescriptionCanvasGroup == null)
+            {
+                m_skillDescriptionCanvasGroup = skillDescriptionPanel.AddComponent<CanvasGroup>();
+            }
+        }
+
+        return m_skillDescriptionCanvasGroup;
+    }
+
+    private void StartSkillDescriptionFade(bool show)
+    {
+        if (skillDescriptionPanel == null)
+            return;
+
+        CanvasGroup cg = EnsureSkillDescriptionCanvasGroup();
+
+        if (m_skillDescriptionFadeCoroutine != null)
+        {
+            StopCoroutine(m_skillDescriptionFadeCoroutine);
+            m_skillDescriptionFadeCoroutine = null;
+        }
+
+        m_skillDescriptionFadeCoroutine = StartCoroutine(FadeSkillDescriptionCoroutine(show, cg));
+    }
+
+    private System.Collections.IEnumerator FadeSkillDescriptionCoroutine(bool show, CanvasGroup cg)
+    {
+        if (cg == null)
+            yield break;
+
+        float startAlpha = cg.alpha;
+        float target = show ? 1f : 0f;
+        float elapsed = 0f;
+
+        if (show)
+        {
+            skillDescriptionPanel.SetActive(true);
+        }
+
+        while (elapsed < skillFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / Mathf.Max(0.0001f, skillFadeDuration));
+            cg.alpha = Mathf.Lerp(startAlpha, target, t);
+            yield return null;
+        }
+
+        cg.alpha = target;
+
+        if (!show)
         {
             skillDescriptionPanel.SetActive(false);
         }
+
+        m_skillDescriptionFadeCoroutine = null;
     }
 
     private void ApplyCharacterButtonPosition(RectTransform buttonRectTransform, int index)//应用角色选择按钮的位置

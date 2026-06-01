@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class BackpackModuleItemUI : MonoBehaviour
+public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler
 {
     [SerializeField] private Color normalBackgroundColor = new Color(0.12f, 0.14f, 0.18f, 0.92f);
     [SerializeField] private Color selectedBackgroundColor = new Color(0.22f, 0.35f, 0.18f, 0.98f);
@@ -23,7 +24,7 @@ public class BackpackModuleItemUI : MonoBehaviour
     [SerializeField] private CanvasGroup m_canvasGroup;
     [SerializeField] private TMP_Text m_titleText;
     [SerializeField] private RectTransform m_shapeRoot;
-    private Action<GridModuleDefinition> m_onClicked;
+    private Action<GridModuleDefinition> m_onPressed;
     private GridModuleDefinition m_module;
 
     private void Awake()
@@ -31,12 +32,12 @@ public class BackpackModuleItemUI : MonoBehaviour
         EnsureView();
     }
 
-    public void Bind(GridModuleDefinition module, bool selected, bool isLoaded, Vector2 drawCellSize, Action<GridModuleDefinition> onClicked)
+    public void Bind(GridModuleDefinition module, bool selected, bool isLoaded, Vector2 drawCellSize, Action<GridModuleDefinition> onPressed)
     {
         EnsureView();
 
         m_module = module;
-        m_onClicked = onClicked;
+        m_onPressed = onPressed;
 
         m_titleText.text = module != null ? module.moduleName : string.Empty;
         m_background.color = isLoaded ? loadedBackgroundColor : (selected ? selectedBackgroundColor : normalBackgroundColor);
@@ -44,23 +45,17 @@ public class BackpackModuleItemUI : MonoBehaviour
         m_button.interactable = !isLoaded;
         m_canvasGroup.alpha = isLoaded ? loadedAlpha : 1f;
 
-        m_button.onClick.RemoveAllListeners();
-        if (!isLoaded)
-        {
-            m_button.onClick.AddListener(HandleClick);
-        }
-
         RedrawShape(drawCellSize, isLoaded);
     }
 
-    private void HandleClick()
+    public void OnPointerDown(PointerEventData eventData)
     {
-        if (m_module == null)
+        if (eventData.button != PointerEventData.InputButton.Left || m_module == null || m_button == null || !m_button.interactable)
         {
             return;
         }
 
-        m_onClicked?.Invoke(m_module);
+        m_onPressed?.Invoke(m_module);
     }
 
     private void EnsureView()

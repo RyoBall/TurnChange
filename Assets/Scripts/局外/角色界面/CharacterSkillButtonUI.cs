@@ -2,26 +2,20 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
-public class CharacterSkillButtonUI : MonoBehaviour
+public class CharacterSkillButtonUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    [SerializeField] private Button button;
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text skillNameText;
 
     private SkillBase m_skill;
-    private Action<SkillBase> m_onClick;
 
     public RectTransform RectTransform => transform as RectTransform;
 
     private void Awake()
     {
-        if (button == null)
-        {
-            button = GetComponent<Button>();
-        }
-
         if (skillNameText == null)
         {
             skillNameText = GetComponentInChildren<TMP_Text>(true);
@@ -33,10 +27,9 @@ public class CharacterSkillButtonUI : MonoBehaviour
         }
     }
 
-    public void Bind(SkillBase skill, Action<SkillBase> onClick)
+    public void Bind(SkillBase skill)
     {
         m_skill = skill;
-        m_onClick = onClick;
 
         if (skillNameText != null)
         {
@@ -49,16 +42,19 @@ public class CharacterSkillButtonUI : MonoBehaviour
         {
             //暂且默认
         }
-
-        if (button != null)
-        {
-            button.onClick.RemoveListener(HandleClick);
-            button.onClick.AddListener(HandleClick);
-        }
     }
 
-    private void HandleClick()
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        m_onClick?.Invoke(m_skill);
+        // call panel to show description for this skill
+        CharacterPanelView panel = FindObjectOfType<CharacterPanelView>();
+        panel?.ShowSkillDescription(m_skill);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        // call panel to hide description
+        CharacterPanelView panel = FindObjectOfType<CharacterPanelView>();
+        panel?.HideSkillDescription();
     }
 }

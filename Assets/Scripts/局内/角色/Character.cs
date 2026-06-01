@@ -250,7 +250,11 @@ public class Character : UnitCombatant
     private void EnterMoveDOT()
     {
         m_originalPosition = transform.position;
-        transform.DOMove(targetPos, moveAnimDuration).SetEase(moveAnimEase);
+        animator.SetTrigger("Move");
+        transform.DOMove(targetPos, moveAnimDuration).SetEase(moveAnimEase).OnComplete(() =>
+        {
+            animator.SetTrigger("Idle");
+        });
     }
     private void ExitMoveDOT()
     {

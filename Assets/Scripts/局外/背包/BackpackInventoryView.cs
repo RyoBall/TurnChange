@@ -19,7 +19,7 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
 
     private readonly List<BackpackModuleItemUI> m_items = new List<BackpackModuleItemUI>();
 
-    public event Action<GridModuleDefinition> ModuleClicked;
+    public event Action<GridModuleDefinition> ModulePressed;
 
     private void Awake()
     {
@@ -80,14 +80,14 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
             layoutElement.minHeight = itemSize.y;
 
             bool isLoaded = module.IsLoaded;
-            item.Bind(module, module == selectedModule, isLoaded, GetPreviewCellSize(module), HandleModuleClicked);
+            item.Bind(module, module == selectedModule, isLoaded, GetPreviewCellSize(module), HandleModulePressed);
             m_items.Add(item);
         }
     }
 
-    private void HandleModuleClicked(GridModuleDefinition module)
+    private void HandleModulePressed(GridModuleDefinition module)
     {
-        ModuleClicked?.Invoke(module);
+        ModulePressed?.Invoke(module);
     }
 
     private void EnsureLayout()
