@@ -165,18 +165,6 @@ public class CinemachineCameraManager : MonoBehaviour
 			RestartMainCameraSwayCycle();
 		}
 	}
-
-	public bool TrySwitchCamera(ManagedCameraType cameraType)
-	{
-		if (!m_cameraMap.ContainsKey(cameraType) || m_cameraMap[cameraType] == null)
-		{
-			return false;
-		}
-
-		SwitchCamera(cameraType);
-		return true;
-	}
-
 	public IEnumerator TransitionIntoSkillCamera(ManagedCameraType skillCameraType)
 	{
 		Debug.Log("[CinemachineCameraManager] 过渡进入技能镜头");

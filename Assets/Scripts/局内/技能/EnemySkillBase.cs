@@ -21,6 +21,12 @@ public enum EnemySkillType
     ChessQueenThroneAssault,
     ChessQueenCoronation
 }
+public enum targetType
+{
+    Character,
+    Self,
+    None
+}
 [CreateAssetMenu(fileName = "NewEnemySkill", menuName = "技能/EnemySkill"), System.Serializable]
 public class EnemySkillBase : SkillBase
 {
@@ -37,6 +43,8 @@ public class EnemySkillBase : SkillBase
     private int m_remainingCooldown;
 
     public int RemainingCooldown => m_remainingCooldown;
+    [Header("目标类型")]
+    [SerializeField] private targetType targetType;
 
     private static void NotifyDamageSkillUsed(UnitCombatant unitCombatant, IReadOnlyList<UnitCombatant> damagedUnits)
     {
@@ -70,12 +78,16 @@ public class EnemySkillBase : SkillBase
         Enemy self = unitCombatant as Enemy;
         if (self == null) yield break;
         if (!CanUse(self)) yield break;
-
+        if(targetType == targetType.Character)
+        {
+            yield return CinemachineCameraManager.Instance?.TransitionIntoSkillCamera(ManagedCameraType.Help);
+        }
+        else if(targetType == targetType.Self)
+        {
+            yield return CinemachineCameraManager.Instance?.TransitionIntoSkillCamera(ManagedCameraType.Attack);
+        }
         switch (enemySkillType)
         {
-            case EnemySkillType.NormalAttack:
-                // 可补充普通攻击逻辑
-                break;
             case EnemySkillType.ShieldSupport_1:
                 yield return ShieldSupport_1(self);
                 break;
@@ -118,6 +130,7 @@ public class EnemySkillBase : SkillBase
         }
         StartCooldown();
         yield return new WaitForSeconds(0.5f); // 技能执行后的小间隔
+        yield return CinemachineCameraManager.Instance?.TransitionOutOfSkillCamera();
     }
 
     // 1.护盾手 技能一
@@ -380,6 +393,7 @@ public class EnemySkillBase : SkillBase
         // 如果正在蓄力，执行蓄力攻击
         if (queen.IsChargingThroneAssault)
         {
+            yield return CinemachineCameraManager.Instance?.TransitionIntoSkillCamera(ManagedCameraType.Help);
             yield return ExecuteThroneAssaultStrike(queen);
             yield break;
         }

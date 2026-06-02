@@ -94,13 +94,6 @@ public class UnitCombatant : Combatant
         finalDamage = ConsumeShield(finalDamage);
         hitFeedback?.PlayFeedbacks();
         OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType);
-        //如果伤害小于0直接结束
-        if (finalDamage <= 0)
-        {
-            TemporaryBattleModifierRuntimeManager.NotifyDamageSettled(damageInfo.Source, this, 0, damageInfo.IsDotDamage, damageInfo.IsTrueDamage, damageInfo.DamageType);
-            NotifyAnyDamageSettled(damageInfo.Source, this, 0, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
-            return;
-        }
         //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);

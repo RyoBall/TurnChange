@@ -196,42 +196,42 @@ public class CharacterPanelView : MonoBehaviour
 
         if (levelText != null)
         {
-            levelText.text = hasData && dataSource != null ? $"等级 {dataSource.GetTeamLevel()}" : "等级 -";
+            levelText.text = hasData && dataSource != null ? $" {dataSource.GetTeamLevel()}" : "等级 -";
         }
 
         if (experienceText != null)
         {
-            experienceText.text = hasData && dataSource != null ? $"Exp: {dataSource.GetCurrentExp()}/{dataSource.GetExpToNextLevel()}" : "经验 -";
+            experienceText.text = hasData && dataSource != null ? $"{dataSource.GetCurrentExp()}/{dataSource.GetExpToNextLevel()}" : "经验 -";
         }
 
         if (attackText != null)
         {
-            attackText.text = hasLevelData ? $"ATK:{levelData.attack}" : "-";
+            attackText.text = hasLevelData ? $"{levelData.attack}" : "-";
         }
 
         if (hpText != null)
         {
-            hpText.text = hasLevelData ? $"HP:{levelData.maxHP}" : "-";
+            hpText.text = hasLevelData ? $"{levelData.maxHP}" : "-";
         }
 
         if (critRateText != null)
         {
-            critRateText.text = hasLevelData ? $"暴击率:{levelData.critRate * 100f:0.#}%" : "-";
+            critRateText.text = hasLevelData ? $"{levelData.critRate * 100f:0.#}%" : "-";
         }
 
         if (critDamageText != null)
         {
-            critDamageText.text = hasLevelData ? $"暴击伤害:{levelData.critDamage * 100f:0.#}%" : "-";
+            critDamageText.text = hasLevelData ? $"{levelData.critDamage * 100f:0.#}%" : "-";
         }
 
         if (defenseText != null)
         {
-            defenseText.text = hasLevelData ? $"防御:{levelData.defense}" : "-";
+            defenseText.text = hasLevelData ? $"{levelData.defense}" : "-";
         }
 
         if (speedText != null)
         {
-            speedText.text = hasLevelData ? $"速度:{levelData.speed}" : "-";
+            speedText.text = hasLevelData ? $"{levelData.speed}" : "-";
         }
     }
 

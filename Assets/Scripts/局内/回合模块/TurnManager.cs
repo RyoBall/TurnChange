@@ -225,7 +225,20 @@ public class TurnManager : MonoBehaviour
             {
                 yield break;
             }
-
+            //需要检测当前场上角色是否全部死亡，如果全部死亡则不继续回合循环
+            bool allCharactersDead = true;
+            foreach(var cha in CharacterManager.Instance.fieldCharacters)
+            {
+                if(cha != null && !cha.IsDead)
+                {
+                    allCharactersDead = false;
+                    break;
+                }
+            }
+            if (allCharactersDead)
+            {
+                //填充在场角色全部死亡的逻辑
+            }
             //读取当前行动者行动值
             var nextCombatant = nextNode.Value;
             // 用当前行动者的行动值推进整张时间轴。

@@ -224,7 +224,7 @@ MonoBehaviour:
   bossGroupId: chess-boss
   pawnAdvanceOffset: {x: 0, y: 0, z: -0.8}
   pawnAdvanceDuration: 0.2
-  pawnPromotionSteps: 2
+  pawnPromotionSteps: 5
   m_pawnAdvanceCount: 0
 --- !u!114 &8978152631924308604 stripped
 MonoBehaviour:
