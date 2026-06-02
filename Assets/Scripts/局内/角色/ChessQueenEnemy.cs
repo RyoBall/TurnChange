@@ -116,7 +116,6 @@ public class ChessQueenEnemy : Enemy
         EnemySkillBase selectedSkill = SelectRandomAvailableSkill();
         if (selectedSkill != null)
         {
-            FloatingTipGenerator.Instance?.ShowDefaultTip($"{selectedSkill.skillName}");
             switch (selectedSkill.enemySkillType)
             {
                 case EnemySkillType.ChessQueenChaosCharge:
