@@ -215,9 +215,10 @@ public class CharacterManager : MonoBehaviour
 			Debug.LogWarning("[CharacterManager] 替换失败：角色不在正确列表中");
 			yield break;
 		}
-		//设置入场角色位置
+		//设置入场角色位置与站位
 		var exitPosition = newCharacter.transform.position;
 		int targetStandPosition = oldCharacter.standPosition;
+		newCharacter.standPosition = targetStandPosition;
 		if (LevelCharacterSpawner.TryGetSpawnPosition(targetStandPosition, out Vector3 spawnPosition))
 		{
 			newCharacter.transform.position = spawnPosition;
@@ -262,6 +263,10 @@ public class CharacterManager : MonoBehaviour
 		}
 
 		Debug.Log($"[CharacterManager] 已将场上角色 {oldCharacter.name} 替换为 {newCharacter.name}");
+
+		// 通知状态系统角色交换（王棋/车棋等需要转移的状态）
+		oldCharacter.NotifyStatesOwnerSwappedOut(newCharacter);
+
 		BattleRuntimeEvents.RaisePlayerCharacterSwapped();
 		TemporaryBattleModifierRuntimeManager.NotifyPlayerCharacterSwapped(oldCharacter, newCharacter);
 		OnFieldCharacterSwapped?.Invoke(oldCharacter, newCharacter);

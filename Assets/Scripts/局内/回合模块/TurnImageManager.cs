@@ -40,7 +40,6 @@ public class TurnImageManager : MonoBehaviour
 
     private List<TurnImage> removedImages = new List<TurnImage>();
     private List<TurnImage> addedImages = new List<TurnImage>();
-    private bool haveReorderOrder = false;
 
     /// 单例初始化：如果已存在另一个实例，则销毁当前对象。
     private void Awake()
@@ -119,7 +118,6 @@ public class TurnImageManager : MonoBehaviour
     {
         StopCurrentReorder();
         reorderCoroutine = StartCoroutine(ReorderCoroutine());
-        haveReorderOrder = true;
         return reorderCoroutine;
     }
     private void StopCurrentReorder()

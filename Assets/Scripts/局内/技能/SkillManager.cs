@@ -161,16 +161,19 @@ public class SkillManager : MonoBehaviour
     {
         if (!m_isSelectingCharacters || character == null)
         {
+            Debug.Log("[SkillManager] 当前不处于选友状态，点击无效");
             return;
         }
 
         if (CharacterManager.Instance != null && !CharacterManager.Instance.fieldCharacters.Contains(character))
         {
+            Debug.Log("[SkillManager] 点击的角色不在场上，点击无效");
             return;
         }
 
         if (m_selectedCharacters.Contains(character))
         {
+            Debug.Log($"[SkillManager] 取消选择角色: {character.name}");
             m_selectedCharacters.Remove(character);
             character.SetSelectedVisual(false);
         }
@@ -178,9 +181,10 @@ public class SkillManager : MonoBehaviour
         {
             if (m_selectedCharacters.Count >= m_requiredCharacterCount)
             {
+                Debug.Log($"[SkillManager] 已经选择了 {m_requiredCharacterCount} 个角色，无法选择更多");
                 return;
             }
-
+            Debug.Log($"[SkillManager] 选择角色: {character.name}");
             m_selectedCharacters.Add(character);
             character.SetSelectedVisual(true);
         }

@@ -705,7 +705,6 @@ public class ModulePlacementController : MonoBehaviour//背包
 
         RemovePlacedEntriesForModule(datas, moduleIndex);
         datas.AddPlacedModuleEntry(new PlacedModuleData(moduleIndex, anchorCell));
-        datas.SetHasModuleState(ownedModuleDefinitions.Count > 0 || datas.GetPlacedModuleEntries().Count > 0);
         datas.NotifyModuleStateChanged();
         return true;
     }
@@ -728,8 +727,6 @@ public class ModulePlacementController : MonoBehaviour//背包
         {
             return false;
         }
-
-        datas.SetHasModuleState(ownedModuleDefinitions.Count > 0 || datas.GetPlacedModuleEntries().Count > 0);
         datas.NotifyModuleStateChanged();
         return true;
     }

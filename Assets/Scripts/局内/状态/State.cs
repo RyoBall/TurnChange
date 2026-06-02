@@ -53,7 +53,10 @@ public enum StateType
     ExploderProcess,//自爆流程
     NextActionDamageBoost,//下次行动增伤
     ActionWeakened,//单回合减攻
-    Weakened
+    Weakened,
+    ChessKingMark,//王棋标记
+    ChessRookMark,//车棋标记
+    ChessExhaustion//力竭
 
 }
 
@@ -282,6 +285,11 @@ public class State : ScriptableObject
         }
 
         Behavior.OnCombatEventTriggered(triggerUnit, eventType, damagedUnits);
+    }
+
+    public void OnOwnerSwappedOut(UnitCombatant newOwner)
+    {
+        Behavior.OnOwnerSwappedOut(newOwner);
     }
 
     public void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
@@ -539,6 +547,8 @@ public interface IStateBehavior
     bool TryConsumeResist();
     void DotTrigger(float damageMultiplier);
     bool CausesOutgoingTrueDamage(bool isDotDamage);
+    /// <summary>角色交换回调：当持有者被换下时，将状态转移到新角色上</summary>
+    void OnOwnerSwappedOut(UnitCombatant newOwner);
 }
 
 public abstract class StateBehaviorBase : IStateBehavior
@@ -565,6 +575,7 @@ public abstract class StateBehaviorBase : IStateBehavior
     public virtual bool TryConsumeResist() { return false; }
     public virtual void DotTrigger(float damageMultiplier) { }
     public virtual bool CausesOutgoingTrueDamage(bool isDotDamage) { return false; }
+    public virtual void OnOwnerSwappedOut(UnitCombatant newOwner) { }
 }
 
 public static class StateBehaviorFactory
@@ -637,6 +648,12 @@ public static class StateBehaviorFactory
                 return new ChaosStunStateBehavior();
             case StateType.Weakened:
                 return new WeakenedStateBehavior();
+            case StateType.ChessKingMark:
+                return new ChessKingMarkStateBehavior();
+            case StateType.ChessRookMark:
+                return new ChessRookMarkStateBehavior();
+            case StateType.ChessExhaustion:
+                return new ChessExhaustionStateBehavior();
             default:
                 return new DefaultStateBehavior();
         }
@@ -1682,6 +1699,90 @@ public class WeakenedStateBehavior : StateBehaviorBase
         return state.baseExtraData1;
     }
 }
+public class ChessKingMarkStateBehavior : StateBehaviorBase
+{
+    public override void OnStateApply()
+    {
+        // 王棋：自身伤害+30%，受到伤害+30%
+    }
+
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        return 1.3f;
+    }
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return 1.3f;
+    }
+
+    public override void OnOwnerSwappedOut(UnitCombatant newOwner)
+    {
+        // 角色被换下时，将王棋状态转移到新角色
+        if (newOwner != null && state.owner != null)
+        {
+            newOwner.AddState(StateType.ChessKingMark, state.giver, 99, state.RemainingTurns);
+            state.EndState();
+        }
+    }
+}
+
+public class ChessRookMarkStateBehavior : StateBehaviorBase
+{
+    public override void OnStateApply()
+    {
+        // 车棋：自身受到伤害-30%
+    }
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return 0.7f;
+    }
+
+    public override void OnOwnerSwappedOut(UnitCombatant newOwner)
+    {
+        // 角色被换下时，将车棋状态转移到新角色
+        if (newOwner != null && state.owner != null)
+        {
+            newOwner.AddState(StateType.ChessRookMark, state.giver, 99, state.RemainingTurns);
+            state.EndState();
+        }
+    }
+}
+
+public class ChessExhaustionStateBehavior : StateBehaviorBase
+{
+    private int m_accumulatedDamage;
+    private int m_damageThreshold;
+
+    public override void OnStateApply()
+    {
+        m_accumulatedDamage = 0;
+        m_damageThreshold = state.owner != null ? Mathf.Max(1, Mathf.CeilToInt(state.owner.maxHP * 0.15f)) : 0;
+    }
+
+    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    {
+        // 监听持有者受到的伤害
+        if (state.owner == null || target != state.owner || damage <= 0)
+        {
+            return;
+        }
+
+        m_accumulatedDamage += damage;
+        if (m_accumulatedDamage >= m_damageThreshold)
+        {
+            Commander.GetInstance().AddCastlingOpportunity(1, "力竭破绽暴露");
+            m_accumulatedDamage = int.MinValue; // 防止重复触发
+        }
+    }
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return 1.25f; // 力竭时受到伤害+25%
+    }
+}
+
 public class InspectorReadOnlyAttribute : PropertyAttribute
 {
     // 这个类不需要额外代码，只是作为一个标记存在

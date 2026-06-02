@@ -24,7 +24,7 @@ public class ShieldSlider : MonoBehaviour
             GetComponent<UnityEngine.UI.Image>().fillAmount = 0;
             return;
         }
-        float shieldPercent = targetCharacter.currentShield / targetCharacter.maxHP;
+        float shieldPercent = (float)targetCharacter.currentShield / targetCharacter.maxHP;
         GetComponent<UnityEngine.UI.Image>().fillAmount = Mathf.Clamp01(shieldPercent);
     }
 }

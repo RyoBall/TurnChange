@@ -277,7 +277,7 @@ public sealed class HeavyPoisonModuleBehavior : BattleModifierBehaviorBase
             return 1f;
         }
 
-        float penalty = enemy is ChessBossEnemy ? m_bossSpeedPenaltyPerDebuff : m_speedPenaltyPerDebuff;
+        float penalty = enemy is ChessQueenEnemy ? m_bossSpeedPenaltyPerDebuff : m_speedPenaltyPerDebuff;
         return 1f + debuffCount * penalty;
     }
 }

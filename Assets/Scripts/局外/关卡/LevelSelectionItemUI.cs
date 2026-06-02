@@ -1,103 +1,22 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum LevelSelectionButtonType
-{
-    BattleLevel,
-    EventLevel,
-    NextFloor
-}
-
-public enum LevelEventOptionType
-{
-    None,
-    WorshipSpeedGod,
-    WorshipPowerGod,
-    TakeAllIncenseMoney,
-    SwapForProfit,
-    CashOutSwap,
-    TakeWindingPath,
-    TakeBroadRoad
-}
-
-[Serializable]
-public class LevelEnemyEntry//关卡数据单元
-{
-    public EnemyRosterData enemyData;
-    public int level = 1;
-    public bool isChessSeriesEnemy;
-    public ChessBossPendingData chessBossData = new ChessBossPendingData();
-}
-
-[Serializable]
-public class LevelEnemyWaveData//关卡敌人波次
-{
-    public List<LevelEnemyEntry> enemies = new List<LevelEnemyEntry>();
-}
-[Serializable]
-public class LevelSelectionData//关卡数据
-{
-    public string levelId;
-    public string levelName;
-    public bool isUnlocked;
-    public LevelSelectionButtonType buttonType;
-    public LevelEventData eventData;
-    public List<LevelEnemyWaveData> enemyWaves = new List<LevelEnemyWaveData>();
-    [Min(0)] public int rewardExperience;
-    [Min(0)] public int rewardGold;
-
-    public IReadOnlyList<LevelEnemyWaveData> GetEnemyWaves()
-    {
-        return enemyWaves != null ? enemyWaves : Array.Empty<LevelEnemyWaveData>();
-    }
-
-    public IReadOnlyList<LevelEnemyEntry> GetWaveEnemies(int waveIndex)
-    {
-        if (enemyWaves == null || waveIndex < 0 || waveIndex >= enemyWaves.Count)
-        {
-            return Array.Empty<LevelEnemyEntry>();
-        }
-
-        LevelEnemyWaveData waveData = enemyWaves[waveIndex];
-        if (waveData == null || waveData.enemies == null)
-        {
-            return Array.Empty<LevelEnemyEntry>();
-        }
-
-        return waveData.enemies;
-    }
-}
-
-[Serializable]
-public class LevelSelectionFloorData
-{
-    public string floorId;
-    //public string floorName = "第1层";
-    public List<LevelSelectionData> levels = new List<LevelSelectionData>();
-
-    public IReadOnlyList<LevelSelectionData> GetLevels()
-    {
-        return levels != null ? levels : Array.Empty<LevelSelectionData>();
-    }
-}
-
 [DisallowMultipleComponent]
 public class LevelSelectionItemUI : MonoBehaviour
 {
     [Header("关卡数据")]
-    [SerializeField] private LevelSelectionData levelData = new LevelSelectionData();
-    [SerializeField] private LevelSelectionButtonType levelType;
+    private LevelSelectionData levelData;
+    private LevelSelectionButtonType levelType;
 
     [Header("按钮与目标")]
     [SerializeField] private Button prepareButton;
-    [SerializeField] private PreparationPanelView preparationPanel;
-    [SerializeField] private GameObject preparationPanelRoot;
-    [SerializeField] private EventLevelPanelView eventPanel;
-    [SerializeField] private LevelSelectionListLoader listLoader;
+    private PreparationPanelView preparationPanel;
+    private GameObject preparationPanelRoot;
+    private EventLevelPanelPreview eventPanel;
+    private LevelSelectionListLoader listLoader;
 
     [Header("显示")]
     [SerializeField] private TMP_Text levelNameText;
@@ -201,7 +120,7 @@ public class LevelSelectionItemUI : MonoBehaviour
             yield return ScreenTransition.Instance.ExitTransition();
         }
     }
-#region  三种关卡进入按钮的函数
+    #region  三种关卡进入按钮的函数
     private void OpenBattlePreparation()
     {
         if (preparationPanel != null)
@@ -221,8 +140,8 @@ public class LevelSelectionItemUI : MonoBehaviour
             Debug.LogWarning("[LevelSelectionItemUI] 缺少 EventLevelPanelView，无法打开事件关卡。", this);
             return;
         }
-        if(levelData==null)
-        Debug.LogWarning("缺少关卡数据");
+        if (levelData == null)
+            Debug.LogWarning("缺少关卡数据");
         eventPanel.OpenWithLevelData(levelData);
     }
 
@@ -247,10 +166,10 @@ public class LevelSelectionItemUI : MonoBehaviour
 
         listLoader?.ApplyLevels();
     }
-#endregion
+    #endregion
     public void SetLevelData(LevelSelectionData data)
     {
-        levelData = data ?? new LevelSelectionData();
+        levelData = data;
         levelType = levelData.buttonType;
         m_isUnlocked = levelData.isUnlocked;
         RefreshView();
@@ -312,7 +231,7 @@ public class LevelSelectionItemUI : MonoBehaviour
             levelNameLegacyText = GetComponentInChildren<Text>(true);
         }
     }
-//获取引用
+    //获取引用
     private void ResolveTargetReferences()
     {
         if (preparationPanel == null)
@@ -327,7 +246,7 @@ public class LevelSelectionItemUI : MonoBehaviour
 
         if (eventPanel == null)
         {
-            eventPanel = EventLevelPanelView.Instance;
+            eventPanel = EventLevelPanelPreview.Instance;
         }
 
         if (listLoader == null)
@@ -338,6 +257,11 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     private void RefreshView()
     {
+        if (levelData == null)
+        {
+            return;
+        }
+
         string displayName = GetDisplayName();
         bool canInteract = m_isUnlocked && !m_isCompleted;
         bool showStatusText = m_isCompleted || !m_isUnlocked;
@@ -379,6 +303,11 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     private string GetDisplayName()
     {
+        if (levelData == null)
+        {
+            return string.Empty;
+        }
+
         if (levelType == LevelSelectionButtonType.EventLevel)
         {
             if (levelData.eventData != null && !string.IsNullOrWhiteSpace(levelData.eventData.eventName))

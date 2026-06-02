@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class LevelCharacterSpawner : MonoBehaviour
 {
     private const int EnemyStandPositionStart = 3;
     private static readonly Dictionary<int, Vector3> s_spawnPositionByStandPosition = new Dictionary<int, Vector3>();
+
+    public static LevelCharacterSpawner Instance { get; private set; }
 
     [Header("Spawn Points")]
     [SerializeField] private Transform[] playerFieldSpawnPoints;
@@ -21,11 +24,81 @@ public class LevelCharacterSpawner : MonoBehaviour
 
     private readonly List<GameObject> m_spawnedObjects = new List<GameObject>();
 
+    // 站位占用管理：记录每个 standPosition 上是否已有敌人
+    private readonly HashSet<int> m_occupiedEnemyStandPositions = new HashSet<int>();
+    private readonly List<int> m_availableEnemyStandPositions = new List<int>();
+
     public static IReadOnlyDictionary<int, Vector3> SpawnPositionByStandPosition => s_spawnPositionByStandPosition;
 
     public static bool TryGetSpawnPosition(int standPosition, out Vector3 spawnPosition)
     {
         return s_spawnPositionByStandPosition.TryGetValue(standPosition, out spawnPosition);
+    }
+
+    /// <summary>获取一个随机的未被占用的敌人生成站位</summary>
+    public bool TryGetRandomAvailableEnemyStandPosition(out int standPosition)
+    {
+        standPosition = 0;
+        if (m_availableEnemyStandPositions.Count == 0)
+        {
+            // 如果没有可用站位，回退到使用下一个未使用的序号
+            int maxUsed = m_occupiedEnemyStandPositions.Count > 0 ? m_occupiedEnemyStandPositions.Max() : EnemyStandPositionStart - 1;
+            standPosition = maxUsed + 1;
+            m_occupiedEnemyStandPositions.Add(standPosition);
+            return true;
+        }
+
+        int randomIndex = Random.Range(0, m_availableEnemyStandPositions.Count);
+        standPosition = m_availableEnemyStandPositions[randomIndex];
+        m_availableEnemyStandPositions.RemoveAt(randomIndex);
+        m_occupiedEnemyStandPositions.Add(standPosition);
+        return true;
+    }
+
+    /// <summary>标记一个站位已被占用</summary>
+    public void MarkEnemyStandPositionOccupied(int standPosition)
+    {
+        m_occupiedEnemyStandPositions.Add(standPosition);
+        m_availableEnemyStandPositions.Remove(standPosition);
+    }
+
+    /// <summary>释放一个站位（敌人死亡时调用）</summary>
+    public void ReleaseEnemyStandPosition(int standPosition)
+    {
+        m_occupiedEnemyStandPositions.Remove(standPosition);
+        if (!m_availableEnemyStandPositions.Contains(standPosition))
+        {
+            m_availableEnemyStandPositions.Add(standPosition);
+        }
+    }
+
+    /// <summary>初始化可用站位列表</summary>
+    public void InitializeEnemyStandPositions(int startPosition, int count)
+    {
+        m_occupiedEnemyStandPositions.Clear();
+        m_availableEnemyStandPositions.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            m_availableEnemyStandPositions.Add(startPosition + i);
+        }
+    }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     public void SpawnLevel(
@@ -133,6 +206,8 @@ public class LevelCharacterSpawner : MonoBehaviour
 
         m_spawnedObjects.Clear();
         s_spawnPositionByStandPosition.Clear();
+        m_occupiedEnemyStandPositions.Clear();
+        m_availableEnemyStandPositions.Clear();
     }
 
     public void SpawnEnemyWave(
@@ -220,6 +295,7 @@ public class LevelCharacterSpawner : MonoBehaviour
 
         ConfigureEnemy(instance, data, EnemyStandPositionStart + index);
         RegisterSpawnPosition(EnemyStandPositionStart + index, spawnPosition);
+        MarkEnemyStandPositionOccupied(EnemyStandPositionStart + index);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -250,6 +326,7 @@ public class LevelCharacterSpawner : MonoBehaviour
 
         ConfigureEnemy(instance, data, standPositionStart + index);
         RegisterSpawnPosition(standPositionStart + index, spawnPosition);
+        MarkEnemyStandPositionOccupied(standPositionStart + index);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
     }
@@ -359,26 +436,9 @@ public class LevelCharacterSpawner : MonoBehaviour
         out Vector3 position,
         out Quaternion rotation)
     {
-        if (ShouldUseChessPieceSpawnPoints(prefabToSpawn, battleSpawnData)
-            && ChessPieceSpawnPointManager.Instance != null
-            && ChessPieceSpawnPointManager.Instance.TryGetSpawnPose(index, out position, out rotation))
-        {
-            return;
-        }
-
         Transform spawnPoint = GetSpawnPoint(enemySpawnPoints, index);
         position = GetSpawnPosition(spawnPoint);
         rotation = GetSpawnRotation(spawnPoint);
-    }
-
-    private static bool ShouldUseChessPieceSpawnPoints(GameObject prefabToSpawn, BattleEnemySpawnData battleSpawnData)
-    {
-        if (battleSpawnData != null && battleSpawnData.chessBossData != null)
-        {
-            return true;
-        }
-
-        return prefabToSpawn != null && prefabToSpawn.GetComponent<ChessBossEnemy>() != null;
     }
 
     private Transform GetSpawnPoint(Transform[] spawnPoints, int index)

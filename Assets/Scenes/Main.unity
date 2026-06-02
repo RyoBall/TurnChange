@@ -3055,7 +3055,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 505091963}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b799e339cef5d8b4b80e7e1d43d2a99f, type: 3}
+  m_Script: {fileID: 11500000, guid: ed8060a0d81d1f741895dd8c1e4a6fe4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelRoot: {fileID: 172657280}
@@ -3074,7 +3074,7 @@ MonoBehaviour:
   - {fileID: 1794227958}
   firstSelectedCharacterImage: {fileID: 1461164214}
   secondSelectedCharacterImage: {fileID: 301964694}
-  listHiddenX: -300
+  listHiddenX: -200
   listShownX: 0
   listSlideSmoothTime: 0.12
 --- !u!1 &505723680
@@ -6037,514 +6037,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92d944f053d5f4c45b9c15f4fca7ce4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterDatas: []
+  characterDatas:
+  - {fileID: 11400000, guid: 511beaf3365619041b59f31e4bc10c52, type: 2}
+  - {fileID: 11400000, guid: a7f0b46fa2265ec499f0c713cef66195, type: 2}
+  - {fileID: 11400000, guid: 92ffc6d48ce2c3e45915ef0fddb72dd9, type: 2}
+  - {fileID: 11400000, guid: 303896a6f716db74581636b248f968e1, type: 2}
+  - {fileID: 11400000, guid: f37433189d2a024498c265ff06a95888, type: 2}
+  - {fileID: 11400000, guid: d2a09ca80264f3d429c0297df363f2e1, type: 2}
   starterChoiceSceneName: Main
   selectedStarterBranchId: 
   levelFloors:
   - floorId: 1
     levels:
-    - levelId: 1
-      levelName: "\u5173\u53611"
-      isUnlocked: 0
-      buttonType: 0
-      eventData: {fileID: 0}
-      enemyWaves:
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      rewardExperience: 25
-      rewardGold: 25
-    - levelId: 2
-      levelName: "\u5173\u53612"
-      isUnlocked: 0
-      buttonType: 0
-      eventData: {fileID: 0}
-      enemyWaves:
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      rewardExperience: 35
-      rewardGold: 35
-    - levelId: "\u4E8B\u4EF61"
-      levelName: 
-      isUnlocked: 0
-      buttonType: 1
-      eventData: {fileID: 11400000, guid: 649f732cc1f72614fa9983c0709ae819, type: 2}
-      enemyWaves:
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      rewardExperience: 0
-      rewardGold: 0
-    - levelId: 3
-      levelName: "\u5173\u53613"
-      isUnlocked: 0
-      buttonType: 0
-      eventData: {fileID: 0}
-      enemyWaves:
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 114edf33702307d47a6586ceafc14922, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 45206f48917b5ad428812a394ac00e08, type: 2}
-          level: 1
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      rewardExperience: 40
-      rewardGold: 40
-    - levelId: "\u4E0B\u4E00\u5C42"
-      levelName: "\u4E0B\u4E00\u5C42"
-      isUnlocked: 0
-      buttonType: 2
-      eventData: {fileID: 0}
-      enemyWaves: []
-      rewardExperience: 0
-      rewardGold: 0
+    - {fileID: 11400000, guid: 42a6a900d3b759a47b92070820eb5338, type: 2}
   - floorId: 2
     levels:
-    - levelId: 2-1
-      levelName: "\u5173\u53611"
-      isUnlocked: 0
-      buttonType: 0
-      eventData: {fileID: 0}
-      enemyWaves:
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
-          level: 0
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
-          level: 0
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 3868e0f18994f8449a6db78b0df355bb, type: 2}
-          level: 0
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      - enemies:
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 0
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 0
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-        - enemyData: {fileID: 11400000, guid: 6f1b86d2c65fbb84fbf0a9bec3794362, type: 2}
-          level: 0
-          isChessSeriesEnemy: 0
-          chessBossData:
-            enabled: 0
-            bossGroupId: 
-            unitRole: 0
-            startHiddenUntilPhaseTwo: 0
-            summonPawnData: {fileID: 0}
-            summonPawnLevel: 0
-            pawnAdvanceOffset: {x: 0, y: 0, z: 0}
-            pawnAdvanceDuration: 0
-            pawnPromotionSteps: 0
-            summonedPawnHealRatio: 0
-            immuneToDaze: 0
-            immuneToTaunt: 0
-      rewardExperience: 0
-      rewardGold: 0
-    - levelId: 
-      levelName: 
-      isUnlocked: 0
-      buttonType: 0
-      eventData: {fileID: 0}
-      enemyWaves: []
-      rewardExperience: 0
-      rewardGold: 0
-    - levelId: 
-      levelName: 
-      isUnlocked: 0
-      buttonType: 0
-      eventData: {fileID: 0}
-      enemyWaves: []
-      rewardExperience: 0
-      rewardGold: 0
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
   - floorId: 3
     levels: []
   currentFloorIndex: 0
   completedLevelIds: []
   activeBattleModifiers: []
-  teamLevel: 1
+  teamLevel: 8
   currentExp: 0
   baseExpToNextLevel: 20
   expGrowthFactor: 1
   gold: 0
-  hasModuleState: 0
   ownedModules: []
   placedModules: []
   backpackWidth: 4
@@ -13298,11 +12818,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1830951429}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fd71d6caf7682f43b36d9eb5a19e118, type: 3}
+  m_Script: {fileID: 11500000, guid: 08f0b051ab15b8e4fb03abe6c7f51fdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   panelRoot: {fileID: 1129329939}
-  levelListLoader: {fileID: 1978627445}
+  levelListLoader: {fileID: 1978627447}
   titleText: {fileID: 1202824377}
   descriptionText: {fileID: 1781490787}
   optionButtons:
@@ -14108,7 +13628,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1978627446}
-  - component: {fileID: 1978627445}
+  - component: {fileID: 1978627447}
   m_Layer: 0
   m_Name: "\u5173\u5361\u6570\u636E"
   m_TagString: Untagged
@@ -14116,24 +13636,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1978627445
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1978627444}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b4e128aa2653f4469e489d1a522299d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  levelFloors: []
-  itemsRoot: {fileID: 1147383442}
-  carousel: {fileID: 140247126}
-  populateOnStart: 1
-  disableExtraItems: 1
-  initializeDatasFromLocalConfig: 1
 --- !u!4 &1978627446
 Transform:
   m_ObjectHideFlags: 0
@@ -14149,6 +13651,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1978627447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1978627444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ba573e2900d2748b69a31b49b489e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelFloors: []
+  itemsRoot: {fileID: 1147383442}
+  carousel: {fileID: 140247126}
+  populateOnStart: 1
+  disableExtraItems: 1
+  initializeDatasFromLocalConfig: 1
 --- !u!1 &1984381007
 GameObject:
   m_ObjectHideFlags: 0
@@ -15759,7 +15279,6 @@ MonoBehaviour:
   - {fileID: 946578261}
   - {fileID: 231351234}
   - {fileID: 890196723}
-  characterIconImage: {fileID: 0}
   characterNameText: {fileID: 2139047895}
   levelText: {fileID: 1491508455}
   experienceText: {fileID: 978164122}
@@ -15780,6 +15299,7 @@ MonoBehaviour:
   skillDescriptionPanel: {fileID: 1683139853}
   skillDescriptionTitleText: {fileID: 1672727991}
   skillDescriptionContentText: {fileID: 1346457854}
+  skillFadeDuration: 0.15
 --- !u!4 &2128805165
 Transform:
   m_ObjectHideFlags: 0
@@ -16377,7 +15897,7 @@ SceneRoots:
   - {fileID: 2128805165}
   - {fileID: 975851274}
   - {fileID: 1801067787}
-  - {fileID: 964294950}
   - {fileID: 341425388}
   - {fileID: 1312347888}
   - {fileID: 505091964}
+  - {fileID: 964294950}

@@ -22,13 +22,8 @@ public class UnitCombatant : Combatant
     public int currentShield;
     [Header("MMF引用")]
     [SerializeField] protected MMF_Player enterFeedback;
-    [SerializeField] protected MMF_Player exitFeedback;
     [SerializeField] protected MMF_Player hitFeedback;
-    [SerializeField] protected MMF_Player actionFeedback;
     [SerializeField] protected MMF_Player dieFeedback;
-    [SerializeField] protected MMF_Player mouseEnterFeedback;
-    [SerializeField] protected MMF_Player mouseExitFeedback;
-    [SerializeField] protected MMF_Player selectFeedback;
     [SerializeField] protected MMF_Player healFeedback;
     [SerializeField] protected MMF_Player shieldFeedback;
     [SerializeField] protected MMF_Player buffAppliedFeedback;
@@ -111,12 +106,7 @@ public class UnitCombatant : Combatant
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
         TemporaryBattleModifierRuntimeManager.NotifyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage, damageInfo.DamageType);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
-        if (currentHP <= 0)
-        {
-            Commander.GetInstance().NotifyEnemyKilled(damageInfo.Source, this);
-        }
     }
-
     public virtual void Heal(int amount)
     {
         if (amount <= 0)
@@ -271,6 +261,16 @@ public class UnitCombatant : Combatant
         return state;
     }
 
+    /// <summary>通知所有状态的 OnOwnerSwappedOut（角色被换下时）</summary>
+    public void NotifyStatesOwnerSwappedOut(UnitCombatant newOwner)
+    {
+        for (int i = states.Count - 1; i >= 0; i--)
+        {
+            State state = states[i];
+            if (state == null) continue;
+            state.OnOwnerSwappedOut(newOwner);
+        }
+    }
 
     public bool RemoveState(State state)
     {

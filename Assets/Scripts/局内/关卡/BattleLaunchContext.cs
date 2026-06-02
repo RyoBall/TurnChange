@@ -7,7 +7,7 @@ public class BattleEnemySpawnData
 {
     public EnemyRosterData enemyData;
     public int level = 1;
-    public ChessBossPendingData chessBossData;
+    public bool isChessSeriesEnemy;
 }
 
 [Serializable]
@@ -98,9 +98,6 @@ public static class BattleLaunchContext
                         {
                             enemyData = entry.enemyData,
                             level = Mathf.Max(1, entry.level),
-                            chessBossData = entry.isChessSeriesEnemy && entry.chessBossData != null
-                                ? CreateChessBossPendingData(entry.chessBossData)
-                                : null
                         });
                     }
                 }
@@ -137,17 +134,5 @@ public static class BattleLaunchContext
     public static void ClearPendingLevelData()
     {
         s_pendingLevelData = null;
-    }
-
-    private static ChessBossPendingData CreateChessBossPendingData(ChessBossPendingData source)
-    {
-        if (source == null)
-        {
-            return null;
-        }
-
-        ChessBossPendingData clonedData = source.Clone();
-        clonedData.enabled = true;
-        return clonedData;
     }
 }

@@ -19,7 +19,7 @@ public class PreparationPanelView : MonoBehaviour
     [SerializeField] private Image firstSelectedCharacterImage;
     [SerializeField] private Image secondSelectedCharacterImage;
     [SerializeField] private float listHiddenX = -680f;
-        [SerializeField] private float listShownX = 0f;
+    [SerializeField] private float listShownX = 0f;
     [SerializeField] private float listSlideSmoothTime = 0.12f;
 
     public LevelSelectionData CurrentLevelData { get; private set; }

@@ -29,10 +29,10 @@ public class Enemy : UnitCombatant
     private bool m_isBattleVisible = true;
     private bool m_animationOverridesApplied;
     public virtual bool ShouldRegisterAtBattleStart => true;
-    protected bool IsBattleVisible => m_isBattleVisible;
+    public bool IsBattleVisible => m_isBattleVisible;
 
     #region 自爆相关 因为项目比较小 所以先把自爆相关的状态和逻辑写在Enemy类里，后续如果需要的话再重构
-    public ExplodeType explodeState = ExplodeType.None;
+    [HideInInspector] public ExplodeType explodeState = ExplodeType.None;
     #endregion
     protected virtual void Start()
     {
@@ -201,6 +201,12 @@ public class Enemy : UnitCombatant
     {
         base.Die();
         EnemyManager.Instance?.UnregisterEnemy(this);
+        if (currentHP <= 0)
+        {
+            Commander.GetInstance().NotifyEnemyKilled();
+        }
+        // 通知 LevelCharacterSpawner 释放站位
+        LevelCharacterSpawner.Instance?.ReleaseEnemyStandPosition(standPosition);
     }
 
     protected override IEnumerator OnDeathEvent()

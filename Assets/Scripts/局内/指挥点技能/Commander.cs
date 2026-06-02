@@ -31,6 +31,43 @@ public class Commander : MonoBehaviour
     private float actionValueSinceLastRecovery;
     public int MaxCommandPoints => maxCommandPoints;
 
+    // 棋局Boss 王车易位机会系统
+    private int m_castlingOpportunities;
+    private const int MaxCastlingOpportunities = 2;
+
+    public int CastlingOpportunities => m_castlingOpportunities;
+
+    public void AddCastlingOpportunity(int amount, string tipText = null)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        int before = m_castlingOpportunities;
+        m_castlingOpportunities = Mathf.Clamp(m_castlingOpportunities + amount, 0, MaxCastlingOpportunities);
+        if (m_castlingOpportunities > before && !string.IsNullOrEmpty(tipText))
+        {
+            FloatingTipGenerator.Instance?.ShowDefaultTip(tipText);
+        }
+    }
+
+    public bool TryConsumeCastlingOpportunity()
+    {
+        if (m_castlingOpportunities <= 0)
+        {
+            return false;
+        }
+
+        m_castlingOpportunities--;
+        return true;
+    }
+
+    public void ResetCastlingOpportunities()
+    {
+        m_castlingOpportunities = 0;
+    }
+
     public bool UseCommandPoints(int amount)
     {
         if (amount > 0 && amount <= commandPoints)
@@ -51,13 +88,8 @@ public class Commander : MonoBehaviour
         return RecoverCommandPointsInternal(amount, tipText);
     }
 
-    public void NotifyEnemyKilled(UnitCombatant source, UnitCombatant target)
+    public void NotifyEnemyKilled()
     {
-        if (!(source is Character) || !(target is Enemy))
-        {
-            return;
-        }
-
         RecoverCommandPoints(KillRecoveryAmount, $"击杀回点+{KillRecoveryAmount}");
     }
 

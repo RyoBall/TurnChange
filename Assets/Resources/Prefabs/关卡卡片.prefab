@@ -88,18 +88,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 550172768301201810}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 774f88c0e689f8244bec3e72d0cf39bc, type: 3}
+  m_Script: {fileID: 11500000, guid: 6eda0e8122cce3046a58cbc0f9b10510, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelData:
-    levelId: 
-    levelName: 
-    enemyWaves: []
-    rewardExperience: 0
-    rewardGold: 0
   prepareButton: {fileID: 8120595787998208915}
-  preparationPanel: {fileID: 0}
-  preparationPanelRoot: {fileID: 0}
   levelNameText: {fileID: 6448659609308389345}
   levelNameLegacyText: {fileID: 0}
   completedText: {fileID: 1150389821364483247}

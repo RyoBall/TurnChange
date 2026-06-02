@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public enum EnemySkillType
@@ -266,59 +267,237 @@ public class EnemySkillBase : SkillBase
         yield break;
     }
 
+    // ============ 棋局Boss技能 ============
+
+    /// <summary>棋子行动：初始兵卒推进，召唤兵卒回血</summary>
     private IEnumerator ChessPawnAction(Enemy self)
     {
-        ChessBossEnemy chessBoss = self as ChessBossEnemy;
-        if (chessBoss != null)
+        // 召唤兵卒：为皇后回血
+        ChessSummonedPawnEnemy summonedPawn = self as ChessSummonedPawnEnemy;
+        if (summonedPawn != null)
         {
-            yield return chessBoss.ExecuteChessPawnAction(this);
+            summonedPawn.HealQueen(extraData1);
+            yield break;
+        }
+
+        // 初始兵卒：向前推进
+        ChessPawnEnemy pawn = self as ChessPawnEnemy;
+        if (pawn != null)
+        {
+            yield return pawn.AdvancePawn();
         }
     }
 
+    /// <summary>技能一：混沌横冲 — 对全体造成伤害+混沌</summary>
     private IEnumerator ChessQueenChaosCharge(Enemy self)
     {
+        ChessQueenEnemy queen = self as ChessQueenEnemy;
+        if (queen == null) yield break;
+
         int chaosAmount = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 2f));
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
+
+        float prestigeBonus = queen.GetPrestigeDamageBonus();
+        float totalCoef = skillCoef * prestigeBonus;
+
         foreach (var ally in allies)
         {
-            if (ally == null || ally.IsDead)
-            {
-                continue;
-            }
-
-            var damageInfo = DamageCounter.CountDamage(self, ally, skillCoef, skillBase, DamageType.Physical, true, false, false);
+            if (ally == null || ally.IsDead) continue;
+            var damageInfo = DamageCounter.CountDamage(self, ally, totalCoef, skillBase, DamageType.Physical, true, false, false);
             ally.TakeDamage(damageInfo);
             ally.TryAddChaos(chaosAmount);
         }
-
-        yield break;
     }
 
+    /// <summary>技能二：兵卒召唤 — 召唤一个兵卒，皇后获得1层威望</summary>
     private IEnumerator ChessQueenSummonPawn(Enemy self)
     {
-        ChessBossEnemy chessBoss = self as ChessBossEnemy;
-        if (chessBoss != null)
+        ChessQueenEnemy queen = self as ChessQueenEnemy;
+        if (queen == null) yield break;
+
+        // 获取召唤位置
+        LevelCharacterSpawner spawner = LevelCharacterSpawner.Instance;
+        if (spawner == null)
         {
-            yield return chessBoss.ExecuteChessQueenSummonPawn(this);
+            Debug.LogWarning("[EnemySkillBase] LevelCharacterSpawner 不可用");
+            yield break;
         }
+
+        if (!spawner.TryGetRandomAvailableEnemyStandPosition(out int standPosition))
+        {
+            Debug.LogWarning("[EnemySkillBase] 没有可用的敌人生成位置");
+            yield break;
+        }
+
+        // 获取生成prefab
+        EnemyRosterData rosterData = GetSummonPawnRosterData(queen);
+        if (rosterData == null) yield break;
+
+        GameObject summonPrefab = rosterData.PrefabOverride;
+        if (summonPrefab == null)
+        {
+            ChessSummonedPawnEnemy fallback = GetSummonPawnPrefabFallback(queen);
+            if (fallback != null) summonPrefab = fallback.gameObject;
+        }
+
+        if (summonPrefab == null)
+        {
+            Debug.LogWarning($"[EnemySkillBase] {queen.combatantName} 缺少兵卒召唤 prefab");
+            yield break;
+        }
+
+        // 生成兵卒
+        Vector3 spawnPos = queen.transform.position + new Vector3(-1f, 0f, 0f);
+        Quaternion spawnRot = queen.transform.rotation;
+
+        GameObject spawnedObject = Object.Instantiate(summonPrefab, spawnPos, spawnRot, queen.transform.parent);
+        ChessSummonedPawnEnemy pawn = spawnedObject.GetComponent<ChessSummonedPawnEnemy>();
+        if (pawn == null)
+        {
+            Debug.LogError("[EnemySkillBase] 召唤的兵卒 prefab 缺少 ChessSummonedPawnEnemy 组件", spawnedObject);
+            Object.Destroy(spawnedObject);
+            spawner.ReleaseEnemyStandPosition(standPosition);
+            yield break;
+        }
+
+        pawn.ConfigureAsSummonedPawn(queen, rosterData, standPosition, GetSummonPawnLevel(queen));
+        pawn.ChangeActionValue(pawn.BaseActionValue, false);
+        EnemyManager.Instance?.RegisterEnemy(pawn);
+        TurnManager.Instance?.InsertCombatant(pawn);
+
+        queen.AddPrestige(1);
+        queen.StartSummonCooldown();
+        FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}召唤兵卒");
     }
 
+    /// <summary>技能三：后袭王座 — 蓄力后造成伤害+力竭</summary>
     private IEnumerator ChessQueenThroneAssault(Enemy self)
     {
-        ChessBossEnemy chessBoss = self as ChessBossEnemy;
-        if (chessBoss != null)
+        ChessQueenEnemy queen = self as ChessQueenEnemy;
+        if (queen == null) yield break;
+
+        // 如果正在蓄力，执行蓄力攻击
+        if (queen.IsChargingThroneAssault)
         {
-            yield return chessBoss.ExecuteChessQueenThroneAssault(this);
+            yield return ExecuteThroneAssaultStrike(queen);
+            yield break;
+        }
+
+        // 否则标记蓄力（王棋/车棋已在进入二阶段时标记）
+        queen.SetChargingThroneAssault(true);
+        FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}蓄力中...");
+    }
+
+    private IEnumerator ExecuteThroneAssaultStrike(ChessQueenEnemy queen)
+    {
+        queen.SetChargingThroneAssault(false);
+        queen.StartThroneAssaultCooldown();
+
+        // 找到有王棋状态的角色
+        Character kingTarget = FindCharacterWithState(StateType.ChessKingMark);
+        if (kingTarget == null)
+        {
+            // 如果没有王棋，随机选一个
+            List<Character> alive = GetAliveFieldCharacters(queen);
+            if (alive.Count == 0) yield break;
+            kingTarget = alive[0];
+        }
+
+        float prestigeBonus = queen.GetPrestigeDamageBonus();
+        float totalCoef = skillCoef * prestigeBonus;
+
+        NotifyDamageSkillUsed(queen, new List<UnitCombatant> { kingTarget });
+        var damageInfo = DamageCounter.CountDamage(queen, kingTarget, totalCoef, skillBase, DamageType.Physical, true, false, false);
+        kingTarget.TakeDamage(damageInfo);
+        Debug.Log($"[EnemySkillBase] {queen.combatantName}对{kingTarget.combatantName}造成了{damageInfo.Damage}点伤害");
+        // 行动延后100%
+        queen.DelayActionValue(1f);
+
+        // 给自己施加力竭
+        queen.AddState(StateType.ChessExhaustion, queen, 1, 1);
+    }
+
+    /// <summary>技能四：王权加冕 — 消耗威望，对全体造成极大伤害</summary>
+    private IEnumerator ChessQueenCoronation(Enemy self)
+    {
+        ChessQueenEnemy queen = self as ChessQueenEnemy;
+        if (queen == null) yield break;
+
+        int prestigeConsumed = queen.ConsumeAllPrestige();
+        float bonusPerPrestige = extraData1 > 0f ? extraData1 : 0.2f;
+        float totalSkillCoef = skillCoef * (1f + prestigeConsumed * bonusPerPrestige);
+
+        List<Character> targets = GetAliveFieldCharacters(queen);
+        NotifyDamageSkillUsed(queen, targets);
+        for (int i = 0; i < targets.Count; i++)
+        {
+            Character target = targets[i];
+            if (target == null) continue;
+
+            var damageInfo = DamageCounter.CountDamage(queen, target, totalSkillCoef, skillBase, DamageType.Physical, true, false, false);
+            target.TakeDamage(damageInfo);
+        }
+
+        FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}消耗{prestigeConsumed}层威望");
+    }
+
+    // ============ 辅助方法 ============
+
+    private List<Character> GetAliveFieldCharacters(ChessQueenEnemy queen)
+    {
+        List<Character> aliveCharacters = new List<Character>();
+        if (CharacterManager.Instance == null) return aliveCharacters;
+
+        for (int i = 0; i < CharacterManager.Instance.fieldCharacters.Count; i++)
+        {
+            Character character = CharacterManager.Instance.fieldCharacters[i];
+            if (character != null && !character.IsDead)
+                aliveCharacters.Add(character);
+        }
+        return aliveCharacters;
+    }
+
+    private Character FindCharacterWithState(StateType stateType)
+    {
+        if (CharacterManager.Instance == null) return null;
+
+        for (int i = 0; i < CharacterManager.Instance.fieldCharacters.Count; i++)
+        {
+            Character character = CharacterManager.Instance.fieldCharacters[i];
+            if (character == null || character.IsDead) continue;
+            if (character.GetState(stateType) != null) return character;
+        }
+        return null;
+    }
+
+    private void TryTriggerCastling(ChessQueenEnemy queen)
+    {
+        if (!Commander.GetInstance().TryConsumeCastlingOpportunity()) return;
+
+        Character kingCharacter = FindCharacterWithState(StateType.ChessKingMark);
+        Character rookCharacter = FindCharacterWithState(StateType.ChessRookMark);
+        if (kingCharacter == null || rookCharacter == null || kingCharacter == rookCharacter) return;
+
+        if (CharacterManager.Instance.SwapFieldCharacters(kingCharacter, rookCharacter))
+        {
+            rookCharacter.AddState(StateType.Resist, queen, 99, 1);
+            FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, "王车易位");
         }
     }
 
-    private IEnumerator ChessQueenCoronation(Enemy self)
+    private static EnemyRosterData GetSummonPawnRosterData(ChessQueenEnemy queen)
     {
-        ChessBossEnemy chessBoss = self as ChessBossEnemy;
-        if (chessBoss != null)
-        {
-            yield return chessBoss.ExecuteChessQueenCoronation(this);
-        }
+        return queen != null ? queen.summonPawnData : null;
+    }
+
+    private static int GetSummonPawnLevel(ChessQueenEnemy queen)
+    {
+        return queen != null ? queen.summonPawnLevel : 1;
+    }
+
+    private static ChessSummonedPawnEnemy GetSummonPawnPrefabFallback(ChessQueenEnemy queen)
+    {
+        return queen != null ? queen.summonPawnPrefabFallback : null;
     }
 }

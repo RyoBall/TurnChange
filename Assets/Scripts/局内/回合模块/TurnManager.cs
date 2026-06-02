@@ -24,7 +24,7 @@ public class TurnManager : MonoBehaviour
 
     public IEnumerable<Combatant> CurrentTurnOrder => turnOrder;
     public GameObject ExtraTurnPrefab;//额外回合的预制体
-    
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -109,7 +109,7 @@ public class TurnManager : MonoBehaviour
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
         TemporaryBattleModifierRuntimeManager.NotifyBattleStarted();
-        yield return StartCoroutine(TriggerOpeningEnterSkills());   
+        yield return StartCoroutine(TriggerOpeningEnterSkills());
         //回合开始
         isTurnInitialized = true;
         yield return StartCoroutine(RunTurnLoop());
@@ -277,8 +277,8 @@ public class TurnManager : MonoBehaviour
             }
 
             // 回合结束后重新计算当前角色的下一次行动值。
-            if (nextCombatant != null)
-            {   
+            if (nextCombatant != null && nextCombatant is UnitCombatant unitCombatant && !unitCombatant.IsDead)
+            {
                 float nextActionValue = nextCombatant.ConsumeTurnEndActionValue();
                 nextCombatant.ChangeActionValue(nextActionValue);
                 Debug.Log($"[TurnManager] 结束回合: {nextCombatant.name}，重置行动值到 {nextActionValue:F0}");

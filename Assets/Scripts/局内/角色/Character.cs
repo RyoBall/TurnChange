@@ -98,14 +98,12 @@ public class Character : UnitCombatant
             pendingChaosRecover = true;
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}混沌过载，无法行动");
             EndTurn();
-            yield break;
         }
 
         if (!CanActThisTurn())
         {
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}受到震慑，无法行动");
             EndTurn();
-            yield break;
         }
 
         if (IsActionEffectHalved)
@@ -258,7 +256,10 @@ public class Character : UnitCombatant
     }
     private void ExitMoveDOT()
     {
-        transform.DOMove(m_originalPosition, moveAnimDuration).SetEase(moveAnimEase);
+        if (LevelCharacterSpawner.TryGetSpawnPosition(standPosition, out Vector3 spawnPosition))
+        {
+            transform.DOMove(spawnPosition, moveAnimDuration).SetEase(moveAnimEase);
+        }
         m_originalPosition = Vector3.zero;
     }
     /// <summary>

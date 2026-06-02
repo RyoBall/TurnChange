@@ -5,9 +5,9 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 [DisallowMultipleComponent]
-public class EventLevelPanelView : MonoBehaviour
+public class EventLevelPanelPreview : MonoBehaviour
 {
-    public static EventLevelPanelView Instance { get; private set; }
+    public static EventLevelPanelPreview Instance { get; private set; }
 
     [Header("面板根节点")]
     [SerializeField] private GameObject panelRoot;

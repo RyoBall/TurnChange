@@ -53,7 +53,6 @@ public class Datas : MonoBehaviour
     [SerializeField] private int gold;
 
     [Header("模块数据")]
-    [SerializeField] private bool hasModuleState;
     [SerializeField] private List<GridModuleDefinition> ownedModules = new List<GridModuleDefinition>();
     [SerializeField] private List<PlacedModuleData> placedModules = new List<PlacedModuleData>();
 
@@ -73,7 +72,7 @@ public class Datas : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
+        Time.timeScale=2;
         Instance = this;
         InitializeCharacterLookup();
         NormalizeUnlockedCharacters();
@@ -84,7 +83,10 @@ public class Datas : MonoBehaviour
         gold = Mathf.Max(0, gold);
         DontDestroyOnLoad(gameObject);
     }
-
+    void Update()
+    {
+        Time.timeScale=1.5f;
+    }
     private void OnDestroy()
     {
         if (Instance == this)
@@ -455,7 +457,6 @@ public class Datas : MonoBehaviour
 
         GridModuleDefinition runtimeModule = module.Clone();
         ownedModules.Add(runtimeModule);
-        hasModuleState = true;
         ModuleStateChanged?.Invoke();
         return runtimeModule;
     }
@@ -479,11 +480,6 @@ public class Datas : MonoBehaviour
 
         placedModules.RemoveAt(entryIndex);
         return true;
-    }
-
-    public void SetHasModuleState(bool value)
-    {
-        hasModuleState = value;
     }
 
     public void NotifyModuleStateChanged()
