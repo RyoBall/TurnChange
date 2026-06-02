@@ -145,6 +145,18 @@ public class ChessQueenEnemy : Enemy
         {
             return;
         }
+        // 直接消灭所有残余召唤兵卒
+        List<Enemy> enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            ChessPawnEnemy pawn = enemies[i] as ChessPawnEnemy;
+            if (pawn == null)
+            {
+                continue;
+            }
+
+            pawn.TakeDamage(new DamageInfo(pawn.currentHP).AsTrueDamage()); // 直接消灭所有残余兵卒
+        }
 
         m_prestigeStacks = Mathf.Max(0, prestigeStacks);
         StartCoroutine(EnterPhaseTwoWithFadeIn());

@@ -118,7 +118,6 @@ public class ChessPawnEnemy : Enemy
             if (pawn != null && !pawn.IsDead && string.Equals(pawn.BossGroupId, queen.BossGroupId, System.StringComparison.Ordinal))
             {
                 aliveCount++;
-                pawn.TakeDamage(new DamageInfo(pawn.currentHP).AsTrueDamage()); // 直接消灭剩余兵卒
             }
         }
         return aliveCount;
