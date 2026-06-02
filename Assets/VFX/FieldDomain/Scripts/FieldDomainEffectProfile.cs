@@ -28,7 +28,7 @@ public class FieldDomainEffectProfile : ScriptableObject
     public Color borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
     public Color borderVfxCoreColor = new Color(0.75f, 0.1f, 0.02f, 1f);
     public Texture2D flameNoiseTexture;
-    [Tooltip("噪声贴图：X=沿屏幕边方向 Tiling，Y=向屏内渗透方向 Tiling")]
+    [Tooltip("重裁火焰：X/Y=噪声 Tiling。奇迹焦散：X=沿边密度，Y=向内密度")]
     public Vector2 flameNoiseTiling = new Vector2(5f, 11f);
     [Range(0.5f, 3f)] public float flameNoiseInwardStretch = 2f;
     [Tooltip("向屏内流动的滚动倍率（× borderVfxSpeed）")]
@@ -142,13 +142,13 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.radialGlowStrength = 0f;
         profile.heatShimmerStrength = 0f;
         profile.secondaryAccentColor = new Color(0.55f, 0.05f, 0.08f, 1f);
-        profile.tint = new Color(0.1f, 0.02f, 0.03f, 0.32f);
-        profile.saturation = 0.46f;
-        profile.contrast = 1.25f;
-        profile.exposure = 1.04f;
+        profile.tint = new Color(0.42f, 0.12f, 0.1f, 0.18f);
+        profile.saturation = 0.72f;
+        profile.contrast = 1.08f;
+        profile.exposure = 1.02f;
         profile.distortionStrength = 0f;
-        profile.vignetteColor = new Color(0.4f, 0.02f, 0.05f, 1f);
-        profile.vignetteIntensity = 0.62f;
+        profile.vignetteColor = new Color(0.32f, 0.06f, 0.08f, 1f);
+        profile.vignetteIntensity = 0.3f;
         profile.gridColor = new Color(0.7f, 0.08f, 0.12f, 0.92f);
         profile.gridLineWidth = 2.4f;
         profile.gridScale = 1.35f;
@@ -161,12 +161,23 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.heartbeatStrength = 0.85f;
         profile.bloomStrength = 0f;
         profile.volumeBloomIntensity = 0f;
-        profile.borderVfxStrength = 0.65f;
-        profile.borderVfxDepth = 0.18f;
+        profile.borderVfxStrength = 0.58f;
+        profile.borderVfxDepth = 0.22f;
+        profile.borderVfxEdgeSoftness = 1.35f;
         profile.ringBurnStrength = 0f;
-        profile.borderVfxSpeed = 0.55f;
-        profile.borderVfxHotColor = new Color(0.15f, 0.02f, 0.03f, 1f);
-        profile.borderVfxCoreColor = new Color(0.35f, 0.02f, 0.05f, 1f);
+        profile.borderVfxSpeed = 1.05f;
+        profile.borderVfxHotColor = new Color(0.58f, 0.22f, 0.12f, 1f);
+        profile.borderVfxCoreColor = new Color(0.28f, 0.08f, 0.04f, 1f);
+        profile.flameNoiseTiling = new Vector2(5.5f, 13f);
+        profile.flameNoiseInwardStretch = 2.1f;
+        profile.flameNoiseInwardScroll = 0.95f;
+#if UNITY_EDITOR
+        if (profile.flameNoiseTexture == null)
+        {
+            profile.flameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
+                "Assets/VFX/Textures/NoiseSmooth04.png");
+        }
+#endif
     }
 
     private static void ConfigureMiraclePreset(FieldDomainEffectProfile profile)
@@ -200,8 +211,9 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.borderVfxDepth = 0.22f;
         profile.borderVfxEdgeSoftness = 3f;
         profile.ringBurnStrength = 0f;
-        profile.borderVfxSpeed = 1.15f;
+        profile.borderVfxSpeed = 1.1f;
         profile.borderVfxHotColor = new Color(1f, 0.52f, 0.88f, 1f);
         profile.borderVfxCoreColor = new Color(0.35f, 0.82f, 1f, 1f);
+        profile.flameNoiseTiling = new Vector2(4.5f, 6f);
     }
 }

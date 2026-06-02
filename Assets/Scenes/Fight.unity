@@ -5549,6 +5549,7 @@ MonoBehaviour:
   showOnScreenPanel: 1
   logStatusToConsole: 1
   burstOrigin: {fileID: 0}
+  useOneShotPreviewCycle: 0
   activeHoldDuration: 2
   useFirstFieldCharacterForBurst: 1
   effectController: {fileID: 888888803}

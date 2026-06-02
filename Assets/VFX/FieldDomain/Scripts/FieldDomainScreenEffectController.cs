@@ -288,6 +288,12 @@ public class FieldDomainScreenEffectController : MonoBehaviour
         yield return PlayContract(origin);
     }
 
+    /// <summary>持续预览：扩散后保持在 Active，不自动收缩；由调用方触发 PlayContract / ForceStop。</summary>
+    public IEnumerator PlaySustainedPreview(EnvironmentType environmentType, Transform origin, bool skipOpeningIntroWait = true)
+    {
+        yield return PlayExpand(environmentType, origin, -1f, skipOpeningIntroWait);
+    }
+
     public void NotifyEnvironmentRegistered(EnvironmentType environmentType, UnitCombatant applier)
     {
         if (!m_HasActiveFieldVisual)
