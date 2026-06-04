@@ -9,6 +9,7 @@ public class Character : UnitCombatant
 
 {
     public event Action<Character> OnSwapCooldownAvailabilityChanged;
+    public event Action<Character> OnCharacterEnterTurn;
     public Transform spriteTransform;
     public string characterID;
     public CharacterType characterType;
@@ -112,6 +113,7 @@ public class Character : UnitCombatant
         }
         //展示攻击逻辑
         yield return TurnStateManager.Instance.ChangeState(TurnState.InCharacterTurn, this);
+        OnCharacterEnterTurn?.Invoke(this);
         yield return new WaitUntil(() => endTurn);
         //等待死亡动画结束
         yield return WaitForDeathEvents();

@@ -29,6 +29,8 @@ public class Datas : MonoBehaviour
     public static Datas Instance;
     public event Action CharacterRosterChanged;
     public event Action ModuleStateChanged;
+    /// <summary>序体被装载时的静态事件（供教程系统监听）</summary>
+    public static event Action ModulePlacedStatic;
     public event Action BackpackWidthChanged;
     public event Action<string> LevelCompleted;
 
@@ -36,7 +38,6 @@ public class Datas : MonoBehaviour
     [SerializeField] private List<CharacterRosterData> characterDatas = new List<CharacterRosterData>();
 
     [Header("开局流派")]
-    [SerializeField] private string starterChoiceSceneName = "Main";
     [SerializeField] private string selectedStarterBranchId;
 
     [Header("关卡进度")]
@@ -63,7 +64,6 @@ public class Datas : MonoBehaviour
 
     public bool HasSelectedStarterBranch => !string.IsNullOrWhiteSpace(selectedStarterBranchId);
     public string SelectedStarterBranchId => selectedStarterBranchId;
-    public string StarterChoiceSceneName => starterChoiceSceneName;
 
     private void Awake()
     {
@@ -485,6 +485,7 @@ public class Datas : MonoBehaviour
     public void NotifyModuleStateChanged()
     {
         ModuleStateChanged?.Invoke();
+        ModulePlacedStatic?.Invoke();
     }
     #endregion
     private void InitializeCharacterLookup()

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -5,6 +6,9 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class StartBattleButton : MonoBehaviour
 {
+    /// <summary>开始战斗时的静态事件</summary>
+    public static event Action BattleStarted;
+
     [SerializeField] private Button startButton;
     [SerializeField] private PreparationPanelView preparationPanel;
     [SerializeField] private string battleSceneName;
@@ -61,6 +65,7 @@ public class StartBattleButton : MonoBehaviour
             }
 
             BattleLaunchContext.SetPendingLevelData(preparationPanel.CurrentLevelData, preparationPanel.SelectedFieldCharacters);
+            BattleStarted?.Invoke();
             SceneManager.LoadScene(battleSceneName);
         });
     }

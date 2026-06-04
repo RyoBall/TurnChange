@@ -29,13 +29,8 @@ public class ChessPawnEnemy : Enemy
         base.Start();
         if (ChessStandPositionManager.Instance != null)
         {
-            Debug.Log($"ChessPawnEnemy {combatantName} occupying stand position {standPosition}");
             transform.position = ChessStandPositionManager.Instance.GetPawnStandPosition(standPosition).position    ;
         }
-    }
-    void Update()
-    {
-        Debug.Log($"ChessPawnEnemy {combatantName} at position {transform.position}, advance count {m_pawnAdvanceCount}, promotion triggered {m_hasTriggeredPromotion}");
     }
     public override void InitializeFromPendingLevelData(PendingBattleLevelData pendingData, IReadOnlyList<Enemy> spawnedEnemies)
     {

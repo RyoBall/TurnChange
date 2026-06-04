@@ -136,6 +136,7 @@ public class ChessQueenEnemy : Enemy
             }
             yield return selectedSkill.Execute(this);
         }
+        TickQueenSkillCooldowns();
     }
 
     /// <summary>进入阶段二</summary>
@@ -239,7 +240,7 @@ public class ChessQueenEnemy : Enemy
     }
 
     /// <summary>Tick皇后技能CD</summary>
-    public void TickQueenSkillCooldowns()
+    private void TickQueenSkillCooldowns()
     {
         if (m_summonSkillRemainingCooldown > 0) m_summonSkillRemainingCooldown--;
         if (m_throneAssaultRemainingCooldown > 0) m_throneAssaultRemainingCooldown--;

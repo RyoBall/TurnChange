@@ -6,6 +6,9 @@ using System.Linq;
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance { get; private set; }
+    /// <summary>战斗正式开始时的静态事件（相机 intro 完成、回合图片初始化后触发）</summary>
+    public static event System.Action BattleStarted;
+
     public event System.Action OnTurnOrderChanged;
     [Tooltip("是否自动开始回合循环")]
     public bool autoStart = true;
@@ -105,6 +108,12 @@ public class TurnManager : MonoBehaviour
     IEnumerator StartFight()
     {
         //在此处插入需要在回合进行前进行的事情
+        BattleStarted?.Invoke();
+        // 如果有教程系统，等待教程完成后再继续
+        if (TutorialController.Instance != null)
+        {
+            yield return new WaitUntil(() => TutorialController.Instance == null || !TutorialController.Instance.IsTutorialActive);
+        }
         yield return new WaitUntil(() => CinemachineCameraManager.Instance == null || CinemachineCameraManager.Instance.HasCompletedOpeningIntro);
         //设置回合图片
         yield return StartCoroutine(SetTurnImages());
@@ -238,6 +247,7 @@ public class TurnManager : MonoBehaviour
             if (allCharactersDead)
             {
                 //填充在场角色全部死亡的逻辑
+                SkillExecuteManager.ExecuteSkill(null,Commander.GetInstance().changeSkill);
             }
             //读取当前行动者行动值
             var nextCombatant = nextNode.Value;

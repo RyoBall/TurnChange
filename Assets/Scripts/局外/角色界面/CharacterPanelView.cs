@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -6,6 +7,9 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class CharacterPanelView : MonoBehaviour
 {
+    /// <summary>角色页面关闭时的静态事件（供教程系统监听）</summary>
+    public static event Action PanelClosed;
+
     [Header("数据")]
     [SerializeField] private Datas dataSource;
 
@@ -13,8 +17,6 @@ public class CharacterPanelView : MonoBehaviour
     [SerializeField] private Transform characterButtonRoot;
     [SerializeField] private CharacterSelectButtonUI characterButtonPrefab;
     [SerializeField] private List<RectTransform> characterButtonPositions = new List<RectTransform>();
-
-    [Header("顶部页签")]
 
     [Header("角色基础信息")]
     private Image characterIconImage;
@@ -67,6 +69,7 @@ public class CharacterPanelView : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromDataSource();
+        PanelClosed?.Invoke();
     }
 
     private void Update()

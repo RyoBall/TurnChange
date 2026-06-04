@@ -56,7 +56,10 @@ public enum StateType
     Weakened,
     ChessKingMark,//王棋标记
     ChessRookMark,//车棋标记
-    ChessExhaustion//力竭
+    ChessExhaustion,//力竭
+    DragonBreath,//龙息（Dot）
+    EternalFlame,//不灭之焰
+    InstantDeath//即死
 
 }
 
@@ -654,6 +657,12 @@ public static class StateBehaviorFactory
                 return new ChessRookMarkStateBehavior();
             case StateType.ChessExhaustion:
                 return new ChessExhaustionStateBehavior();
+            case StateType.DragonBreath:
+                return new DragonBreathStateBehavior();
+            case StateType.EternalFlame:
+                return new EternalFlameStateBehavior();
+            case StateType.InstantDeath:
+                return new DefaultStateBehavior();
             default:
                 return new DefaultStateBehavior();
         }
@@ -1026,7 +1035,7 @@ public class RestorationSurgeStateBehavior : StateBehaviorBase
             return 1f;
         }
 
-        return state.baseExtraData1 > 0f ? state.baseExtraData1 : 1f;
+        return state.baseExtraData1+state.baseExtraData2*GetTeamMissingHpRatio();
     }
 
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
@@ -1038,6 +1047,32 @@ public class RestorationSurgeStateBehavior : StateBehaviorBase
 
         state.ChangeStackCount(0);
     }
+    private float GetTeamMissingHpRatio()
+    {
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        allies.AddRange(CharacterManager.Instance.reserveCharacters);
+        float totalMaxHp = 0f;
+        float totalMissingHp = 0f;
+        for (int i = 0; i < allies.Count; i++)
+        {
+            Character ally = allies[i];
+            if (ally == null || ally.maxHP <= 0)
+            {
+                continue;
+            }
+
+            totalMaxHp += ally.maxHP;
+            totalMissingHp += Mathf.Max(0, ally.maxHP - ally.currentHP);
+        }
+
+        if (totalMaxHp <= 0f)
+        {
+            return 0f;
+        }
+
+        return Mathf.Clamp01(totalMissingHp / totalMaxHp);
+    }
+
 }
 
 public class DeadlyArmorStateBehavior : StateBehaviorBase
@@ -1341,7 +1376,7 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
         }
 
         enemy.AddState(StateType.PunishMark, state.owner, 1, 1);
-        foreach(var combatant in TurnManager.Instance.CurrentTurnOrder)
+        foreach (var combatant in TurnManager.Instance.CurrentTurnOrder)
         {
             if (combatant is AdditionalCharacter additionalTurnCombatant && additionalTurnCombatant.character == ownerCharacter)
             {
@@ -1514,13 +1549,13 @@ public class CounterChargeStateBehavior : StateBehaviorBase
         int selfGain = Mathf.RoundToInt(state.baseExtraData2);
         int otherGain = Mathf.RoundToInt(state.baseExtraData3);
         bool isSelfTriggered = false;
-        foreach(var unit in damagedUnits)
+        foreach (var unit in damagedUnits)
         {
-            if(unit==state.owner)
-             {
+            if (unit == state.owner)
+            {
                 isSelfTriggered = true;
                 break;
-             }
+            }
         }
         int count = isSelfTriggered ? selfGain : otherGain;
         AddOrUpdateChargeState(count);
@@ -1780,6 +1815,32 @@ public class ChessExhaustionStateBehavior : StateBehaviorBase
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
         return 1.25f; // 力竭时受到伤害+25%
+    }
+}
+
+public class DragonBreathStateBehavior : StateBehaviorBase
+{
+    public override void DotTrigger(float damageMultiplier)
+    {
+        if (state.owner == null || state.giver == null) return;
+        float coef = state.skillCoef > 0f ? state.skillCoef : 0.2f;
+        int damage = Mathf.RoundToInt(state.giver.attack * coef * state.StackCount * damageMultiplier);
+        if (damage <= 0) return;
+        var damageInfo = DamageCounter.CountDamage(state.giver, state.owner, coef * state.StackCount, 0f, DamageType.Physical, false, false, false);
+        state.owner.TakeDamage(damageInfo);
+    }
+}
+
+public class EternalFlameStateBehavior : StateBehaviorBase
+{
+    public override void DotTrigger(float damageMultiplier)
+    {
+        if (state.owner == null || state.giver == null) return;
+        float coef = state.skillCoef > 0f ? state.skillCoef : 0.15f;
+        int damage = Mathf.RoundToInt(state.giver.attack * coef * damageMultiplier);
+        if (damage <= 0) return;
+        var damageInfo = DamageCounter.CountDamage(state.giver, state.owner, coef, 0f, DamageType.Physical, false, false, false);
+        state.owner.TakeDamage(damageInfo);
     }
 }
 

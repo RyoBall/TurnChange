@@ -923,15 +923,10 @@ public class CharacterSkillBase : SkillBase
         }
 
         List<Character> allies = GetAllLivingAllies();
-        float teamMissingHpRatio = GetTeamMissingHpRatio(allies);
 
         RemoveDebuffs(target, 3);
 
-        State restorationSurge = target.AddState(StateType.RestorationSurge, character, 1, 1);
-        if (restorationSurge != null)
-        {
-            restorationSurge.baseExtraData1 = 1f + teamMissingHpRatio;
-        }
+        target.AddState(StateType.RestorationSurge, character, 1, 1);
 
         HealAlliesByMissingHp(allies, 0.4f);
         yield break;
@@ -1149,31 +1144,6 @@ public class CharacterSkillBase : SkillBase
 
         return allies;
     }
-
-    private float GetTeamMissingHpRatio(List<Character> allies)
-    {
-        float totalMaxHp = 0f;
-        float totalMissingHp = 0f;
-        for (int i = 0; i < allies.Count; i++)
-        {
-            Character ally = allies[i];
-            if (ally == null || ally.maxHP <= 0)
-            {
-                continue;
-            }
-
-            totalMaxHp += ally.maxHP;
-            totalMissingHp += Mathf.Max(0, ally.maxHP - ally.currentHP);
-        }
-
-        if (totalMaxHp <= 0f)
-        {
-            return 0f;
-        }
-
-        return Mathf.Clamp01(totalMissingHp / totalMaxHp);
-    }
-
     private void HealAlliesByMissingHp(List<Character> allies, float ratio)
     {
         for (int i = 0; i < allies.Count; i++)

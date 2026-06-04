@@ -35,3 +35,6 @@ Name,EnumName,Description,BaseMultiplier,IsDebuff,IsDot,MaxStacks,DurationType,D
 车棋,ChessRookMark,自身伤害减少30%。该状态无法通过切出消除，切入角色继承切出角色的对应状态。,0,否,否,1,Special,0,100,0.7,承伤减免倍率,0.7,伤害减免倍率,0,预留,0,预留
 力竭,ChessExhaustion,自身受到伤害提升25%。,0,是,否,1,Turn,1,100,1.25,承伤倍率,0.15,力竭触发阈值比例,0,预留,0,预留
 威望,Prestige,每层提供10%伤害减免（独立乘区）与10%伤害加成。,0,否,否,99,Special,0,100,0.1,每层减免比例,0.1,每层增伤比例,0,预留,0,预留
+龙息,DragonBreath,在目标行动前触发持续伤害，可叠加多层。,0.2,是,是,5,ActionValue,1,300,0,预留,0,预留,0,预留,0,预留
+不灭之焰,EternalFlame,持续受到灼烧伤害，无法被净化。,0.15,是,是,1,ActionValue,1,300,0,预留,0,预留,0,预留,0,预留
+即死,InstantDeath,在下次蓄力触发时承受即死伤害。,0,是,否,1,Turn,1,100,0,预留,0,预留,0,预留,0,预留

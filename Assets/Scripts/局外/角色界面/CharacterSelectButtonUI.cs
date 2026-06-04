@@ -6,6 +6,9 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class CharacterSelectButtonUI : MonoBehaviour
 {
+    /// <summary>角色头像被点击时的静态事件</summary>
+    public static event Action CharacterClicked;
+
     [SerializeField] private Button button;
     [SerializeField] private Image iconImage;
     [SerializeField] private TMP_Text nameText;
@@ -70,6 +73,7 @@ public class CharacterSelectButtonUI : MonoBehaviour
 
     private void HandleClick()
     {
+        CharacterClicked?.Invoke();
         m_onClick?.Invoke(m_data);
     }
 }

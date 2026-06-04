@@ -10,9 +10,11 @@ public class AppConfig : ScriptableObject
     public string CharacterSkillCSVPath = "Assets/Data/CharacterSkillData.csv";
     public string GridModuleCSVPath = "Assets/Data/GridModuleData.csv";
     public string StateDataCSVPath = "Assets/Data/StateData.csv";
+    public string TutorialDataCSVPath = "Assets/Data/TutorialData.csv";
     public string CharacterSkillAssetOutputPath = "Assets/Resources/配置可编程物体/角色技能";
     public string GridModuleAssetOutputPath = "Assets/Resources/配置可编程物体/模块";
     public string StateAssetOutputPath = "Assets/Resources/配置可编程物体/状态";
+    public string TutorialAssetOutputPath = "Assets/Resources/配置可编程物体/教程";
 }
 
 // 全局访问

@@ -19,7 +19,17 @@ public enum EnemySkillType
     ChessQueenChaosCharge,
     ChessQueenSummonPawn,
     ChessQueenThroneAssault,
-    ChessQueenCoronation
+    ChessQueenCoronation,
+    // 龙Boss技能
+    DragonDotSkill1,     // Dot龙技能一：龙息喷吐
+    DragonDotSkill2,     // Dot龙技能二：净化
+    DragonDotRage,       // Dot龙暴怒：无尽炼狱
+    DragonDirectSkill1,  // 直伤龙技能一：龙爪
+    DragonDirectSkill2,  // 直伤龙技能二：龙威
+    DragonDirectRage,    // 直伤龙暴怒：死亡标记
+    DragonChaosSkill1,   // 混沌龙技能一：混沌吐息
+    DragonChaosSkill2,   // 混沌龙技能二：时间扭曲
+    DragonChaosRage      // 混沌龙暴怒：混沌风暴
 }
 public enum targetType
 {
@@ -126,6 +136,34 @@ public class EnemySkillBase : SkillBase
                 break;
             case EnemySkillType.ChessQueenCoronation:
                 yield return ChessQueenCoronation(self);
+                break;
+            // 龙Boss技能
+            case EnemySkillType.DragonDotSkill1:
+                yield return DragonDotSkill1(self);
+                break;
+            case EnemySkillType.DragonDotSkill2:
+                yield return DragonDotSkill2(self);
+                break;
+            case EnemySkillType.DragonDotRage:
+                yield return DragonDotRage(self);
+                break;
+            case EnemySkillType.DragonDirectSkill1:
+                yield return DragonDirectSkill1(self);
+                break;
+            case EnemySkillType.DragonDirectSkill2:
+                yield return DragonDirectSkill2(self);
+                break;
+            case EnemySkillType.DragonDirectRage:
+                yield return DragonDirectRage(self);
+                break;
+            case EnemySkillType.DragonChaosSkill1:
+                yield return DragonChaosSkill1(self);
+                break;
+            case EnemySkillType.DragonChaosSkill2:
+                yield return DragonChaosSkill2(self);
+                break;
+            case EnemySkillType.DragonChaosRage:
+                yield return DragonChaosRage(self);
                 break;
         }
         StartCooldown();
@@ -513,5 +551,216 @@ public class EnemySkillBase : SkillBase
     private static ChessSummonedPawnEnemy GetSummonPawnPrefabFallback(ChessQueenEnemy queen)
     {
         return queen != null ? queen.summonPawnPrefabFallback : null;
+    }
+
+    // ============ 龙Boss技能 ============
+
+    // --- Dot龙 ---
+
+    /// <summary>Dot龙技能一：龙息喷吐 — 全体直伤+龙息Dot</summary>
+    private IEnumerator DragonDotSkill1(Enemy self)
+    {
+        DragonBossEnemy dragon = self as DragonBossEnemy;
+        if (dragon == null) yield break;
+
+        int breathStacks = dragon.ReinforceLevel >= 1 ? 3 : 2;
+        float coef = dragon.ReinforceLevel >= 1 ? (extraData1 > 0f ? extraData1 : 1.5f) : skillCoef;
+        float baseDmg = dragon.ReinforceLevel >= 1 ? (extraData2 > 0f ? extraData2 : 0f) : skillBase;
+
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        NotifyDamageSkillUsed(self, allies);
+        foreach (var ally in allies)
+        {
+            if (ally == null || ally.IsDead) continue;
+            var damageInfo = DamageCounter.CountDamage(self, ally, coef, baseDmg, DamageType.Physical, true, false, false);
+            ally.TakeDamage(damageInfo);
+            ally.AddState(StateType.DragonBreath, self, 99, breathStacks, 0.2f);
+        }
+    }
+
+    /// <summary>Dot龙技能二：净化 — 清除友方负面状态</summary>
+    private IEnumerator DragonDotSkill2(Enemy self)
+    {
+        DragonBossEnemy dragon = self as DragonBossEnemy;
+        if (dragon == null) yield break;
+
+        int clearCount = dragon.ReinforceLevel >= 1 ? 2 : 1;
+        if (EnemyManager.Instance == null) yield break;
+
+        IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            Enemy enemy = aliveEnemies[i];
+            if (enemy == null || enemy.IsDead) continue;
+
+            int cleared = 0;
+            for (int j = enemy.States.Count - 1; j >= 0 && cleared < clearCount; j--)
+            {
+                State state = enemy.States[j];
+                if (state != null && state.isDebuff)
+                {
+                    enemy.RemoveState(state);
+                    cleared++;
+                }
+            }
+        }
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}净化友方负面状态");
+    }
+
+    /// <summary>Dot龙暴怒：无尽炼狱 — 全体施加不灭之焰</summary>
+    private IEnumerator DragonDotRage(Enemy self)
+    {
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        foreach (var ally in allies)
+        {
+            if (ally == null || ally.IsDead) continue;
+            ally.AddState(StateType.EternalFlame, self, 99, 1);
+        }
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}无尽炼狱！");
+        yield break;
+    }
+
+    // --- 直伤龙 ---
+
+    /// <summary>直伤龙技能一：龙爪 — 单体直伤</summary>
+    private IEnumerator DragonDirectSkill1(Enemy self)
+    {
+        DragonBossEnemy dragon = self as DragonBossEnemy;
+        if (dragon == null) yield break;
+
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target == null) yield break;
+
+        float coef = dragon.ReinforceLevel >= 1 ? (extraData1 > 0f ? extraData1 : 2.5f) : skillCoef;
+        float baseDmg = dragon.ReinforceLevel >= 1 ? (extraData2 > 0f ? extraData2 : 0f) : skillBase;
+
+        NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+        var damageInfo = DamageCounter.CountDamage(self, target, coef, baseDmg, DamageType.Physical, true, false, false);
+        target.TakeDamage(damageInfo);
+    }
+
+    /// <summary>直伤龙技能二：龙威 — 单体施加瞩目</summary>
+    private IEnumerator DragonDirectSkill2(Enemy self)
+    {
+        DragonBossEnemy dragon = self as DragonBossEnemy;
+        if (dragon == null) yield break;
+
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target == null) yield break;
+
+        int attractStacks = dragon.ReinforceLevel >= 1 ? 2 : 1;
+        target.AddState(StateType.Attract, self, 1, attractStacks);
+        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"瞩目 x{attractStacks}");
+    }
+
+    /// <summary>直伤龙暴怒：死亡标记 — 前置施加即死，蓄力后触发</summary>
+    private IEnumerator DragonDirectRage(Enemy self)
+    {
+        DirectDragonEnemy dragon = self as DirectDragonEnemy;
+        if (dragon == null) yield break;
+
+        // 如果正在蓄力，执行即死
+        if (dragon.IsChargingRage)
+        {
+            dragon.SetChargingRage(false);
+            yield return ExecuteInstantDeath();
+            yield break;
+        }
+
+        // 否则施加即死状态并蓄力
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target == null) yield break;
+
+        target.AddState(StateType.InstantDeath, self, 1, 1);
+        dragon.SetChargingRage(true);
+        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, "即死标记");
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}蓄力中...");
+    }
+
+    private IEnumerator ExecuteInstantDeath()
+    {
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        for (int i = allies.Count - 1; i >= 0; i--)
+        {
+            Character ally = allies[i];
+            if (ally == null || ally.IsDead) continue;
+            State instantDeath = ally.GetState(StateType.InstantDeath);
+            if (instantDeath != null)
+            {
+                ally.TakeDamage(new UnitCombatant.DamageInfo(ally.maxHP, ally).AsTrueDamage());
+                FloatingTipGenerator.Instance?.ShowTipAtObject(ally.transform, "即死触发！");
+            }
+        }
+        yield break;
+    }
+
+    // --- 混沌龙 ---
+
+    /// <summary>混沌龙技能一：混沌吐息 — 单体混沌+行动延后</summary>
+    private IEnumerator DragonChaosSkill1(Enemy self)
+    {
+        DragonBossEnemy dragon = self as DragonBossEnemy;
+        if (dragon == null) yield break;
+
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target == null) yield break;
+
+        int chaosAmount = dragon.ReinforceLevel >= 1 ? 2 : 1;
+        float delayRatio = dragon.ReinforceLevel >= 1 ? 0.5f : 0.2f;
+
+        target.TryAddChaos(chaosAmount);
+        target.ChangeActionValue(target.currentActionValue + target.BaseActionValue * delayRatio);
+        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"混沌+{chaosAmount} 行动延后");
+    }
+
+    /// <summary>混沌龙技能二：时间扭曲 — 自身与随机友方行动提前</summary>
+    private IEnumerator DragonChaosSkill2(Enemy self)
+    {
+        DragonBossEnemy dragon = self as DragonBossEnemy;
+        if (dragon == null) yield break;
+
+        float advanceRatio = dragon.ReinforceLevel >= 1 ? 0.5f : 0.4f;
+
+        // 自身行动提前
+        self.ChangeActionValue(self.currentActionValue - self.BaseActionValue * advanceRatio);
+
+        // 随机一名敌方单体行动提前
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target != null)
+        {
+            target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * advanceRatio);
+            FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, "行动提前");
+
+            // 强化后：下次伤害提升20%
+            if (dragon.ReinforceLevel >= 1)
+            {
+                target.AddState(StateType.NextActionDamageBoost, self, 1, 1);
+            }
+        }
+
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, "时间扭曲");
+    }
+
+    /// <summary>混沌龙暴怒：混沌风暴 — 全体3混沌，震慑者额外直伤</summary>
+    private IEnumerator DragonChaosRage(Enemy self)
+    {
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        NotifyDamageSkillUsed(self, allies);
+
+        foreach (var ally in allies)
+        {
+            if (ally == null || ally.IsDead) continue;
+            ally.TryAddChaos(3);
+
+            // 若已处于震慑，额外造成大量直伤
+            if (ally.GetState(StateType.Daze) != null)
+            {
+                float extraCoef = extraData1 > 0f ? extraData1 : 2f;
+                var damageInfo = DamageCounter.CountDamage(self, ally, extraCoef, skillBase, DamageType.Physical, true, false, false);
+                ally.TakeDamage(damageInfo);
+            }
+        }
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, "混沌风暴！");
+        yield break;
     }
 }

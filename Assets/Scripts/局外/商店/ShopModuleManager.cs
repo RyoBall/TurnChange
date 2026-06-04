@@ -50,6 +50,8 @@ public class ShopModuleManager : MonoBehaviour
     private string m_hoverDescription;
 
     public event Action<GridModuleDefinition, int, int> ItemPurchased;
+    /// <summary>购买序体时的静态事件（供教程系统监听）</summary>
+    public static event Action<GridModuleDefinition, int, int> ItemPurchasedStatic;
     public event Action<GridModuleDefinition, int, int> PurchaseFailed;
     public event Action ShopStateChanged;
 
@@ -211,6 +213,7 @@ public class ShopModuleManager : MonoBehaviour
         }
 
         ItemPurchased?.Invoke(entry.module, entry.price, slotIndex);//激活事件
+        ItemPurchasedStatic?.Invoke(entry.module, entry.price, slotIndex);
         SetStatusText("购买成功: " + entry.module.moduleName);
         RefreshVisualState();
         return true;

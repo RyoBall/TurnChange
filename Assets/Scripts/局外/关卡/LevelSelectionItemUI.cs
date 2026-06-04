@@ -7,6 +7,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LevelSelectionItemUI : MonoBehaviour
 {
+    public static event Action BattleLevelSelected;
     [Header("关卡数据")]
     private LevelSelectionData levelData;
     private LevelSelectionButtonType levelType;
@@ -66,6 +67,7 @@ public class LevelSelectionItemUI : MonoBehaviour
         {
             case LevelSelectionButtonType.BattleLevel:
                 OpenBattleLevel();
+                BattleLevelSelected?.Invoke();
                 break;
             case LevelSelectionButtonType.EventLevel:
                 OpenEventLevel();

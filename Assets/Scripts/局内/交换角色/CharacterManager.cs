@@ -8,6 +8,8 @@ using UnityEngine.UI;
 public class CharacterManager : MonoBehaviour
 {
 	public static CharacterManager Instance { get; private set; }
+	/// <summary>换人完成时的静态事件（供教程系统监听）</summary>
+	public static event System.Action SwapCompleted;
 	public event System.Action<Character, Character> OnFieldCharacterSwapped;
 	public event System.Action OnFieldCharactersReordered;
 	public event System.Action OnReserveSwapAvailabilityChanged;
@@ -270,6 +272,7 @@ public class CharacterManager : MonoBehaviour
 		BattleRuntimeEvents.RaisePlayerCharacterSwapped();
 		TemporaryBattleModifierRuntimeManager.NotifyPlayerCharacterSwapped(oldCharacter, newCharacter);
 		OnFieldCharacterSwapped?.Invoke(oldCharacter, newCharacter);
+		SwapCompleted?.Invoke();
 		yield break;
 	}
 
