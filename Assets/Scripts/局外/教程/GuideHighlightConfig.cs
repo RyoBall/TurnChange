@@ -53,4 +53,6 @@ public enum GuideHighlightType
     扩容按钮,
     切人按键,
     指挥点,
+    全黑,
+    厄运播撒技能
 }

@@ -14,16 +14,13 @@ public enum CommandButtonState
 }
 public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    public static event System.Action OnChangeButtonClicked;
     public CommandButtonState buttonState = CommandButtonState.Character;
     public Image skillIcon;
     public TMP_Text skillNameText;
     public TMP_Text skillDescriptionText;
     public float selectedScale = 1.08f;
     public float selectAnimDuration = 0.12f;
-
-    [Header("Feedback")]
-    [SerializeField] private MMF_Player pointerEnterFeedback;
-    [SerializeField] private MMF_Player pointerExitFeedback;
 
     private Character m_owner;
     private SkillBase m_skill;
@@ -88,19 +85,21 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             Debug.LogWarning($"[CommandButton] {name} 未绑定技能或角色");
             return;
         }
+        if(m_skill is CommandSkillBase commandSkill && commandSkill.commandSkillType == CommandSkillType.Change)
+        {
+            OnChangeButtonClicked?.Invoke();
+        }
         SkillExecuteManager.ExecuteSkill(m_owner, m_skill, m_skill is CommandSkillBase);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        pointerEnterFeedback?.PlayFeedbacks();
         SkillDescription.Instance?.ChangeDescription(m_skill);
         PlaySelectAnimation();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        pointerExitFeedback?.PlayFeedbacks();
         SkillDescription.Instance?.ChangeDescription(null);
         PlayDeselectAnimation();
     }

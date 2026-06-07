@@ -9,7 +9,7 @@ public class Character : UnitCombatant
 
 {
     public event Action<Character> OnSwapCooldownAvailabilityChanged;
-    public event Action<Character> OnCharacterEnterTurn;
+    public static event Action<Character> OnCharacterEnterTurn;
     public Transform spriteTransform;
     public string characterID;
     public CharacterType characterType;

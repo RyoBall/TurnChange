@@ -19,6 +19,7 @@ public class TutorialController : MonoBehaviour
     [SerializeField] private GuideDisplayController m_guideDisplay;
 
     [Header("对话框 UI")]
+    [SerializeField] private Image guideImage;
     [SerializeField] private CanvasGroup m_dialogCanvasGroup;
     [SerializeField] private TMP_Text m_dialogText;
 
@@ -49,6 +50,7 @@ public class TutorialController : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        guideImage.alphaHitTestMinimumThreshold = 0.1f; // 设置图片的点击穿透阈值
     }
 
     private void OnDestroy()
@@ -132,7 +134,7 @@ public class TutorialController : MonoBehaviour
             Debug.LogWarning($"TutorialController: 未找到类型 {type} 的教程行为");
             return;
         }
-
+        Debug.Log($"TutorialController: 启动教程 {type}");
         StartTutorial(behavior);
     }
 
@@ -141,6 +143,13 @@ public class TutorialController : MonoBehaviour
     /// </summary>
     private void StartTutorial(TutorialBehavior behavior)
     {
+        // 如果该教程已完成过，不再触发
+        if (behavior.HasCompleted)
+        {
+            Debug.Log($"TutorialController: 教程 {behavior.Data.Type} 已完成过，跳过触发");
+            return;
+        }
+
         // 如果已有教程在执行，先结束
         if (m_currentBehavior != null)
         {
@@ -151,14 +160,12 @@ public class TutorialController : MonoBehaviour
         behavior.OnTutorialStart();
 
         // 播放对话框出现动画
-        ShowDialog(() =>
+        // 显示第一条文本
+        if (behavior.Data.TextList.Count > 0)
         {
-            // 显示第一条文本
-            if (behavior.Data.TextList.Count > 0)
-            {
-                behavior.Progress();
-            }
-        });
+            behavior.Progress();
+        }
+        ShowDialog();
     }
 
     /// <summary>
@@ -180,11 +187,12 @@ public class TutorialController : MonoBehaviour
         if (m_currentBehavior == null)
             return;
 
-        m_currentBehavior.OnTutorialEnd();
-        m_currentBehavior = null;
+        TutorialBehavior behavior = m_currentBehavior;
+        m_currentBehavior = null; // 先置空，防止递归
 
-        // 播放对话框消失动画
         HideDialog();
+        behavior.OnTutorialEnd();
+        Debug.Log($"TutorialController: 结束教程 {behavior.Data.Type}");
     }
 
     /// <summary>
@@ -231,7 +239,7 @@ public class TutorialController : MonoBehaviour
         {
             m_dialogCanvasGroup.gameObject.SetActive(false);
             onComplete?.Invoke();
-        });
+        }).OnKill(() => onComplete?.Invoke());
         m_dialogTween = seq;
     }
 

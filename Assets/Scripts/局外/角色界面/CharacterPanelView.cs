@@ -69,7 +69,6 @@ public class CharacterPanelView : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromDataSource();
-        PanelClosed?.Invoke();
     }
 
     private void Update()

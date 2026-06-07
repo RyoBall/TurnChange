@@ -99,6 +99,8 @@ public class TurnImageManager : MonoBehaviour
         var targetPositions = BuildTargetPositions(targetScales);
 
         // 初始入场：每个元素从右侧与 0 尺寸进入，再过渡到自己的目标尺寸和目标位置。
+        var sequence = DOTween.Sequence();
+        float delay = 0;
         foreach (var turnImage in turnOrder)
         {
             turnImage.SetTopRightAnchor();
@@ -109,9 +111,10 @@ public class TurnImageManager : MonoBehaviour
             turnImage.SetLayoutScale(cellSize, 0f);
             turnImage.SetAnchoredPosition(new Vector2(slideDistance, targetPosition.y));
 
-            PlaySlideFadeScaleTween(turnImage, targetScale);
-            yield return new WaitForSeconds(enterDelay);
+            sequence.Insert(delay, PlaySlideFadeScaleTween(turnImage, targetScale));
+            delay += enterDelay;
         }
+        yield return sequence.WaitForCompletion();
     }
 
     public Coroutine Reorder()
@@ -257,9 +260,9 @@ public class TurnImageManager : MonoBehaviour
             {
                 targetScale = normalScale;
             }
-            sequence.Insert(0.2f+c*enterDelay,TweenAlpha(turnImage, 0f, 1f, moveDuration, fadeEase));
-            sequence.Insert(0.2f+c*enterDelay,TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase, 0));
-            sequence.Insert(0.2f+c*enterDelay,turnImage.MoveTo(targetPositions[turnImage], moveDuration).SetEase(moveEase));
+            sequence.Insert(0.2f + c * enterDelay, TweenAlpha(turnImage, 0f, 1f, moveDuration, fadeEase));
+            sequence.Insert(0.2f + c * enterDelay, TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase, 0));
+            sequence.Insert(0.2f + c * enterDelay, turnImage.MoveTo(targetPositions[turnImage], moveDuration).SetEase(moveEase));
             c++;
         }
         sequence.AppendCallback(() => Debug.Log($"TurnImageManager: Completed fade-in sequence for {addedImages.Count} added turn images."));
@@ -320,15 +323,15 @@ public class TurnImageManager : MonoBehaviour
         float endX = 0;
         float startScale = turnImage.CurrentLayoutScale;
 
+        turnImage.SetAlpha(startAlpha);
+        turnImage.SetLayoutScale(cellSize, startScale);
+        turnImage.SetAnchoredPosition(new Vector2(startX, turnImage.GetAnchoredPosition().y));
+
         var sequence = DOTween.Sequence();
         sequence.Join(TweenAlpha(turnImage, startAlpha, endAlpha, fadeDuration, fadeEase));
         sequence.Join(turnImage.MoveTo(new Vector2(endX, turnImage.GetAnchoredPosition().y), moveDuration).SetEase(moveEase));
         sequence.Join(TweenLayoutScale(turnImage, targetScale, moveDuration, moveEase));
 
-
-        turnImage.SetAlpha(startAlpha);
-        turnImage.SetLayoutScale(cellSize, startScale);
-        turnImage.SetAnchoredPosition(new Vector2(startX, turnImage.GetAnchoredPosition().y));
 
         return sequence;
     }

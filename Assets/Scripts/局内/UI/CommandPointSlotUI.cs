@@ -15,7 +15,7 @@ public class CommandPointSlotUI : MonoBehaviour
     [SerializeField] private RectTransform slotContainer;
     [SerializeField] private Vector2 slotSize = new Vector2(24f, 24f);
 
-    private readonly List<Image> slotImages = new List<Image>();
+    [SerializeField] private List<Image> slotImages = new List<Image>();
     private Canvas m_parentCanvas;
 
     public int MaxValue => maxValue;
@@ -52,15 +52,9 @@ public class CommandPointSlotUI : MonoBehaviour
     {
         int clampedMaxValue = Mathf.Max(0, newMaxValue);
         int clampedValue = Mathf.Clamp(newValue, 0, clampedMaxValue);
-        bool maxChanged = maxValue != clampedMaxValue;
 
         maxValue = clampedMaxValue;
         currentValue = clampedValue;
-
-        if (maxChanged)
-        {
-            RebuildSlots();
-        }
 
         RefreshUI();
     }
@@ -68,12 +62,6 @@ public class CommandPointSlotUI : MonoBehaviour
     private void Initialize()
     {
         EnsureContainer();
-        EnsureLayoutGroup();
-
-        if (slotContainer != null)
-        {
-            slotImages.AddRange(slotContainer.GetComponentsInChildren<Image>());
-        }
     }
 
     private void EnsureContainer()
@@ -82,84 +70,6 @@ public class CommandPointSlotUI : MonoBehaviour
         {
             slotContainer = transform as RectTransform;
         }
-    }
-
-    private void EnsureLayoutGroup()
-    {
-        if (slotContainer == null)
-        {
-            return;
-        }
-
-        bool hasHorizontal = slotContainer.GetComponent<HorizontalLayoutGroup>() != null;
-        bool hasVertical = slotContainer.GetComponent<VerticalLayoutGroup>() != null;
-        if (!hasHorizontal && !hasVertical)
-        {
-            slotContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-        }
-    }
-
-    private void RebuildSlots()
-    {
-        if (slotContainer == null)
-        {
-            return;
-        }
-
-        slotImages.RemoveAll(item => item == null);
-        while (slotImages.Count < maxValue)
-        {
-            slotImages.Add(CreateSlotImage(slotImages.Count));
-        }
-
-        while (slotImages.Count > maxValue)
-        {
-            int lastIndex = slotImages.Count - 1;
-            Image lastImage = slotImages[lastIndex];
-            slotImages.RemoveAt(lastIndex);
-            if (lastImage != null)
-            {
-                Destroy(lastImage.gameObject);
-            }
-        }
-
-        for (int i = 0; i < slotImages.Count; i++)
-        {
-            if (slotImages[i] != null)
-            {
-                slotImages[i].name = "CommandPointSlot_" + i;
-            }
-        }
-    }
-
-    private Image CreateSlotImage(int index)
-    {
-        Image image;
-        if (slotPrefab != null)
-        {
-            image = Instantiate(slotPrefab, slotContainer);
-        }
-        else
-        {
-            GameObject go = new GameObject("CommandPointSlot_" + index, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            go.transform.SetParent(slotContainer, false);
-            image = go.GetComponent<Image>();
-        }
-
-        RectTransform rect = image.rectTransform;
-        rect.sizeDelta = slotSize;
-
-        LayoutElement layoutElement = image.GetComponent<LayoutElement>();
-        if (layoutElement == null)
-        {
-            layoutElement = image.gameObject.AddComponent<LayoutElement>();
-        }
-
-        layoutElement.preferredWidth = slotSize.x;
-        layoutElement.preferredHeight = slotSize.y;
-
-        image.preserveAspect = true;
-        return image;
     }
 
     private void RefreshUI()
@@ -172,7 +82,7 @@ public class CommandPointSlotUI : MonoBehaviour
                 continue;
             }
 
-            image.color = currentValue <= i ? Color.black : Color.grey;
+            image.color = currentValue <= i ? Color.clear : Color.white;
         }
     }
 

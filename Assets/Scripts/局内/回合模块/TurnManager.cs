@@ -107,16 +107,15 @@ public class TurnManager : MonoBehaviour
     #region 回合开始的函数
     IEnumerator StartFight()
     {
-        //在此处插入需要在回合进行前进行的事情
+        yield return new WaitUntil(() => CinemachineCameraManager.Instance == null || CinemachineCameraManager.Instance.HasCompletedOpeningIntro);
+        //设置回合图片
+        yield return StartCoroutine(SetTurnImages());
         BattleStarted?.Invoke();
         // 如果有教程系统，等待教程完成后再继续
         if (TutorialController.Instance != null)
         {
             yield return new WaitUntil(() => TutorialController.Instance == null || !TutorialController.Instance.IsTutorialActive);
         }
-        yield return new WaitUntil(() => CinemachineCameraManager.Instance == null || CinemachineCameraManager.Instance.HasCompletedOpeningIntro);
-        //设置回合图片
-        yield return StartCoroutine(SetTurnImages());
         TemporaryBattleModifierRuntimeManager.NotifyBattleStarted();
         yield return StartCoroutine(TriggerOpeningEnterSkills());
         //回合开始
@@ -236,9 +235,9 @@ public class TurnManager : MonoBehaviour
             }
             //需要检测当前场上角色是否全部死亡，如果全部死亡则不继续回合循环
             bool allCharactersDead = true;
-            foreach(var cha in CharacterManager.Instance.fieldCharacters)
+            foreach (var cha in CharacterManager.Instance.fieldCharacters)
             {
-                if(cha != null && !cha.IsDead)
+                if (cha != null && !cha.IsDead)
                 {
                     allCharactersDead = false;
                     break;
@@ -247,7 +246,7 @@ public class TurnManager : MonoBehaviour
             if (allCharactersDead)
             {
                 //填充在场角色全部死亡的逻辑
-                SkillExecuteManager.ExecuteSkill(null,Commander.GetInstance().changeSkill);
+                SkillExecuteManager.ExecuteSkill(null, Commander.GetInstance().changeSkill);
             }
             //读取当前行动者行动值
             var nextCombatant = nextNode.Value;

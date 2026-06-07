@@ -29,10 +29,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _EdgeSoftness: 0.02
+    - _EdgeSoftness: 0
     - _RectMaxX: 1
-    - _RectMaxY: 1
-    - _RectMinX: 0
+    - _RectMaxY: 0.275
+    - _RectMinX: 0.84
     - _RectMinY: 0
     - _ShowHighlight: 0
     m_Colors:

@@ -8,6 +8,7 @@ public class ModulePlacementController : MonoBehaviour//背包
 {
     public static ModulePlacementController Instance { get; private set; }
     [Header("基础引用")]
+    [SerializeField] private RectTransform moduleRoot;
     [SerializeField] private Canvas targetCanvas;
     [SerializeField] private BackpackInventoryView inventoryView;
     [SerializeField] private ModulePlacementBoard placementBoard;
@@ -81,6 +82,10 @@ public class ModulePlacementController : MonoBehaviour//背包
 
     private void Update()
     {
+        if(!moduleRoot.gameObject.activeInHierarchy)
+        {
+            return;
+        }
         UpdateHoveredBoardCell();
         if (m_selectedModule != null)
         {

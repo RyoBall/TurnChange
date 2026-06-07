@@ -5,10 +5,12 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DG.Tweening;
+using System;
 
 [DisallowMultipleComponent]
 public class BattleSettlementView : MonoBehaviour//结算界面
 {
+    public static event Action ExitBattle;
     [Header("根节点")]
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private CanvasGroup rootCanvasGroup;
@@ -87,14 +89,14 @@ public class BattleSettlementView : MonoBehaviour//结算界面
         yield return FadeCanvasGroup(rewardPanelGroup, 1f, panelFadeDuration, true);
         StartCoroutine(UpdateExpSlider(experienceReward));
     }
-    IEnumerator UpdateExpSlider(float experienceReward = 0,float duration=-1)
+    IEnumerator UpdateExpSlider(float experienceReward = 0, float duration = -1)
     {
         if (Datas.Instance != null && expSlider != null && expSliderText != null)
         {
             float startExp = m_expBeforeReward;
             float advanceExp = experienceReward;
             float expToNextLevel = Datas.Instance.GetExpToNextLevel();
-            DOTween.To(() => startExp, x => { expSlider.value = x / expToNextLevel % 1f; expSliderText.text = $"{Mathf.FloorToInt(x%expToNextLevel)} / {Mathf.FloorToInt(Datas.Instance.GetExpToNextLevel())}"; }, startExp + advanceExp, duration > 0 ? duration : expSliderFillDuration).SetEase(DG.Tweening.Ease.Linear);
+            DOTween.To(() => startExp, x => { expSlider.value = x / expToNextLevel % 1f; expSliderText.text = $"{Mathf.FloorToInt(x % expToNextLevel)} / {Mathf.FloorToInt(Datas.Instance.GetExpToNextLevel())}"; }, startExp + advanceExp, duration > 0 ? duration : expSliderFillDuration).SetEase(DG.Tweening.Ease.Linear);
             yield return new WaitForSecondsRealtime(duration > 0 ? duration : expSliderFillDuration);
         }
     }
@@ -159,12 +161,12 @@ public class BattleSettlementView : MonoBehaviour//结算界面
             exitButton.interactable = false;
         }
 
-        if (ScreenTransition.Instance != null)
+        yield return ScreenTransition.Instance.Transition(() =>
         {
-            yield return ScreenTransition.Instance.EnterTransition();
-        }
-        ScreenTransition.Instance.ExitTransition();
-        SceneManager.LoadScene(exitSceneName);
+            ExitBattle?.Invoke();
+            ScreenTransition.Instance.ExitTransition();
+            SceneManager.LoadScene(exitSceneName);
+        });
     }
 
     private void UpdateRewardTexts(int experienceReward, int goldReward)

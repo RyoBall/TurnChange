@@ -13,6 +13,7 @@ public enum ExplodeType
 
 public class Enemy : UnitCombatant
 {
+    public static event System.Action OnEnemyActEvent;
     public string enemyID;
     [Header("动画覆盖")]
     [SerializeField] private Animator animator;
@@ -128,7 +129,7 @@ public class Enemy : UnitCombatant
         {
             yield break;
         }
-
+        
         TickSkillCooldowns();
         OnTurnStartBeforeStateSettlement();
         enterFeedback?.PlayFeedbacks();
@@ -146,6 +147,7 @@ public class Enemy : UnitCombatant
         }
         //执行行动
         yield return ActionCoroutine();
+        OnEnemyActEvent?.Invoke();
     }
 
     public override float ConsumeTurnEndActionValue()

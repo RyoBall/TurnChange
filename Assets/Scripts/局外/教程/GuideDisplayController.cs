@@ -13,6 +13,8 @@ public class GuideDisplayController : MonoBehaviour
 
     [Header("遮罩材质")]
     [SerializeField] private Material m_guideMaterial;
+    [Header("高亮区域 RectTransform（可选，用于编辑器中可视化）")]
+    [SerializeField] private RectTransform m_highlightRect;
 
     // Shader 属性ID缓存
     private int m_rectMinXId;
@@ -65,7 +67,8 @@ public class GuideDisplayController : MonoBehaviour
         m_currentHighlight = type;
 
         // 确保遮罩 GameObject 可见
-        gameObject.SetActive(true);
+        if (m_highlightRect != null)
+            m_highlightRect.gameObject.SetActive(true);
     }
 
     /// <summary>
@@ -85,7 +88,8 @@ public class GuideDisplayController : MonoBehaviour
         m_currentHighlight = null;
 
         // 隐藏遮罩 GameObject
-        gameObject.SetActive(false);
+        if (m_highlightRect != null)
+            m_highlightRect.gameObject.SetActive(false);
     }
 
 #if UNITY_EDITOR

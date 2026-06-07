@@ -67,7 +67,6 @@ public class LevelSelectionItemUI : MonoBehaviour
         {
             case LevelSelectionButtonType.BattleLevel:
                 OpenBattleLevel();
-                BattleLevelSelected?.Invoke();
                 break;
             case LevelSelectionButtonType.EventLevel:
                 OpenEventLevel();
@@ -110,17 +109,7 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     private IEnumerator ExecuteWithTransition(Action action)
     {
-        if (ScreenTransition.Instance != null)
-        {
-            yield return ScreenTransition.Instance.EnterTransition();
-        }
-
-        action?.Invoke();
-
-        if (ScreenTransition.Instance != null)
-        {
-            yield return ScreenTransition.Instance.ExitTransition();
-        }
+        yield return ScreenTransition.Instance.Transition(action);
     }
     #region  三种关卡进入按钮的函数
     private void OpenBattlePreparation()
@@ -133,6 +122,7 @@ public class LevelSelectionItemUI : MonoBehaviour
         {
             preparationPanelRoot.SetActive(true);
         }
+        BattleLevelSelected?.Invoke();
     }
 
     private void OpenEventPanel()

@@ -76,9 +76,6 @@ Shader "UI/RectGuideMask"
                 // Screen Space - Overlay 模式下，SV_POSITION.xy 是屏幕像素坐标
                 // 需要先做透视除法，再映射到 0~1
                 float2 ndc = (OUT.vertex.xy / OUT.vertex.w) * 0.5 + 0.5;
-                #if defined(UNITY_UV_STARTS_AT_TOP)
-                ndc.y = 1 - ndc.y;
-                #endif
                 OUT.screenUV = ndc;
 
                 return OUT;

@@ -5,6 +5,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class PreparationPanelView : MonoBehaviour
 {
+    public static event System.Action CharacterChoosePanelOpened;
     public GameObject panelRoot;
     public static PreparationPanelView Instance { get; private set; }
     private static event System.Action FirstPreparationOpened;
@@ -134,6 +135,7 @@ public class PreparationPanelView : MonoBehaviour
 
     private void OpenCharacterListForSlot(int slotIndex)
     {
+        CharacterChoosePanelOpened?.Invoke();
         m_activeTargetSlot = slotIndex;
         SetCharacterListVisible(true);
         RebuildCharacterButtons();

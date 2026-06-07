@@ -22,6 +22,7 @@ public class ScreenTransition : MonoBehaviour
     [SerializeField, Tooltip("优先使用已指定的 Image，若为空则自动创建全屏 Image")]
     private Coroutine runningCoroutine;
     [SerializeField] private Canvas overlayCanvas;
+    public Canvas OverlayCanvas => overlayCanvas;
     [SerializeField] private MMF_Player fadeInPlayer;
     [SerializeField] private MMF_Player fadeOutPlayer;
 

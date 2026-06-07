@@ -47,7 +47,7 @@ public static class TutorialBehaviorFactory
             case TutorialType.教程十七:
                 return new FinalTestTutorial();
             default:
-                return new WaitClickTutorial();
+                return null;
         }
     }
 }

@@ -20,10 +20,6 @@ public class CharacterStateUIItem : MonoBehaviour
     {
         currentCharacter = character;
         IntializeChildUI();
-        if (characterIcon != null && currentCharacter != null)
-        {
-            characterIcon.sprite = Datas.Instance.m_characterTypeLookup[currentCharacter.characterType].portraitSprite;
-        }
 
         if (canvasGroup != null)
         {
@@ -62,13 +58,17 @@ public class CharacterStateUIItem : MonoBehaviour
         {
             healthBar.SetTarget(currentCharacter);
         }
-        if(chaosPointSlotUI != null)
+        if (chaosPointSlotUI != null)
         {
             chaosPointSlotUI.InitializeTarget(currentCharacter);
         }
-        if(shieldSlider != null)
+        if (shieldSlider != null)
         {
             shieldSlider.SetTarget(currentCharacter);
+        }
+        if (characterIcon != null && currentCharacter != null)
+        {
+            characterIcon.sprite = Datas.Instance.m_characterTypeLookup[currentCharacter.characterType].portraitSprite;
         }
     }
 

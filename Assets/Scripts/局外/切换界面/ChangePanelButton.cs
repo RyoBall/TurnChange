@@ -10,7 +10,6 @@ public enum PanelType
     角色页面,
     背包页面,
     商店页面,
-    关卡页面,
 }
 
 public class ChangePanelButton : MonoBehaviour
@@ -30,9 +29,6 @@ public class ChangePanelButton : MonoBehaviour
     IEnumerator SwitchPanelCoroutine()
     {
         // 在这里可以添加切换动画或过渡效果
-        yield return ScreenTransition.Instance.EnterTransition(); // 等待转场完成
-        panel.gameObject.SetActive(true);
-        PanelSwitched?.Invoke(m_panelType);
-        yield return ScreenTransition.Instance.ExitTransition(); // 等待转场完成
+        yield return ScreenTransition.Instance.Transition(() => { panel.gameObject.SetActive(true); PanelSwitched?.Invoke(m_panelType); });
     }
 }

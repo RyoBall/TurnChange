@@ -16,7 +16,7 @@ public class BackgroundManager : MonoBehaviour
         }
         Instance = this;
     }
-    public Image backgroundImage;
+    public Material backgroundMaterial;
     public Color defaultColor = Color.white;
     public Color darkColor;
     public float duration;
@@ -25,11 +25,11 @@ public class BackgroundManager : MonoBehaviour
     {
         if(enter)
         {
-            return backgroundImage.DOColor(darkColor, duration).SetEase(easeType);
+            return backgroundMaterial.DOColor(darkColor, duration).SetEase(easeType);
         }
         else
         {
-            return backgroundImage.DOColor(defaultColor, duration).SetEase(easeType);
+            return backgroundMaterial.DOColor(defaultColor, duration).SetEase(easeType);
         }
     }
 }

@@ -8,15 +8,21 @@ public abstract class TutorialBehavior
     /// <summary>教程结束时的静态委托字段（可由子类在 OnTutorialEnd 中触发）</summary>
     public static System.Action<TutorialType> TutorialEnded;
 
+    /// <summary>记录所有完成过的教程类型（持久化，不会重复触发）</summary>
+    public static readonly System.Collections.Generic.HashSet<TutorialType> CompletedTutorials = new System.Collections.Generic.HashSet<TutorialType>();
+
     protected TutorialData m_data;
     protected int m_currentIndex = 0;
     protected TutorialController m_controller;
+
+    /// <summary>当前教程是否已完成过</summary>
+    public bool HasCompleted => CompletedTutorials.Contains(m_data?.Type ?? default);
 
     /// <summary>关联的教程数据</summary>
     public TutorialData Data => m_data;
 
     /// <summary>当前文本索引</summary>
-    public int CurrentIndex => m_currentIndex;
+    public int CurrentIndex => m_currentIndex;//初始为0，每次推进后加一，进入时为1，执行序号0的OnProgress，检查条件也为1.
 
     /// <summary>是否已读完所有文本</summary>
     public bool IsCompleted => m_currentIndex >= m_data.TextList.Count;
@@ -38,6 +44,7 @@ public abstract class TutorialBehavior
     /// </summary>
     public virtual bool CanProgress()
     {
+        Debug.Log("TutorialBehavior: 使用默认推进条件（鼠标点击）");
         return Input.GetMouseButtonDown(0);
     }
 
@@ -67,13 +74,25 @@ public abstract class TutorialBehavior
 
     /// <summary>
     /// 教程开始时的回调，子类可覆盖以监听特殊事件
+    /// 基类默认执行全黑聚焦
     /// </summary>
-    public virtual void OnTutorialStart() { }
+    public virtual void OnTutorialStart()
+    {
+        if (m_data != null)
+            CompletedTutorials.Add(m_data.Type);
+        Debug.Log($"TutorialBehavior: 教程 {m_data.Type} 开始，执行默认 OnTutorialStart（全黑聚焦）");
+        m_controller.ShowGuideHighlight(GuideHighlightType.全黑);
+    }
 
     /// <summary>
     /// 教程结束时的回调，子类可覆盖以清理资源
+    /// 基类默认取消聚焦并将当前教程标记为已完成
     /// </summary>
-    public virtual void OnTutorialEnd() { }
+    public virtual void OnTutorialEnd()
+    {
+        m_controller.HideGuideHighlight();
+        TutorialEnded?.Invoke(m_data.Type);
+    }
 
     /// <summary>
     /// 在控制器 Start 中调用，子类可覆写以注册监听事件，
@@ -87,40 +106,7 @@ public abstract class TutorialBehavior
     public virtual void StopListening() { }
 }
 
-/// <summary>
-/// 等待点击推进的教程行为
-/// 特殊索引处可等待外部事件而非鼠标点击
-/// </summary>
-public class WaitClickTutorial : TutorialBehavior
-{
-    private bool m_specialFlag = false;
-
-    /// <summary>
-    /// 检查是否可以推进
-    /// 索引 2 处等待外部事件设置 specialFlag，其余索引等待鼠标点击
-    /// </summary>
-    public override bool CanProgress()
-    {
-        if (m_currentIndex == 2)
-            return m_specialFlag;
-        else
-            return Input.GetMouseButtonDown(0);
-    }
-
-    /// <summary>
-    /// 由外部事件调用，设置特殊标志以允许教程推进
-    /// </summary>
-    public void OnSpecialEvent()
-    {
-        m_specialFlag = true;
-    }
-
-    public override void OnTutorialEnd()
-    {
-        m_specialFlag = false;
-    }
-}
-
+#region 教程一
 /// <summary>
 /// 角色页面引导教程行为
 /// 文本1结束后触发聚焦高亮角色按钮，文本2等待玩家进入角色页面后推进
@@ -159,11 +145,8 @@ public class CharacterPanelTutorial : TutorialBehavior
     {
         switch (index)
         {
-            case 0:
-                m_controller.ShowGuideHighlight(GuideHighlightType.角色栏);
-                break;
             case 1:
-                m_controller.HideGuideHighlight();
+                m_controller.ShowGuideHighlight(GuideHighlightType.角色栏);
                 break;
         }
     }
@@ -173,6 +156,7 @@ public class CharacterPanelTutorial : TutorialBehavior
     /// </summary>
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         ChangePanelButton.PanelSwitched += OnPanelSwitched;
     }
 
@@ -189,11 +173,15 @@ public class CharacterPanelTutorial : TutorialBehavior
 
     public override void OnTutorialEnd()
     {
+        m_controller.HideGuideHighlight();
         m_enteredCharacterPanel = false;
         ChangePanelButton.PanelSwitched -= OnPanelSwitched;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程二
 /// <summary>
 /// 角色页面详情教程行为
 /// 进入角色页面时触发，4条纯点击推进的文本，无特殊事件
@@ -221,7 +209,9 @@ public class CharacterPanelDetailTutorial : TutorialBehavior
         }
     }
 }
+#endregion
 
+#region 教程三
 /// <summary>
 /// 战斗引导教程行为
 /// 关闭角色页面时触发，高亮开始战斗按钮，文本2等待进入战斗事件
@@ -235,17 +225,20 @@ public class BattleIntroTutorial : TutorialBehavior
     /// </summary>
     public override void StartListening()
     {
-        CharacterPanelView.PanelClosed += OnCharacterPanelClosed;
+        ExitButton.PanelClosed += OnPanelClosed;
     }
 
     public override void StopListening()
     {
-        CharacterPanelView.PanelClosed -= OnCharacterPanelClosed;
+        ExitButton.PanelClosed -= OnPanelClosed;
     }
 
-    private void OnCharacterPanelClosed()
+    private void OnPanelClosed(PanelType panelType)
     {
-        m_controller.StartTutorial(m_data.Type);
+        if (panelType == PanelType.角色页面)
+        {
+            m_controller.StartTutorial(m_data.Type);
+        }
     }
 
     /// <summary>
@@ -268,11 +261,8 @@ public class BattleIntroTutorial : TutorialBehavior
     {
         switch (index)
         {
-            case 0:
-                m_controller.ShowGuideHighlight(GuideHighlightType.开始战斗按钮);
-                break;
             case 1:
-                m_controller.HideGuideHighlight();
+                m_controller.ShowGuideHighlight(GuideHighlightType.关卡选择);
                 break;
         }
     }
@@ -282,6 +272,7 @@ public class BattleIntroTutorial : TutorialBehavior
     /// </summary>
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         LevelSelectionItemUI.BattleLevelSelected += OnBattleStarted;
     }
 
@@ -294,9 +285,13 @@ public class BattleIntroTutorial : TutorialBehavior
     {
         m_battleStarted = false;
         LevelSelectionItemUI.BattleLevelSelected -= OnBattleStarted;
+        m_controller.HideGuideHighlight();
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程四
 /// <summary>
 /// 备战页面教程行为
 /// 进入关卡页面时触发，高亮关卡信息区域，3条纯点击推进的文本
@@ -323,7 +318,7 @@ public class BattlePreparationTutorial : TutorialBehavior
 
     /// <summary>
     /// 文本推进后的系统处理
-    /// 索引0 → 高亮关卡信息；索引2 → 取消高亮
+    /// 索引0 → 高亮关卡信息
     /// </summary>
     public override void OnProgress(int index)
     {
@@ -332,21 +327,15 @@ public class BattlePreparationTutorial : TutorialBehavior
             case 0:
                 m_controller.ShowGuideHighlight(GuideHighlightType.关卡信息);
                 break;
-            case 2:
-                m_controller.HideGuideHighlight();
-                break;
         }
     }
-
-    /// <summary>
-    /// 教程结束时触发静态事件，通知后续教程可以启动
-    /// </summary>
     public override void OnTutorialEnd()
     {
-        TutorialEnded?.Invoke(m_data.Type);
+        base.OnTutorialEnd();
     }
 }
-
+#endregion
+#region 教程五
 /// <summary>
 /// 角色选择教程行为
 /// 备战教程结束后触发，高亮角色头像区域，文本3等待点击角色头像推进
@@ -360,12 +349,12 @@ public class CharacterSelectionTutorial : TutorialBehavior
     /// </summary>
     public override void StartListening()
     {
-        BattlePreparationTutorial.TutorialEnded += OnBattlePreparationEnded;
+        TutorialEnded += OnBattlePreparationEnded;
     }
 
     public override void StopListening()
     {
-        BattlePreparationTutorial.TutorialEnded -= OnBattlePreparationEnded;
+        TutorialEnded -= OnBattlePreparationEnded;
     }
 
     private void OnBattlePreparationEnded(TutorialType type)
@@ -399,9 +388,6 @@ public class CharacterSelectionTutorial : TutorialBehavior
             case 0:
                 m_controller.ShowGuideHighlight(GuideHighlightType.角色头像选择);
                 break;
-            case 2:
-                m_controller.HideGuideHighlight();
-                break;
         }
     }
 
@@ -410,7 +396,8 @@ public class CharacterSelectionTutorial : TutorialBehavior
     /// </summary>
     public override void OnTutorialStart()
     {
-        CharacterSelectButtonUI.CharacterClicked += OnCharacterClicked;
+        base.OnTutorialStart();
+        PreparationPanelView.CharacterChoosePanelOpened += OnCharacterClicked;
     }
 
     private void OnCharacterClicked()
@@ -422,9 +409,12 @@ public class CharacterSelectionTutorial : TutorialBehavior
     {
         m_characterClicked = false;
         CharacterSelectButtonUI.CharacterClicked -= OnCharacterClicked;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程六
 /// <summary>
 /// 战斗界面教程行为
 /// 进入战斗后触发，高亮角色状态栏，文本6后切换高亮到行动序列，结束时隐藏聚焦
@@ -457,19 +447,23 @@ public class BattleUITutorial : TutorialBehavior
     {
         switch (index)
         {
-            case 0:
+            case 1:
                 m_controller.ShowGuideHighlight(GuideHighlightType.角色状态栏);
                 break;
             case 5:
                 m_controller.ShowGuideHighlight(GuideHighlightType.行动序列);
                 break;
-            case 9:
-                m_controller.HideGuideHighlight();
-                break;
         }
     }
-}
 
+    public override void OnTutorialEnd()
+    {
+        base.OnTutorialEnd();
+    }
+}
+#endregion
+
+#region 教程七
 /// <summary>
 /// 技能演示教程行为
 /// 战斗界面教程结束后触发，演示追惩和厄运播撒技能，文本5/6等待对应技能执行完毕
@@ -484,20 +478,17 @@ public class SkillDemoTutorial : TutorialBehavior
     /// </summary>
     public override void StartListening()
     {
-        BattleUITutorial.TutorialEnded += OnBattleUIEnded;
+        Character.OnCharacterEnterTurn += OnCharacterEnterTurn;
     }
 
     public override void StopListening()
     {
-        BattleUITutorial.TutorialEnded -= OnBattleUIEnded;
+        Character.OnCharacterEnterTurn -= OnCharacterEnterTurn;
     }
 
-    private void OnBattleUIEnded(TutorialType type)
+    private void OnCharacterEnterTurn(Character character)
     {
-        if (type == TutorialType.教程六)
-        {
-            m_controller.StartTutorial(m_data.Type);
-        }
+        m_controller.StartTutorial(m_data.Type);
     }
 
     /// <summary>
@@ -517,20 +508,23 @@ public class SkillDemoTutorial : TutorialBehavior
 
     /// <summary>
     /// 文本推进后的系统处理
-    /// 索引3 → 高亮追惩技能；索引5 → 切换高亮到敌人词条；索引7 → 取消高亮
+    /// 索引3 → 高亮追惩技能；索引5 → 切换高亮到敌人词条
     /// </summary>
     public override void OnProgress(int index)
     {
         switch (index)
         {
-            case 3:
+            case 1:
+                m_controller.ShowGuideHighlight(GuideHighlightType.技能栏);
+                break;
+            case 4:
                 m_controller.ShowGuideHighlight(GuideHighlightType.追惩技能);
                 break;
             case 5:
-                m_controller.ShowGuideHighlight(GuideHighlightType.敌人词条);
+                m_controller.ShowGuideHighlight(GuideHighlightType.厄运播撒技能);
                 break;
-            case 7:
-                m_controller.HideGuideHighlight();
+            case 6:
+                m_controller.ShowGuideHighlight(GuideHighlightType.敌人词条);
                 break;
         }
     }
@@ -540,6 +534,7 @@ public class SkillDemoTutorial : TutorialBehavior
     /// </summary>
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         SkillExecuteManager.OnSkillExecuted += OnSkillExecuted;
     }
 
@@ -547,8 +542,7 @@ public class SkillDemoTutorial : TutorialBehavior
     {
         if (skill is CharacterSkillBase characterSkill)
         {
-            if (characterSkill.skillType == CharacterSkillType.PursuitPunish ||
-                characterSkill.skillType == CharacterSkillType.PursuitPunishAdditional)
+            if (characterSkill.skillType == CharacterSkillType.PursuitPunish)
             {
                 m_pursuitPunishExecuted = true;
             }
@@ -564,9 +558,12 @@ public class SkillDemoTutorial : TutorialBehavior
         m_pursuitPunishExecuted = false;
         m_debuffSpreadExecuted = false;
         SkillExecuteManager.OnSkillExecuted -= OnSkillExecuted;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程八
 /// <summary>
 /// 商店引导教程行为（教程八）
 /// 战斗结束回到主场景后触发，高亮商店按钮，文本2等待进入商店页面
@@ -577,18 +574,18 @@ public class ShopIntroTutorial : TutorialBehavior
 
     public override void StartListening()
     {
-        SkillDemoTutorial.TutorialEnded += OnSkillDemoEnded;
+        BattleSettlementView.ExitBattle += OnSkillDemoEnded;
     }
 
     public override void StopListening()
     {
-        SkillDemoTutorial.TutorialEnded -= OnSkillDemoEnded;
+        BattleSettlementView.ExitBattle -= OnSkillDemoEnded;
+
     }
 
-    private void OnSkillDemoEnded(TutorialType type)
+    private void OnSkillDemoEnded()
     {
-        if (type == TutorialType.教程七)
-            m_controller.StartTutorial(m_data.Type);
+        m_controller.StartTutorial(m_data.Type);
     }
 
     public override bool CanProgress()
@@ -601,13 +598,13 @@ public class ShopIntroTutorial : TutorialBehavior
     {
         switch (index)
         {
-            case 0: m_controller.ShowGuideHighlight(GuideHighlightType.商店按钮); break;
-            case 1: m_controller.HideGuideHighlight(); break;
+            case 1: m_controller.ShowGuideHighlight(GuideHighlightType.商店按钮); break;
         }
     }
 
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         ChangePanelButton.PanelSwitched += OnPanelSwitched;
     }
 
@@ -620,9 +617,12 @@ public class ShopIntroTutorial : TutorialBehavior
     {
         m_enteredShop = false;
         ChangePanelButton.PanelSwitched -= OnPanelSwitched;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程九
 /// <summary>
 /// 商店详情教程行为（教程九）
 /// 进入商店页面后触发，高亮商品/刷新/扩容，文本3等待购买序体
@@ -649,7 +649,7 @@ public class ShopDetailTutorial : TutorialBehavior
 
     public override bool CanProgress()
     {
-        if (m_currentIndex == 3) return m_itemPurchased;
+        if (m_currentIndex == 4) return m_itemPurchased;
         return Input.GetMouseButtonDown(0);
     }
 
@@ -657,15 +657,15 @@ public class ShopDetailTutorial : TutorialBehavior
     {
         switch (index)
         {
-            case 0: m_controller.ShowGuideHighlight(GuideHighlightType.序体商品); break;
-            case 2: m_controller.ShowGuideHighlight(GuideHighlightType.刷新按钮); break;
-            case 3: m_controller.ShowGuideHighlight(GuideHighlightType.扩容按钮); break;
-            case 4: m_controller.HideGuideHighlight(); break;
+            case 1: m_controller.ShowGuideHighlight(GuideHighlightType.序体商品); break;
+            case 4: m_controller.ShowGuideHighlight(GuideHighlightType.刷新按钮); break;
+            case 5: m_controller.ShowGuideHighlight(GuideHighlightType.扩容按钮); break;
         }
     }
 
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         ShopModuleManager.ItemPurchasedStatic += OnItemPurchased;
     }
 
@@ -678,9 +678,12 @@ public class ShopDetailTutorial : TutorialBehavior
     {
         m_itemPurchased = false;
         ShopModuleManager.ItemPurchasedStatic -= OnItemPurchased;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程十
 /// <summary>
 /// 序体引导教程行为（教程十）
 /// 离开商店页面后触发，高亮序体按钮，文本1等待进入序体页面
@@ -691,17 +694,18 @@ public class BackpackIntroTutorial : TutorialBehavior
 
     public override void StartListening()
     {
-        CharacterPanelView.PanelClosed += OnShopClosed;
+        ExitButton.PanelClosed += OnShopClosed;
     }
 
     public override void StopListening()
     {
-        CharacterPanelView.PanelClosed -= OnShopClosed;
+        ExitButton.PanelClosed -= OnShopClosed;
     }
 
-    private void OnShopClosed()
+    private void OnShopClosed(PanelType panelType)
     {
-        m_controller.StartTutorial(m_data.Type);
+        if (panelType == PanelType.商店页面)
+            m_controller.StartTutorial(m_data.Type);
     }
 
     public override bool CanProgress()
@@ -715,12 +719,12 @@ public class BackpackIntroTutorial : TutorialBehavior
         switch (index)
         {
             case 0: m_controller.ShowGuideHighlight(GuideHighlightType.序体按钮); break;
-            case 1: m_controller.HideGuideHighlight(); break;
         }
     }
 
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         ChangePanelButton.PanelSwitched += OnPanelSwitched;
     }
 
@@ -733,9 +737,12 @@ public class BackpackIntroTutorial : TutorialBehavior
     {
         m_enteredBackpack = false;
         ChangePanelButton.PanelSwitched -= OnPanelSwitched;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程十一
 /// <summary>
 /// 序体搭载教程行为（教程十一）
 /// 进入序体页面后触发，文本2等待序体装载
@@ -746,14 +753,20 @@ public class BackpackPlacementTutorial : TutorialBehavior
 
     public override void StartListening()
     {
-        BackpackIntroTutorial.TutorialEnded += OnBackpackIntroEnded;
+        TutorialEnded += OnBackpackIntroEnded;
     }
 
     public override void StopListening()
     {
-        BackpackIntroTutorial.TutorialEnded -= OnBackpackIntroEnded;
+        TutorialEnded -= OnBackpackIntroEnded;
     }
-
+    public override void OnProgress(int index)
+    {
+        switch (index)
+        {
+            case 1: m_controller.HideGuideHighlight(); break;
+        }
+    }
     private void OnBackpackIntroEnded(TutorialType type)
     {
         if (type == TutorialType.教程十)
@@ -768,6 +781,7 @@ public class BackpackPlacementTutorial : TutorialBehavior
 
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         Datas.ModulePlacedStatic += OnModulePlaced;
     }
 
@@ -780,9 +794,12 @@ public class BackpackPlacementTutorial : TutorialBehavior
     {
         m_modulePlaced = false;
         Datas.ModulePlacedStatic -= OnModulePlaced;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程十二
 /// <summary>
 /// 第二关引导教程行为（教程十二）
 /// 离开序体页面后触发，纯点击
@@ -791,68 +808,108 @@ public class SecondLevelIntroTutorial : TutorialBehavior
 {
     public override void StartListening()
     {
-        CharacterPanelView.PanelClosed += OnBackpackClosed;
+        ExitButton.PanelClosed += OnBackpackClosed;
     }
 
     public override void StopListening()
     {
-        CharacterPanelView.PanelClosed -= OnBackpackClosed;
+        ExitButton.PanelClosed -= OnBackpackClosed;
     }
 
-    private void OnBackpackClosed()
+    private void OnBackpackClosed(PanelType panelType)
     {
-        m_controller.StartTutorial(m_data.Type);
+        if (panelType == PanelType.背包页面)
+            m_controller.StartTutorial(m_data.Type);
     }
 }
+#endregion
 
+#region 教程十三
 /// <summary>
 /// 第二关提示教程行为（教程十三）
-/// 教程十二完成后触发，纯点击
+/// 教程十二完成后设置标志，点击关卡页面按钮时如果标志为true则启动
 /// </summary>
 public class SecondLevelTipTutorial : TutorialBehavior
 {
+    private static bool s_tutorialTwelveCompleted = false;
+
+    public override void OnProgress(int index)
+    {
+        switch (index)
+        {
+            case 1: m_controller.ShowGuideHighlight(GuideHighlightType.开始战斗按钮); break;
+        }
+    }
     public override void StartListening()
     {
         SecondLevelIntroTutorial.TutorialEnded += OnSecondLevelEnded;
+        LevelSelectionItemUI.BattleLevelSelected += OnPanelSwitched;
     }
 
     public override void StopListening()
     {
         SecondLevelIntroTutorial.TutorialEnded -= OnSecondLevelEnded;
+        LevelSelectionItemUI.BattleLevelSelected -= OnPanelSwitched;
     }
 
     private void OnSecondLevelEnded(TutorialType type)
     {
         if (type == TutorialType.教程十二)
+        {
+            s_tutorialTwelveCompleted = true;
+        }
+    }
+
+    private void OnPanelSwitched()
+    {
+        if (s_tutorialTwelveCompleted)
+        {
+            s_tutorialTwelveCompleted = false;
             m_controller.StartTutorial(m_data.Type);
+        }
     }
 }
+#endregion
 
+#region 教程十四
 /// <summary>
 /// 强敌提示教程行为（教程十四）
 /// 敌人行动且教程十三完成后触发，纯点击
 /// </summary>
 public class EnemyStrongTutorial : TutorialBehavior
 {
-    private bool m_enemyActed = false;
+    private bool tutorialEnded = false;
 
     public override void StartListening()
     {
-        SecondLevelTipTutorial.TutorialEnded += OnTipEnded;
+        Enemy.OnEnemyActEvent += OnEnemyActEvent;
+        TutorialEnded += OnTutorialEnded;
     }
 
     public override void StopListening()
     {
-        SecondLevelTipTutorial.TutorialEnded -= OnTipEnded;
+        Enemy.OnEnemyActEvent -= OnEnemyActEvent;
+        TutorialEnded -= OnTutorialEnded;
     }
-
-    private void OnTipEnded(TutorialType type)
+    private void OnEnemyActEvent()
+    {
+        if (tutorialEnded)
+        {
+            m_controller.StartTutorial(m_data.Type);
+            Enemy.OnEnemyActEvent -= OnEnemyActEvent;
+        }
+    }
+    private void OnTutorialEnded(TutorialType type)
     {
         if (type == TutorialType.教程十三)
-            m_controller.StartTutorial(m_data.Type);
+        {
+            tutorialEnded = true;
+        }
     }
 }
+#endregion
 
+#region 教程十五
 /// <summary>
 /// 援军到达教程行为（教程十五）
 /// 教程十四完成后触发，高亮切人按键和指挥点，文本6等待换人回合结束
@@ -860,23 +917,33 @@ public class EnemyStrongTutorial : TutorialBehavior
 public class ReinforcementArriveTutorial : TutorialBehavior
 {
     private bool m_swapCompleted = false;
+    private bool tutorialEnded = false;
 
     public override void StartListening()
     {
-        EnemyStrongTutorial.TutorialEnded += OnEnemyStrongEnded;
+        EnemyStrongTutorial.TutorialEnded += OnOtherTutorialEnded;
+        Enemy.OnEnemyActEvent += OnEnemyActEvent;
     }
 
     public override void StopListening()
     {
-        EnemyStrongTutorial.TutorialEnded -= OnEnemyStrongEnded;
+        EnemyStrongTutorial.TutorialEnded -= OnOtherTutorialEnded;
+        Enemy.OnEnemyActEvent -= OnEnemyActEvent;
     }
 
-    private void OnEnemyStrongEnded(TutorialType type)
+    private void OnOtherTutorialEnded(TutorialType type)
     {
         if (type == TutorialType.教程十四)
-            m_controller.StartTutorial(m_data.Type);
+            tutorialEnded = true;
     }
-
+    private void OnEnemyActEvent()
+    {
+        if (tutorialEnded)
+        {
+            m_controller.StartTutorial(m_data.Type);
+            Enemy.OnEnemyActEvent -= OnEnemyActEvent;
+        }
+    }
     public override bool CanProgress()
     {
         if (m_currentIndex == 6) return m_swapCompleted;
@@ -887,14 +954,16 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     {
         switch (index)
         {
-            case 0: m_controller.ShowGuideHighlight(GuideHighlightType.切人按键); break;
-            case 4: m_controller.HideGuideHighlight(); break;
+            case 1: m_controller.ShowGuideHighlight(GuideHighlightType.指挥点); break;
+            case 5: m_controller.ShowGuideHighlight(GuideHighlightType.切人按键); break;
         }
     }
 
     public override void OnTutorialStart()
     {
-        CharacterManager.SwapCompleted += OnSwapCompleted;
+        base.OnTutorialStart();
+        Time.timeScale = 0; // 慢速以便观察
+        CommandButton.OnChangeButtonClicked += OnSwapCompleted;
     }
 
     private void OnSwapCompleted()
@@ -905,31 +974,44 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     public override void OnTutorialEnd()
     {
         m_swapCompleted = false;
-        CharacterManager.SwapCompleted -= OnSwapCompleted;
+        CommandButton.OnChangeButtonClicked -= OnSwapCompleted;
+        Time.timeScale = 1.5f; // 恢复正常速度
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程十六
 /// <summary>
 /// 新角色引导教程行为（教程十六）
-/// 战斗结束回主界面后触发，高亮角色按钮，文本2等待进入角色页面
+/// 战斗结束回主界面且教程十五完成后触发，高亮角色按钮，文本2等待进入角色页面
 /// </summary>
 public class NewCharacterIntroTutorial : TutorialBehavior
 {
     private bool m_enteredCharacterPanel = false;
+    private static bool s_tutorialFifteenCompleted = false;
 
     public override void StartListening()
     {
         ReinforcementArriveTutorial.TutorialEnded += OnReinforcementEnded;
+        BattleSettlementView.ExitBattle += OnExitBattle;
     }
 
     public override void StopListening()
     {
         ReinforcementArriveTutorial.TutorialEnded -= OnReinforcementEnded;
+        BattleSettlementView.ExitBattle -= OnExitBattle;
     }
 
     private void OnReinforcementEnded(TutorialType type)
     {
         if (type == TutorialType.教程十五)
+            s_tutorialFifteenCompleted = true;
+    }
+
+    private void OnExitBattle()
+    {
+        if (s_tutorialFifteenCompleted)
             m_controller.StartTutorial(m_data.Type);
     }
 
@@ -944,12 +1026,12 @@ public class NewCharacterIntroTutorial : TutorialBehavior
         switch (index)
         {
             case 0: m_controller.ShowGuideHighlight(GuideHighlightType.角色栏); break;
-            case 1: m_controller.HideGuideHighlight(); break;
         }
     }
 
     public override void OnTutorialStart()
     {
+        base.OnTutorialStart();
         ChangePanelButton.PanelSwitched += OnPanelSwitched;
     }
 
@@ -962,28 +1044,45 @@ public class NewCharacterIntroTutorial : TutorialBehavior
     {
         m_enteredCharacterPanel = false;
         ChangePanelButton.PanelSwitched -= OnPanelSwitched;
+        base.OnTutorialEnd();
     }
 }
+#endregion
 
+#region 教程十七
 /// <summary>
 /// 最终测验教程行为（教程十七）
-/// 教程十六结束且退出角色界面后触发，纯点击
+/// 退出角色界面且教程十六结束后触发，纯点击
 /// </summary>
 public class FinalTestTutorial : TutorialBehavior
 {
+    private static bool s_tutorialSixteenCompleted = false;
+
     public override void StartListening()
     {
         NewCharacterIntroTutorial.TutorialEnded += OnNewCharacterEnded;
+        ExitButton.PanelClosed += OnPanelClosed;
     }
 
     public override void StopListening()
     {
         NewCharacterIntroTutorial.TutorialEnded -= OnNewCharacterEnded;
+        ExitButton.PanelClosed -= OnPanelClosed;
     }
 
     private void OnNewCharacterEnded(TutorialType type)
     {
         if (type == TutorialType.教程十六)
+            s_tutorialSixteenCompleted = true;
+    }
+
+    private void OnPanelClosed(PanelType panelType)
+    {
+        if (panelType == PanelType.角色页面 && s_tutorialSixteenCompleted)
+        {
+            s_tutorialSixteenCompleted = false;
             m_controller.StartTutorial(m_data.Type);
+        }
     }
 }
+#endregion
