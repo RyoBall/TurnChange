@@ -27,9 +27,7 @@ public class Character : UnitCombatant
 
     [Header("混沌值")]
     [SerializeField, Range(0, MaxChaosValue)] private int chaosValue = 0;
-    [SerializeField] private bool pendingChaosRecover;
     private const int MaxChaosValue = 5;
-    private const int ChaosRecoverValue = 2;
     public int ChaosValue => chaosValue;
     public int MaxChaosValueConst => MaxChaosValue;
     [Header("换人冷却")]
@@ -83,7 +81,6 @@ public class Character : UnitCombatant
     {
         endTurn = false;
         TickSkillCooldowns();
-        HandleChaosTurnStart();
         //结算状态
         yield return ProcessStatesOnTurnStart();
         //如果死亡就结束回合
@@ -94,22 +91,10 @@ public class Character : UnitCombatant
         EnterMoveDOT();
         yield return new WaitForSeconds(moveAnimDuration);
 
-        if (chaosValue >= MaxChaosValue)
-        {
-            pendingChaosRecover = true;
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}混沌过载，无法行动");
-            EndTurn();
-        }
-
         if (!CanActThisTurn())
         {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}受到震慑，无法行动");
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
             EndTurn();
-        }
-
-        if (IsActionEffectHalved)
-        {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}混沌偏高，本回合行动效果减半");
         }
         //展示攻击逻辑
         yield return TurnStateManager.Instance.ChangeState(TurnState.InCharacterTurn, this);
@@ -136,16 +121,32 @@ public class Character : UnitCombatant
     }
     #region 混沌值相关
 
-    public bool IsActionEffectHalved => HasState(StateType.ChaosHalf);
-
-    public float GetActionEffectMultiplier()
-    {
-        return HasState(StateType.ChaosHalf) ? 0.5f : 1f;
-    }
     public override void Die()
     {
         base.Die();
     }
+
+    /// <summary>
+    /// 将混沌状态层数与混沌值同步。
+    /// 使用 AddState 的 ifChangeStackByExtraStacks=false 模式，确保层数被覆盖为当前混沌值。
+    /// </summary>
+    private void SyncChaosState()
+    {
+        if (chaosValue <= 0)
+        {
+            // 混沌值为0时移除状态
+            State existing = GetState(StateType.Chaos);
+            if (existing != null)
+            {
+                RemoveState(existing);
+            }
+            return;
+        }
+
+        // 用 ifChangeStackByExtraStacks=false 覆盖层数为 chaosValue
+        AddState(StateType.Chaos, this, 99, chaosValue, false);
+    }
+
     public bool TryAddChaos(int amount)
     {
         if (amount <= 0 || chaosValue >= MaxChaosValue || dead)
@@ -154,7 +155,7 @@ public class Character : UnitCombatant
         }
 
         int before = chaosValue;
-        chaosValue = Mathf.Clamp(chaosValue + amount, 0, MaxChaosValue);
+        SetChaos(Mathf.Clamp(chaosValue + amount, 0, MaxChaosValue));
         if (chaosValue == before)
         {
             return false;
@@ -170,15 +171,13 @@ public class Character : UnitCombatant
 
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "混沌达到上限，下回合将无法行动");
         }
-
-        UpdateChaosStates();
         return true;
     }
 
     public void SetChaos(int value)
     {
         chaosValue = Mathf.Clamp(value, 0, MaxChaosValue);
-        UpdateChaosStates();
+        SyncChaosState();
     }
 
     public int ReduceChaos(int amount)
@@ -189,7 +188,7 @@ public class Character : UnitCombatant
         }
 
         int before = chaosValue;
-        chaosValue = Mathf.Clamp(chaosValue - amount, 0, MaxChaosValue);
+        SetChaos(chaosValue - amount);
         int reducedValue = before - chaosValue;
         if (reducedValue <= 0)
         {
@@ -197,7 +196,6 @@ public class Character : UnitCombatant
         }
 
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"混沌-{reducedValue} ({chaosValue}/{MaxChaosValue})");
-        UpdateChaosStates();
         TemporaryBattleModifierRuntimeManager.NotifyChaosReduced(this, reducedValue);
         return reducedValue;
     }
@@ -263,42 +261,6 @@ public class Character : UnitCombatant
             transform.DOMove(spawnPosition, moveAnimDuration).SetEase(moveAnimEase);
         }
         m_originalPosition = Vector3.zero;
-    }
-    /// <summary>
-    /// 根据当前混沌值自动添加/移除混沌半效和眩晕状态
-    /// </summary>
-    private void UpdateChaosStates()
-    {
-        // 先移除自身的混沌相关状态
-        if (chaosValue < 3)
-        {
-            RemoveState(GetState(StateType.ChaosHalf));
-            RemoveState(GetState(StateType.ChaosStun));
-        }
-        if (chaosValue >= 3 && chaosValue <= 4)
-        {
-            RemoveState(GetState(StateType.ChaosStun));
-            AddState(StateType.ChaosHalf, this, 99);
-        }
-        else if (chaosValue >= MaxChaosValue)
-        {
-            AddState(StateType.ChaosHalf, this, 99);
-            AddState(StateType.ChaosStun, this, 99);
-        }
-    }
-    private void HandleChaosTurnStart()
-    {
-        if (!pendingChaosRecover)
-        {
-            // 每回合刷新混沌相关状态
-            UpdateChaosStates();
-            return;
-        }
-
-        pendingChaosRecover = false;
-        SetChaos(ChaosRecoverValue);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{name}混沌回落至{ChaosRecoverValue}");
-        UpdateChaosStates();
     }
     #endregion
     #region 选友相关

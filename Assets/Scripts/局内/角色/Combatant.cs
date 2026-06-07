@@ -15,7 +15,11 @@ public class Combatant : MonoBehaviour
     public string combatantName;
 
     public float currentActionValue{get; private set;}
-    public float BaseActionValue => speed;
+    public float BaseActionValue => GetSpeed();
+    protected virtual float GetSpeed()
+    {
+        return speed;
+    }
     public virtual void ChangeActionValue(float delta,bool ifChangePos=true)
     {
         currentActionValue = Mathf.Max(0, delta);

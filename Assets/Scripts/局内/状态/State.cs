@@ -36,8 +36,7 @@ public enum StateType
     Charge,//蓄势
     Attract,//瞩目
     Poison,//毒
-    ChaosHalf,//混沌半效
-    ChaosStun,//混沌眩晕
+    Chaos,//混沌（整合状态，层数=混沌值）
     None,
     BerserkFeast,//狂暴盛宴
     BurningBlood,//燃血
@@ -154,13 +153,17 @@ public class State : ScriptableObject
     {
         m_behavior = null;
     }
-
-
-
+    public float GetSpeedModifier()
+    {
+        return m_behavior.GetSpeedMultiplier();
+    }
+    public int GetSpeedExtraNum()
+    {
+        return m_behavior.GetSpeedExtraNum();
+    }
     public void Mount(
         UnitCombatant owner,
         UnitCombatant giver,
-        float skillCoef,
         int duration = -1,
         int stacks = -1)
     {
@@ -186,7 +189,7 @@ public class State : ScriptableObject
         int atkT,
         int extraDuration,
         int extraStacks,
-        float skillCoef = 0f)
+        bool ifChangeStackByExtraStacks = true)
     {
         if (this.atkT < atkT)
         {
@@ -204,8 +207,14 @@ public class State : ScriptableObject
             int targetActionValue = extraDuration > 0 ? extraDuration : defaultActionValue;
             remainingActionValue = Mathf.Max(remainingActionValue, targetActionValue);
         }
-
-        ChangeStackCount(stackCount + extraStacks);
+        if (ifChangeStackByExtraStacks)
+        {
+            ChangeStackCount(stackCount + extraStacks);
+        }
+        else
+        {
+            ChangeStackCount(extraStacks);
+        }
     }
 
     public void TickOnTurnEnd()
@@ -534,6 +543,8 @@ public class State : ScriptableObject
 
 public interface IStateBehavior
 {
+    float GetSpeedMultiplier();
+    int GetSpeedExtraNum();
     void Initialize(State state);
     void OnStateApply();
     IEnumerator OnOwnerTurnStart();
@@ -557,12 +568,15 @@ public interface IStateBehavior
 public abstract class StateBehaviorBase : IStateBehavior
 {
     protected State state;
+    public virtual int GetSpeedExtraNum()
+    {
+        return 0;
+    }
 
     public virtual void Initialize(State state)
     {
         this.state = state;
     }
-
     public virtual void OnStateApply() { }
     public virtual IEnumerator OnOwnerTurnStart() { yield break; }//由于这是回合开始的行为，最好支持协程，以便实现一些需要等待的效果
     public virtual void OnOwnerTurnEnd() { }
@@ -570,6 +584,10 @@ public abstract class StateBehaviorBase : IStateBehavior
     public virtual void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits) { }
     public virtual void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage) { }
     public virtual void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver) { }
+    public virtual float GetSpeedMultiplier()
+    {
+        return 1f;
+    }
     public virtual float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1f; }
     public virtual float GetOutgoingDamageMultiplier(bool isDotDamage) { return 1f; }
     public virtual float GetAttractMultiplier(UnitCombatant source) { return 1f; }
@@ -645,10 +663,8 @@ public static class StateBehaviorFactory
                 return new AttractStateBehavior();
             case StateType.Poison:
                 return new PoisonStateBehavior();
-            case StateType.ChaosHalf:
-                return new ChaosHalfStateBehavior();
-            case StateType.ChaosStun:
-                return new ChaosStunStateBehavior();
+            case StateType.Chaos:
+                return new ChaosStateBehavior();
             case StateType.Weakened:
                 return new WeakenedStateBehavior();
             case StateType.ChessKingMark:
@@ -1035,7 +1051,7 @@ public class RestorationSurgeStateBehavior : StateBehaviorBase
             return 1f;
         }
 
-        return state.baseExtraData1+state.baseExtraData2*GetTeamMissingHpRatio();
+        return state.baseExtraData1 + state.baseExtraData2 * GetTeamMissingHpRatio();
     }
 
     public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
@@ -1698,30 +1714,57 @@ public class PoisonStateBehavior : DotStateBehaviorBase
 {
 }
 
-public class ChaosHalfStateBehavior : StateBehaviorBase
+/// <summary>
+/// 混沌整合状态：层数 = 混沌值(1-5)
+/// - 1-2层：每层减少10%造成伤害
+/// - 3-4层：每层增加20点行动冷却（合计-20%~-40%伤害、+20~+40冷却）
+/// - 5层：眩晕1回合，之后混沌值重置为2层
+/// </summary>
+public class ChaosStateBehavior : StateBehaviorBase
 {
+    private bool m_hasStunned;
+
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
-        return state.baseExtraData1;
+        // 每层减少10%伤害
+        float multiplier = 1f - state.StackCount * 0.1f;
+        return Mathf.Max(0f, multiplier);
     }
-}
 
-public class ChaosStunStateBehavior : StateBehaviorBase
-{
-    bool hasStunned;
+    public override int GetSpeedExtraNum()
+    {
+        // 3-4层：每层+20行动冷却；1-2层不加；5层不加（因为眩晕不行动）
+        int stacks = state.StackCount;
+        if (stacks >= 3 && stacks <= 4)
+        {
+            return stacks * 20;
+        }
+        return 0;
+    }
+
     public override bool CanActThisTurn()
     {
-        hasStunned = true;
-        return false;
+        // 5层时眩晕
+        if (state.StackCount >= 5)
+        {
+            m_hasStunned = true;
+            return false;
+        }
+        return true;
     }
+
     public override IEnumerator OnOwnerTurnStart()
     {
-        if (hasStunned)
+        if (m_hasStunned)
         {
+            m_hasStunned = false;
             var cha = state.owner as Character;
-            int recoverChaosValue = Mathf.RoundToInt(state.baseExtraData1);
-            cha?.SetChaos(recoverChaosValue);
-            state.EndState();
+            if (cha != null)
+            {
+                // 眩晕结算后混沌重置为2
+                FloatingTipGenerator.Instance?.ShowTipAtObject(cha.transform, $"{cha.name}混沌爆发，眩晕解除，混沌回落至2");
+                cha.SetChaos(2);
+            }
         }
         yield break;
     }

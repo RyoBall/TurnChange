@@ -192,12 +192,28 @@ public class UnitCombatant : Combatant
     [SerializeField] protected List<State> states = new List<State>();
 
     public List<State> States => states;
+    protected override float GetSpeed()
+    {
+        float modifiedSpeed = speed;
+        for (int i = 0; i < states.Count; i++)
+        {
+            State state = states[i];
+            if (state == null)
+            {
+                continue;
+            }
+
+            modifiedSpeed *= state.GetSpeedModifier();
+            modifiedSpeed += state.GetSpeedExtraNum();
+        }
+
+        return Mathf.Max(1f, modifiedSpeed);
+    }
     public State AddState(
         StateType stateType,
         UnitCombatant giver,
         int duration,
-        int stacks = 1,
-        float skillCoef = 0f)
+        int stacks = 1,bool ifChangeStackByExtraStacks = true)
     {
         if (!CanReceiveState(stateType, giver))
         {
@@ -208,7 +224,7 @@ public class UnitCombatant : Combatant
         {
             if (tstate != null && tstate.stateType == stateType)
             {
-                tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, skillCoef);
+                tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, ifChangeStackByExtraStacks);
                 DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
                 GameAudioEvents.Raise(
                     tstate.isDebuff ? GameAudioEventType.CombatDebuffGain : GameAudioEventType.CombatBuffGain,
@@ -233,7 +249,7 @@ public class UnitCombatant : Combatant
         State state = Instantiate(stateTemplate);
         state.name = stateTemplate.name;
         states.Add(state);
-        state.Mount(this, giver, skillCoef, duration, stacks);
+        state.Mount(this, giver, duration, stacks);
 
         if (state.isDebuff)
         {
