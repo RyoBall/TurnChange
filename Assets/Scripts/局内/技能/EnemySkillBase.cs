@@ -291,7 +291,7 @@ public class EnemySkillBase : SkillBase
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        target.AddState(StateType.Poison, self, 99, 2, 0.2f);
+        target.AddState(StateType.Poison, self, 99, 2);
         yield break;
     }
     // 5.Dot施加手 技能二
@@ -312,7 +312,7 @@ public class EnemySkillBase : SkillBase
             }
             else if (poisonStacks > 0)
             {
-                ally.AddState(StateType.Poison, self,99, 2,0.2f);
+                ally.AddState(StateType.Poison, self,99, 2);
             }
         }
         yield break;
@@ -574,7 +574,7 @@ public class EnemySkillBase : SkillBase
             if (ally == null || ally.IsDead) continue;
             var damageInfo = DamageCounter.CountDamage(self, ally, coef, baseDmg, DamageType.Physical, true, false, false);
             ally.TakeDamage(damageInfo);
-            ally.AddState(StateType.DragonBreath, self, 99, breathStacks, 0.2f);
+            ally.AddState(StateType.DragonBreath, self, 99, breathStacks);
         }
     }
 
@@ -671,7 +671,7 @@ public class EnemySkillBase : SkillBase
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
 
-        target.AddState(StateType.InstantDeath, self, 1, 1);
+        target.AddState(StateType.InstantDeath, self, 1,1);
         dragon.SetChargingRage(true);
         FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, "即死标记");
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}蓄力中...");

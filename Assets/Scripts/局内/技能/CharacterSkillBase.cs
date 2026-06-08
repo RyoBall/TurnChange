@@ -503,7 +503,7 @@ public class CharacterSkillBase : SkillBase
 
                 StateType dotType = PickRandomDotState(enemy);
                 bool hadDot = enemy.HasState(dotType);
-                State state = enemy.AddState(dotType, character, dotDuration, 1, dotSkillCoef);
+                State state = enemy.AddState(dotType, character, dotDuration, 1);
                 if (hadDot && state != null)
                 {
                     state.DotTrigger(refreshMultiplier);
@@ -621,7 +621,7 @@ public class CharacterSkillBase : SkillBase
         target.AddState(StateType.Taunt, character, tauntDuration, 1);
         if (damageReduction > 0f)
         {
-            target.AddState(StateType.ActionWeakened, character, 1, 1, outgoingMultiplier);
+            State weakened = target.AddState(StateType.ActionWeakened, character, 1, 1);
         }
         target.ChangeActionValue(Mathf.Max(0f, target.currentActionValue - target.currentActionValue * advanceRatio));
         yield break;
@@ -642,14 +642,11 @@ public class CharacterSkillBase : SkillBase
 
         float shieldHpCoef = extraData1;
         float advanceRatio = extraData2;
-        float nextActionDamageBoost = extraData3;
         float shieldAttackCoef = extraData4;
         int shield = Mathf.RoundToInt(target.maxHP * shieldHpCoef + character.attack * shieldAttackCoef);
         target.AddShield(shield);
-        if (nextActionDamageBoost > 0f)
-        {
-            target.AddState(StateType.NextActionDamageBoost, character, 1, 1, 1f + nextActionDamageBoost);
-        }
+        State boost = target.AddState(StateType.NextActionDamageBoost, character, 1, 1);
+
 
         target.ChangeActionValue(target.currentActionValue - target.currentActionValue * advanceRatio);
         yield break;
@@ -771,7 +768,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        State deadlyArmorState = character.AddState(StateType.DeadlyArmor, character, 1, 1, extraData1);
+        State deadlyArmorState = character.AddState(StateType.DeadlyArmor, character, 1, 1);
         if (deadlyArmorState != null && extraData2 > 0f)
         {
             deadlyArmorState.baseExtraData1 = extraData2;
@@ -900,8 +897,8 @@ public class CharacterSkillBase : SkillBase
         }
 
         int healTriggerCount = Mathf.Max(1, Mathf.RoundToInt(extraData3));
-        State bloodSurgeHeal = character.AddState(StateType.BloodSurgeHeal, character, 99, healTriggerCount, extraData2);
-        if (bloodSurgeHeal != null && extraData4 > 0f)
+        State bloodSurgeHeal = character.AddState(StateType.BloodSurgeHeal, character, 99, healTriggerCount);
+        if (bloodSurgeHeal != null)
         {
             bloodSurgeHeal.baseExtraData1 = extraData4;
         }

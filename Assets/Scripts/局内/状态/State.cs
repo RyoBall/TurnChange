@@ -948,7 +948,7 @@ public class DesperationMarkStateBehavior : StateBehaviorBase
         }
 
         UnitCombatant giver = state.giver != null ? state.giver : state.owner;
-        State transferredState = nextTarget.AddState(StateType.DesperationMark, giver, GetTransferDuration(), state.StackCount, state.skillCoef);
+        State transferredState = nextTarget.AddState(StateType.DesperationMark, giver, GetTransferDuration(), state.StackCount);
         if (transferredState == null)
         {
             return;
