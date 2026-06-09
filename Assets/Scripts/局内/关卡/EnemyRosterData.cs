@@ -6,6 +6,7 @@ public class EnemyRosterData : ScriptableObject
 {
     public string enemyName;
     public string enemyID;
+    public Sprite enemySprite;
     public GameObject prefabOverride;
 
     public List<EnemySkillType> skills = new List<EnemySkillType>();

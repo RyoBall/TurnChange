@@ -295,6 +295,7 @@ public class Character : UnitCombatant
     }
     private void OnMouseDown()
     {
+        Debug.Log($"Clicked on character: {name}");
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
             CharacterManager.Instance?.OnFieldCharacterClicked(this);

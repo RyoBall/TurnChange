@@ -133,6 +133,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMPro_InstructionOverlay.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeB.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelDataTypes.cs" />
+     <Compile Include="Assets\Scripts\局外\关卡\EnemyInfoDisplayUI.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\DropdownSample.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\LevelCharacterSpawner.cs" />
@@ -142,6 +143,7 @@
      <Compile Include="Assets\Scripts\局外\总数据\StarterBranchChoiceButtonUI.cs" />
      <Compile Include="Assets\Scripts\局内\DictionaryManager.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelSelectionListLoader.cs" />
+     <Compile Include="Assets\Scripts\局外\总数据\SkillKeywordConfig.cs" />
      <Compile Include="Assets\Scripts\局内\指挥点技能\Commander.cs" />
      <Compile Include="Assets\Scripts\局内\UI\角色UI\CharacterStateUIItem.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterSkillButtonUI.cs" />

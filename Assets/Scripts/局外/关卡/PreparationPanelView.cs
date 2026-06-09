@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using TMPro;
 [DisallowMultipleComponent]
 public class PreparationPanelView : MonoBehaviour
 {
@@ -22,6 +22,13 @@ public class PreparationPanelView : MonoBehaviour
     [SerializeField] private float listHiddenX = -680f;
     [SerializeField] private float listShownX = 0f;
     [SerializeField] private float listSlideSmoothTime = 0.12f;
+
+    [Header("敌人信息")]
+    [SerializeField] private List<RectTransform> enemyInfoPositions = new List<RectTransform>();
+    [SerializeField] private GameObject enemyInfoPrefab;
+
+    [Header("关卡名称")]
+    [SerializeField] private TMP_Text levelNameText;
 
     public LevelSelectionData CurrentLevelData { get; private set; }
 
@@ -60,6 +67,7 @@ public class PreparationPanelView : MonoBehaviour
     }
 
     private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
+    private readonly List<EnemyInfoDisplayUI> m_enemyInfoDisplays = new List<EnemyInfoDisplayUI>();
     private static readonly List<CharacterRosterData> m_selectedCharacters = new List<CharacterRosterData>();
     private static bool s_HasRaisedFirstPreparationOpenEvent;
     private Vector2 m_ListVelocity;
@@ -164,6 +172,12 @@ public class PreparationPanelView : MonoBehaviour
         panelRoot.SetActive(true);
         RebuildCharacterButtons();
         RefreshSelectedCharacterImages();
+        RebuildEnemyInfoDisplays();
+
+        if (levelNameText != null && levelData != null)
+        {
+            levelNameText.text = levelData.levelName;
+        }
     }
 
     public void Close()
@@ -283,6 +297,56 @@ public class PreparationPanelView : MonoBehaviour
         }
 
         m_characterButtons.Clear();
+    }
+
+    private void RebuildEnemyInfoDisplays()
+    {
+        ClearEnemyInfoDisplays();
+
+        if (enemyInfoPrefab == null || CurrentLevelData == null)
+        {
+            return;
+        }
+
+        List<LevelEnemyEntry> distinctEnemies = CurrentLevelData.GetDistinctEnemies();
+        if (distinctEnemies == null || distinctEnemies.Count == 0)
+        {
+            Debug.LogWarning("[PreparationPanelView] 当前关卡没有敌人数据，无法显示敌人信息。", this);
+            return;
+        }
+
+        for (int i = 0; i < distinctEnemies.Count; i++)
+        {
+            EnemyInfoDisplayUI display = Instantiate(enemyInfoPrefab, enemyInfoPositions[i]).GetComponent<EnemyInfoDisplayUI>();
+            RectTransform displayRect = display.GetComponent<RectTransform>();
+            if (displayRect != null && enemyInfoPositions != null && i < enemyInfoPositions.Count && enemyInfoPositions[i] != null)
+            {
+                displayRect.anchoredPosition = enemyInfoPositions[i].anchoredPosition;
+            }
+
+            display.SetEnemyData(distinctEnemies[i]);
+            m_enemyInfoDisplays.Add(display);
+            Debug.Log($"[PreparationPanelView] 显示敌人信息：{distinctEnemies[i].enemyData.enemyName} (Lv.{distinctEnemies[i].level})", this);
+        }
+    }
+
+    private void ClearEnemyInfoDisplays()
+    {
+        for (int i = m_enemyInfoDisplays.Count - 1; i >= 0; i--)
+        {
+            if (m_enemyInfoDisplays[i] == null) continue;
+
+            if (Application.isPlaying)
+            {
+                Destroy(m_enemyInfoDisplays[i].gameObject);
+            }
+            else
+            {
+                DestroyImmediate(m_enemyInfoDisplays[i].gameObject);
+            }
+        }
+
+        m_enemyInfoDisplays.Clear();
     }
 
     private void RemoveUnavailableSelectedCharacters()

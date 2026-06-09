@@ -47,11 +47,13 @@
      <Compile Include="Assets\Editor\TutorialDataImporter.cs" />
      <Compile Include="Assets\Editor\FieldDomainRenderFeatureInstaller.cs" />
      <Compile Include="Assets\Editor\EditorConfig.cs" />
+     <Compile Include="Assets\Editor\SkillKeywordProcessor.cs" />
      <Compile Include="Assets\Editor\CFXFixer.cs" />
      <Compile Include="Assets\VFX\JMO Assets\Cartoon FX Easy Editor\Editor\CFXEasyEditor.cs" />
      <Compile Include="Assets\Editor\EnemyDataImporter.cs" />
      <Compile Include="Assets\Editor\CharacterSkillImporter.cs" />
      <Compile Include="Assets\Editor\LevelEnemyEntryDrawer.cs" />
+     <Compile Include="Assets\Editor\SkillKeywordImporter.cs" />
      <Compile Include="Assets\Editor\StateImporter.cs" />
      <Compile Include="Assets\Editor\ReadOnlyDrawer.cs" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\CurveGrid.shader" />

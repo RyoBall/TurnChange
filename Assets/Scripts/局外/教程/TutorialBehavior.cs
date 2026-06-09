@@ -44,7 +44,6 @@ public abstract class TutorialBehavior
     /// </summary>
     public virtual bool CanProgress()
     {
-        Debug.Log("TutorialBehavior: 使用默认推进条件（鼠标点击）");
         return Input.GetMouseButtonDown(0);
     }
 

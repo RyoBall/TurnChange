@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using System.Text;
-using TMPro;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 public class UnitStateTextDisplay : MonoBehaviour
@@ -19,12 +19,11 @@ public class UnitStateTextDisplay : MonoBehaviour
     [SerializeField] private Vector2 screenOffset = Vector2.zero;
     [SerializeField] private RectTransform parentCanvasRect;
 
-    [Header("文本样式")]
-    [SerializeField] private Color textColor = Color.white;
-    [SerializeField] private float fontSize = 24f;
-    [SerializeField] private Vector2 textSize = new Vector2(260f, 120f);
-    [SerializeField] private string noStateText = string.Empty;
-    [SerializeField] private TMP_FontAsset defaultFont;
+    [Header("图标样式")]
+    [SerializeField] private Vector2 iconSize = new Vector2(32f, 32f);
+    [SerializeField] private float iconSpacing = 2f;
+    [SerializeField] private Color iconColor = Color.white;
+    [SerializeField] private Sprite defaultIcon;
 
     [Header("刷新")]
     [SerializeField, Min(0.02f)] private float refreshInterval = 0.1f;
@@ -35,12 +34,19 @@ public class UnitStateTextDisplay : MonoBehaviour
     private Canvas rootCanvas;
     private float nextUnitListRefreshTime;
 
-    private sealed class UnitBinding//UI对象
+    private sealed class UnitBinding
     {
         public UnitCombatant Unit;
-        public RectTransform TextRoot;
-        public TextMeshProUGUI TextMesh;
+        public RectTransform RootRect;
+        public HorizontalLayoutGroup LayoutGroup;
+        public readonly List<StateIconBinding> IconBindings = new List<StateIconBinding>();
         public float NextRefreshTime;
+    }
+
+    private sealed class StateIconBinding
+    {
+        public RectTransform RectTransform;
+        public Image Image;
     }
 
     private void Awake()
@@ -85,17 +91,17 @@ public class UnitStateTextDisplay : MonoBehaviour
         for (int i = 0; i < bindings.Count; i++)
         {
             UnitBinding binding = bindings[i];
-            if (binding == null || binding.Unit == null || binding.TextRoot == null || binding.TextMesh == null)
+            if (binding == null || binding.Unit == null || binding.RootRect == null)
             {
                 continue;
             }
 
-            UpdateTextPosition(binding);
+            UpdateRootPosition(binding);
 
             if (Time.time >= binding.NextRefreshTime)
             {
                 binding.NextRefreshTime = Time.time + refreshInterval;
-                RefreshText(binding);
+                RefreshIcons(binding);
             }
         }
     }
@@ -104,9 +110,9 @@ public class UnitStateTextDisplay : MonoBehaviour
     {
         for (int i = 0; i < bindings.Count; i++)
         {
-            if (bindings[i] != null && bindings[i].TextRoot != null)
+            if (bindings[i] != null && bindings[i].RootRect != null)
             {
-                Destroy(bindings[i].TextRoot.gameObject);
+                Destroy(bindings[i].RootRect.gameObject);
             }
         }
 
@@ -157,16 +163,6 @@ public class UnitStateTextDisplay : MonoBehaviour
         }
     }
 
-    private void EnsureTextObject()
-    {
-        if (parentCanvasRect != null)
-        {
-            return;
-        }
-
-        Debug.LogWarning($"[UnitStateTextDisplay] {name} 未找到 Canvas，无法显示状态文本");
-    }
-
     private void ValidateTrackedUnits()
     {
         HashSet<UnitCombatant> seen = new HashSet<UnitCombatant>();
@@ -199,8 +195,8 @@ public class UnitStateTextDisplay : MonoBehaviour
 
         for (int i = 0; i < bindings.Count; i++)
         {
-            UpdateTextPosition(bindings[i]);
-            RefreshText(bindings[i]);
+            UpdateRootPosition(bindings[i]);
+            RefreshIcons(bindings[i]);
         }
     }
 
@@ -211,9 +207,9 @@ public class UnitStateTextDisplay : MonoBehaviour
             UnitBinding binding = bindings[i];
             if (binding == null || binding.Unit == null || !trackedUnits.Contains(binding.Unit))
             {
-                if (binding != null && binding.TextRoot != null)
+                if (binding != null && binding.RootRect != null)
                 {
-                    Destroy(binding.TextRoot.gameObject);
+                    Destroy(binding.RootRect.gameObject);
                 }
 
                 if (binding != null && binding.Unit != null)
@@ -251,30 +247,32 @@ public class UnitStateTextDisplay : MonoBehaviour
             return null;
         }
 
-        GameObject textObject = new GameObject($"StateTextUI_{unit.name}");
-        RectTransform textRoot = textObject.AddComponent<RectTransform>();
-        textRoot.SetParent(parentCanvasRect, false);
-        textRoot.sizeDelta = textSize;
+        GameObject rootObject = new GameObject($"StateIconUI_{unit.name}");
+        RectTransform rootRect = rootObject.AddComponent<RectTransform>();
+        rootRect.SetParent(parentCanvasRect, false);
 
-        TextMeshProUGUI textMesh = textObject.AddComponent<TextMeshProUGUI>();
-        textMesh.alignment = TextAlignmentOptions.Center;
-        textMesh.verticalAlignment = VerticalAlignmentOptions.Bottom;
-        textMesh.fontSize = fontSize;
-        textMesh.font = defaultFont;    
-        textMesh.color = textColor;
-        textMesh.text = string.Empty;
-        textMesh.raycastTarget = false;
+        HorizontalLayoutGroup layoutGroup = rootObject.AddComponent<HorizontalLayoutGroup>();
+        layoutGroup.childAlignment = TextAnchor.MiddleCenter;
+        layoutGroup.childControlWidth = false;
+        layoutGroup.childControlHeight = false;
+        layoutGroup.childForceExpandWidth = false;
+        layoutGroup.childForceExpandHeight = false;
+        layoutGroup.spacing = iconSpacing;
+
+        ContentSizeFitter sizeFitter = rootObject.AddComponent<ContentSizeFitter>();
+        sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         return new UnitBinding
         {
             Unit = unit,
-            TextRoot = textRoot,
-            TextMesh = textMesh,
+            RootRect = rootRect,
+            LayoutGroup = layoutGroup,
             NextRefreshTime = 0f
         };
     }
 
-    private void UpdateTextPosition(UnitBinding binding)
+    private void UpdateRootPosition(UnitBinding binding)
     {
         Camera renderCamera = GetRenderCamera();
         Camera worldCamera = Camera.main != null ? Camera.main : renderCamera;
@@ -287,22 +285,22 @@ public class UnitStateTextDisplay : MonoBehaviour
         Vector3 screenPosition = worldCamera.WorldToScreenPoint(worldPosition);
         if (screenPosition.z < 0f)
         {
-            if (binding.TextRoot.gameObject.activeSelf)
+            if (binding.RootRect.gameObject.activeSelf)
             {
-                binding.TextRoot.gameObject.SetActive(false);
+                binding.RootRect.gameObject.SetActive(false);
             }
             return;
         }
 
-        if (!binding.TextRoot.gameObject.activeSelf)
+        if (!binding.RootRect.gameObject.activeSelf)
         {
-            binding.TextRoot.gameObject.SetActive(true);
+            binding.RootRect.gameObject.SetActive(true);
         }
 
         Vector2 localPoint;
         Vector2 finalScreenPosition = new Vector2(screenPosition.x, screenPosition.y) + screenOffset;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, finalScreenPosition, renderCamera, out localPoint);
-        binding.TextRoot.anchoredPosition = localPoint;
+        binding.RootRect.anchoredPosition = localPoint;
     }
 
     private Camera GetRenderCamera()
@@ -315,48 +313,88 @@ public class UnitStateTextDisplay : MonoBehaviour
         return rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
     }
 
-    private void RefreshText(UnitBinding binding)
+    private void RefreshIcons(UnitBinding binding)
     {
         UnitCombatant unit = binding.Unit;
-        if (unit.States == null || unit.States.Count == 0)
+
+        // 收集有效状态，跳过 Sprite 为 null 的状态
+        List<State> sortedStates = new List<State>();
+        if (unit.States != null)
         {
-            binding.TextMesh.text = noStateText;
-            return;
+            for (int i = 0; i < unit.States.Count; i++)
+            {
+                State state = unit.States[i];
+                if (state == null)
+                {
+                    continue;
+                }
+
+                if (state.icon == null && defaultIcon == null)
+                {
+                    continue;
+                }
+
+                sortedStates.Add(state);
+            }
         }
 
-        StringBuilder sb = new StringBuilder(64);
-        for (int i = 0; i < unit.States.Count; i++)
+        // 按 priority 升序排列，priority 相同按 name 排序确保唯一解
+        sortedStates.Sort((a, b) =>
         {
-            State state = unit.States[i];
-            if (state == null)
+            int priorityCompare = a.priority.CompareTo(b.priority);
+            if (priorityCompare != 0)
             {
-                continue;
+                return priorityCompare;
             }
 
-            if (sb.Length > 0)
-            {
-                sb.Append('\n');
-            }
+            return string.CompareOrdinal(a.name, b.name);
+        });
 
-            sb.Append(state.name);
-            sb.Append($" Lv.{state.StackCount}");
-            sb.Append(" ");
-            sb.Append(FormatDuration(state));
+        // 确保图标数量匹配
+        while (binding.IconBindings.Count < sortedStates.Count)
+        {
+            CreateIconChild(binding);
         }
 
-        binding.TextMesh.text = sb.ToString();
+        while (binding.IconBindings.Count > sortedStates.Count)
+        {
+            int lastIndex = binding.IconBindings.Count - 1;
+            StateIconBinding removed = binding.IconBindings[lastIndex];
+            if (removed.RectTransform != null)
+            {
+                Destroy(removed.RectTransform.gameObject);
+            }
+
+            binding.IconBindings.RemoveAt(lastIndex);
+        }
+
+        // 更新图标
+        for (int i = 0; i < sortedStates.Count; i++)
+        {
+            State state = sortedStates[i];
+            StateIconBinding iconBinding = binding.IconBindings[i];
+            Sprite sprite = state.icon != null ? state.icon : defaultIcon;
+            iconBinding.Image.sprite = sprite;
+            iconBinding.Image.color = iconColor;
+            iconBinding.RectTransform.gameObject.SetActive(true);
+        }
     }
 
-    private static string FormatDuration(State state)
+    private void CreateIconChild(UnitBinding binding)
     {
-        switch (state.DurationType)
+        GameObject iconObject = new GameObject($"StateIcon_{binding.IconBindings.Count}");
+        RectTransform iconRect = iconObject.AddComponent<RectTransform>();
+        iconRect.SetParent(binding.RootRect, false);
+        iconRect.sizeDelta = iconSize;
+
+        Image image = iconObject.AddComponent<Image>();
+        image.raycastTarget = false;
+        image.preserveAspect = true;
+
+        binding.IconBindings.Add(new StateIconBinding
         {
-            case StateDurationType.Turn:
-                return $"{state.RemainingTurns}T";
-            case StateDurationType.ActionValue:
-                return $"{state.RemainingActionValue}AV";
-            default:
-                return "";
-        }
+            RectTransform = iconRect,
+            Image = image
+        });
     }
 }

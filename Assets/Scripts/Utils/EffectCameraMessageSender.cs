@@ -49,6 +49,10 @@ public class EffectCameraMessageSender : MonoBehaviour
             // 停留在同一物体上
             currentHitObject.SendMessage("OnMouseOver", SendMessageOptions.DontRequireReceiver);
         }
+        if(currentHitObject != null&&Input.GetMouseButtonDown(0))
+        {
+            currentHitObject.SendMessage("OnMouseDown", SendMessageOptions.DontRequireReceiver);
+        }
         
         lastHitObject = currentHitObject;
     }

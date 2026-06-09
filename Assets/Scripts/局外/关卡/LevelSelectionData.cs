@@ -35,4 +35,43 @@ public class LevelSelectionData : ScriptableObject//关卡数据
 
         return waveData.enemies;
     }
+
+    /// <summary>
+    /// 汇总所有波次中不同等级和种类的敌人，相同敌人（同enemyID+同等级）只保留一条
+    /// </summary>
+    public List<LevelEnemyEntry> GetDistinctEnemies()
+    {
+        List<LevelEnemyEntry> result = new List<LevelEnemyEntry>();
+        if (enemyWaves == null) return result;
+
+        foreach (LevelEnemyWaveData wave in enemyWaves)
+        {
+            if (wave == null || wave.enemies == null) continue;
+
+            foreach (LevelEnemyEntry entry in wave.enemies)
+            {
+                if (entry == null || entry.enemyData == null) continue;
+
+                // 检查是否已存在相同enemyID且相同等级的敌人
+                bool alreadyExists = false;
+                foreach (LevelEnemyEntry existing in result)
+                {
+                    if (existing != null && existing.enemyData != null &&
+                        existing.enemyData.enemyID == entry.enemyData.enemyID &&
+                        existing.level == entry.level)
+                    {
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyExists)
+                {
+                    result.Add(entry);
+                }
+            }
+        }
+
+        return result;
+    }
 }

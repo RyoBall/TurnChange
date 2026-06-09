@@ -116,7 +116,13 @@ public class State : ScriptableObject
     public bool isDot;
     public bool isDebuff;
 
+    [Header("排序")]
+    [Tooltip("状态图标显示优先级，数值越小越靠前")]
+    public int priority;
+
     [Header("显示与基础配置")]
+    [Tooltip("状态图标")]
+    public Sprite icon;
     [TextArea(2, 5)] public string description;
     public float skillCoef;
     public float baseExtraData1;

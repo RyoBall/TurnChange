@@ -67,6 +67,7 @@ public static class StateImporter
             stateAsset.baseExtraData4 = GetFloat(row, "Extra_Data_4", 0f);
             stateAsset.isDebuff = GetBool(row, "IsDebuff");
             stateAsset.isDot = GetBool(row, "IsDot");
+            stateAsset.priority = GetInt(row, "Priority", 99);
 
             SerializedObject serializedObject = new SerializedObject(stateAsset);
             serializedObject.FindProperty("maxStacks").intValue = Mathf.Max(1, GetInt(row, "MaxStacks", 1));
