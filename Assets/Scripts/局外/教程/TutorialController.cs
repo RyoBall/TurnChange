@@ -21,6 +21,7 @@ public class TutorialController : MonoBehaviour
     [Header("对话框 UI")]
     [SerializeField] private Image guideImage;
     [SerializeField] private CanvasGroup m_dialogCanvasGroup;
+    [SerializeField] private RectTransform m_dialogRectTransform;
     [SerializeField] private TMP_Text m_dialogText;
 
     [Header("动画参数")]
@@ -165,6 +166,12 @@ public class TutorialController : MonoBehaviour
 
         m_currentBehavior = behavior;
         behavior.OnTutorialStart();
+
+        // 设置对话框位置
+        if (m_dialogRectTransform != null)
+        {
+            m_dialogRectTransform.anchoredPosition = behavior.Data.AnchoredPosition;
+        }
 
         // 播放对话框出现动画
         // 显示第一条文本

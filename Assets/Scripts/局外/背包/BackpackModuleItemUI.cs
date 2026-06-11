@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler
+public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Color normalBackgroundColor = new Color(0.12f, 0.14f, 0.18f, 0.92f);
     [SerializeField] private Color selectedBackgroundColor = new Color(0.22f, 0.35f, 0.18f, 0.98f);
@@ -25,6 +25,8 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler
     [SerializeField] private TMP_Text m_titleText;
     [SerializeField] private RectTransform m_shapeRoot;
     private Action<GridModuleDefinition> m_onPressed;
+    private Action<GridModuleDefinition> m_onHovered;
+    private Action m_onHoverExited;
     private GridModuleDefinition m_module;
 
     private void Awake()
@@ -32,12 +34,14 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler
         EnsureView();
     }
 
-    public void Bind(GridModuleDefinition module, bool selected, bool isLoaded, Vector2 drawCellSize, Action<GridModuleDefinition> onPressed)
+    public void Bind(GridModuleDefinition module, bool selected, bool isLoaded, Vector2 drawCellSize, Action<GridModuleDefinition> onPressed, Action<GridModuleDefinition> onHovered = null, Action onHoverExited = null)
     {
         EnsureView();
 
         m_module = module;
         m_onPressed = onPressed;
+        m_onHovered = onHovered;
+        m_onHoverExited = onHoverExited;
 
         m_titleText.text = module != null ? module.moduleName : string.Empty;
         m_background.color = isLoaded ? loadedBackgroundColor : (selected ? selectedBackgroundColor : normalBackgroundColor);
@@ -56,6 +60,19 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler
         }
 
         m_onPressed?.Invoke(m_module);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (m_module != null)
+        {
+            m_onHovered?.Invoke(m_module);
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        m_onHoverExited?.Invoke();
     }
 
     private void EnsureView()

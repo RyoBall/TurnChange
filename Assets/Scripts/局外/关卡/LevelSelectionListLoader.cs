@@ -92,6 +92,39 @@ public class LevelSelectionListLoader : MonoBehaviour
         }
 
         carousel?.RefreshItems();
+
+        // 定位到第一个未完成的关卡
+        SnapToFirstIncompleteLevel(sourceLevels);
+    }
+
+    /// <summary>
+    /// 从第一个关卡开始遍历，将轮播吸附到第一个未完成的关卡
+    /// </summary>
+    private void SnapToFirstIncompleteLevel(List<LevelSelectionData> sourceLevels)
+    {
+        if (carousel == null || sourceLevels == null || sourceLevels.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < sourceLevels.Count; i++)
+        {
+            LevelSelectionData level = sourceLevels[i];
+            if (level == null)
+            {
+                continue;
+            }
+
+            bool isCompleted = Datas.Instance != null && Datas.Instance.IsLevelCompleted(level.levelId);
+            if (!isCompleted)
+            {
+                carousel.SnapToItemIndex(i);
+                return;
+            }
+        }
+
+        // 全部完成时，定位到最后一个关卡
+        carousel.SnapToItemIndex(sourceLevels.Count - 1);
     }
 
     private List<LevelSelectionData> GetSourceLevels()
@@ -198,7 +231,6 @@ public class LevelSelectionListLoader : MonoBehaviour
         m_dataSource.LevelCompleted -= RebuildLevelListAfterCompletion;
         m_dataSource = null;
     }
-
     private void RebuildLevelListAfterCompletion(string levelId)
     {
         if (string.IsNullOrWhiteSpace(levelId))

@@ -352,7 +352,7 @@ public class HorizontalSnapCarousel : MonoBehaviour, IBeginDragHandler, IDragHan
         SnapToItem(index, item);
     }
 
-    private void SnapToItemIndex(int index)
+    public void SnapToItemIndex(int index)
     {
         if (index < 0 || index >= m_Items.Count)
         {

@@ -33,6 +33,8 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
     private PlacedModuleEntry[,] m_placedEntries;
 
     public event Action<Vector2Int> CellClicked;
+    public event Action<GridModuleDefinition> ModuleHovered;
+    public event Action ModuleHoverExited;
     private void OnValidate()
     {
         spacing = Mathf.Max(0f, spacing);
@@ -221,6 +223,41 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
                 });
             }
         }
+    }
+
+    public bool TryGetModuleAtCell(Vector2Int cell, out GridModuleDefinition module)
+    {
+        module = null;
+
+        if (m_placedEntries == null)
+        {
+            return false;
+        }
+
+        int boardSize = GetBoardSize();
+        if (cell.x < 0 || cell.x >= boardSize || cell.y < 0 || cell.y >= boardSize)
+        {
+            return false;
+        }
+
+        PlacedModuleEntry entry = m_placedEntries[cell.x, cell.y];
+        if (entry == null || entry.module == null)
+        {
+            return false;
+        }
+
+        module = entry.module;
+        return true;
+    }
+
+    public void NotifyModuleHovered(GridModuleDefinition module)
+    {
+        ModuleHovered?.Invoke(module);
+    }
+
+    public void NotifyModuleHoverExited()
+    {
+        ModuleHoverExited?.Invoke();
     }
 
     public void OnPointerClick(PointerEventData eventData)

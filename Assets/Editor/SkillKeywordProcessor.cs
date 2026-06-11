@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ using UnityEngine;
 /// - 读取所有 CharacterSkillBase 资产的描述文本
 /// - 根据 SkillKeywordConfig 中的关键词列表进行匹配
 /// - 将匹配到的关键词自动填入技能的 tags 列表
+/// - 在描述文本中将匹配到的关键词用 <b><color=black> 标签包裹
 /// </summary>
 public static class SkillKeywordProcessor
 {
@@ -90,8 +92,10 @@ public static class SkillKeywordProcessor
                 return;
             }
 
-            // 3. 在技能描述中检索关键词
-            string searchText = $"{skill.description} {skill.shortDescription}";
+            // 3. 去除尖括号修饰后检索关键词
+            string rawDescription = StripHtmlTags(skill.description);
+            string rawShortDescription = StripHtmlTags(skill.shortDescription);
+            string searchText = $"{rawDescription} {rawShortDescription}";
             if (string.IsNullOrWhiteSpace(searchText))
             {
                 continue;
@@ -103,7 +107,24 @@ public static class SkillKeywordProcessor
                 continue;
             }
 
-            // 4. 将匹配到的关键词加入技能的 tags 列表（去重）
+            // 4. 在原始描述文本中用 <b><color=black> 包裹匹配到的关键词
+            string newDescription = WrapKeywordsInText(skill.description, matchedKeywords);
+            string newShortDescription = WrapKeywordsInText(skill.shortDescription, matchedKeywords);
+
+            bool descriptionChanged = newDescription != skill.description;
+            bool shortDescriptionChanged = newShortDescription != skill.shortDescription;
+
+            if (descriptionChanged)
+            {
+                skill.description = newDescription;
+            }
+
+            if (shortDescriptionChanged)
+            {
+                skill.shortDescription = newShortDescription;
+            }
+
+            // 5. 将匹配到的关键词加入技能的 tags 列表（去重）
             int addedCount = 0;
             foreach (string keyword in matchedKeywords)
             {
@@ -114,11 +135,11 @@ public static class SkillKeywordProcessor
                 }
             }
 
-            if (addedCount > 0)
+            if (descriptionChanged || shortDescriptionChanged || addedCount > 0)
             {
                 EditorUtility.SetDirty(skill);
                 totalKeywordsAdded += addedCount;
-                Debug.Log($"[SkillKeywordProcessor] 技能 [{skill.skillName}] 添加了 {addedCount} 个关键词: {string.Join(", ", matchedKeywords)}");
+                Debug.Log($"[SkillKeywordProcessor] 技能 [{skill.skillName}] 添加了 {addedCount} 个关键词，描述已更新: {string.Join(", ", matchedKeywords)}");
             }
 
             totalProcessed++;
@@ -131,6 +152,56 @@ public static class SkillKeywordProcessor
         AssetDatabase.Refresh();
 
         Debug.Log($"[SkillKeywordProcessor] 处理完成！共处理 {totalProcessed} 个技能，添加了 {totalKeywordsAdded} 个关键词");
+    }
+
+    /// <summary>
+    /// 去除文本中所有的尖括号标签（如 &lt;b&gt;, &lt;color=white&gt;, &lt;/color&gt; 等）
+    /// </summary>
+    private static string StripHtmlTags(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        // 匹配 <...> 格式的所有标签
+        return Regex.Replace(text, @"<[^>]*>", string.Empty);
+    }
+
+    /// <summary>
+    /// 在原始文本中用 &lt;b&gt;&lt;color=black&gt;...&lt;/color&gt;&lt;/b&gt; 包裹匹配到的关键词
+    /// 避免重复包裹已存在的标签
+    /// </summary>
+    private static string WrapKeywordsInText(string text, List<string> keywords)
+    {
+        if (string.IsNullOrEmpty(text) || keywords == null || keywords.Count == 0)
+        {
+            return text;
+        }
+
+        string result = text;
+
+        foreach (string keyword in keywords)
+        {
+            if (string.IsNullOrEmpty(keyword))
+            {
+                continue;
+            }
+
+            // 构造带包裹标签的关键词模式
+            string wrappedKeyword = $"<b><color=black>{keyword}</color></b>";
+
+            // 如果原文中已经包含包裹后的版本，则跳过
+            if (result.Contains(wrappedKeyword))
+            {
+                continue;
+            }
+
+            // 替换所有未包裹的 keyword 为包裹版本
+            result = result.Replace(keyword, wrappedKeyword);
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -147,7 +218,7 @@ public static class SkillKeywordProcessor
                 continue;
             }
 
-            // 使用 Contains 进行子串匹配（不区分大小写，但保留原始关键词的大小写）
+            // 使用 Contains 进行子串匹配
             if (text.Contains(keyword))
             {
                 matched.Add(keyword);

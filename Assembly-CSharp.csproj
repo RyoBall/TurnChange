@@ -50,6 +50,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
      <Compile Include="Assets\Scripts\局外\教程\TutorialBehaviorFactory.cs" />
      <Compile Include="Assets\Scripts\局内\角色\DragonBossEnemy.cs" />
+     <Compile Include="Assets\Scripts\局内\UI\伤害文本\StateTipUI.cs" />
      <Compile Include="Assets\Scripts\局内\交换角色\EnterCharacterButton.cs" />
      <Compile Include="Assets\Scripts\局内\角色\EnemyAnimationOverrideDatabase.cs" />
      <Compile Include="Assets\Scripts\局内\角色\Changer.cs" />
@@ -76,7 +77,6 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_FrameRateCounter.cs" />
      <Compile Include="Assets\VFX\Lana Studio\Casual RPG VFX\Demo\Scripts\ObjectsSwitcher.cs" />
-     <Compile Include="Assets\Scripts\局内\UI\伤害文本\FeelDamageTextManager.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterSelectButtonUI.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
@@ -114,6 +114,7 @@
      <Compile Include="Assets\VFX\CodeWee\cwGridShader(URP)\Scripts\cwGridFeature(URP).cs" />
      <Compile Include="Assets\Scripts\Audio\GameAudioInputObserver.cs" />
      <Compile Include="Assets\Scripts\局外\切换界面\StartBattleButton.cs" />
+     <Compile Include="Assets\Scripts\局外\主界面\MoneyText.cs" />
      <Compile Include="Assets\Scripts\局外\背包\GridModuleModifierBehaviors.cs" />
      <Compile Include="Assets\Scripts\局外\教程\GuideDisplayController.cs" />
      <Compile Include="Assets\Scripts\局内\CharacterLevelDataContainer.cs" />

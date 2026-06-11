@@ -260,7 +260,7 @@ public class UnitCombatant : Combatant
                 if (tstate != null && tstate.stateType == stateType)
                 {
                     tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, ifChangeStackByExtraStacks);
-                    DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
+                    DamageTextPool.Instance?.ShowStateTipAtObject(transform, tstate);
                     GameAudioEvents.Raise(
                         tstate.isDebuff ? GameAudioEventType.CombatDebuffGain : GameAudioEventType.CombatBuffGain,
                         giver,
@@ -296,7 +296,7 @@ public class UnitCombatant : Combatant
             giver,
             this,
             stacks);
-        DamageTextPool.Instance?.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
+        DamageTextPool.Instance?.ShowStateTipAtObject(transform, state);
         return state;
     }
 

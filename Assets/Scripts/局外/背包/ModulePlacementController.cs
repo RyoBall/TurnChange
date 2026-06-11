@@ -52,11 +52,15 @@ public class ModulePlacementController : MonoBehaviour//背包
         if (inventoryView != null)
         {
             inventoryView.ModulePressed += HandleModulePressed;
+            inventoryView.ModuleHovered += HandleInventoryModuleHovered;
+            inventoryView.ModuleHoverExited += HandleModuleHoverExited;
         }
 
         if (placementBoard != null)
         {
             placementBoard.BuildBoard();
+            placementBoard.ModuleHovered += HandleBoardModuleHovered;
+            placementBoard.ModuleHoverExited += HandleModuleHoverExited;
         }
 
         SubscribeToDataSource();
@@ -75,6 +79,14 @@ public class ModulePlacementController : MonoBehaviour//背包
         if (inventoryView != null)
         {
             inventoryView.ModulePressed -= HandleModulePressed;
+            inventoryView.ModuleHovered -= HandleInventoryModuleHovered;
+            inventoryView.ModuleHoverExited -= HandleModuleHoverExited;
+        }
+
+        if (placementBoard != null)
+        {
+            placementBoard.ModuleHovered -= HandleBoardModuleHovered;
+            placementBoard.ModuleHoverExited -= HandleModuleHoverExited;
         }
 
         UnsubscribeFromDataSource();
@@ -116,6 +128,39 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
 
         SetSelection(module);
+    }
+
+    private void HandleInventoryModuleHovered(GridModuleDefinition module)
+    {
+        if (module == null || selectionText == null)
+        {
+            return;
+        }
+
+        selectionText.text = module.moduleName + "\n" + module.description;
+    }
+
+    private void HandleBoardModuleHovered(GridModuleDefinition module)
+    {
+        if (module == null || selectionText == null)
+        {
+            return;
+        }
+
+        selectionText.text = module.moduleName + "（已装载）\n" + module.description;
+    }
+
+    private void HandleModuleHoverExited()
+    {
+        if (selectionText == null)
+        {
+            return;
+        }
+
+        // 恢复默认提示文本
+        selectionText.text = m_selectedModule == null
+            ? "按住左键拿起背包中的模块，松开左键时自动尝试放置"
+            : "已拿起：" + m_selectedModule.moduleName + "，松开左键时自动尝试放置";
     }
 
     private void TryPickupModuleAtCell(Vector2Int cell)
@@ -232,6 +277,7 @@ public class ModulePlacementController : MonoBehaviour//背包
 
     private void UpdateHoveredBoardCell()//更新鼠标悬停的网格单元格
     {
+        Vector2Int? previousHoveredCell = m_hoveredBoardCell;
         m_hoveredBoardCell = null;
 
         if (placementBoard == null || targetCanvas == null)
@@ -243,6 +289,25 @@ public class ModulePlacementController : MonoBehaviour//背包
         if (placementBoard.TryGetCellFromScreenPoint(Input.mousePosition, uiCamera, out Vector2Int hoveredCell))
         {
             m_hoveredBoardCell = hoveredCell;
+        }
+
+        // 检测网格上悬停的模块变化
+        if (m_hoveredBoardCell.HasValue)
+        {
+            if (placementBoard.TryGetModuleAtCell(m_hoveredBoardCell.Value, out GridModuleDefinition hoveredModule))
+            {
+                if (!previousHoveredCell.HasValue || !placementBoard.TryGetModuleAtCell(previousHoveredCell.Value, out GridModuleDefinition prevModule) || prevModule != hoveredModule)
+                {
+                    placementBoard.NotifyModuleHovered(hoveredModule);
+                }
+                return;
+            }
+        }
+
+        // 鼠标离开了已放置模块
+        if (previousHoveredCell.HasValue && placementBoard.TryGetModuleAtCell(previousHoveredCell.Value, out _))
+        {
+            placementBoard.NotifyModuleHoverExited();
         }
     }
 

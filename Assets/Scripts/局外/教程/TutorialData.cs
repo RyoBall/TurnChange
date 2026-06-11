@@ -37,9 +37,15 @@ public class TutorialData : ScriptableObject
     [Header("对话文本列表")]
     [SerializeField] private List<string> m_textList = new List<string>();
 
+    [Header("对话框位置")]
+    [SerializeField] private Vector2 m_anchoredPosition;
+
     /// <summary>教程类型，决定使用哪个行为子类</summary>
     public TutorialType Type => m_type;
 
     /// <summary>该教程的对话文本列表</summary>
     public IReadOnlyList<string> TextList => m_textList;
+
+    /// <summary>对话框出现时的 AnchoredPosition</summary>
+    public Vector2 AnchoredPosition => m_anchoredPosition;
 }
