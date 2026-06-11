@@ -34,6 +34,7 @@ public enum GridModuleType
     SwapChargeBurst,
     EmergencySwapIn,
     CritDotSpread,
+    FocusFire,
 }
 
 public enum GridModuleLevel
@@ -62,35 +63,9 @@ public class GridModuleDefinition : ScriptableObject
     {
         Vector2Int.zero
     };
-
-    [NonSerialized] private IGridModuleBehavior m_behavior;
     [NonSerialized] private bool m_isLoaded;
 
     public bool IsLoaded => m_isLoaded;
-
-    private IGridModuleBehavior Behavior
-    {
-        get
-        {
-            if (m_behavior == null)
-            {
-                m_behavior = GridModuleBehaviorFactory.Create(moduleType);
-                m_behavior.Initialize(this);
-            }
-
-            return m_behavior;
-        }
-    }
-
-    private void OnEnable()
-    {
-        m_behavior = null;
-    }
-
-    private void OnValidate()
-    {
-        m_behavior = null;
-    }
     public int GetPricePerCell()
     {
         return Mathf.Max(0, privePerCell);
@@ -111,7 +86,6 @@ public class GridModuleDefinition : ScriptableObject
         clone.baseExtraData4 = baseExtraData4;
         clone.privePerCell = privePerCell;
         clone.cells = new List<Vector2Int>(cells.Count);
-        clone.m_behavior = null;
         clone.m_isLoaded = false;
 
         for (int i = 0; i < cells.Count; i++)
@@ -131,7 +105,6 @@ public class GridModuleDefinition : ScriptableObject
 
         m_isLoaded = true;
         TemporaryBattleModifierRuntimeManager.SyncModuleModifier(this);
-        Behavior.OnApplyToBoard();
     }
 
     public void RemoveFromBoard()
@@ -142,13 +115,7 @@ public class GridModuleDefinition : ScriptableObject
         }
 
         TemporaryBattleModifierRuntimeManager.RemoveModuleModifier(this);
-        Behavior.OnRemoveFromBoard();
         m_isLoaded = false;
-    }
-
-    public float GetDotDamageMultiplier()
-    {
-        return Behavior.GetDotDamageMultiplier();
     }
 
     public void GetNormalizedCells(List<Vector2Int> results)
@@ -254,53 +221,5 @@ public class GridModuleDefinition : ScriptableObject
     {
         Vector2Int size = GetSize();
         return Mathf.Max(size.x, size.y);
-    }
-}
-
-public interface IGridModuleBehavior
-{
-    void Initialize(GridModuleDefinition module);
-    void OnApplyToBoard();
-    void OnRemoveFromBoard();
-    float GetDotDamageMultiplier();
-}
-
-public abstract class GridModuleBehaviorBase : IGridModuleBehavior
-{
-    protected GridModuleDefinition module;
-
-    public virtual void Initialize(GridModuleDefinition module)
-    {
-        this.module = module;
-    }
-
-    public virtual void OnApplyToBoard() { }
-    public virtual void OnRemoveFromBoard() { }
-    public virtual float GetDotDamageMultiplier() { return 1f; }
-}
-
-public static class GridModuleBehaviorFactory
-{
-    public static IGridModuleBehavior Create(GridModuleType moduleType)
-    {
-        switch (moduleType)
-        {
-            case GridModuleType.LegacyDotDamage:
-                return new DotDamageGridModuleBehavior();
-            default:
-                return new DefaultGridModuleBehavior();
-        }
-    }
-}
-
-public class DefaultGridModuleBehavior : GridModuleBehaviorBase
-{
-}
-
-public class DotDamageGridModuleBehavior : GridModuleBehaviorBase
-{
-    public override float GetDotDamageMultiplier()
-    {
-        return Mathf.Max(0f, 1f + module.baseExtraData1);
     }
 }

@@ -1684,6 +1684,7 @@ public class ActionWeakenedStateBehavior : StateBehaviorBase//盾手专用减伤
 
 public class ChargeStateBehavior : StateBehaviorBase
 {
+    public static event Action<UnitCombatant> OnCounterChargeTriggered;
     public override void OnStackChange()
     {
         int threshold = Mathf.RoundToInt(state.baseExtraData2);
@@ -1731,6 +1732,7 @@ public class ChargeStateBehavior : StateBehaviorBase
 
         TurnManager.Instance?.ExtraTurnInsert(state.owner as Character);
         FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}触发蓄势逆击");
+        OnCounterChargeTriggered?.Invoke(state.owner);
     }
 }
 

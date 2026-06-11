@@ -273,6 +273,15 @@ public class CharacterManager : MonoBehaviour
 		TemporaryBattleModifierRuntimeManager.NotifyPlayerCharacterSwapped(oldCharacter, newCharacter);
 		OnFieldCharacterSwapped?.Invoke(oldCharacter, newCharacter);
 		SwapCompleted?.Invoke();
+
+		// 触发换人对话事件
+		BattleDialogEvents.Raise(new BattleDialogEventData
+		{
+			EventType = BattleDialogEventType.CharacterSwapped,
+			RelatedCharacter = newCharacter,
+			ExtraText = oldCharacter.combatantName,
+		});
+
 		yield break;
 	}
 

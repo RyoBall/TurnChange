@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;  // 使用TextMeshPro实现更精美的文本效果（推荐）
@@ -37,6 +38,14 @@ public class FloatingTipGenerator : MonoBehaviour
     [Tooltip("相对于物体位置的屏幕偏移量（像素）")]
     [SerializeField] private Vector2 screenOffset = new Vector2(0, 50);
 
+    [Header("持续对话框设置")]
+    [Tooltip("持续对话框的字体大小")]
+    [SerializeField] private int persistentFontSize = 32;
+    [Tooltip("持续对话框的颜色")]
+    [SerializeField] private Color persistentTextColor = new Color(1f, 0.9f, 0.5f, 1f); // 金色
+    [Tooltip("持续对话框在屏幕中的Y位置比例（0-1）")]
+    [SerializeField, Range(0f, 1f)] private float persistentDialogYRatio = 0.3f;
+
     [Header("其他设置")]
     [Tooltip("提示文本预制体（如果不指定，则自动创建）")]
     [SerializeField] private GameObject tipPrefab;
@@ -51,6 +60,13 @@ public class FloatingTipGenerator : MonoBehaviour
 
     // 缓存Canvas，用于世界坐标转换等
     private Canvas rootCanvas;
+
+    // 持续对话框管理
+    private readonly Dictionary<string, GameObject> m_persistentDialogs = new Dictionary<string, GameObject>();
+    private readonly Dictionary<string, Coroutine> m_persistentDialogCoroutines = new Dictionary<string, Coroutine>();
+    private readonly Queue<string> m_dialogQueue = new Queue<string>();
+    private Coroutine m_dialogQueueCoroutine;
+    private bool m_isShowingQueuedDialog;
 
     private void Awake()
     {
@@ -321,29 +337,273 @@ public class FloatingTipGenerator : MonoBehaviour
         }
     }
 
-    private void Update()
+    #region 持续对话框系统
+
+    /// <summary>
+    /// 开始一个持续对话框，对话框从底部淡入并停留在屏幕中央偏上位置
+    /// </summary>
+    /// <param name="dialogId">唯一ID，用于后续关闭</param>
+    /// <param name="message">显示的文本</param>
+    /// <param name="autoDismissDelay">自动消失延迟（秒），0表示不自动消失</param>
+    public void StartPersistentDialog(string dialogId, string message, float autoDismissDelay = 0f)
     {
-        if (Input.GetKeyDown(KeyCode.T))
+        if (string.IsNullOrEmpty(dialogId))
         {
-            string[] testMessages = { "✨ 任务完成！", "❤️ 生命值 +10", "⚡ 闪电一击", "🍃 微风轻拂", "🌟 获得成就", "🎉 庆典开始", "💎 宝石收集", "🔔 提醒事项" };
-            string randomMsg = testMessages[Random.Range(0, testMessages.Length)];
-            ShowTip(randomMsg);
+            Debug.LogError("[FloatingTipGenerator] StartPersistentDialog: dialogId 不能为空");
+            return;
         }
 
-        // 按Y键测试在鼠标位置生成提示文本
-        if (Input.GetKeyDown(KeyCode.Y))
+        // 如果已有同ID的对话框，先关闭旧的
+        if (m_persistentDialogs.ContainsKey(dialogId))
         {
-            ShowDefaultTip("✨ 鼠标悬浮提示 ✨");
+            StopPersistentDialog(dialogId);
         }
 
-        // 按U键测试在摄像机位置生成提示（演示物体跟随）
-        if (Input.GetKeyDown(KeyCode.U))
+        // 加入队列，按顺序显示
+        m_dialogQueue.Enqueue(dialogId);
+        // 存储消息以便后续使用
+        m_pendingDialogMessages[dialogId] = new DialogEntry { Message = message, AutoDismissDelay = autoDismissDelay };
+
+        if (m_dialogQueueCoroutine == null)
         {
-            // 示例：在主摄像机位置生成提示
-            if (Camera.main != null)
-            {
-                ShowTipAtObject(Camera.main.gameObject.transform, "📷 摄像机位置提示");
-            }
+            m_dialogQueueCoroutine = StartCoroutine(ProcessDialogQueue());
         }
     }
+
+    private readonly Dictionary<string, DialogEntry> m_pendingDialogMessages = new Dictionary<string, DialogEntry>();
+
+    private struct DialogEntry
+    {
+        public string Message;
+        public float AutoDismissDelay;
+    }
+
+    private IEnumerator ProcessDialogQueue()
+    {
+        while (m_dialogQueue.Count > 0)
+        {
+            string dialogId = m_dialogQueue.Dequeue();
+            if (!m_pendingDialogMessages.TryGetValue(dialogId, out DialogEntry entry))
+            {
+                continue;
+            }
+
+            m_pendingDialogMessages.Remove(dialogId);
+
+            // 等待上一个对话框显示完成（淡入+短暂停留）
+            if (m_isShowingQueuedDialog)
+            {
+                yield return new WaitForSeconds(0.4f);
+            }
+
+            m_isShowingQueuedDialog = true;
+            yield return StartCoroutine(ShowPersistentDialogCoroutine(dialogId, entry.Message, entry.AutoDismissDelay));
+            m_isShowingQueuedDialog = false;
+        }
+
+        m_dialogQueueCoroutine = null;
+    }
+
+    private IEnumerator ShowPersistentDialogCoroutine(string dialogId, string message, float autoDismissDelay)
+    {
+        if (parentCanvasRect == null)
+        {
+            Debug.LogError("[FloatingTipGenerator] 父Canvas RectTransform未设置");
+            yield break;
+        }
+
+        // 创建对话框对象
+        GameObject dialogObj = CreatePersistentDialogObject(message);
+        RectTransform rect = dialogObj.GetComponent<RectTransform>();
+        CanvasGroup cg = dialogObj.GetComponent<CanvasGroup>();
+
+        dialogObj.transform.SetParent(parentCanvasRect, false);
+
+        // 定位到屏幕中央偏上
+        Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height * persistentDialogYRatio);
+        Vector2 uiPos;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, screenCenter, rootCanvas.worldCamera, out uiPos);
+        rect.anchoredPosition = uiPos;
+
+        m_persistentDialogs[dialogId] = dialogObj;
+
+        // 淡入动画
+        float elapsed = 0f;
+        float duration = fadeInDuration * 0.6f; // 持续对话框淡入稍快
+        Vector2 startPos = rect.anchoredPosition;
+        Vector2 targetPos = startPos + Vector2.up * (fadeInUpDistance * 0.5f);
+
+        while (elapsed < duration)
+        {
+            if (dialogObj == null) yield break;
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            cg.alpha = Mathf.Lerp(0f, 1f, t);
+            rect.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        if (dialogObj != null)
+        {
+            cg.alpha = 1f;
+            rect.anchoredPosition = targetPos;
+        }
+
+        // 如果有自动消失时间，等待后自动关闭
+        if (autoDismissDelay > 0f)
+        {
+            yield return new WaitForSeconds(autoDismissDelay);
+            StopPersistentDialog(dialogId);
+        }
+    }
+
+    /// <summary>
+    /// 停止一个持续对话框（带淡出动画）
+    /// </summary>
+    /// <param name="dialogId">开始对话框时传入的ID</param>
+    public void StopPersistentDialog(string dialogId)
+    {
+        if (string.IsNullOrEmpty(dialogId) || !m_persistentDialogs.TryGetValue(dialogId, out GameObject dialogObj))
+        {
+            return;
+        }
+
+        m_persistentDialogs.Remove(dialogId);
+
+        if (m_persistentDialogCoroutines.TryGetValue(dialogId, out Coroutine coroutine))
+        {
+            if (coroutine != null)
+            {
+                StopCoroutine(coroutine);
+            }
+            m_persistentDialogCoroutines.Remove(dialogId);
+        }
+
+        if (dialogObj != null)
+        {
+            StartCoroutine(DismissPersistentDialogCoroutine(dialogObj));
+        }
+    }
+
+    /// <summary>
+    /// 更新持续对话框的文本内容
+    /// </summary>
+    public void UpdatePersistentDialogText(string dialogId, string newMessage)
+    {
+        if (string.IsNullOrEmpty(dialogId) || !m_persistentDialogs.TryGetValue(dialogId, out GameObject dialogObj))
+        {
+            return;
+        }
+
+        TextMeshProUGUI tmp = dialogObj.GetComponent<TextMeshProUGUI>();
+        if (tmp != null)
+        {
+            tmp.text = newMessage;
+        }
+    }
+
+    /// <summary>
+    /// 检查指定ID的持续对话框是否存在
+    /// </summary>
+    public bool HasPersistentDialog(string dialogId)
+    {
+        return !string.IsNullOrEmpty(dialogId) && m_persistentDialogs.ContainsKey(dialogId);
+    }
+
+    /// <summary>
+    /// 立即清除所有持续对话框
+    /// </summary>
+    public void ClearAllPersistentDialogs()
+    {
+        foreach (var kvp in m_persistentDialogs)
+        {
+            if (kvp.Value != null)
+            {
+                Destroy(kvp.Value);
+            }
+        }
+        m_persistentDialogs.Clear();
+        m_persistentDialogCoroutines.Clear();
+        m_dialogQueue.Clear();
+        m_pendingDialogMessages.Clear();
+        if (m_dialogQueueCoroutine != null)
+        {
+            StopCoroutine(m_dialogQueueCoroutine);
+            m_dialogQueueCoroutine = null;
+        }
+        m_isShowingQueuedDialog = false;
+    }
+
+    private IEnumerator DismissPersistentDialogCoroutine(GameObject dialogObj)
+    {
+        if (dialogObj == null) yield break;
+
+        CanvasGroup cg = dialogObj.GetComponent<CanvasGroup>();
+        RectTransform rect = dialogObj.GetComponent<RectTransform>();
+        if (cg == null || rect == null)
+        {
+            Destroy(dialogObj);
+            yield break;
+        }
+
+        Vector2 startPos = rect.anchoredPosition;
+        float elapsed = 0f;
+        float duration = fadeOutDuration * 0.5f; // 淡出稍快
+
+        while (elapsed < duration)
+        {
+            if (dialogObj == null) yield break;
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            cg.alpha = Mathf.Lerp(1f, 0f, t);
+            rect.anchoredPosition = startPos + Vector2.up * (fadeOutUpDistance * 0.5f * t);
+            yield return null;
+        }
+
+        if (dialogObj != null)
+        {
+            Destroy(dialogObj);
+        }
+    }
+
+    private GameObject CreatePersistentDialogObject(string message)
+    {
+        GameObject dialogObj = new GameObject("PersistentDialog");
+        dialogObj.layer = LayerMask.NameToLayer("UI");
+
+        RectTransform rect = dialogObj.AddComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(700, 100);
+
+        TextMeshProUGUI tmp = dialogObj.AddComponent<TextMeshProUGUI>();
+        tmp.text = message;
+        tmp.fontSize = persistentFontSize;
+        tmp.color = persistentTextColor;
+        tmp.font = tmpFont;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.rectTransform.sizeDelta = new Vector2(700, 120);
+        tmp.enableWordWrapping = true;
+
+        // 添加描边效果
+        tmp.outlineWidth = 0.3f;
+        tmp.outlineColor = new Color(0f, 0f, 0f, 0.7f);
+
+        CanvasGroup cg = dialogObj.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        cg.interactable = false;
+        cg.blocksRaycasts = false;
+
+        return dialogObj;
+    }
+
+    /// <summary>
+    /// 在屏幕中央显示一个短期对话框（非持续，自动消失）
+    /// </summary>
+    public void ShowCenterDialog(string message, float duration = 2.5f)
+    {
+        string dialogId = System.Guid.NewGuid().ToString();
+        StartPersistentDialog(dialogId, message, duration);
+    }
+
+    #endregion
 }

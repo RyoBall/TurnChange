@@ -170,6 +170,7 @@ public class Character : UnitCombatant
             }
 
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "混沌达到上限，下回合将无法行动");
+            BattleDialogEvents.Raise(BattleDialogEventType.CharacterChaosMaxReached, character: this);
         }
         return true;
     }

@@ -30,8 +30,8 @@ Material:
     m_Ints: []
     m_Floats:
     - _EdgeSoftness: 0
-    - _RectMaxX: 0
-    - _RectMaxY: 0
+    - _RectMaxX: 1
+    - _RectMaxY: 1
     - _RectMinX: 0
     - _RectMinY: 0
     - _ShowHighlight: 0

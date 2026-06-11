@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using System.Collections.Generic;
 public sealed class PassiveStatModuleBehavior : BattleModifierBehaviorBase
 {
     private readonly float m_speedMultiplier;
@@ -424,5 +424,423 @@ public sealed class EmergencySwapInModuleBehavior : BattleModifierBehaviorBase
 
         float advanceRatio = TemporaryBattleModifierRuntimeManager.IsNextCombatantEnemy() ? m_enemyAheadAdvanceRatio : m_baseAdvanceRatio;
         context.CurrentCharacter.ChangeActionValue(Mathf.Max(0f, context.CurrentCharacter.currentActionValue - context.CurrentCharacter.BaseActionValue * advanceRatio));
+    }
+}
+
+// ============================================================
+// 起死回生 (FatalGuard) — 致命伤害免疫+回血+清debuff
+// ============================================================
+public sealed class FatalGuardModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_healRatio;
+
+    public FatalGuardModuleBehavior(float healRatio)
+    {
+        m_healRatio = Mathf.Clamp01(healRatio);
+    }
+
+    public override void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeContext context)
+    {
+        if (context.EventType != TemporaryBattleModifierRuntimeEventType.DamageSettled
+            || !(context.Target is Character targetCharacter)
+            || targetCharacter.currentHP > 0
+            || targetCharacter.IsDead
+            || modifier.sourceModuleIndex < 0)
+        {
+            return;
+        }
+
+        if (!TemporaryBattleModifierRuntimeManager.TryConsumeFatalGuard(modifier.sourceModuleIndex))
+        {
+            return;
+        }
+
+        // 回复到最大生命值的指定比例
+        int healAmount = Mathf.RoundToInt(targetCharacter.maxHP * m_healRatio);
+        targetCharacter.currentHP = Mathf.Max(1, healAmount);
+
+        // 清除所有负面状态
+        targetCharacter.ClearAllDebuffs();
+    }
+}
+
+// ============================================================
+// 燃血逆转 (BloodReverse) — 燃血效果反转
+// ============================================================
+public sealed class BloodReverseModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_killPenaltyRatio;
+    private readonly float m_critDamageBonus;
+
+    public BloodReverseModuleBehavior(float killPenaltyRatio, float critDamageBonus)
+    {
+        m_killPenaltyRatio = Mathf.Clamp01(killPenaltyRatio);
+        m_critDamageBonus = Mathf.Max(0f, critDamageBonus);
+    }
+
+    public override void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeContext context)
+    {
+        if (context.EventType != TemporaryBattleModifierRuntimeEventType.DamageSettled
+            || !(context.Source is Character sourceCharacter)
+            || !(context.Target is UnitCombatant target)
+            || target.currentHP > 0
+            || context.Source == context.Target)
+        {
+            return;
+        }
+
+        // 检查攻击者是否持有燃血状态
+        if (!HasBurningBlood(sourceCharacter))
+        {
+            return;
+        }
+
+        // 反转逻辑：击杀成功 → 扣血25% + 获得必暴buff
+        int selfDamage = Mathf.RoundToInt(sourceCharacter.maxHP * m_killPenaltyRatio);
+        sourceCharacter.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, sourceCharacter).AsTrueDamage());
+
+        // 添加"下一次攻击必定暴击，暴击伤害提高"的buff
+        // 通过 pendingNextDamageBonus 系统实现暴伤加成，暴击率通过临时buff
+        TemporaryBattleModifierRuntimeManager.AddPendingNextDamageBonus(sourceCharacter, m_critDamageBonus);
+        sourceCharacter.AddState(StateType.CritRhythm, sourceCharacter, 99, 1);
+    }
+
+    private static bool HasBurningBlood(Character character)
+    {
+        if (character == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < character.States.Count; i++)
+        {
+            if (character.States[i] != null && character.States[i].stateType == StateType.BurningBlood)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+// ============================================================
+// 域场共鸣 (DomainResonance) — 双域场触发共鸣
+// ============================================================
+public sealed class DomainResonanceModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_durationExtensionRatio;
+    private readonly float m_enemyDamageMultiplier;
+
+    public DomainResonanceModuleBehavior(float durationExtensionRatio, float enemyDamageMultiplier)
+    {
+        m_durationExtensionRatio = Mathf.Max(0f, durationExtensionRatio);
+        m_enemyDamageMultiplier = Mathf.Max(1f, enemyDamageMultiplier);
+    }
+
+    // 域场内敌方受伤倍率
+    public override float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit)
+    {
+        if (target is Enemy && IsDomainResonanceActive())
+        {
+            return m_enemyDamageMultiplier;
+        }
+
+        return 1f;
+    }
+
+    private static bool IsDomainResonanceActive()
+    {
+        if (EnvironmentManager.Instance == null)
+        {
+            return false;
+        }
+
+        // 检查是否存在至少两种不同的域场（其中之一为奇迹域场也算）
+        bool hasMiracleField = EnvironmentManager.Instance.HasEnvironment(EnvironmentType.MiracleField);
+        int nonMiracleDomainCount = 0;
+
+        EnvironmentType[] domainTypes = { EnvironmentType.Gravity, EnvironmentType.Cutdown, EnvironmentType.DesperationField };
+        for (int i = 0; i < domainTypes.Length; i++)
+        {
+            if (EnvironmentManager.Instance.HasEnvironment(domainTypes[i]))
+            {
+                nonMiracleDomainCount++;
+            }
+        }
+
+        // 奇迹域场 + 任意其他域场，或两个非奇迹域场同时存在
+        return (hasMiracleField && nonMiracleDomainCount >= 1) || nonMiracleDomainCount >= 2;
+    }
+}
+
+// ============================================================
+// 蓄势逆击·共鸣 (ChargeCounterResonance) — 满层触发共鸣
+// ============================================================
+public sealed class ChargeCounterResonanceModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_dotSettleRatio;
+    private readonly float m_dotDamageBonus;
+    private readonly int m_dotDamageBonusTurns;
+
+    public ChargeCounterResonanceModuleBehavior(float dotSettleRatio, float dotDamageBonus, int dotDamageBonusTurns)
+    {
+        m_dotSettleRatio = Mathf.Clamp01(dotSettleRatio);
+        m_dotDamageBonus = Mathf.Max(0f, dotDamageBonus);
+        m_dotDamageBonusTurns = Mathf.Max(1, dotDamageBonusTurns);
+    }
+
+    public override void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeContext context)
+    {
+        if (context.EventType != TemporaryBattleModifierRuntimeEventType.CounterChargeTriggered
+            || !(context.Source is Character sourceCharacter))
+        {
+            return;
+        }
+
+        // 对敌方全体立即触发所有DOT的50%结算
+        if (EnemyManager.Instance != null)
+        {
+            IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+            for (int i = 0; i < aliveEnemies.Count; i++)
+            {
+                Enemy enemy = aliveEnemies[i];
+                if (enemy == null || enemy.IsDead)
+                {
+                    continue;
+                }
+
+                SettleDotsOnTarget(enemy, m_dotSettleRatio);
+            }
+        }
+
+        // 我方全体DOT伤害提升，持续指定回合
+        if (CharacterManager.Instance != null)
+        {
+            for (int i = 0; i < CharacterManager.Instance.allCharacters.Count; i++)
+            {
+                Character character = CharacterManager.Instance.allCharacters[i];
+                if (character == null || character.IsDead)
+                {
+                    continue;
+                }
+
+                character.AddState(StateType.DamageChange, sourceCharacter, m_dotDamageBonusTurns, 1);
+            }
+        }
+    }
+
+    private static void SettleDotsOnTarget(UnitCombatant target, float ratio)
+    {
+        if (target == null || target.IsDead)
+        {
+            return;
+        }
+
+        for (int i = 0; i < target.States.Count; i++)
+        {
+            State state = target.States[i];
+            if (state == null || !state.isDot)
+            {
+                continue;
+            }
+
+            // 立即触发一次DOT伤害的指定比例
+            state.DotTrigger(ratio);
+        }
+    }
+}
+
+// ============================================================
+// 物法双修 (HybridDamage) — 伤害类型交替叠层
+// ============================================================
+public sealed class HybridDamageModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_damageBonusPerStack;
+
+    // 静态追踪：记录每个模块的上一次伤害类型和当前叠层
+    // Key: sourceModuleIndex, Value: (lastDamageType, stackCount)
+    private static readonly Dictionary<int, DamageType> s_lastDamageTypeByModule = new Dictionary<int, DamageType>();
+    private static readonly Dictionary<int, int> s_hybridStackByModule = new Dictionary<int, int>();
+
+    public HybridDamageModuleBehavior(float damageBonusPerStack)
+    {
+        m_damageBonusPerStack = Mathf.Max(0f, damageBonusPerStack);
+    }
+
+    public override float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit)
+    {
+        if (modifier.sourceModuleIndex < 0)
+        {
+            return 1f;
+        }
+
+        int moduleIndex = modifier.sourceModuleIndex;
+        bool hasLastType = s_lastDamageTypeByModule.TryGetValue(moduleIndex, out DamageType lastType);
+
+        if (hasLastType && lastType != damageType)
+        {
+            // 类型不同 → 叠层+1
+            int newStack = s_hybridStackByModule.TryGetValue(moduleIndex, out int stack) ? stack + 1 : 1;
+            s_hybridStackByModule[moduleIndex] = newStack;
+        }
+        else if (hasLastType && lastType == damageType)
+        {
+            // 类型相同 → 层数清零
+            s_hybridStackByModule[moduleIndex] = 0;
+        }
+
+        s_lastDamageTypeByModule[moduleIndex] = damageType;
+
+        int currentStack = s_hybridStackByModule.TryGetValue(moduleIndex, out int s) ? s : 0;
+        return 1f + currentStack * m_damageBonusPerStack;
+    }
+
+    public static void ResetModuleTracking(int moduleIndex)
+    {
+        s_lastDamageTypeByModule.Remove(moduleIndex);
+        s_hybridStackByModule.Remove(moduleIndex);
+    }
+
+    public static void ResetAllModuleTracking()
+    {
+        s_lastDamageTypeByModule.Clear();
+        s_hybridStackByModule.Clear();
+    }
+}
+
+// ============================================================
+// 暴噬蔓延 (CritDotSpread) — 暴击扩散DOT+延长
+// ============================================================
+public sealed class CritDotSpreadModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_triggerChance;
+    private readonly int m_extendTurns;
+    private readonly int m_maxExtraApplyCount;
+
+    private static readonly StateType[] s_randomDotTypes =
+    {
+        StateType.Ice,
+        StateType.Corrosion,
+        StateType.Wind
+    };
+
+    public CritDotSpreadModuleBehavior(float triggerChance, int extendTurns, int maxExtraApplyCount)
+    {
+        m_triggerChance = Mathf.Clamp01(triggerChance);
+        m_extendTurns = Mathf.Max(1, extendTurns);
+        m_maxExtraApplyCount = Mathf.Max(0, maxExtraApplyCount);
+    }
+
+    public override void HandleRuntimeEvent(Datas datas, TemporaryBattleModifierData modifier, TemporaryBattleModifierRuntimeContext context)
+    {
+        if (context.EventType != TemporaryBattleModifierRuntimeEventType.CriticalHit
+            || modifier.sourceModuleIndex < 0)
+        {
+            return;
+        }
+
+        if (Random.value > m_triggerChance)
+        {
+            return;
+        }
+
+        // 敌方全体DOT延长1回合
+        if (EnemyManager.Instance != null)
+        {
+            IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+            for (int i = 0; i < aliveEnemies.Count; i++)
+            {
+                Enemy enemy = aliveEnemies[i];
+                if (enemy == null || enemy.IsDead)
+                {
+                    continue;
+                }
+
+                ExtendAllDotsOnTarget(enemy, m_extendTurns);
+            }
+        }
+
+        // 每场战斗前3次触发时，额外施加1种随机DOT
+        int triggerCount = TemporaryBattleModifierRuntimeManager.GetAndIncrementCritDotSpreadTrigger(modifier.sourceModuleIndex);
+        if (triggerCount < m_maxExtraApplyCount && context.Target is UnitCombatant target && target != null)
+        {
+            StateType randomDot = s_randomDotTypes[Random.Range(0, s_randomDotTypes.Length)];
+            target.AddState(randomDot, context.Source, 2, 1);
+        }
+    }
+
+    private static void ExtendAllDotsOnTarget(UnitCombatant target, int turns)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < target.States.Count; i++)
+        {
+            State state = target.States[i];
+            if (state != null && state.isDot)
+            {
+                state.ExtendTurns(turns);
+            }
+        }
+    }
+}
+
+// ============================================================
+// 专注机枪 (FocusFire) — 伤害类型相同叠层
+// ============================================================
+public sealed class FocusFireModuleBehavior : BattleModifierBehaviorBase
+{
+    private readonly float m_damageBonusPerStack;
+
+    // 静态追踪：记录每个模块的上一次伤害类型和当前叠层
+    private static readonly Dictionary<int, DamageType> s_lastDamageTypeByModule = new Dictionary<int, DamageType>();
+    private static readonly Dictionary<int, int> s_focusFireStackByModule = new Dictionary<int, int>();
+
+    public FocusFireModuleBehavior(float damageBonusPerStack)
+    {
+        m_damageBonusPerStack = Mathf.Max(0f, damageBonusPerStack);
+    }
+
+    public override float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit)
+    {
+        if (modifier.sourceModuleIndex < 0)
+        {
+            return 1f;
+        }
+
+        int moduleIndex = modifier.sourceModuleIndex;
+        bool hasLastType = s_lastDamageTypeByModule.TryGetValue(moduleIndex, out DamageType lastType);
+
+        if (hasLastType && lastType == damageType)
+        {
+            // 类型相同 → 叠层+1
+            int newStack = s_focusFireStackByModule.TryGetValue(moduleIndex, out int stack) ? stack + 1 : 1;
+            s_focusFireStackByModule[moduleIndex] = newStack;
+        }
+        else if (hasLastType && lastType != damageType)
+        {
+            // 类型不同 → 层数清零
+            s_focusFireStackByModule[moduleIndex] = 0;
+        }
+
+        s_lastDamageTypeByModule[moduleIndex] = damageType;
+
+        int currentStack = s_focusFireStackByModule.TryGetValue(moduleIndex, out int s) ? s : 0;
+        return 1f + currentStack * m_damageBonusPerStack;
+    }
+
+    public static void ResetModuleTracking(int moduleIndex)
+    {
+        s_lastDamageTypeByModule.Remove(moduleIndex);
+        s_focusFireStackByModule.Remove(moduleIndex);
+    }
+
+    public static void ResetAllModuleTracking()
+    {
+        s_lastDamageTypeByModule.Clear();
+        s_focusFireStackByModule.Clear();
     }
 }

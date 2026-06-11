@@ -636,6 +636,8 @@ public class EnemySkillBase : SkillBase
     /// <summary>Dot龙暴怒：无尽炼狱 — 全体施加不灭之焰</summary>
     private IEnumerator DragonDotRage(Enemy self)
     {
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonDotUltimate, enemy: self as Enemy);
+
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         foreach (var ally in allies)
         {
@@ -689,11 +691,13 @@ public class EnemySkillBase : SkillBase
         if (dragon.IsChargingRage)
         {
             dragon.SetChargingRage(false);
+            BattleDialogEvents.Raise(BattleDialogEventType.DragonInstantDeathTriggered, enemy: self as Enemy);
             yield return ExecuteInstantDeath();
             yield break;
         }
 
         // 否则施加即死状态并蓄力
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonInstantDeathWarning, enemy: self as Enemy);
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
 
@@ -770,6 +774,8 @@ public class EnemySkillBase : SkillBase
     /// <summary>混沌龙暴怒：混沌风暴 — 全体3混沌，震慑者额外直伤</summary>
     private IEnumerator DragonChaosRage(Enemy self)
     {
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonChaosUltimate, enemy: self as Enemy);
+
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
 

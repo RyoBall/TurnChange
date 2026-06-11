@@ -90,8 +90,13 @@ public class UnitCombatant : Combatant
         }
 
         int finalDamage = damageInfo.Damage;
+        int shieldBefore = currentShield;
         //结算盾值
         finalDamage = ConsumeShield(finalDamage);
+        if (shieldBefore > 0 && currentShield <= 0)
+        {
+            TemporaryBattleModifierRuntimeManager.NotifyShieldBroken(this, damageInfo.Source);
+        }
         hitFeedback?.PlayFeedbacks();
         OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType);
         //扣血  
@@ -99,6 +104,24 @@ public class UnitCombatant : Combatant
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
         TemporaryBattleModifierRuntimeManager.NotifyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage, damageInfo.DamageType);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
+
+        // 角色血量变化时发出事件，携带当前血量百分比
+        NotifyHealthChanged();
+    }
+
+    /// <summary>角色血量变化时通知对话系统（仅对 Character）</summary>
+    private void NotifyHealthChanged()
+    {
+        Character character = this as Character;
+        if (character == null || character.IsDead) return;
+
+        float hpRatio = (float)currentHP / maxHP;
+        BattleDialogEvents.Raise(new BattleDialogEventData
+        {
+            EventType = BattleDialogEventType.CharacterHealthChanged,
+            RelatedCharacter = character,
+            ExtraFloat = hpRatio,
+        });
     }
     public virtual void Heal(int amount)
     {
@@ -109,6 +132,7 @@ public class UnitCombatant : Combatant
         DamageTextPool.Instance?.ShowHeal(amount, transform.position);
         currentHP = Mathf.Min(maxHP, currentHP + amount);
         healFeedback?.PlayFeedbacks();
+        TemporaryBattleModifierRuntimeManager.NotifyUnitHealed(this, amount);
     }
 
     protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None)
@@ -176,6 +200,7 @@ public class UnitCombatant : Combatant
         DamageTextPool.Instance?.ShowCustomText($"获得护盾 {amount}", transform.position, Color.cyan);
         shieldFeedback?.PlayFeedbacks();
         currentShield += amount;
+        TemporaryBattleModifierRuntimeManager.NotifyShieldAdded(this, amount);
     }
 
     public override void ChangeActionValue(float delta, bool ifChangePos = true)
@@ -297,7 +322,22 @@ public class UnitCombatant : Combatant
         return true;
     }
 
-    public IEnumerator ProcessStatesOnTurnStart()
+    /// <summary>
+    /// 清除所有负面状态（isDebuff == true）
+    /// </summary>
+    public void ClearAllDebuffs()
+    {
+        for (int i = states.Count - 1; i >= 0; i--)
+        {
+            State state = states[i];
+            if (state != null && state.isDebuff)
+            {
+                state.EndState();
+            }
+        }
+    }
+
+    protected IEnumerator ProcessStatesOnTurnStart()
     {
         yield return State.RunBatchedDotEvent(this, ProcessTurnStartStatesInternal());
     }

@@ -126,9 +126,14 @@ public class ChessQueenEnemy : Enemy
                     if (!m_isChargingThroneAssault)
                     {
                         FloatingTipGenerator.Instance?.ShowDefaultTip($"后袭王座:下个回合对王棋发动袭击");
+                        BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenCharging, enemy: this);
                     }
                     else
+                    {
                         FloatingTipGenerator.Instance?.ShowDefaultTip($"后袭王座");
+                        // 蓄力技释放后触发力竭
+                        BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenExhausted, enemy: this);
+                    }
                     break;
                 case EnemySkillType.ChessQueenCoronation:
                     FloatingTipGenerator.Instance?.ShowDefaultTip($"王权加冕");
@@ -182,6 +187,9 @@ public class ChessQueenEnemy : Enemy
         // 进入二阶段时标记王棋/车棋
         MarkChessKingAndRook();
 
+        // 入场对话
+        BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenMarkingKing, enemy: this);
+
         if (chessSpriteRenderer != null)
         {
             yield return chessSpriteRenderer.DOFade(1f, 0.5f).SetEase(Ease.OutQuad).WaitForCompletion();
@@ -202,6 +210,10 @@ public class ChessQueenEnemy : Enemy
         rookCharacter.AddState(StateType.ChessRookMark, this, 99, 99);
         FloatingTipGenerator.Instance?.ShowTipAtObject(kingCharacter.transform, "王棋位");
         FloatingTipGenerator.Instance?.ShowTipAtObject(rookCharacter.transform, "车棋位");
+
+        // 触发标记对话
+        BattleDialogEvents.Raise(BattleDialogEventType.ChessKingMarked, character: kingCharacter);
+        BattleDialogEvents.Raise(BattleDialogEventType.ChessRookMarked, character: rookCharacter);
     }
 
     /// <summary>通知召唤兵卒被击杀</summary>
@@ -258,6 +270,7 @@ public class ChessQueenEnemy : Enemy
         int consumed = m_prestigeStacks;
         m_prestigeStacks = 0;
         m_hasUsedCoronation = true;
+        BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenPrestigeDepleted, enemy: this);
         return consumed;
     }
 
@@ -326,7 +339,12 @@ public class ChessQueenEnemy : Enemy
 
     private bool ShouldUseCoronation()
     {
-        return !m_hasUsedCoronation && currentHP > 0 && currentHP <= Mathf.Max(1, Mathf.FloorToInt(maxHP / 3f));
+        bool should = !m_hasUsedCoronation && currentHP > 0 && currentHP <= Mathf.Max(1, Mathf.FloorToInt(maxHP / 3f));
+        if (should)
+        {
+            BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenCoronationImminent, enemy: this);
+        }
+        return should;
     }
 
     private List<Character> GetAliveFieldCharacters()

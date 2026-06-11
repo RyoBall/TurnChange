@@ -15,7 +15,8 @@ public enum TemporaryBattleModifierRuntimeEventType
     CriticalHit,
     ChaosReduced,
     ChaosMaxReached,
-    ReserveActionValueAdvanced
+    ReserveActionValueAdvanced,
+    CounterChargeTriggered
 }
 
 public static class BattleRuntimeEvents
@@ -196,6 +197,20 @@ public static class GridModuleRuntimeBehaviorFactory
                 return new SwapChargeBurstModuleBehavior(100f, 3, 0.15f);
             case GridModuleType.EmergencySwapIn:
                 return new EmergencySwapInModuleBehavior(0.10f, 0.50f);
+            case GridModuleType.FatalGuard:
+                return new FatalGuardModuleBehavior(0.50f);
+            case GridModuleType.BloodReverse:
+                return new BloodReverseModuleBehavior(0.25f, 0.50f);
+            case GridModuleType.DomainResonance:
+                return new DomainResonanceModuleBehavior(0.25f, 1.25f);
+            case GridModuleType.ChargeCounterResonance:
+                return new ChargeCounterResonanceModuleBehavior(0.50f, 0.20f, 1);
+            case GridModuleType.HybridDamage:
+                return new HybridDamageModuleBehavior(0.10f);
+            case GridModuleType.CritDotSpread:
+                return new CritDotSpreadModuleBehavior(0.20f, 1, 3);
+            case GridModuleType.FocusFire:
+                return new FocusFireModuleBehavior(0.05f);
             default:
                 return null;
         }
@@ -210,6 +225,8 @@ public static class TemporaryBattleModifierRuntimeManager
     private static readonly Dictionary<int, int> s_commandPointsSpentByModule = new Dictionary<int, int>();
     private static readonly HashSet<int> s_emergencyEvadeUsedModules = new HashSet<int>();
     private static readonly HashSet<int> s_chaosImmunityUsedModules = new HashSet<int>();
+    private static readonly HashSet<int> s_fatalGuardUsedModules = new HashSet<int>();
+    private static readonly Dictionary<int, int> s_critDotSpreadTriggerCountByModule = new Dictionary<int, int>();
     private static readonly Dictionary<int, Dictionary<Character, float>> s_reserveAdvanceProgressByModule = new Dictionary<int, Dictionary<Character, float>>();
     private static readonly Dictionary<int, Dictionary<Character, int>> s_swapChargeStacksByModule = new Dictionary<int, Dictionary<Character, int>>();
     private static readonly Dictionary<Character, float> s_pendingNextDamageBonusByCharacter = new Dictionary<Character, float>();
@@ -277,9 +294,13 @@ public static class TemporaryBattleModifierRuntimeManager
         s_commandPointsSpentByModule.Clear();
         s_emergencyEvadeUsedModules.Clear();
         s_chaosImmunityUsedModules.Clear();
+        s_fatalGuardUsedModules.Clear();
+        s_critDotSpreadTriggerCountByModule.Clear();
         s_reserveAdvanceProgressByModule.Clear();
         s_swapChargeStacksByModule.Clear();
         s_pendingNextDamageBonusByCharacter.Clear();
+
+        ChargeStateBehavior.OnCounterChargeTriggered += OnCounterChargeEventTriggered;
 
         if (datas != null)
         {
@@ -332,10 +353,16 @@ public static class TemporaryBattleModifierRuntimeManager
         s_commandPointsSpentByModule.Clear();
         s_emergencyEvadeUsedModules.Clear();
         s_chaosImmunityUsedModules.Clear();
+        s_fatalGuardUsedModules.Clear();
+        s_critDotSpreadTriggerCountByModule.Clear();
         s_reserveAdvanceProgressByModule.Clear();
         s_swapChargeStacksByModule.Clear();
         s_pendingNextDamageBonusByCharacter.Clear();
+        HybridDamageModuleBehavior.ResetAllModuleTracking();
+        FocusFireModuleBehavior.ResetAllModuleTracking();
         s_hasBattleModifierSnapshot = false;
+
+        ChargeStateBehavior.OnCounterChargeTriggered -= OnCounterChargeEventTriggered;
     }
 
     public static void NotifyBattleStarted()
@@ -497,6 +524,26 @@ public static class TemporaryBattleModifierRuntimeManager
             Target = reserveCharacter,
             FloatValue = actionValue,
         });
+    }
+
+    public static void NotifyCounterChargeTriggered(UnitCombatant owner)
+    {
+        if (owner == null)
+        {
+            return;
+        }
+
+        DispatchRuntimeEvent(new TemporaryBattleModifierRuntimeContext
+        {
+            EventType = TemporaryBattleModifierRuntimeEventType.CounterChargeTriggered,
+            Source = owner,
+            Target = owner,
+        });
+    }
+
+    private static void OnCounterChargeEventTriggered(UnitCombatant owner)
+    {
+        NotifyCounterChargeTriggered(owner);
     }
 
     public static float GetPlayerSpeedMultiplier(Character character = null)
@@ -777,6 +824,34 @@ public static class TemporaryBattleModifierRuntimeManager
 
         s_chaosImmunityUsedModules.Add(moduleIndex);
         return true;
+    }
+
+    public static bool TryConsumeFatalGuard(int moduleIndex)
+    {
+        if (moduleIndex < 0 || s_fatalGuardUsedModules.Contains(moduleIndex))
+        {
+            return false;
+        }
+
+        s_fatalGuardUsedModules.Add(moduleIndex);
+        return true;
+    }
+
+    public static int GetAndIncrementCritDotSpreadTrigger(int moduleIndex)
+    {
+        if (moduleIndex < 0)
+        {
+            return int.MaxValue;
+        }
+
+        if (s_critDotSpreadTriggerCountByModule.TryGetValue(moduleIndex, out int count))
+        {
+            s_critDotSpreadTriggerCountByModule[moduleIndex] = count + 1;
+            return count;
+        }
+
+        s_critDotSpreadTriggerCountByModule[moduleIndex] = 1;
+        return 0;
     }
 
     public static void AddReserveChargeProgress(int moduleIndex, Character character, float advanceValue, float threshold, int maxStacks)

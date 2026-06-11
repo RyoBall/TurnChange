@@ -31,6 +31,8 @@ public class ChessPawnEnemy : Enemy
         {
             transform.position = ChessStandPositionManager.Instance.GetPawnStandPosition(standPosition).position    ;
         }
+        // 兵棋入场对话（仅触发一次，由第一个兵棋触发）
+        BattleDialogEvents.Raise(BattleDialogEventType.ChessPawnsEnter, enemy: this);
     }
     public override void InitializeFromPendingLevelData(PendingBattleLevelData pendingData, IReadOnlyList<Enemy> spawnedEnemies)
     {
@@ -74,6 +76,13 @@ public class ChessPawnEnemy : Enemy
         }
 
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}推进至第{m_pawnAdvanceCount}格");
+
+        // 倒数第二次行动后提示即将升变
+        if (m_pawnAdvanceCount >= pawnPromotionSteps - 1 && !m_hasTriggeredPromotion)
+        {
+            BattleDialogEvents.Raise(BattleDialogEventType.ChessPawnsAboutToPromote, enemy: this);
+        }
+
         if (m_pawnAdvanceCount >= pawnPromotionSteps && !m_hasTriggeredPromotion)
         {
             m_hasTriggeredPromotion = true;

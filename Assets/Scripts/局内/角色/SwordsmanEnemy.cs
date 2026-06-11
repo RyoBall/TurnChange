@@ -43,6 +43,7 @@ public class SwordsmanEnemy : Enemy
         {
             owner.AddState(StateType.SwordsmanBrightSword, owner, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(owner.transform, "亮剑姿态");
+            BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStanceBright, enemy: owner);
         }
         public override void OnExit(SwordsmanStance toStance)
         {
@@ -58,6 +59,7 @@ public class SwordsmanEnemy : Enemy
         {
             owner.AddState(StateType.SwordsmanDefense, owner, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(owner.transform, "防御姿态");
+            BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStanceDefense, enemy: owner);
         }
         public override void OnExit(SwordsmanStance toStance)
         {
@@ -72,6 +74,7 @@ public class SwordsmanEnemy : Enemy
         {
             owner.AddState(StateType.SwordsmanGuerrilla, owner, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(owner.transform, "游击姿态");
+            BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStanceGuerrilla, enemy: owner);
         }
         public override void OnExit(SwordsmanStance toStance)
         {
@@ -106,6 +109,11 @@ public class SwordsmanEnemy : Enemy
         TransitionTo(SwordsmanStance.BrightSword);
         // 施加优雅体态
         AddState(StateType.SwordsmanElegance, this, 99, 1);
+
+        // 入场对话
+        BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEnter);
+        // 优雅体态提醒
+        BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEleganceReminder);
     }
 
     public override void TakeDamage(DamageInfo damageInfo)
@@ -251,6 +259,7 @@ public class SwordsmanEnemy : Enemy
 
         AddState(StateType.SwordsmanStagger, this, staggerDuration, 1);
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "失衡！");
+        BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStaggerEnter, enemy: this);
     }
 
     public void ExitStagger()
@@ -259,6 +268,9 @@ public class SwordsmanEnemy : Enemy
         // 强制切换至防御姿态
         TransitionTo(SwordsmanStance.Defense);
         m_stanceSwitchCountdown = 2;
+        BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStaggerExit, enemy: this);
+        // 优雅体态重复提醒
+        BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEleganceReminder, enemy: this);
     }
 
     // ============ 阶段检测 ============
@@ -273,6 +285,7 @@ public class SwordsmanEnemy : Enemy
             m_phaseTwoTriggered = true;
             AddState(StateType.SpeedChange, this, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "剑客速度提升！");
+            BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanPhaseTwo, enemy: this);
         }
 
         // 阶段三：血量低于25%
@@ -283,6 +296,7 @@ public class SwordsmanEnemy : Enemy
             TransitionTo(SwordsmanStance.BrightSword);
             AddState(StateType.SwordsmanLastStand, this, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "背水一战！");
+            BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanPhaseThree, enemy: this);
         }
     }
 

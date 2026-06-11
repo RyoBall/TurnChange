@@ -17,9 +17,17 @@ public class DragonBossEnemy : Enemy
     public int ReinforceLevel => m_reinforceLevel;
     public bool IsRaging => m_reinforceLevel >= rageThreshold;
 
+    protected override void Start()
+    {
+        base.Start();
+        // 三头龙入场对话（由第一个龙触发）
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonEnter, enemy: this);
+    }
+
     /// <summary>被其他龙死亡时调用，提升强化等级</summary>
     public void ApplyReinforcement()
     {
+        int previousLevel = m_reinforceLevel;
         m_reinforceLevel = Mathf.Min(m_reinforceLevel + 1, rageThreshold);
         if (m_reinforceLevel >= rageThreshold)
         {
@@ -63,14 +71,22 @@ public class DragonBossEnemy : Enemy
 
         if (aliveDragonCount == 0) return;
 
+        // 第一头龙死亡：黑雾被吸收
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonFirstDeath);
+
         // 当只剩最后一头龙时，回复生命
         if (aliveDragonCount == 1)
         {
+            // 第二头龙死亡：进入暴怒
+            BattleDialogEvents.Raise(BattleDialogEventType.DragonSecondDeath);
             aliveDragons[0].ApplyReinforcement();
             aliveDragons[0].ApplyFinalDragonHeal();
+            BattleDialogEvents.Raise(BattleDialogEventType.DragonLastStand);
         }
         else
         {
+            // 技能强化
+            BattleDialogEvents.Raise(BattleDialogEventType.DragonSkillReinforced);
             for (int i = 0; i < aliveDragons.Count; i++)
             {
                 aliveDragons[i].ApplyReinforcement();

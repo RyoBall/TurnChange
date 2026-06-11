@@ -94,6 +94,7 @@
      <Compile Include="Assets\Scripts\局内\关卡\LevelSetupManager.cs" />
      <Compile Include="Assets\Scripts\局内\回合模块\TurnStateManager.cs" />
      <Compile Include="Assets\VFX\Lana Studio\Casual RPG VFX\Demo\Scripts\_InputKeyBoard.cs" />
+     <Compile Include="Assets\Scripts\局内\UI\提示文本\BattleDialogController.cs" />
      <Compile Include="Assets\Scripts\局内\角色\ChessQueenEnemy.cs" />
      <Compile Include="Assets\Scripts\局内\角色\ChaosDragonEnemy.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelSelectionItemUI.cs" />
@@ -161,6 +162,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexJitter.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterPanelView.cs" />
      <Compile Include="Assets\Scripts\Utils\UIButtonHoverEffect.cs" />
+     <Compile Include="Assets\Scripts\局内\UI\提示文本\BattleDialogEvents.cs" />
      <Compile Include="Assets\Scripts\局外\背包\GridModuleDefinition.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextConsoleSimulator.cs" />
      <Compile Include="Assets\Scripts\Audio\GameAudioEventSoundPlayer.cs" />
