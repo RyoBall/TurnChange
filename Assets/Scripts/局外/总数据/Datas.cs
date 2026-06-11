@@ -21,7 +21,15 @@ public class PlacedModuleData
         this.anchorCell = anchorCell;
     }
 }
-
+public enum CharacterType
+{
+    DotMain,
+    DotSub,
+    DotSupport,
+    DirectMain,
+    DirectSub,
+    DirectSupport,
+}
 public class Datas : MonoBehaviour
 {
     private const int MaxTeamLevel = 99;
@@ -37,20 +45,30 @@ public class Datas : MonoBehaviour
     [Header("角色列表")]
     [SerializeField] private List<CharacterRosterData> characterDatas = new List<CharacterRosterData>();
 
-    [Header("开局流派")]
-    [SerializeField] private string selectedStarterBranchId;
-
     [Header("关卡进度")]
     [SerializeField] private List<LevelSelectionFloorData> levelFloors = new List<LevelSelectionFloorData>();
     [SerializeField] private int currentFloorIndex;
     [SerializeField] private List<string> completedLevelIds = new List<string>();
     [SerializeField] private List<TemporaryBattleModifierData> activeBattleModifiers = new List<TemporaryBattleModifierData>();
 
+    // 战队等级累计经验阈值表: index 0 = Lv1(0), index 1 = Lv2(100), index 2 = Lv3(250) ...
+    private static readonly float[] s_levelExpThresholds = new float[]
+    {
+        0f,     // Lv1
+        100f,   // Lv2
+        250f,   // Lv3
+        500f,   // Lv4
+        900f,   // Lv5
+        1350f,  // Lv6
+        1900f,  // Lv7
+        2700f,  // Lv8
+        3700f,  // Lv9
+        4800f,  // Lv10
+    };
+
     [Header("队伍成长")]
     [SerializeField] private int teamLevel = 1;
     [SerializeField] private float currentExp = 0f;
-    [SerializeField] private float baseExpToNextLevel = 100f;
-    [SerializeField] private float expGrowthFactor = 1f;
     [SerializeField] private int gold;
 
     [Header("模块数据")]
@@ -59,11 +77,11 @@ public class Datas : MonoBehaviour
 
     [SerializeField] private int backpackWidth = 4;
 
+    [Header("关卡角色解锁")]
+    [SerializeField] private LevelCharacterUnlockConfig levelCharacterUnlockConfig;
+
     public readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
     private bool m_characterLookupBuilt;
-
-    public bool HasSelectedStarterBranch => !string.IsNullOrWhiteSpace(selectedStarterBranchId);
-    public string SelectedStarterBranchId => selectedStarterBranchId;
 
     private void Awake()
     {
@@ -81,6 +99,7 @@ public class Datas : MonoBehaviour
         teamLevel = Mathf.Clamp(teamLevel, 1, MaxTeamLevel);
         currentExp = Mathf.Max(0f, currentExp);
         gold = Mathf.Max(0, gold);
+        LevelCompleted += OnLevelCompletedForCharacterUnlock;
         DontDestroyOnLoad(gameObject);
     }
     void Update()
@@ -89,6 +108,7 @@ public class Datas : MonoBehaviour
     }
     private void OnDestroy()
     {
+        LevelCompleted -= OnLevelCompletedForCharacterUnlock;
         if (Instance == this)
         {
             Instance = null;
@@ -151,11 +171,6 @@ public class Datas : MonoBehaviour
 
         characterDatas.Clear();
     }
-
-    public void SetSelectedStarterBranchId(string branchId)
-    {
-        selectedStarterBranchId = branchId;
-    }
     #endregion
     #region 关卡进度相关
     public IReadOnlyList<LevelSelectionFloorData> GetLevelFloors()
@@ -199,38 +214,6 @@ public class Datas : MonoBehaviour
     public int GetCompletedLevelCount()
     {
         return completedLevelIds != null ? completedLevelIds.Count : 0;
-    }
-
-    public void SetLevelFloors(IEnumerable<LevelSelectionFloorData> floors)
-    {
-        levelFloors.Clear();
-        currentFloorIndex = 0;
-
-        if (floors == null)
-        {
-            return;
-        }
-
-        var registeredIds = new HashSet<string>();
-        foreach (LevelSelectionFloorData floor in floors)
-        {
-            if (floor == null)
-            {
-                continue;
-            }
-
-            string floorId = string.IsNullOrWhiteSpace(floor.floorId)
-                ? $"Floor_{levelFloors.Count + 1}"
-                : floor.floorId;
-            if (!registeredIds.Add(floorId))
-            {
-                continue;
-            }
-
-            levelFloors.Add(floor);
-        }
-
-        currentFloorIndex = Mathf.Clamp(currentFloorIndex, 0, Mathf.Max(0, levelFloors.Count - 1));
     }
 
     public bool SetCurrentFloorIndex(int floorIndex)
@@ -357,9 +340,14 @@ public class Datas : MonoBehaviour
 
     public float GetExpToNextLevel()
     {
-        float baseExp = Mathf.Max(1f, baseExpToNextLevel);
-        float growth = Mathf.Max(1f, expGrowthFactor);
-        return baseExp * Mathf.Pow(growth, Mathf.Max(0, GetTeamLevel() - 1));
+        int level = GetTeamLevel();
+        // 当前等级在表中没有下一级 -> 满级，返回极大值表示不可再升级
+        if (level >= s_levelExpThresholds.Length)
+        {
+            return float.MaxValue;
+        }
+        // 从当前等级升到下一级所需的经验 = 下一级累计阈值 - 当前级累计阈值
+        return s_levelExpThresholds[level] - s_levelExpThresholds[level - 1];
     }
 
     public int GetGold()
@@ -395,12 +383,15 @@ public class Datas : MonoBehaviour
         }
 
         currentExp += amount;
+        int level = GetTeamLevel();
 
-        while (currentExp >= GetExpToNextLevel())
+        // 用累计阈值表判断是否能升级
+        while (level < s_levelExpThresholds.Length && currentExp >= s_levelExpThresholds[level])
         {
-            currentExp -= GetExpToNextLevel();
-            teamLevel = Mathf.Min(GetTeamLevel() + 1, MaxTeamLevel);
+            level++;
         }
+
+        teamLevel = Mathf.Min(level, MaxTeamLevel);
     }
 
     public void ApplyBattleRewards(int experienceReward, int goldReward)
@@ -598,6 +589,39 @@ public class Datas : MonoBehaviour
 
         return false;
     }
+    #region 关卡完成解锁角色
+    /// <summary>
+    /// 监听关卡完成事件，根据 LevelCharacterUnlockConfig 配置向角色列表中添加对应角色。
+    /// </summary>
+    private void OnLevelCompletedForCharacterUnlock(string levelId)
+    {
+        if (levelCharacterUnlockConfig == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<CharacterType> characterTypesToUnlock = levelCharacterUnlockConfig.GetCharacterTypesForLevel(levelId);
+        if (characterTypesToUnlock == null || characterTypesToUnlock.Count == 0)
+        {
+            return;
+        }
+
+        bool anyAdded = false;
+        for (int i = 0; i < characterTypesToUnlock.Count; i++)
+        {
+            if (AddCharacterData(characterTypesToUnlock[i]))
+            {
+                anyAdded = true;
+            }
+        }
+
+        if (anyAdded)
+        {
+            CharacterRosterChanged?.Invoke();
+        }
+    }
+    #endregion
+
     public void NotifyCharacterRosterChanged()
     {
         CharacterRosterChanged?.Invoke();

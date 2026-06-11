@@ -15,7 +15,6 @@ public class LevelSelectionListLoader : MonoBehaviour
     [Header("生成选项")]
     [SerializeField] private bool populateOnStart = true;
     [SerializeField] private bool disableExtraItems = true;
-    [SerializeField] private bool initializeDatasFromLocalConfig = true;
 
     private Datas m_dataSource;
 
@@ -99,9 +98,10 @@ public class LevelSelectionListLoader : MonoBehaviour
     {
         if (Datas.Instance != null)
         {
-            if (initializeDatasFromLocalConfig && levelFloors != null && levelFloors.Count > 0 && Datas.Instance.GetLevelFloorCount() == 0)
+            // Debug 模式下返回所有楼层的关卡
+            if (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode)
             {
-                Datas.Instance.SetLevelFloors(levelFloors);
+                return GetAllFloorLevels();
             }
 
             return new List<LevelSelectionData>(Datas.Instance.GetCurrentFloorLevels());
@@ -114,6 +114,46 @@ public class LevelSelectionListLoader : MonoBehaviour
 
         LevelSelectionFloorData floorData = levelFloors[0];
         return floorData != null ? new List<LevelSelectionData>(floorData.GetLevels()) : new List<LevelSelectionData>();
+    }
+
+    /// <summary>
+    /// 获取所有楼层中所有关卡的扁平列表（用于 Debug 模式）
+    /// </summary>
+    private List<LevelSelectionData> GetAllFloorLevels()
+    {
+        var allLevels = new List<LevelSelectionData>();
+        IReadOnlyList<LevelSelectionFloorData> floors = Datas.Instance.GetLevelFloors();
+
+        if (floors == null)
+        {
+            return allLevels;
+        }
+
+        foreach (LevelSelectionFloorData floor in floors)
+        {
+            if (floor == null)
+            {
+                continue;
+            }
+
+            IReadOnlyList<LevelSelectionData> floorLevels = floor.GetLevels();
+            if (floorLevels == null)
+            {
+                continue;
+            }
+
+            foreach (LevelSelectionData level in floorLevels)
+            {
+                if (level != null)
+                {
+                    // Debug 模式强制解锁所有关卡
+                    level.isUnlocked = true;
+                    allLevels.Add(level);
+                }
+            }
+        }
+
+        return allLevels;
     }
 
     private void ResolveReferences()

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System;
 using UnityEngine;
 
 public enum StateDurationType
@@ -50,21 +51,29 @@ public enum StateType
     ArmorBreak,//破甲
     BloodSurgeHeal,//浴血反哺
     ExploderProcess,//自爆流程
-    NextActionDamageBoost,//下次行动增伤
-    ActionWeakened,//单回合减攻
-    Weakened,
+    Weakened,//虚弱
     ChessKingMark,//王棋标记
     ChessRookMark,//车棋标记
     ChessExhaustion,//力竭
     DragonBreath,//龙息（Dot）
     EternalFlame,//不灭之焰
-    InstantDeath//即死
+    InstantDeath,//即死
+    DamageChange,//伤害变化
+    ActionWeakened,//单回合减攻
+    SpeedChange,//速度变化
+    SwordsmanBrightSword,//亮剑姿态
+    SwordsmanDefense,//防御姿态
+    SwordsmanGuerrilla,//游击姿态
+    SwordsmanLastStand,//背水一战
+    SwordsmanStagger,//失衡
+    SwordsmanElegance//优雅体态
 
 }
 
 [CreateAssetMenu(fileName = "State", menuName = "状态/新状态")]
 public class State : ScriptableObject
 {
+    public static event Action OnDamageEventSettled; 
     private static UnitCombatant s_activeDotEventUnit;
     private static bool s_activeDotEventHasDamage;
     private static List<UnitCombatant> s_activeDotDamagedUnits;
@@ -116,6 +125,9 @@ public class State : ScriptableObject
     public bool isDot;
     public bool isDebuff;
 
+    [Tooltip("是否可以重复施加（跳过已有检查，直接添加新实例）")]
+    public bool canStack;
+
     [Header("排序")]
     [Tooltip("状态图标显示优先级，数值越小越靠前")]
     public int priority;
@@ -133,8 +145,8 @@ public class State : ScriptableObject
     [Header("Dot:快照属性")]
     [InspectorReadOnly] public float atkT;
 
-    [Header("Buff:增益倍率")]
-    [SerializeField, InspectorReadOnly] private float buffMultiplier;
+    [Header("额外参数(用于施加时动态传入)")]
+    [SerializeField, InspectorReadOnly] private float extraData = 0;
 
     private IStateBehavior Behavior
     {
@@ -171,11 +183,12 @@ public class State : ScriptableObject
         UnitCombatant owner,
         UnitCombatant giver,
         int duration = -1,
-        int stacks = -1)
+        int stacks = -1, float extraData = 0f)
     {
         atkT = giver != null ? giver.attack : 0f;
         this.owner = owner;
         this.giver = giver;
+        this.extraData = extraData;
 
         switch (DurationType)
         {
@@ -424,6 +437,7 @@ public class State : ScriptableObject
                 state.OnCombatEventTriggered(triggerUnit, eventType, damagedUnits);
             }
         }
+
     }
     public static void NotifyDamageSkillUsed(UnitCombatant triggerUnit, IReadOnlyList<UnitCombatant> damagedUnits)
     {
@@ -635,7 +649,7 @@ public static class StateBehaviorFactory
                 return new BloodSurgeHealStateBehavior();
             case StateType.ExploderProcess:
                 return new ExploderProcessStateBehavior();
-            case StateType.NextActionDamageBoost:
+            case StateType.DamageChange:
                 return new NextActionDamageBoostStateBehavior();
             case StateType.ActionWeakened:
                 return new ActionWeakenedStateBehavior();
@@ -685,6 +699,18 @@ public static class StateBehaviorFactory
                 return new EternalFlameStateBehavior();
             case StateType.InstantDeath:
                 return new DefaultStateBehavior();
+            case StateType.SwordsmanBrightSword:
+                return new SwordsmanBrightSwordBehavior();
+            case StateType.SwordsmanDefense:
+                return new SwordsmanDefenseBehavior();
+            case StateType.SwordsmanGuerrilla:
+                return new SwordsmanGuerrillaBehavior();
+            case StateType.SwordsmanLastStand:
+                return new SwordsmanLastStandBehavior();
+            case StateType.SwordsmanStagger:
+                return new SwordsmanStaggerBehavior();
+            case StateType.SwordsmanElegance:
+                return new SwordsmanEleganceBehavior();
             default:
                 return new DefaultStateBehavior();
         }
@@ -1435,7 +1461,7 @@ public class PersistentTormentStateBehavior : StateBehaviorBase
         int stunDuration = Mathf.RoundToInt(state.baseExtraData3);
         int validLayer = Mathf.Clamp(state.StackCount, 0, maxStacks);
         float chance = Mathf.Min(maxStacks * chancePerStack, validLayer * chancePerStack);
-        if (Random.value <= chance)
+        if (UnityEngine.Random.value <= chance)
         {
             state.owner.AddState(StateType.Daze, state.giver != null ? state.giver : state.owner, stunDuration, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}受到震慑");
@@ -1890,6 +1916,58 @@ public class EternalFlameStateBehavior : StateBehaviorBase
         if (damage <= 0) return;
         var damageInfo = DamageCounter.CountDamage(state.giver, state.owner, coef, 0f, DamageType.Physical, false, false, false);
         state.owner.TakeDamage(damageInfo);
+    }
+}
+
+// ============ 西洋剑客状态行为 ============
+
+public class SwordsmanBrightSwordBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage) { return 1.3f; }
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1.3f; }
+}
+
+public class SwordsmanDefenseBehavior : StateBehaviorBase
+{
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 0.6f; }
+}
+
+public class SwordsmanGuerrillaBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage) { return 1f; }
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1f; }
+}
+
+public class SwordsmanLastStandBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage) { return 1.5f; }
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1.5f; }
+}
+
+public class SwordsmanStaggerBehavior : StateBehaviorBase
+{
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1.4f; }
+    public override bool CanActThisTurn() { return false; }
+
+    public override void OnStateEnd()
+    {
+        // 失衡结束时通知剑客
+        SwordsmanEnemy swordsman = state.owner as SwordsmanEnemy;
+        swordsman?.ExitStagger();
+    }
+}
+
+public class SwordsmanEleganceBehavior : StateBehaviorBase
+{
+    private const float DamageReduction = 0.4f;
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        // 优雅体态：60%独立乘区伤害减免
+        // 通过返回倍率实现：1 - 0.6 = 0.4
+        SwordsmanEnemy swordsman = state.owner as SwordsmanEnemy;
+        if (swordsman != null && swordsman.IsInStagger) return 1f;
+        return DamageReduction;
     }
 }
 

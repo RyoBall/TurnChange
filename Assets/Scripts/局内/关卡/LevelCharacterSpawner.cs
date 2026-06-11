@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class LevelCharacterSpawner : MonoBehaviour
+public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角色
 {
     private const int EnemyStandPositionStart = 3;
     private static readonly Dictionary<int, Vector3> s_spawnPositionByStandPosition = new Dictionary<int, Vector3>();
@@ -390,7 +390,16 @@ public class LevelCharacterSpawner : MonoBehaviour
         instance.additionalSkillType = data.additionalSkill;
         instance.participateInTurnLoopAtStart = participateInTurnLoop;
         instance.standPosition = standPosition;
-        instance.level = Datas.Instance != null ? Datas.Instance.GetTeamLevel() : Mathf.Max(1, instance.level);
+        // Debug 模式使用关卡配置的角色等级，否则使用全局战队等级
+        if (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode)
+        {
+            int debugLevel = BattleLaunchContext.GetPlayerLevel();
+            instance.level = debugLevel > 0 ? debugLevel : Mathf.Max(1, instance.level);
+        }
+        else
+        {
+            instance.level = Datas.Instance != null ? Datas.Instance.GetTeamLevel() : Mathf.Max(1, instance.level);
+        }
         instance.LoadDataFromCSV();
     }
 

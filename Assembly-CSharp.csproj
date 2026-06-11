@@ -45,6 +45,7 @@
      <Compile Include="Assets\Scripts\局内\技能\CommandSkill.cs" />
      <Compile Include="Assets\Scripts\局外\切换界面\ExitButton.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\UnitStateTextDisplay.cs" />
+     <Compile Include="Assets\Scripts\局内\角色\SwordsmanEnemy.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventHandler.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
      <Compile Include="Assets\Scripts\局外\教程\TutorialBehaviorFactory.cs" />
@@ -62,12 +63,12 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_A.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01_UGUI.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SimpleScript.cs" />
-     <Compile Include="Assets\Scripts\局外\总数据\StarterBranchConfig.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark04.cs" />
      <Compile Include="Assets\Scripts\局内\角色\CharacterAnimationOverrideDatabase.cs" />
      <Compile Include="Assets\Scripts\局外\教程\ShaderAwareRaycast.cs" />
      <Compile Include="Assets\Scripts\局内\角色\ChessStandPositionManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ChatController.cs" />
+     <Compile Include="Assets\Scripts\局外\总数据\LevelCharacterUnlockConfig.cs" />
      <Compile Include="Assets\Scripts\局内\MFF\GlobalFeedbacks.cs" />
      <Compile Include="Assets\Scripts\局内\UI\角色UI\UnitHealthBarController.cs" />
      <Compile Include="Assets\Scripts\局内\UI\BattleSettlementView.cs" />
@@ -75,7 +76,6 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_FrameRateCounter.cs" />
      <Compile Include="Assets\VFX\Lana Studio\Casual RPG VFX\Demo\Scripts\ObjectsSwitcher.cs" />
-     <Compile Include="Assets\Scripts\局外\总数据\StarterBranchRuntimeController.cs" />
      <Compile Include="Assets\Scripts\局内\UI\伤害文本\FeelDamageTextManager.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterSelectButtonUI.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
@@ -85,6 +85,7 @@
      <Compile Include="Assets\Scripts\Audio\GameAudioEvents.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
      <Compile Include="Assets\Scripts\Utils\ScreenTransition.cs" />
+     <Compile Include="Assets\Scripts\局外\总数据\DebugMode.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\EventLevelPanelPreview.cs" />
      <Compile Include="Assets\Scripts\局外\总数据\Datas.cs" />
      <Compile Include="Assets\Scripts\局内\UI\指挥UI\CommandButton.cs" />
@@ -140,7 +141,6 @@
      <Compile Include="Assets\Scripts\局内\回合模块\TurnManager.cs" />
      <Compile Include="Assets\Scripts\局外\背包\ModulePlacementBoard.cs" />
      <Compile Include="Assets\Scripts\局内\DamageCounter.cs" />
-     <Compile Include="Assets\Scripts\局外\总数据\StarterBranchChoiceButtonUI.cs" />
      <Compile Include="Assets\Scripts\局内\DictionaryManager.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelSelectionListLoader.cs" />
      <Compile Include="Assets\Scripts\局外\总数据\SkillKeywordConfig.cs" />
@@ -165,7 +165,6 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextConsoleSimulator.cs" />
      <Compile Include="Assets\Scripts\Audio\GameAudioEventSoundPlayer.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TeleType.cs" />
-     <Compile Include="Assets\Scripts\局内\导入数据显示\SerializeDictionary.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventCheck.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_UiFrameRateCounter.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ShopPanelView.cs" />

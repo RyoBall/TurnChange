@@ -213,43 +213,48 @@ public class UnitCombatant : Combatant
         StateType stateType,
         UnitCombatant giver,
         int duration,
-        int stacks = 1,bool ifChangeStackByExtraStacks = true)
+        int stacks = 1,bool ifChangeStackByExtraStacks = true,float extraData=0f)
     {
         if (!CanReceiveState(stateType, giver))
         {
             return null;
         }
 
-        foreach (var tstate in states)
-        {
-            if (tstate != null && tstate.stateType == stateType)
-            {
-                tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, ifChangeStackByExtraStacks);
-                DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
-                GameAudioEvents.Raise(
-                    tstate.isDebuff ? GameAudioEventType.CombatDebuffGain : GameAudioEventType.CombatBuffGain,
-                    giver,
-                    this,
-                    stacks);
-                if (tstate.isDebuff)
-                {
-                    NotifyDebuffApplied(this, giver);
-                }
-
-                return tstate;
-            }
-        }
-
+        // 先获取模板以检查 canStack
         State stateTemplate = StateDictionaryManager.GetState(stateType);
         if (stateTemplate == null)
         {
             return null;
         }
 
+        // 如果不允许重复施加，则查找已有状态进行更新
+        if (!stateTemplate.canStack)
+        {
+            foreach (var tstate in states)
+            {
+                if (tstate != null && tstate.stateType == stateType)
+                {
+                    tstate.UpdateState(giver != null ? giver.GetAttackDamage() : 0, duration, stacks, ifChangeStackByExtraStacks);
+                    DamageTextPool.Instance.ShowCustomText($"{StateDictionaryManager.GetStateName(stateType)}", transform.position);
+                    GameAudioEvents.Raise(
+                        tstate.isDebuff ? GameAudioEventType.CombatDebuffGain : GameAudioEventType.CombatBuffGain,
+                        giver,
+                        this,
+                        stacks);
+                    if (tstate.isDebuff)
+                    {
+                        NotifyDebuffApplied(this, giver);
+                    }
+
+                    return tstate;
+                }
+            }
+        }
+
         State state = Instantiate(stateTemplate);
         state.name = stateTemplate.name;
         states.Add(state);
-        state.Mount(this, giver, duration, stacks);
+        state.Mount(this, giver, duration, stacks,extraData);
 
         if (state.isDebuff)
         {

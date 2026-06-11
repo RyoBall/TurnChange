@@ -43,6 +43,7 @@ public class TutorialController : MonoBehaviour
 
     private void Awake()
     {
+
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -67,6 +68,12 @@ public class TutorialController : MonoBehaviour
 
     private void Start()
     {
+        if(DebugMode.Instance != null && DebugMode.Instance.IsDebugMode)
+        {
+            Debug.Log("TutorialController: 处于调试模式，所有教程都将不被触发");
+            m_dialogCanvasGroup.gameObject.SetActive(false);
+            return;
+        }
         // 遍历 tutorialList，用工厂创建对应 TutorialBehavior 并存入 behaviorList
         foreach (TutorialData data in m_tutorialList)
         {

@@ -37,7 +37,6 @@ public class LevelEnemyWaveData//关卡敌人波次
 [Serializable]
 public class LevelSelectionFloorData
 {
-    public string floorId;
     public List<LevelSelectionData> levels = new List<LevelSelectionData>();
 
     public IReadOnlyList<LevelSelectionData> GetLevels()

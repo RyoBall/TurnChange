@@ -1187,7 +1187,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &172657281
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2245,52 +2245,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 288939362}
   m_CullTransparentMesh: 1
---- !u!1 &292298798
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 292298799}
-  - component: {fileID: 292298800}
-  m_Layer: 0
-  m_Name: "\u6D41\u6D3E\u89D2\u8272\u83B7\u53D6\u7BA1\u7406\u5668"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &292298799
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 292298798}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &292298800
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 292298798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 80545e1d05a7efb4290522eb7c12dc0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  starterBranchConfig: {fileID: 11400000, guid: 114166400c721a24cad688af8ec9fca5,
-    type: 2}
 --- !u!1 &301964692
 GameObject:
   m_ObjectHideFlags: 0
@@ -6311,6 +6265,7 @@ GameObject:
   m_Component:
   - component: {fileID: 964294950}
   - component: {fileID: 964294951}
+  - component: {fileID: 964294952}
   m_Layer: 0
   m_Name: "\u603B\u6570\u636E"
   m_TagString: Untagged
@@ -6349,30 +6304,71 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 511beaf3365619041b59f31e4bc10c52, type: 2}
   - {fileID: 11400000, guid: a7f0b46fa2265ec499f0c713cef66195, type: 2}
   - {fileID: 11400000, guid: 92ffc6d48ce2c3e45915ef0fddb72dd9, type: 2}
-  selectedStarterBranchId: Dot
+  - {fileID: 11400000, guid: 303896a6f716db74581636b248f968e1, type: 2}
+  - {fileID: 11400000, guid: f37433189d2a024498c265ff06a95888, type: 2}
+  - {fileID: 11400000, guid: d2a09ca80264f3d429c0297df363f2e1, type: 2}
   levelFloors:
-  - floorId: 1
-    levels:
-    - {fileID: 11400000, guid: eae5bcf9f099b934d8e2885879b42cd9, type: 2}
-    - {fileID: 11400000, guid: ead1a07fd7fb4a543acc51efbe739b5d, type: 2}
-  - floorId: 2
-    levels:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-  - floorId: 3
-    levels: []
+  - levels:
+    - {fileID: 11400000, guid: 9244e11a4558efa42a31c2c768e1faef, type: 2}
+    - {fileID: 11400000, guid: 91b476f4d03ada04fae67e057d485464, type: 2}
+    - {fileID: 11400000, guid: eec6d86cb9d51a740966ad628c360912, type: 2}
+    - {fileID: 11400000, guid: a9da4823a7d0bfb40bf8db964f9b1244, type: 2}
+    - {fileID: 11400000, guid: 37b23bfd5b1f91340aed88e2840c5164, type: 2}
+    - {fileID: 11400000, guid: 9e5276c38d3e21547a316e0a889413fd, type: 2}
+    - {fileID: 11400000, guid: 92234d5d2651f6049854fa7c1efa62d1, type: 2}
+    - {fileID: 11400000, guid: 092c383bf7e4ec94080998bd4e7134b3, type: 2}
+  - levels:
+    - {fileID: 11400000, guid: bea588ecc7f3dc84d848105ed4162730, type: 2}
+    - {fileID: 11400000, guid: a8c612d5a7257df4a9de4faabfc80896, type: 2}
+    - {fileID: 11400000, guid: e06824e6b8aeb274f9be5398d3c3a910, type: 2}
+    - {fileID: 11400000, guid: d4a8421ac5df9d1418ac74249acab6c0, type: 2}
+    - {fileID: 11400000, guid: 407b14992ffaa1346a51c8637fb4fc93, type: 2}
+    - {fileID: 11400000, guid: 509c0a54b004d4e4685e26aab0ac7bfd, type: 2}
+    - {fileID: 11400000, guid: 87eef05b8c1e6844c8b2c3103a03a738, type: 2}
+    - {fileID: 11400000, guid: f19e4448f381e2d43878a86c03024618, type: 2}
+    - {fileID: 11400000, guid: 8ca4b2a90067a524caea9da1c7e6160e, type: 2}
+    - {fileID: 11400000, guid: a7de64a6e339dee409a547ae1fe2811e, type: 2}
+    - {fileID: 11400000, guid: b2950a732598fa64d887206c8e8a6c5e, type: 2}
+    - {fileID: 11400000, guid: 5c3eee4fd1ca0234491a3888341198bd, type: 2}
+  - levels:
+    - {fileID: 11400000, guid: 191d5da637174da43a83937eb0d43fa5, type: 2}
+    - {fileID: 11400000, guid: 4197bebde7bc7fb47a4de8d944aad1c6, type: 2}
+    - {fileID: 11400000, guid: ca4af17825b2eab49aeb5cc6a76a4653, type: 2}
+    - {fileID: 11400000, guid: ad2d6b80ab3f93a4ca06e33d1485dcf5, type: 2}
+    - {fileID: 11400000, guid: 8405185387e44de4aa53bea007eb6140, type: 2}
+    - {fileID: 11400000, guid: c2808d66ddb11e44e808c20a43bb7ae3, type: 2}
+    - {fileID: 11400000, guid: 06b3af2080e592449bd5522034305114, type: 2}
+    - {fileID: 11400000, guid: fd0079abe5bc7864faa02469d71498ae, type: 2}
+    - {fileID: 11400000, guid: 7bbe96231eda8f74abd38a374efe95f6, type: 2}
+    - {fileID: 11400000, guid: 9c9f4988f14527245b89d51c496c4656, type: 2}
+    - {fileID: 11400000, guid: 02ab8a7ae4269424293689665b13af95, type: 2}
+    - {fileID: 11400000, guid: b66b998d44381c1488ac463b626b9e29, type: 2}
+    - {fileID: 11400000, guid: 643ec3487c27ac44882d9b91dd390387, type: 2}
+    - {fileID: 11400000, guid: 4cd9956e136f4f548922fd0b6ddc63dd, type: 2}
+    - {fileID: 11400000, guid: c8786622ce3a94f4e90c1698ad19d27c, type: 2}
   currentFloorIndex: 0
   completedLevelIds: []
   activeBattleModifiers: []
   teamLevel: 8
   currentExp: 0
-  baseExpToNextLevel: 20
-  expGrowthFactor: 1
   gold: 0
   ownedModules: []
   placedModules: []
   backpackWidth: 4
+  levelCharacterUnlockConfig: {fileID: 0}
+--- !u!114 &964294952
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964294949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71db2da8d1437e64fa8d1e813180d8d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_isDebugMode: 0
 --- !u!1 &975851273
 GameObject:
   m_ObjectHideFlags: 0
@@ -13525,7 +13521,6 @@ MonoBehaviour:
   carousel: {fileID: 140247126}
   populateOnStart: 1
   disableExtraItems: 1
-  initializeDatasFromLocalConfig: 1
 --- !u!1 &1984381007
 GameObject:
   m_ObjectHideFlags: 0
@@ -14598,7 +14593,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2098937605
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15643,5 +15638,4 @@ SceneRoots:
   - {fileID: 1312347888}
   - {fileID: 505091964}
   - {fileID: 964294950}
-  - {fileID: 292298799}
   - {fileID: 1334294674}

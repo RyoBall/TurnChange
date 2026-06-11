@@ -21,6 +21,7 @@ public class PendingBattleLevelData
 {
     public string levelId;
     public string levelName;
+    public int playerLevel = 1;
     public int rewardExperience;
     public int rewardGold;
     public List<BattleEnemyWaveData> enemyWaves = new List<BattleEnemyWaveData>();
@@ -63,6 +64,7 @@ public static class BattleLaunchContext
         {
             levelId = source.levelId,
             levelName = source.levelName,
+            playerLevel = Mathf.Max(1, source.playerLevel),
             rewardExperience = Mathf.Max(0, source.rewardExperience),
             rewardGold = Mathf.Max(0, source.rewardGold),
             enemyWaves = new List<BattleEnemyWaveData>()
@@ -122,6 +124,11 @@ public static class BattleLaunchContext
         }
 
         s_pendingLevelData = pendingData;
+    }
+
+    public static int GetPlayerLevel()
+    {
+        return s_pendingLevelData != null ? Mathf.Max(1, s_pendingLevelData.playerLevel) : 1;
     }
 
     public static PendingBattleLevelData ConsumePendingLevelData()

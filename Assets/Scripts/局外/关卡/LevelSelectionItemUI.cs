@@ -79,7 +79,9 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     private void OpenBattleLevel()
     {
-        if (m_isCompleted || !m_isUnlocked)
+        // Debug 模式无视完成状态和锁定状态，随时可进入
+        bool isDebug = DebugMode.Instance != null && DebugMode.Instance.IsDebugMode;
+        if (!isDebug && (m_isCompleted || !m_isUnlocked))
         {
             return;
         }
@@ -271,7 +273,7 @@ public class LevelSelectionItemUI : MonoBehaviour
 
         if (prepareButton != null)
         {
-            prepareButton.interactable = canInteract;
+            prepareButton.interactable = canInteract || (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode);
         }
 
         if (completedText != null)

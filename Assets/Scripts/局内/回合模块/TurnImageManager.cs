@@ -394,7 +394,7 @@ public class TurnImageManager : MonoBehaviour
         {
             value = v;
             turnImage.SetLayoutScale(cellSize, value);
-        }, targetScale, duration).SetEase(ease).OnUpdate(() => Debug.Log($"TurnImageManager: Updating layout scale {turnImage.combatant.combatantName} for {turnImage.GetComponent<RectTransform>().localScale}")); ;
+        }, targetScale, duration).SetEase(ease) ;
     }
 
     private Tween TweenAlpha(TurnImage turnImage, float from, float to, float duration, Ease ease)

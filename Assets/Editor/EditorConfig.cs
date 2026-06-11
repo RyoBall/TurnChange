@@ -12,7 +12,9 @@ public class AppConfig : ScriptableObject
     public string StateDataCSVPath = "Assets/Data/StateData.csv";
     public string TutorialDataCSVPath = "Assets/Data/TutorialData.csv";
     public string KeyWordConfigCSVPath = "Assets/Data/KeyWordConfig.csv";
+    public string BattleLevelDataCSVPath = "Assets/Data/BattleLevelData.csv";
     public string CharacterSkillAssetOutputPath = "Assets/Resources/配置可编程物体/角色技能";
+    public string LevelSelectionDataOutputPath = "Assets/Resources/配置可编程物体/关卡数据";
     public string GridModuleAssetOutputPath = "Assets/Resources/配置可编程物体/模块";
     public string StateAssetOutputPath = "Assets/Resources/配置可编程物体/状态";
     public string TutorialAssetOutputPath = "Assets/Resources/配置可编程物体/教程";

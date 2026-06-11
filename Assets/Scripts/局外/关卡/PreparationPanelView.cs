@@ -82,7 +82,6 @@ public class PreparationPanelView : MonoBehaviour
         }
 
         Instance = this;
-        BindInternalEvents();
         BindSlotButtons();
         SetCharacterListVisible(false, true);
         RefreshSelectedCharacterImages();
@@ -109,7 +108,7 @@ public class PreparationPanelView : MonoBehaviour
             Instance = null;
         }
 
-        UnbindInternalEvents();
+        UnsubscribeFromDataSource();
         UnbindSlotButtons();
     }
 
@@ -190,16 +189,6 @@ public class PreparationPanelView : MonoBehaviour
         SetCharacterListVisible(false, true);
         panelRoot.SetActive(false);
     }
-    private void BindInternalEvents()
-    {
-        FirstPreparationOpened -= HandleFirstPreparationOpened;
-        FirstPreparationOpened += HandleFirstPreparationOpened;
-    }
-
-    private void UnbindInternalEvents()
-    {
-        FirstPreparationOpened -= HandleFirstPreparationOpened;
-    }
 
     private void RaiseFirstPreparationOpenEventIfNeeded()
     {
@@ -238,11 +227,6 @@ public class PreparationPanelView : MonoBehaviour
         RemoveUnavailableSelectedCharacters();
         RebuildCharacterButtons();
         RefreshSelectedCharacterImages();
-    }
-
-    private void HandleFirstPreparationOpened()
-    {
-        TryFillSelectedCharactersToMinimum();
     }
 
     private void RebuildCharacterButtons()
@@ -318,11 +302,6 @@ public class PreparationPanelView : MonoBehaviour
         for (int i = 0; i < distinctEnemies.Count; i++)
         {
             EnemyInfoDisplayUI display = Instantiate(enemyInfoPrefab, enemyInfoPositions[i]).GetComponent<EnemyInfoDisplayUI>();
-            RectTransform displayRect = display.GetComponent<RectTransform>();
-            if (displayRect != null && enemyInfoPositions != null && i < enemyInfoPositions.Count && enemyInfoPositions[i] != null)
-            {
-                displayRect.anchoredPosition = enemyInfoPositions[i].anchoredPosition;
-            }
 
             display.SetEnemyData(distinctEnemies[i]);
             m_enemyInfoDisplays.Add(display);
@@ -378,50 +357,6 @@ public class PreparationPanelView : MonoBehaviour
             }
         }
     }
-
-    private void TryFillSelectedCharactersToMinimum()
-    {
-        RemoveUnavailableSelectedCharacters();
-        if (Datas.Instance == null)
-        {
-            return;
-        }
-
-        IReadOnlyList<CharacterRosterData> currentCharacters = Datas.Instance.GetUnlockedCharacterRosters();
-        if (currentCharacters == null || currentCharacters.Count == 0)
-        {
-            return;
-        }
-
-        // ensure we have two slots in the list
-        while (m_selectedCharacters.Count < 2)
-        {
-            m_selectedCharacters.Add(null);
-        }
-
-        List<CharacterRosterData> candidates = new List<CharacterRosterData>(currentCharacters.Count);
-        for (int i = 0; i < currentCharacters.Count; i++)
-        {
-            CharacterRosterData character = currentCharacters[i];
-            if (character == null || m_selectedCharacters.Contains(character))
-            {
-                continue;
-            }
-
-            candidates.Add(character);
-        }
-
-        for (int slot = 0; slot < 2 && candidates.Count > 0; slot++)
-        {
-            if (m_selectedCharacters[slot] == null)
-            {
-                int randomIndex = Random.Range(0, candidates.Count);
-                m_selectedCharacters[slot] = candidates[randomIndex];
-                candidates.RemoveAt(randomIndex);
-            }
-        }
-    }
-
     private void ToggleCharacterSelection(CharacterRosterData characterData)
     {
         if (characterData == null)

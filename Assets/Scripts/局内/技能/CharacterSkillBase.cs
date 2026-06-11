@@ -616,7 +616,6 @@ public class CharacterSkillBase : SkillBase
         float advanceRatio = extraData1;
         float damageReduction = extraData2;
         int tauntDuration = Mathf.Max(1, Mathf.RoundToInt(extraData3));
-        float outgoingMultiplier = Mathf.Max(0f, 1f - damageReduction);
 
         target.AddState(StateType.Taunt, character, tauntDuration, 1);
         if (damageReduction > 0f)
@@ -645,7 +644,7 @@ public class CharacterSkillBase : SkillBase
         float shieldAttackCoef = extraData4;
         int shield = Mathf.RoundToInt(target.maxHP * shieldHpCoef + character.attack * shieldAttackCoef);
         target.AddShield(shield);
-        State boost = target.AddState(StateType.NextActionDamageBoost, character, 1, 1);
+        State boost = target.AddState(StateType.DamageChange, character, 1, 1);
 
 
         target.ChangeActionValue(target.currentActionValue - target.currentActionValue * advanceRatio);

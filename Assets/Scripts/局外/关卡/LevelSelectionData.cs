@@ -12,6 +12,7 @@ public class LevelSelectionData : ScriptableObject//关卡数据
     public LevelSelectionButtonType buttonType;
     public LevelEventData eventData;
     public List<LevelEnemyWaveData> enemyWaves = new List<LevelEnemyWaveData>();
+    [Min(1)] public int playerLevel = 1;
     [Min(0)] public int rewardExperience;
     [Min(0)] public int rewardGold;
 

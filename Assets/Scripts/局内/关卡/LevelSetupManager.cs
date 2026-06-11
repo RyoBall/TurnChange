@@ -240,11 +240,6 @@ public class LevelSetupManager : MonoBehaviour
         if (Datas.Instance != null)
         {
             IReadOnlyList<CharacterRosterData> unlockedCharacters = Datas.Instance.GetUnlockedCharacterRosters();
-            if (Datas.Instance.HasSelectedStarterBranch)
-            {
-                return unlockedCharacters != null ? new List<CharacterRosterData>(unlockedCharacters) : new List<CharacterRosterData>();
-            }
-
             if (unlockedCharacters != null && unlockedCharacters.Count > 0)
             {
                 return new List<CharacterRosterData>(unlockedCharacters);

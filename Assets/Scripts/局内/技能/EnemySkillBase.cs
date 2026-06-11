@@ -29,7 +29,14 @@ public enum EnemySkillType
     DragonDirectRage,    // 直伤龙暴怒：死亡标记
     DragonChaosSkill1,   // 混沌龙技能一：混沌吐息
     DragonChaosSkill2,   // 混沌龙技能二：时间扭曲
-    DragonChaosRage      // 混沌龙暴怒：混沌风暴
+    DragonChaosRage,     // 混沌龙暴怒：混沌风暴
+    // 西洋剑客技能
+    SwordsmanThrust,     // 易伤突刺
+    SwordsmanDance,      // 剑舞连斩
+    SwordsmanBlock,      // 铁壁格挡
+    SwordsmanSteady,     // 稳固架势
+    SwordsmanDisrupt,    // 扰敌步法
+    SwordsmanShadow     // 迅影刺击
 }
 public enum targetType
 {
@@ -164,6 +171,25 @@ public class EnemySkillBase : SkillBase
                 break;
             case EnemySkillType.DragonChaosRage:
                 yield return DragonChaosRage(self);
+                break;
+            // 西洋剑客技能
+            case EnemySkillType.SwordsmanThrust:
+                yield return SwordsmanThrust(self);
+                break;
+            case EnemySkillType.SwordsmanDance:
+                yield return SwordsmanDance(self);
+                break;
+            case EnemySkillType.SwordsmanBlock:
+                yield return SwordsmanBlock(self);
+                break;
+            case EnemySkillType.SwordsmanSteady:
+                yield return SwordsmanSteady(self);
+                break;
+            case EnemySkillType.SwordsmanDisrupt:
+                yield return SwordsmanDisrupt(self);
+                break;
+            case EnemySkillType.SwordsmanShadow:
+                yield return SwordsmanShadow(self);
                 break;
         }
         StartCooldown();
@@ -734,7 +760,7 @@ public class EnemySkillBase : SkillBase
             // 强化后：下次伤害提升20%
             if (dragon.ReinforceLevel >= 1)
             {
-                target.AddState(StateType.NextActionDamageBoost, self, 1, 1);
+                target.AddState(StateType.DamageChange, self, 1, 1,true,0.2f);
             }
         }
 
@@ -761,6 +787,119 @@ public class EnemySkillBase : SkillBase
             }
         }
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, "混沌风暴！");
+        yield break;
+    }
+
+    // ============ 西洋剑客技能 ============
+
+    /// <summary>亮剑-易伤突刺：单体中等直伤+2层易伤</summary>
+    private IEnumerator SwordsmanThrust(Enemy self)
+    {
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target == null) yield break;
+
+        NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+        var damageInfo = DamageCounter.CountDamage(self, target, skillCoef, skillBase, DamageType.Physical, true, false, false);
+        target.TakeDamage(damageInfo);
+        target.AddState(StateType.Vulnerable, self, 99, 2);
+        yield break;
+    }
+
+    /// <summary>亮剑-剑舞连斩：随机单体3段微伤，每段1混沌</summary>
+    private IEnumerator SwordsmanDance(Enemy self)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            var target = CharacterManager.Instance.GetCharacterByRand();
+            if (target == null || target.IsDead) continue;
+
+            float microCoef = extraData1 > 0f ? extraData1 : 0.3f;
+            NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+            var damageInfo = DamageCounter.CountDamage(self, target, microCoef, 0f, DamageType.Physical, true, false, false);
+            target.TakeDamage(damageInfo);
+            target.TryAddChaos(1);
+            yield return new WaitForSeconds(0.15f);
+        }
+        yield break;
+    }
+
+    /// <summary>防御-铁壁格挡：自身1层抵御，随机单体2混沌</summary>
+    private IEnumerator SwordsmanBlock(Enemy self)
+    {
+        self.AddState(StateType.Resist, self, 99, 1);
+
+        var target = CharacterManager.Instance.GetCharacterByRand();
+        if (target != null)
+        {
+            target.TryAddChaos(2);
+        }
+        yield break;
+    }
+
+    /// <summary>防御-稳固架势：回复微量HP，清除1个负面</summary>
+    private IEnumerator SwordsmanSteady(Enemy self)
+    {
+        float healRatio = extraData1 > 0f ? extraData1 : 0.05f;
+        int healAmount = Mathf.RoundToInt(self.maxHP * healRatio);
+        self.Heal(healAmount);
+
+        // 清除自身1个负面状态
+        for (int i = self.States.Count - 1; i >= 0; i--)
+        {
+            State state = self.States[i];
+            if (state != null && state.isDebuff)
+            {
+                self.RemoveState(state);
+                break;
+            }
+        }
+        yield break;
+    }
+
+    /// <summary>游击-扰敌步法：全体微量伤害，自身下次行动提前50%</summary>
+    private IEnumerator SwordsmanDisrupt(Enemy self)
+    {
+        float microCoef = extraData1 > 0f ? extraData1 : 0.2f;
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        NotifyDamageSkillUsed(self, allies);
+        foreach (var ally in allies)
+        {
+            if (ally == null || ally.IsDead) continue;
+            var damageInfo = DamageCounter.CountDamage(self, ally, microCoef, 0f, DamageType.Physical, true, false, false);
+            ally.TakeDamage(damageInfo);
+        }
+
+        // 自身行动提前50%
+        self.ChangeActionValue(self.currentActionValue - self.BaseActionValue * 0.5f);
+        yield break;
+    }
+
+    /// <summary>游击-迅影刺击：行动条最前单位低伤+行动延后30%（无视嘲讽）</summary>
+    private IEnumerator SwordsmanShadow(Enemy self)
+    {
+        // 找到行动条最前的角色
+        Character fastest = null;
+        float lowestActionValue = float.MaxValue;
+        for (int i = 0; i < CharacterManager.Instance.fieldCharacters.Count; i++)
+        {
+            Character c = CharacterManager.Instance.fieldCharacters[i];
+            if (c == null || c.IsDead) continue;
+            if (c.currentActionValue < lowestActionValue)
+            {
+                lowestActionValue = c.currentActionValue;
+                fastest = c;
+            }
+        }
+
+        if (fastest == null) yield break;
+
+        float lowCoef = extraData1 > 0f ? extraData1 : 0.5f;
+        NotifyDamageSkillUsed(self, new List<UnitCombatant> { fastest });
+        var damageInfo = DamageCounter.CountDamage(self, fastest, lowCoef, 0f, DamageType.Physical, true, false, false);
+        fastest.TakeDamage(damageInfo);
+
+        // 行动延后30%
+        fastest.ChangeActionValue(fastest.currentActionValue + fastest.BaseActionValue * 0.3f);
         yield break;
     }
 }
