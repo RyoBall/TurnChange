@@ -1,21 +1,3 @@
-fileFormatVersion: 2
-guid: a5e41cc3917a5984bb66fc3e5eaa62d7
-TrueTypeFontImporter:
-  externalObjects: {}
-  serializedVersion: 4
-  fontSize: 16
-  forceTextureCase: -2
-  characterSpacing: 0
-  characterPadding: 1
-  includeFontData: 1
-  fontNames:
-  - Source Han Serif CN
-  fallbackFontReferences: []
-  customCharacters: 
-  fontRenderingMode: 0
-  ascentCalculationMode: 1
-  useLegacyBoundsCalculation: 0
-  shouldRoundAdvanceValue: 1
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+version https://git-lfs.github.com/spec/v1
+oid sha256:f9a28ee188f25d6e0c20f809c101c5b6a92dc7b912f44f568a506c251f75b1bd
+size 505
