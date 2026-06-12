@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler, IBackpackModuleItem
 {
     [SerializeField] private Color normalBackgroundColor = new Color(0.12f, 0.14f, 0.18f, 0.92f);
     [SerializeField] private Color selectedBackgroundColor = new Color(0.22f, 0.35f, 0.18f, 0.98f);
@@ -24,17 +24,17 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointer
     [SerializeField] private CanvasGroup m_canvasGroup;
     [SerializeField] private TMP_Text m_titleText;
     [SerializeField] private RectTransform m_shapeRoot;
-    private Action<GridModuleDefinition> m_onPressed;
-    private Action<GridModuleDefinition> m_onHovered;
+    private Action<IGridModule> m_onPressed;
+    private Action<IGridModule> m_onHovered;
     private Action m_onHoverExited;
-    private GridModuleDefinition m_module;
+    private IGridModule m_module;
 
     private void Awake()
     {
         EnsureView();
     }
 
-    public void Bind(GridModuleDefinition module, bool selected, bool isLoaded, Vector2 drawCellSize, Action<GridModuleDefinition> onPressed, Action<GridModuleDefinition> onHovered = null, Action onHoverExited = null)
+    public void Bind(IGridModule module, bool selected, bool isLoaded, Vector2 drawCellSize, Action<IGridModule> onPressed, Action<IGridModule> onHovered = null, Action onHoverExited = null)
     {
         EnsureView();
 
@@ -43,7 +43,8 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointer
         m_onHovered = onHovered;
         m_onHoverExited = onHoverExited;
 
-        m_titleText.text = module != null ? module.moduleName : string.Empty;
+        GridModuleDefinition moduleDef = module as GridModuleDefinition;
+        m_titleText.text = moduleDef != null ? moduleDef.moduleName : string.Empty;
         m_background.color = isLoaded ? loadedBackgroundColor : (selected ? selectedBackgroundColor : normalBackgroundColor);
         m_titleText.alpha = isLoaded ? loadedAlpha : 1f;
         m_button.interactable = !isLoaded;
@@ -188,7 +189,8 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointer
                 -(cell.y - moduleCenter.y) * cellHeight);
 
             Image cellImage = cellObject.GetComponent<Image>();
-            Color cellColor = m_module.color;
+            GridModuleDefinition moduleDef = m_module as GridModuleDefinition;
+            Color cellColor = moduleDef != null ? moduleDef.color : Color.white;
             cellColor.a *= isLoaded ? loadedAlpha : 1f;
             cellImage.color = cellColor;
             m_shapeCells.Add(cellImage);

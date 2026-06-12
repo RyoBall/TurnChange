@@ -57,7 +57,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
     {
         if (CanRespondToPointer())
         {
-            SkillDescription.Instance.ChangeDescription(null);
+            SkillDescription.Instance.HideDescription();
             exitFeedback?.PlayFeedbacks();
         }
     }

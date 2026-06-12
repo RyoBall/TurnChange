@@ -27,26 +27,6 @@ public class StateTipUI : MonoBehaviour
         }
     }
 
-    /// <summary>仅设置图标</summary>
-    public void SetIcon(Sprite icon)
-    {
-        if (m_stateIcon != null)
-        {
-            m_stateIcon.sprite = icon;
-            m_stateIcon.enabled = icon != null;
-        }
-    }
-
-    /// <summary>仅设置名称</summary>
-    public void SetStateName(string stateName)
-    {
-        if (m_stateNameText != null)
-        {
-            m_stateNameText.text = stateName ?? string.Empty;
-        }
-    }
-
-    /// <summary>获取 Image 组件引用</summary>
     public Image StateIcon => m_stateIcon;
 
     /// <summary>获取 TMP_Text 组件引用</summary>

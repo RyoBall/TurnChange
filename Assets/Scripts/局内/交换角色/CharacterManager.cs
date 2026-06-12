@@ -376,7 +376,7 @@ public class CharacterManager : MonoBehaviour
 		}
 
 		m_selectedReserveCharacter = reserveCharacter;
-		SkillDescription.Instance.ChangeDescription(null);
+		SkillDescription.Instance.HideDescription();
 	}
 
 	private void HideReserveButtonsImmediate()

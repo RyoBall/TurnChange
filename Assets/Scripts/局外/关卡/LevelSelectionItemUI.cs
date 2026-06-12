@@ -21,26 +21,16 @@ public class LevelSelectionItemUI : MonoBehaviour
 
     [Header("显示")]
     [SerializeField] private TMP_Text levelNameText;
-    [SerializeField] private Text levelNameLegacyText;
-    [SerializeField] private TMP_Text completedText;
-    [SerializeField] private Text completedLegacyText;
+    [SerializeField] private TMP_Text prepareText;
 
     private bool m_isCompleted;
     private bool m_isUnlocked = true;
 
     public LevelSelectionData LevelData => levelData;
     public LevelSelectionButtonType LevelType => levelType;
-
-    private void Awake()
-    {
-        BindButton();
-        ResolveTargetReferences();
-        ResolveTextReferences();
-        RefreshView();
-    }
-
     private void Start()
     {
+        BindButton();
         ResolveTargetReferences();
         RefreshView();
     }
@@ -48,8 +38,6 @@ public class LevelSelectionItemUI : MonoBehaviour
     private void OnEnable()
     {
         BindButton();
-        ResolveTargetReferences();
-        ResolveTextReferences();
         RefreshView();
     }
 
@@ -212,19 +200,6 @@ public class LevelSelectionItemUI : MonoBehaviour
         prepareButton.onClick.RemoveListener(OnPrepareButtonClicked);
         prepareButton.onClick.AddListener(OnPrepareButtonClicked);
     }
-
-    private void ResolveTextReferences()
-    {
-        if (levelNameText == null)
-        {
-            levelNameText = GetComponentInChildren<TMP_Text>(true);
-        }
-
-        if (levelNameLegacyText == null)
-        {
-            levelNameLegacyText = GetComponentInChildren<Text>(true);
-        }
-    }
     //获取引用
     private void ResolveTargetReferences()
     {
@@ -258,17 +233,10 @@ public class LevelSelectionItemUI : MonoBehaviour
 
         string displayName = GetDisplayName();
         bool canInteract = m_isUnlocked && !m_isCompleted;
-        bool showStatusText = m_isCompleted || !m_isUnlocked;
-        string statusTextValue = m_isCompleted ? "已通过" : "未解锁";
 
         if (levelNameText != null)
         {
             levelNameText.text = displayName;
-        }
-
-        if (levelNameLegacyText != null)
-        {
-            levelNameLegacyText.text = displayName;
         }
 
         if (prepareButton != null)
@@ -276,21 +244,22 @@ public class LevelSelectionItemUI : MonoBehaviour
             prepareButton.interactable = canInteract || (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode);
         }
 
-        if (completedText != null)
+        if (prepareText != null)
         {
-            completedText.gameObject.SetActive(showStatusText);
-            if (showStatusText)
+            if (!m_isUnlocked)
             {
-                completedText.text = statusTextValue;
+                prepareText.text = "未解锁";
             }
-        }
-
-        if (completedLegacyText != null)
-        {
-            completedLegacyText.gameObject.SetActive(showStatusText);
-            if (showStatusText)
+            else
             {
-                completedLegacyText.text = statusTextValue;
+                if (!m_isCompleted)
+                {
+                    prepareText.text = "进入";
+                }
+                else
+                {
+                    prepareText.text = "已完成";
+                }
             }
         }
     }

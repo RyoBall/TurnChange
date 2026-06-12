@@ -83,6 +83,8 @@ public class LevelSetupManager : MonoBehaviour
 
         EnsureCharactersIncluded(allPlayerCharacters, fieldPlayerCharacters);
 
+        int playerLevel = m_pendingBattleLevelData != null ? Mathf.Max(1, m_pendingBattleLevelData.playerLevel) : 1;
+
         characterSpawner.SpawnLevel(
             allPlayerCharacters,
             fieldPlayerCharacters,
@@ -90,7 +92,8 @@ public class LevelSetupManager : MonoBehaviour
             runtimeEnemies,
             out List<Character> spawnedAllCharacters,
             out List<Character> spawnedFieldCharacters,
-            out List<Enemy> spawnedEnemies);
+            out List<Enemy> spawnedEnemies,
+            playerLevel);
 
         InitializeSpawnedEnemies(spawnedEnemies);
 

@@ -108,7 +108,8 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
         IReadOnlyList<BattleEnemySpawnData> runtimeFieldEnemies,
         out List<Character> spawnedAllCharacters,
         out List<Character> spawnedFieldCharacters,
-        out List<Enemy> spawnedEnemies)
+        out List<Enemy> spawnedEnemies,
+        int playerLevel = 1)
     {
         ClearSpawnedObjects();
 
@@ -155,7 +156,8 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
                 Character character = SpawnCharacter(
                     data,
                     fieldOrderIndex,
-                    ref reserveIndex);
+                    ref reserveIndex,
+                    playerLevel);
 
                 if (character == null)
                 {
@@ -231,7 +233,7 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
         }
     }
 
-    private Character SpawnCharacter(CharacterRosterData data, int fieldOrderIndex, ref int reserveIndex)
+    private Character SpawnCharacter(CharacterRosterData data, int fieldOrderIndex, ref int reserveIndex, int playerLevel)
     {
         if (data == null)
         {
@@ -263,7 +265,7 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
             return null;
         }
 
-        ConfigureCharacter(instance, data, isFieldCharacter, assignedStandPosition);
+        ConfigureCharacter(instance, data, isFieldCharacter, assignedStandPosition, playerLevel);
         RegisterSpawnPosition(assignedStandPosition, spawnPosition);
         m_spawnedObjects.Add(spawnedObject);
         return instance;
@@ -375,7 +377,7 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
         return string.IsNullOrEmpty(data.characterName) ? data.characterID : data.characterName;
     }
 
-    private void ConfigureCharacter(Character instance, CharacterRosterData data, bool participateInTurnLoop, int standPosition)
+    private void ConfigureCharacter(Character instance, CharacterRosterData data, bool participateInTurnLoop, int standPosition, int playerLevel)
     {
         if (instance == null || data == null)
         {
@@ -393,8 +395,7 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
         // Debug 模式使用关卡配置的角色等级，否则使用全局战队等级
         if (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode)
         {
-            int debugLevel = BattleLaunchContext.GetPlayerLevel();
-            instance.level = debugLevel > 0 ? debugLevel : Mathf.Max(1, instance.level);
+            instance.level = playerLevel > 0 ? playerLevel : Mathf.Max(1, instance.level);
         }
         else
         {

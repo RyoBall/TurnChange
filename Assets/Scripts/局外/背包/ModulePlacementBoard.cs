@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
+public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModulePlacementBoard
 {
     public struct PlacedModuleState
     {
@@ -33,7 +33,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
     private PlacedModuleEntry[,] m_placedEntries;
 
     public event Action<Vector2Int> CellClicked;
-    public event Action<GridModuleDefinition> ModuleHovered;
+    public event Action<IGridModule> ModuleHovered;
     public event Action ModuleHoverExited;
     private void OnValidate()
     {
@@ -51,15 +51,21 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         BuildCells();
     }
 
-    public bool CanPlace(GridModuleDefinition module, Vector2Int anchorCell)
+    public bool CanPlace(IGridModule module, Vector2Int anchorCell)
     {
         if (module == null || m_occupied == null)
         {
             return false;
         }
 
+        GridModuleDefinition moduleDef = module as GridModuleDefinition;
+        if (moduleDef == null)
+        {
+            return false;
+        }
+
         int boardSize = GetBoardSize();
-        module.GetNormalizedCells(m_shapeBuffer);
+        moduleDef.GetNormalizedCells(m_shapeBuffer);
         for (int i = 0; i < m_shapeBuffer.Count; i++)
         {
             Vector2Int boardCell = anchorCell + m_shapeBuffer[i];
@@ -77,16 +83,22 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         return true;
     }
 
-    public bool TryPlace(GridModuleDefinition module, Vector2Int anchorCell)
+    public bool TryPlace(IGridModule module, Vector2Int anchorCell)
     {
         if (!CanPlace(module, anchorCell))
         {
             return false;
         }
 
+        GridModuleDefinition moduleDef = module as GridModuleDefinition;
+        if (moduleDef == null)
+        {
+            return false;
+        }
+
         PlacedModuleEntry entry = new PlacedModuleEntry
         {
-            module = module,
+            module = moduleDef,
             anchorCell = anchorCell
         };
 
@@ -97,13 +109,13 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
             m_occupied[boardCell.x, boardCell.y] = true;
             m_placedEntries[boardCell.x, boardCell.y] = entry;
             entry.occupiedCells.Add(boardCell);
-            m_cells[boardCell.x, boardCell.y].color = module.color;
+            m_cells[boardCell.x, boardCell.y].color = moduleDef.color;
         }
 
         return true;
     }
 
-    public bool TryPickupModuleAt(Vector2Int cell, out GridModuleDefinition module)
+    public bool TryPickupModuleAt(Vector2Int cell, out IGridModule module)
     {
         module = null;
 
@@ -225,7 +237,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public bool TryGetModuleAtCell(Vector2Int cell, out GridModuleDefinition module)
+    public bool TryGetModuleAtCell(Vector2Int cell, out IGridModule module)
     {
         module = null;
 
@@ -250,7 +262,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler
         return true;
     }
 
-    public void NotifyModuleHovered(GridModuleDefinition module)
+    public void NotifyModuleHovered(IGridModule module)
     {
         ModuleHovered?.Invoke(module);
     }

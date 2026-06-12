@@ -338,7 +338,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -4774,7 +4774,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -5339,7 +5339,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -9269,7 +9269,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -9387,9 +9387,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86514021a3d4b104da90cd9c02364125, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillDesText: {fileID: 53602676}
-  keywordDesText: {fileID: 688321709}
-  canvasGroup: {fileID: 1738976027}
+  m_skillDesText: {fileID: 53602676}
+  m_keywordDesText: {fileID: 688321709}
+  m_canvasGroup: {fileID: 1738976027}
+  m_keywordBackground: {fileID: 1727630927}
 --- !u!1 &1745354706
 GameObject:
   m_ObjectHideFlags: 0

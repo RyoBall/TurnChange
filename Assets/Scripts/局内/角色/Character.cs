@@ -271,7 +271,7 @@ public class Character : UnitCombatant
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
             PlayMouseHoverEffect();
-            SkillDescription.Instance.ChangeDescription(null);
+            SkillDescription.Instance.HideDescription();
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
@@ -285,7 +285,7 @@ public class Character : UnitCombatant
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
             StopMouseHoverEffect();
-            SkillDescription.Instance.ChangeDescription(null);
+            SkillDescription.Instance.HideDescription();
         }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
@@ -300,7 +300,7 @@ public class Character : UnitCombatant
         if (CharacterManager.Instance.IsSelectingFieldCharacter)
         {
             CharacterManager.Instance?.OnFieldCharacterClicked(this);
-            SkillDescription.Instance.ChangeDescription(null);
+            SkillDescription.Instance.HideDescription();
             StopMouseHoverEffect();
         }
         if (SkillManager.Instance.IsSelectingCharacters)

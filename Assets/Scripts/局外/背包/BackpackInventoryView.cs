@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
-public class BackpackInventoryView : MonoBehaviour//背包列表
+public class BackpackInventoryView : MonoBehaviour, IBackpackInventoryView//背包列表
 {
     [SerializeField] private RectTransform contentRoot;
     [SerializeField] private GameObject moduleItemPrefab;
@@ -19,8 +19,8 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
 
     private readonly List<BackpackModuleItemUI> m_items = new List<BackpackModuleItemUI>();
 
-    public event Action<GridModuleDefinition> ModulePressed;
-    public event Action<GridModuleDefinition> ModuleHovered;
+    public event Action<IGridModule> ModulePressed;
+    public event Action<IGridModule> ModuleHovered;
     public event Action ModuleHoverExited;
 
     private void Awake()
@@ -33,7 +33,7 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
         EnsureLayout();
     }
 
-    public void Rebuild(IReadOnlyList<GridModuleDefinition> modules, GridModuleDefinition selectedModule)
+    public void Rebuild(IReadOnlyList<IGridModule> modules, IGridModule selectedModule)
     {
         EnsureLayout();
 
@@ -54,7 +54,7 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
 
         for (int i = 0; i < modules.Count; i++)
         {
-            GridModuleDefinition module = modules[i];
+            IGridModule module = modules[i];
             if (module == null)
             {
                 continue;
@@ -87,12 +87,12 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
         }
     }
 
-    private void HandleModulePressed(GridModuleDefinition module)
+    private void HandleModulePressed(IGridModule module)
     {
         ModulePressed?.Invoke(module);
     }
 
-    private void HandleModuleHovered(GridModuleDefinition module)
+    private void HandleModuleHovered(IGridModule module)
     {
         ModuleHovered?.Invoke(module);
     }
@@ -164,7 +164,7 @@ public class BackpackInventoryView : MonoBehaviour//背包列表
         return new Vector2(horizontalSpacing, verticalSpacing);
     }
 
-    private Vector2 GetPreviewCellSize(GridModuleDefinition module)
+    private Vector2 GetPreviewCellSize(IGridModule module)
     {
         if (module == null)
         {

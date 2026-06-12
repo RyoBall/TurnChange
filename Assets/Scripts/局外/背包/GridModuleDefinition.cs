@@ -45,7 +45,7 @@ public enum GridModuleLevel
 }
 
 [CreateAssetMenu(fileName = "GridModule", menuName = "背包/新模块")]
-public class GridModuleDefinition : ScriptableObject
+public class GridModuleDefinition : ScriptableObject, IGridModule
 {
     [Header("模块配置")]
     public GridModuleType moduleType;
@@ -54,10 +54,6 @@ public class GridModuleDefinition : ScriptableObject
     public GridModuleLevel level = GridModuleLevel.Small;
     public Color color = new Color(0.28f, 0.78f, 1f, 0.9f);
     public TemporaryBattleModifierData modifierData = new TemporaryBattleModifierData();
-    public float baseExtraData1;
-    public float baseExtraData2;
-    public float baseExtraData3;
-    public float baseExtraData4;
     [SerializeField]int privePerCell = 5;
     public List<Vector2Int> cells = new List<Vector2Int>
     {
@@ -80,10 +76,6 @@ public class GridModuleDefinition : ScriptableObject
         clone.level = level;
         clone.color = color;
         clone.modifierData = modifierData != null ? modifierData.Clone() : null;
-        clone.baseExtraData1 = baseExtraData1;
-        clone.baseExtraData2 = baseExtraData2;
-        clone.baseExtraData3 = baseExtraData3;
-        clone.baseExtraData4 = baseExtraData4;
         clone.privePerCell = privePerCell;
         clone.cells = new List<Vector2Int>(cells.Count);
         clone.m_isLoaded = false;
@@ -94,6 +86,11 @@ public class GridModuleDefinition : ScriptableObject
         }
 
         return clone;
+    }
+
+    IGridModule IGridModule.Clone()
+    {
+        return Clone();
     }
 
     public void ApplyToBoard()

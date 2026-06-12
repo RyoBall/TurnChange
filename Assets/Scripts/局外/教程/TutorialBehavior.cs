@@ -961,7 +961,7 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     public override void OnTutorialStart()
     {
         base.OnTutorialStart();
-        Time.timeScale = 0; // 慢速以便观察
+        TimeScaleController.Instance?.Pause(); // 慢速以便观察
         CommandButton.OnChangeButtonClicked += OnSwapCompleted;
     }
 
@@ -974,7 +974,7 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     {
         m_swapCompleted = false;
         CommandButton.OnChangeButtonClicked -= OnSwapCompleted;
-        Time.timeScale = 1.5f; // 恢复正常速度
+        TimeScaleController.Instance?.ResetToDefault(); // 恢复正常速度
         base.OnTutorialEnd();
     }
 }

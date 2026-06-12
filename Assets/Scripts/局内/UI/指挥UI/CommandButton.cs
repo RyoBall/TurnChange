@@ -100,7 +100,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        SkillDescription.Instance?.ChangeDescription(null);
+        SkillDescription.Instance?.HideDescription();
         PlayDeselectAnimation();
     }
 

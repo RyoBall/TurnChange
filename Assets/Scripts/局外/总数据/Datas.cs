@@ -85,30 +85,69 @@ public class Datas : MonoBehaviour
 
     private void Awake()
     {
+        if (!TryClaimSingleton())
+        {
+            return;
+        }
+
+        InitializeCharacterLookup();
+        NormalizeUnlockedCharacters();
+        ClampProgressionData();
+        SubscribeInternalEvents();
+        MarkAsPersistent();
+        EnsureTimeScaleController();
+    }
+    private bool TryClaimSingleton()
+    {
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
-            return;
+            return false;
         }
-        Time.timeScale=2;
-        Instance = this;
-        InitializeCharacterLookup();
-        NormalizeUnlockedCharacters();
 
+        Instance = this;
+        return true;
+    }
+
+    private void ClampProgressionData()
+    {
         currentFloorIndex = Mathf.Clamp(currentFloorIndex, 0, Mathf.Max(0, levelFloors.Count - 1));
         teamLevel = Mathf.Clamp(teamLevel, 1, MaxTeamLevel);
         currentExp = Mathf.Max(0f, currentExp);
         gold = Mathf.Max(0, gold);
+    }
+
+    private void SubscribeInternalEvents()
+    {
         LevelCompleted += OnLevelCompletedForCharacterUnlock;
+    }
+
+    private void MarkAsPersistent()
+    {
         DontDestroyOnLoad(gameObject);
     }
-    void Update()
+
+    private void EnsureTimeScaleController()
     {
-        Time.timeScale=1.5f;
+        if (TimeScaleController.Instance == null)
+        {
+            gameObject.AddComponent<TimeScaleController>();
+        }
     }
+
     private void OnDestroy()
     {
+        UnsubscribeInternalEvents();
+        ClearSingleton();
+    }
+
+    private void UnsubscribeInternalEvents()
+    {
         LevelCompleted -= OnLevelCompletedForCharacterUnlock;
+    }
+
+    private void ClearSingleton()
+    {
         if (Instance == this)
         {
             Instance = null;

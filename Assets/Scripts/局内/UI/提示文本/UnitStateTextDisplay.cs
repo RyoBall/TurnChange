@@ -377,6 +377,12 @@ public class UnitStateTextDisplay : MonoBehaviour
             iconBinding.Image.sprite = sprite;
             iconBinding.Image.color = iconColor;
             iconBinding.RectTransform.gameObject.SetActive(true);
+
+            StateIconHoverHandler hoverHandler = iconBinding.RectTransform.GetComponent<StateIconHoverHandler>();
+            if (hoverHandler != null)
+            {
+                hoverHandler.Initialize(state);
+            }
         }
     }
 
@@ -388,8 +394,10 @@ public class UnitStateTextDisplay : MonoBehaviour
         iconRect.sizeDelta = iconSize;
 
         Image image = iconObject.AddComponent<Image>();
-        image.raycastTarget = false;
+        image.raycastTarget = true;
         image.preserveAspect = true;
+
+        iconObject.AddComponent<StateIconHoverHandler>();
 
         binding.IconBindings.Add(new StateIconBinding
         {

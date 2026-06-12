@@ -7,8 +7,10 @@ using DG.Tweening;
 public class SkillDescription : MonoBehaviour
 {
     public static SkillDescription Instance { get; private set; }
-    private Sequence currentSequence;
-    private SkillKeywordConfig m_keywordConfig{get{return SkillKeywordConfig.Instance;}set{}}
+    private Sequence m_currentSequence;
+    private SkillKeywordConfig m_keywordConfig { get { return SkillKeywordConfig.Instance; } set { } }
+    private float m_previousTimeScale;
+    private bool m_hasSavedTimeScale;
 
     private void Awake()
     {
@@ -20,22 +22,23 @@ public class SkillDescription : MonoBehaviour
         Instance = this;
     }
 
-    public TMP_Text skillDesText;
-    public TMP_Text keywordDesText;
-    public CanvasGroup canvasGroup;
+    [SerializeField] private TMP_Text m_skillDesText;
+    [SerializeField] private TMP_Text m_keywordDesText;
+    [SerializeField] private CanvasGroup m_canvasGroup;
+    [SerializeField] private GameObject m_keywordBackground;
 
     void Start()
     {
-        if (skillDesText == null)
+        if (m_skillDesText == null)
         {
-            skillDesText = GetComponentInChildren<TMP_Text>();
+            m_skillDesText = GetComponentInChildren<TMP_Text>();
         }
-        skillDesText.text = "";
-        if (canvasGroup == null)
+        m_skillDesText.text = "";
+        if (m_canvasGroup == null)
         {
-            canvasGroup = GetComponent<CanvasGroup>();
+            m_canvasGroup = GetComponent<CanvasGroup>();
         }
-        canvasGroup.alpha = 0;
+        m_canvasGroup.alpha = 0;
 
         // 加载关键词配置
         m_keywordConfig = Resources.Load<SkillKeywordConfig>("配置可编程物体/技能/关键词配置/SkillKeywordConfig");
@@ -43,31 +46,74 @@ public class SkillDescription : MonoBehaviour
 
     public void ChangeDescription(SkillBase skill = null)
     {
-        if(currentSequence != null && currentSequence.IsActive())
-        {
-            currentSequence.Kill();
-        }
-        currentSequence = DOTween.Sequence();
+        KillCurrentSequence();
+        m_currentSequence = DOTween.Sequence().SetUpdate(true);
         if (skill != null)
         {
-            skillDesText.text = skill.shortDescription;
+            SlowDownTimeScale();
+            m_skillDesText.text = skill.shortDescription;
             UpdateKeywordText(skill);
-            currentSequence.Join(canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
-            currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
+            m_currentSequence.Join(m_canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
+            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
         }
         else
         {
-            currentSequence.Join(canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
-            currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
-            currentSequence.AppendCallback(() =>
-            {
-                skillDesText.text = "";
-                if (keywordDesText != null)
-                {
-                    keywordDesText.text = "";
-                }
-            });
+            RestoreTimeScale();
+            m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
+            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
+            m_currentSequence.AppendCallback(ClearDescriptionText);
         }
+    }
+
+    /// <summary>
+    /// 显示状态描述（状态没有关键词，只显示纯文本描述）
+    /// </summary>
+    public void ChangeDescription(State state)
+    {
+        KillCurrentSequence();
+        m_currentSequence = DOTween.Sequence().SetUpdate(true);
+        if (state != null)
+        {
+            SlowDownTimeScale();
+            m_skillDesText.text = state.description;
+            if (m_keywordDesText != null)
+            {
+                m_keywordDesText.text = "";
+            }
+
+            UpdateKeywordBackground();
+            m_currentSequence.Join(m_canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
+            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
+        }
+        else
+        {
+            RestoreTimeScale();
+            m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
+            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
+            m_currentSequence.AppendCallback(ClearDescriptionText);
+        }
+    }
+
+    /// <summary>
+    /// 取消显示描述文本，隐藏整个描述面板
+    /// </summary>
+    public void HideDescription()
+    {
+        ChangeDescription((SkillBase)null);
+    }
+
+    /// <summary>
+    /// 根据 keywordDesText 是否为空来控制关键词背景的显隐
+    /// </summary>
+    private void UpdateKeywordBackground()
+    {
+        if (m_keywordBackground == null)
+        {
+            return;
+        }
+
+        bool hasKeyword = m_keywordDesText != null && !string.IsNullOrEmpty(m_keywordDesText.text);
+        m_keywordBackground.SetActive(hasKeyword);
     }
 
     /// <summary>
@@ -75,7 +121,7 @@ public class SkillDescription : MonoBehaviour
     /// </summary>
     private void UpdateKeywordText(SkillBase skill)
     {
-        if (keywordDesText == null)
+        if (m_keywordDesText == null)
         {
             return;
         }
@@ -83,13 +129,15 @@ public class SkillDescription : MonoBehaviour
         CharacterSkillBase characterSkill = skill as CharacterSkillBase;
         if (characterSkill == null || characterSkill.words == null || characterSkill.words.Count == 0)
         {
-            keywordDesText.text = "";
+            m_keywordDesText.text = "";
+            UpdateKeywordBackground();
             return;
         }
 
         if (m_keywordConfig == null)
         {
-            keywordDesText.text = "";
+            m_keywordDesText.text = "";
+            UpdateKeywordBackground();
             return;
         }
 
@@ -120,6 +168,64 @@ public class SkillDescription : MonoBehaviour
             }
         }
 
-        keywordDesText.text = sb.ToString();
+        m_keywordDesText.text = sb.ToString();
+        UpdateKeywordBackground();
+    }
+
+    private void KillCurrentSequence()
+    {
+        if (m_currentSequence != null && m_currentSequence.IsActive())
+        {
+            m_currentSequence.Kill();
+        }
+    }
+
+    private void ClearDescriptionText()
+    {
+        m_skillDesText.text = "";
+        if (m_keywordDesText != null)
+        {
+            m_keywordDesText.text = "";
+        }
+
+        UpdateKeywordBackground();
+    }
+
+    /// <summary>
+    /// 将时间流速降为 0.1 倍速，并保存之前的流速以便恢复
+    /// </summary>
+    private void SlowDownTimeScale()
+    {
+        if (m_hasSavedTimeScale)
+        {
+            return;
+        }
+
+        ITimeScaleController controller = TimeScaleController.Instance;
+        if (controller != null)
+        {
+            m_previousTimeScale = controller.CurrentTimeScale;
+            m_hasSavedTimeScale = true;
+            controller.SetTimeScale(0.1f);
+        }
+    }
+
+    /// <summary>
+    /// 恢复为之前保存的时间流速
+    /// </summary>
+    private void RestoreTimeScale()
+    {
+        if (!m_hasSavedTimeScale)
+        {
+            return;
+        }
+
+        ITimeScaleController controller = TimeScaleController.Instance;
+        if (controller != null)
+        {
+            controller.SetTimeScale(m_previousTimeScale);
+        }
+
+        m_hasSavedTimeScale = false;
     }
 }

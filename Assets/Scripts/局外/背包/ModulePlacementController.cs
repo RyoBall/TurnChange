@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
-public class ModulePlacementController : MonoBehaviour//背包
+public class ModulePlacementController : MonoBehaviour, IModulePlacementController//背包
 {
     public static ModulePlacementController Instance { get; private set; }
     [Header("基础引用")]
@@ -25,7 +25,7 @@ public class ModulePlacementController : MonoBehaviour//背包
     private readonly List<Vector2Int> m_shapeBuffer = new List<Vector2Int>();
     private readonly List<Image> m_cursorCells = new List<Image>();
     private readonly List<PlacedModuleData> m_placedDataBuffer = new List<PlacedModuleData>();
-    private readonly List<GridModuleDefinition> m_runtimeOwnedModules = new List<GridModuleDefinition>();
+    private readonly List<IGridModule> m_runtimeOwnedModules = new List<IGridModule>();
 
     private GridModuleDefinition m_selectedModule;
     private RectTransform m_cursorRoot;
@@ -36,7 +36,7 @@ public class ModulePlacementController : MonoBehaviour//背包
     private bool m_runtimeModulesPrepared;
 
     public int ModuleCount => GetOwnedModules().Count;
-
+#region 生命周期
     private void Awake()
     {
         if(Instance!=null&&Instance!=this)
@@ -119,35 +119,37 @@ public class ModulePlacementController : MonoBehaviour//背包
             SetSelection(null);
         }
     }
-
-    private void HandleModulePressed(GridModuleDefinition module)
+#endregion
+    private void HandleModulePressed(IGridModule module)
     {
         if (module == null || module.IsLoaded)
         {
             return;
         }
 
-        SetSelection(module);
+        SetSelection(module as GridModuleDefinition);
     }
 
-    private void HandleInventoryModuleHovered(GridModuleDefinition module)
+    private void HandleInventoryModuleHovered(IGridModule module)
     {
-        if (module == null || selectionText == null)
+        GridModuleDefinition moduleDef = module as GridModuleDefinition;
+        if (moduleDef == null || selectionText == null)
         {
             return;
         }
 
-        selectionText.text = module.moduleName + "\n" + module.description;
+        selectionText.text = moduleDef.moduleName + "\n" + moduleDef.description;
     }
 
-    private void HandleBoardModuleHovered(GridModuleDefinition module)
+    private void HandleBoardModuleHovered(IGridModule module)
     {
-        if (module == null || selectionText == null)
+        GridModuleDefinition moduleDef = module as GridModuleDefinition;
+        if (moduleDef == null || selectionText == null)
         {
             return;
         }
 
-        selectionText.text = module.moduleName + "（已装载）\n" + module.description;
+        selectionText.text = moduleDef.moduleName + "（已装载）\n" + moduleDef.description;
     }
 
     private void HandleModuleHoverExited()
@@ -177,11 +179,11 @@ public class ModulePlacementController : MonoBehaviour//背包
             return;
         }
 
-        if (placementBoard.TryPickupModuleAt(cell, out GridModuleDefinition pickedModule))
+        if (placementBoard.TryPickupModuleAt(cell, out IGridModule pickedModule))
         {
             pickedModule.RemoveFromBoard();
 
-            if (!TryGetRuntimeModuleIndex(pickedModule, out int moduleIndex) || !TryRemovePlacedModuleData(datas, moduleIndex))
+            if (!TryGetRuntimeModuleIndex(pickedModule as GridModuleDefinition, out int moduleIndex) || !TryRemovePlacedModuleData(datas, moduleIndex))
             {
                 Debug.LogWarning("[ModulePlacementController] 从 Datas 取回模块失败，已按数据源重建网格。", this);
                 RestorePlacedModulesFromData();
@@ -189,10 +191,11 @@ public class ModulePlacementController : MonoBehaviour//背包
                 return;
             }
 
-            SetSelection(GetOwnedModule(moduleIndex));
+            GridModuleDefinition pickedModuleDef = GetOwnedModule(moduleIndex);
+            SetSelection(pickedModuleDef);
             if (selectionText != null)
             {
-                selectionText.text = "已从网格取回：" + pickedModule.moduleName;
+                selectionText.text = "已从网格取回：" + (pickedModule is GridModuleDefinition def ? def.moduleName : "");
             }
         }
     }
@@ -294,9 +297,9 @@ public class ModulePlacementController : MonoBehaviour//背包
         // 检测网格上悬停的模块变化
         if (m_hoveredBoardCell.HasValue)
         {
-            if (placementBoard.TryGetModuleAtCell(m_hoveredBoardCell.Value, out GridModuleDefinition hoveredModule))
+            if (placementBoard.TryGetModuleAtCell(m_hoveredBoardCell.Value, out IGridModule hoveredModule))
             {
-                if (!previousHoveredCell.HasValue || !placementBoard.TryGetModuleAtCell(previousHoveredCell.Value, out GridModuleDefinition prevModule) || prevModule != hoveredModule)
+                if (!previousHoveredCell.HasValue || !placementBoard.TryGetModuleAtCell(previousHoveredCell.Value, out IGridModule prevModule) || prevModule != hoveredModule)
                 {
                     placementBoard.NotifyModuleHovered(hoveredModule);
                 }
@@ -319,15 +322,21 @@ public class ModulePlacementController : MonoBehaviour//背包
         }
     }
 
-    public void AddModuleToInventory(GridModuleDefinition module, bool autoSelect = false)
+    public void AddModuleToInventory(IGridModule module, bool autoSelect = false)
     {
         if (module == null || Datas.Instance == null)
         {
             return;
         }
 
+        GridModuleDefinition moduleDef = module as GridModuleDefinition;
+        if (moduleDef == null)
+        {
+            return;
+        }
+
         int addedModuleIndex = Datas.Instance.GetOwnedModuleDefinitions().Count;
-        GridModuleDefinition storedModule = Datas.Instance.AddOwnedModule(module);
+        GridModuleDefinition storedModule = Datas.Instance.AddOwnedModule(moduleDef);
         if (storedModule == null)
         {
             return;
@@ -359,7 +368,7 @@ public class ModulePlacementController : MonoBehaviour//背包
             return;
         }
 
-        IReadOnlyList<GridModuleDefinition> ownedModules = GetOwnedModules();
+        IReadOnlyList<IGridModule> ownedModules = GetOwnedModules();
         CopyPlacedModuleData(m_placedDataBuffer);
 
         for (int i = 0; i < m_placedDataBuffer.Count; i++)
@@ -376,7 +385,7 @@ public class ModulePlacementController : MonoBehaviour//背包
                 continue;
             }
 
-            GridModuleDefinition module = ownedModules[moduleIndex];
+            GridModuleDefinition module = ownedModules[moduleIndex] as GridModuleDefinition;
             if (module == null)
             {
                 continue;
@@ -665,7 +674,7 @@ public class ModulePlacementController : MonoBehaviour//背包
         return new Vector2(Mathf.Max(1f, baseWidth * scale), Mathf.Max(1f, baseHeight * scale));
     }
 
-    public IReadOnlyList<GridModuleDefinition> GetOwnedModules()
+    public IReadOnlyList<IGridModule> GetOwnedModules()
     {
         EnsureRuntimeModulesPrepared();
         return m_runtimeOwnedModules;
@@ -674,17 +683,17 @@ public class ModulePlacementController : MonoBehaviour//背包
     private GridModuleDefinition GetOwnedModule(int moduleIndex)
     {
         EnsureRuntimeModulesPrepared();
-        return moduleIndex >= 0 && moduleIndex < m_runtimeOwnedModules.Count ? m_runtimeOwnedModules[moduleIndex] : null;
+        return moduleIndex >= 0 && moduleIndex < m_runtimeOwnedModules.Count ? m_runtimeOwnedModules[moduleIndex] as GridModuleDefinition : null;
     }
 
-    private bool TryGetRuntimeModuleIndex(GridModuleDefinition module, out int moduleIndex)
+    private bool TryGetRuntimeModuleIndex(IGridModule module, out int moduleIndex)
     {
         EnsureRuntimeModulesPrepared();
         moduleIndex = module != null ? m_runtimeOwnedModules.IndexOf(module) : -1;
         return moduleIndex >= 0;
     }
 
-    public bool TryGetOwnedModuleIndex(GridModuleDefinition module, out int moduleIndex)
+    public bool TryGetOwnedModuleIndex(IGridModule module, out int moduleIndex)
     {
         return TryGetRuntimeModuleIndex(module, out moduleIndex);
     }
@@ -731,7 +740,7 @@ public class ModulePlacementController : MonoBehaviour//背包
 
     private GridModuleDefinition GetOwnedModuleUnsafe(int moduleIndex)
     {
-        return moduleIndex >= 0 && moduleIndex < m_runtimeOwnedModules.Count ? m_runtimeOwnedModules[moduleIndex] : null;
+        return moduleIndex >= 0 && moduleIndex < m_runtimeOwnedModules.Count ? m_runtimeOwnedModules[moduleIndex] as GridModuleDefinition : null;
     }
 
     private void CopyPlacedModuleData(List<PlacedModuleData> results)

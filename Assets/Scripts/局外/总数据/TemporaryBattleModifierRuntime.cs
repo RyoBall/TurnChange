@@ -989,7 +989,7 @@ public static class TemporaryBattleModifierRuntimeManager
 
     private static bool TryGetModuleIndex(GridModuleDefinition module, out int moduleIndex)
     {
-        ModulePlacementController controller = ModulePlacementController.Instance;
+        IModulePlacementController controller = ModulePlacementController.Instance;
         if (controller != null && controller.TryGetOwnedModuleIndex(module, out moduleIndex))
         {
             return true;
