@@ -12,10 +12,34 @@ public class CharacterStateUIItem : MonoBehaviour
     [SerializeField] private ChaosPointSlotUI chaosPointSlotUI;
     [SerializeField] private ShieldSlider shieldSlider;
     [SerializeField] private Image characterIcon;
+    [SerializeField] private UIEmergencyPulseEffect emergencyPulse;
 
     private Character currentCharacter;
 
     public Character CurrentCharacter => currentCharacter;
+
+    private void Awake()
+    {
+        if (emergencyPulse == null)
+        {
+            emergencyPulse = GetComponent<UIEmergencyPulseEffect>();
+        }
+    }
+
+    public void SetEmergencyActive(bool active)
+    {
+        if (emergencyPulse == null)
+        {
+            emergencyPulse = GetComponent<UIEmergencyPulseEffect>();
+        }
+
+        if (emergencyPulse == null)
+        {
+            return;
+        }
+
+        emergencyPulse.SetEmergencyActive(active);
+    }
     public void Initialize(Character character)
     {
         currentCharacter = character;

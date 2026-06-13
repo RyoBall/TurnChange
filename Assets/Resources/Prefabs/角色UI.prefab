@@ -1107,6 +1107,7 @@ GameObject:
   - component: {fileID: 611817049614366747}
   - component: {fileID: 6697054433406082393}
   - component: {fileID: 3775208783883423892}
+  - component: {fileID: 9000000000000000001}
   m_Layer: 5
   m_Name: "\u89D2\u8272UI"
   m_TagString: Untagged
@@ -1151,6 +1152,40 @@ MonoBehaviour:
   chaosPointSlotUI: {fileID: 6446257986890665624}
   shieldSlider: {fileID: 5311269116661511638}
   characterIcon: {fileID: 1069163302279936328}
+  emergencyPulse: {fileID: 9000000000000000001}
+--- !u!114 &9000000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4324196947267230275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7c4a1b92f3d4658a0b1c2d3e4f50601, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shapeSource: {fileID: 1714055243220684429}
+  pulseImage: {fileID: 0}
+  pulseMaterialTemplate: {fileID: 2100000, guid: e7c4a1b92f3d4658a0b1c2d3e4f50604, type: 2}
+  pulseSpeed: 1.35
+  usePingPong: 1
+  renderOnTop: 1
+  ignoreParentCanvasGroup: 1
+  renderMode: 0
+  onlyForChangeButton: 0
+  expandPixels: 11
+  whiteRimPixels: 15
+  redHaloPixels: 16
+  outerGlowPixels: 40
+  outerGlowStrength: 16
+  outerGlowSoftness: 4.5
+  glowSteps: 6
+  whiteBoost: 0.2
+  redBoost: 1.15
+  intensity: 1.4
+  alphaBlur: 5
+  rectOutset: 2.5
 --- !u!225 &3775208783883423892
 CanvasGroup:
   m_ObjectHideFlags: 0

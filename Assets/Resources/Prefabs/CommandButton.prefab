@@ -147,6 +147,7 @@ GameObject:
   - component: {fileID: 7881096340168173433}
   - component: {fileID: 6110166683724423126}
   - component: {fileID: 6530444441239591324}
+  - component: {fileID: 9000000000000000002}
   m_Layer: 5
   m_Name: CommandButton
   m_TagString: Untagged
@@ -289,6 +290,39 @@ MonoBehaviour:
   selectAnimDuration: 0.12
   pointerEnterFeedback: {fileID: 0}
   pointerExitFeedback: {fileID: 0}
+--- !u!114 &9000000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5943868870068502566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7c4a1b92f3d4658a0b1c2d3e4f50601, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shapeSource: {fileID: 7881096340168173433}
+  pulseImage: {fileID: 0}
+  pulseMaterialTemplate: {fileID: 2100000, guid: e7c4a1b92f3d4658a0b1c2d3e4f50604, type: 2}
+  pulseSpeed: 1.5
+  usePingPong: 1
+  renderOnTop: 1
+  ignoreParentCanvasGroup: 1
+  renderMode: 1
+  onlyForChangeButton: 1
+  expandPixels: 6
+  whiteRimPixels: 2.5
+  redHaloPixels: 18
+  outerGlowPixels: 5
+  outerGlowStrength: 0.5
+  outerGlowSoftness: 2
+  glowSteps: 6
+  whiteBoost: 2.97
+  redBoost: 4
+  intensity: 3
+  alphaBlur: 6
+  rectOutset: 5
 --- !u!1 &7003537938853191158
 GameObject:
   m_ObjectHideFlags: 0
