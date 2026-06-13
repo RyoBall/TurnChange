@@ -238,6 +238,31 @@ public class LevelSetupManager : MonoBehaviour
         Debug.LogWarning("[LevelSetupManager] 缺少 BattleSettlementView，已结算奖励但未显示结算界面。", this);
     }
 
+    /// <summary>
+    /// 处理玩家战败：场上角色全部死亡时调用，显示结算界面但不发放奖励
+    /// </summary>
+    public IEnumerator ResolveDefeat()
+    {
+        if (m_battleResolved)
+        {
+            yield break;
+        }
+
+        m_battleResolved = true;
+        Debug.Log("[LevelSetupManager] 所有场上角色已死亡，战斗失败");
+
+        // 结束战斗增益会话
+        TemporaryBattleModifierRuntimeManager.CompleteBattleModifierSession();
+
+        if (settlementView != null)
+        {
+            yield return settlementView.PlaySettlementSequence(0, 0);
+            yield break;
+        }
+
+        Debug.LogWarning("[LevelSetupManager] 缺少 BattleSettlementView，已判定战败但未显示结算界面。", this);
+    }
+
     private List<CharacterRosterData> ResolveRuntimePlayerCharacters()
     {
         if (Datas.Instance != null)

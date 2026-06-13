@@ -474,6 +474,14 @@ public class Character : UnitCombatant
         return TemporaryBattleModifierRuntimeManager.GetCharacterTurnEndActionValue(base.ConsumeTurnEndActionValue(), this);
     }
 
+    /// <summary>
+    /// 被切出时调用，清空当前盾值
+    /// </summary>
+    public void OnSwapOut()
+    {
+        currentShield = 0;
+    }
+
     public void LoadDataFromCSV()
     {
         if (string.IsNullOrEmpty(characterID))

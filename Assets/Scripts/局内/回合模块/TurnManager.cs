@@ -245,8 +245,12 @@ public class TurnManager : MonoBehaviour
             }
             if (allCharactersDead)
             {
-                //填充在场角色全部死亡的逻辑
-                SkillExecuteManager.ExecuteSkill(null, Commander.GetInstance().changeSkill);
+                // 两个角色全部死亡，判定为游戏失败
+                if (LevelSetupManager.Instance != null)
+                {
+                    yield return LevelSetupManager.Instance.ResolveDefeat();
+                }
+                yield break;
             }
             //读取当前行动者行动值
             var nextCombatant = nextNode.Value;

@@ -368,10 +368,6 @@ public class State : ScriptableObject
         ChangeDuration(remainingTurns + extraTurns);
     }
 
-    public bool TryConsumeResist()
-    {
-        return Behavior.TryConsumeResist();
-    }
 
     public virtual void DotTrigger(float damageMultiplier = 1f)
     {
@@ -578,7 +574,6 @@ public interface IStateBehavior
     float GetAttractMultiplier(UnitCombatant source);
     bool CanActThisTurn();
     void OnStackChange();
-    bool TryConsumeResist();
     void DotTrigger(float damageMultiplier);
     bool CausesOutgoingTrueDamage(bool isDotDamage);
     /// <summary>角色交换回调：当持有者被换下时，将状态转移到新角色上</summary>
@@ -613,7 +608,6 @@ public abstract class StateBehaviorBase : IStateBehavior
     public virtual float GetAttractMultiplier(UnitCombatant source) { return 1f; }
     public virtual bool CanActThisTurn() { return true; }
     public virtual void OnStackChange() { }
-    public virtual bool TryConsumeResist() { return false; }
     public virtual void DotTrigger(float damageMultiplier) { }
     public virtual bool CausesOutgoingTrueDamage(bool isDotDamage) { return false; }
     public virtual void OnOwnerSwappedOut(UnitCombatant newOwner) { }
@@ -1640,15 +1634,26 @@ public class ResistStateBehavior : StateBehaviorBase
         return state.baseExtraData1;
     }
 
-    public override bool TryConsumeResist()
+    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
     {
-        if (state.StackCount <= 0)
+        if (eventType != StateCombatEventType.DamageSkillUsed || state.StackCount <= 0)
         {
-            return false;
+            return;
         }
 
-        state.ChangeStackCount(state.StackCount - 1);
-        return true;
+        if (damagedUnits == null)
+        {
+            return;
+        }
+
+        foreach (var unit in damagedUnits)
+        {
+            if (unit == state.owner)
+            {
+                state.ChangeStackCount(state.StackCount - 1);
+                return;
+            }
+        }
     }
 }
 

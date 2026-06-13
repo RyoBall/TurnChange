@@ -31,9 +31,10 @@ public class CharacterManager : MonoBehaviour
 	public RectTransform reserveButtonContainer;
 	public Button reserveButtonPrefab;
 	public float buttonSpacing = 72f;
+	public float buttonHorizontalSpacing = 160f;
 	public float buttonSlideDuration = 0.2f;
 	public float buttonStagger = 0.05f;
-	public float hiddenOffsetX = -420f;
+	public float hiddenOffsetY = -300f;
 
 	private readonly List<Button> m_runtimeButtons = new List<Button>();
 
@@ -231,6 +232,8 @@ public class CharacterManager : MonoBehaviour
 			newCharacter.transform.position = oldCharacter.transform.position;
 		}
 		oldCharacter.transform.position = exitPosition;
+		//切出时清空盾值
+		oldCharacter.OnSwapOut();
 		//执行退场动画
 		if (TurnManager.Instance != null)
 		{
@@ -312,19 +315,32 @@ public class CharacterManager : MonoBehaviour
 			return;
 		}
 
+		// 先收集可用的候补角色（排除死亡）
+		List<Character> availableReserves = new List<Character>();
 		for (int i = 0; i < reserveCharacters.Count; i++)
 		{
 			Character reserve = reserveCharacters[i];
-			if (reserve == null)
+			if (reserve == null || reserve.IsDead)
 			{
 				continue;
 			}
+			availableReserves.Add(reserve);
+		}
+
+		int count = availableReserves.Count;
+		// 以屏幕正中央为基准对称排布：计算每个按钮的目标 X 坐标
+		float[] targetPositionsX = ComputeSymmetricPositions(count, buttonHorizontalSpacing);
+
+		for (int i = 0; i < count; i++)
+		{
+			Character reserve = availableReserves[i];
 
 			Button button = Instantiate(reserveButtonPrefab, reserveButtonContainer);
 			RectTransform rect = button.GetComponent<RectTransform>();
 			if (rect != null)
 			{
-				rect.anchoredPosition = new Vector2(hiddenOffsetX, -i * buttonSpacing);
+				// 初始隐藏在屏幕下方，动画时滑入到对称位置
+				rect.anchoredPosition = new Vector2(targetPositionsX[i], hiddenOffsetY);
 			}
 
 			TMP_Text label = button.GetComponentInChildren<TMP_Text>();
@@ -345,8 +361,26 @@ public class CharacterManager : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// 计算以屏幕正中央为基准的对称 X 坐标数组。
+	/// 1 个按钮居中，2 个左右对称，3 个左中右，以此类推。
+	/// </summary>
+	private static float[] ComputeSymmetricPositions(int count, float spacing)
+	{
+		float[] positions = new float[count];
+		float centerOffset = (count - 1) * spacing * 0.5f;
+		for (int i = 0; i < count; i++)
+		{
+			positions[i] = i * spacing - centerOffset;
+		}
+		return positions;
+	}
+
 	private void PlayReserveButtonsEnterAnim()
 	{
+		//弹出按钮时让背景暗淡（优先级 2，高于 SkillDescription 的优先级 1）
+		BackgroundManager.Instance?.ChangeBackground(true, 2);
+
 		for (int i = 0; i < m_runtimeButtons.Count; i++)
 		{
 			Button button = m_runtimeButtons[i];
@@ -361,7 +395,8 @@ public class CharacterManager : MonoBehaviour
 				continue;
 			}
 
-			Vector2 targetPosition = new Vector2(0f, -i * buttonSpacing);
+			// 从下方滑入到对称的 X 位置，Y 归零（屏幕正中高度）
+			Vector2 targetPosition = new Vector2(rect.anchoredPosition.x, 0f);
 			rect.DOAnchorPos(targetPosition, buttonSlideDuration)
 				.SetDelay(i * buttonStagger)
 				.SetEase(Ease.OutCubic);
@@ -381,6 +416,9 @@ public class CharacterManager : MonoBehaviour
 
 	private void HideReserveButtonsImmediate()
 	{
+		//隐藏按钮时恢复背景（优先级 2，确保能解除自己设置的变暗）
+		BackgroundManager.Instance?.ChangeBackground(false, 2);
+
 		for (int i = 0; i < m_runtimeButtons.Count; i++)
 		{
 			if (m_runtimeButtons[i] != null)
