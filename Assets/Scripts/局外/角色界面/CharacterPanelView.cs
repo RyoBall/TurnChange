@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,6 +41,10 @@ public class CharacterPanelView : MonoBehaviour
     [SerializeField] private GameObject skillDescriptionPanel;
     [SerializeField] private TMP_Text skillDescriptionTitleText;
     [SerializeField] private TMP_Text skillDescriptionContentText;
+
+    [Header("关键词二级菜单")]
+    [SerializeField] private GameObject keywordDescriptionPanel;
+    [SerializeField] private TMP_Text keywordDescriptionText;
 
     private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
     private readonly List<CharacterSkillButtonUI> m_skillButtons = new List<CharacterSkillButtonUI>();
@@ -309,42 +314,97 @@ public class CharacterPanelView : MonoBehaviour
             skillDescriptionContentText.text = string.IsNullOrWhiteSpace(description) ? "暂无技能说明" : description;
         }
 
+        UpdateKeywordDescription(skill);
         StartSkillDescriptionFade(true);
     }
 
     public void HideSkillDescription()
     {
         StartSkillDescriptionFade(false);
+        HideKeywordDescription();
+    }
+
+    public void HideKeywordDescription()
+    {
+        if (keywordDescriptionPanel == null)
+        {
+            return;
+        }
+
+        keywordDescriptionPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// 根据技能的关键词列表更新关键词二级菜单的文本，无关键词时隐藏面板
+    /// </summary>
+    private void UpdateKeywordDescription(SkillBase skill)
+    {
+        if (keywordDescriptionPanel == null || keywordDescriptionText == null)
+        {
+            return;
+        }
+
+        CharacterSkillBase characterSkill = skill as CharacterSkillBase;
+        if (characterSkill == null || characterSkill.words == null || characterSkill.words.Count == 0)
+        {
+            keywordDescriptionPanel.SetActive(false);
+            return;
+        }
+
+        SkillKeywordConfig config = SkillKeywordConfig.Instance;
+        if (config == null)
+        {
+            keywordDescriptionPanel.SetActive(false);
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < characterSkill.words.Count; i++)
+        {
+            string keyword = characterSkill.words[i];
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                continue;
+            }
+
+            string description = config.GetDescription(keyword);
+            if (sb.Length > 0)
+            {
+                sb.AppendLine();
+            }
+
+            if (!string.IsNullOrEmpty(description))
+            {
+                sb.Append(keyword);
+                sb.Append(":");
+                sb.Append(description);
+            }
+            else
+            {
+                sb.Append(keyword);
+            }
+        }
+
+        string result = sb.ToString();
+        if (string.IsNullOrEmpty(result))
+        {
+            keywordDescriptionPanel.SetActive(false);
+            return;
+        }
+
+        keywordDescriptionText.text = result;
+        keywordDescriptionPanel.SetActive(true);
     }
 
     [Header("技能描述淡入淡出")]
     [SerializeField] private float skillFadeDuration = 0.15f;
-    private CanvasGroup m_skillDescriptionCanvasGroup;
+    [SerializeField] private CanvasGroup descriptionCanvasGroup;
     private Coroutine m_skillDescriptionFadeCoroutine;
-
-    private CanvasGroup EnsureSkillDescriptionCanvasGroup()
-    {
-        if (skillDescriptionPanel == null)
-            return null;
-
-        if (m_skillDescriptionCanvasGroup == null)
-        {
-            m_skillDescriptionCanvasGroup = skillDescriptionPanel.GetComponent<CanvasGroup>();
-            if (m_skillDescriptionCanvasGroup == null)
-            {
-                m_skillDescriptionCanvasGroup = skillDescriptionPanel.AddComponent<CanvasGroup>();
-            }
-        }
-
-        return m_skillDescriptionCanvasGroup;
-    }
 
     private void StartSkillDescriptionFade(bool show)
     {
-        if (skillDescriptionPanel == null)
+        if (descriptionCanvasGroup == null)
             return;
-
-        CanvasGroup cg = EnsureSkillDescriptionCanvasGroup();
 
         if (m_skillDescriptionFadeCoroutine != null)
         {
@@ -352,36 +412,36 @@ public class CharacterPanelView : MonoBehaviour
             m_skillDescriptionFadeCoroutine = null;
         }
 
-        m_skillDescriptionFadeCoroutine = StartCoroutine(FadeSkillDescriptionCoroutine(show, cg));
+        m_skillDescriptionFadeCoroutine = StartCoroutine(FadeSkillDescriptionCoroutine(show));
     }
 
-    private System.Collections.IEnumerator FadeSkillDescriptionCoroutine(bool show, CanvasGroup cg)
+    private System.Collections.IEnumerator FadeSkillDescriptionCoroutine(bool show)
     {
-        if (cg == null)
+        if (descriptionCanvasGroup == null)
             yield break;
 
-        float startAlpha = cg.alpha;
+        float startAlpha = descriptionCanvasGroup.alpha;
         float target = show ? 1f : 0f;
         float elapsed = 0f;
 
         if (show)
         {
-            skillDescriptionPanel.SetActive(true);
+            descriptionCanvasGroup.gameObject.SetActive(true);
         }
 
         while (elapsed < skillFadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / Mathf.Max(0.0001f, skillFadeDuration));
-            cg.alpha = Mathf.Lerp(startAlpha, target, t);
+            descriptionCanvasGroup.alpha = Mathf.Lerp(startAlpha, target, t);
             yield return null;
         }
 
-        cg.alpha = target;
+        descriptionCanvasGroup.alpha = target;
 
         if (!show)
         {
-            skillDescriptionPanel.SetActive(false);
+            descriptionCanvasGroup.gameObject.SetActive(false);
         }
 
         m_skillDescriptionFadeCoroutine = null;

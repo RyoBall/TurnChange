@@ -206,11 +206,6 @@ public class LevelSetupManager : MonoBehaviour
         m_currentWaveIndex = waveIndex;
         FloatingTipGenerator.Instance?.ShowDefaultTip($"第 {waveIndex + 1} 波敌人出现");
 
-        for (int i = 0; i < spawnedEnemies.Count; i++)
-        {
-            spawnedEnemies[i]?.PlaySpawnEnterFeedback();
-        }
-
         yield return new WaitForSeconds(enemyWaveEnterDelay+2f);
     }
 

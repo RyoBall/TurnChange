@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "unity": {
+      "type": "stdio",
+      "command": "C:/Program Files/nodejs/node.exe",
+      "args": [
+        "Library/PackageCache/com.gamelovers.mcp-unity@cce8b57de9/Server~/build/index.js"
+      ],
+      "cwd": "d:/Github Store"
+    }
+  }
+}

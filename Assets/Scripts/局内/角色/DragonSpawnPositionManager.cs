@@ -87,12 +87,6 @@ public class DragonSpawnPositionManager : MonoBehaviour
         Instantiate(environmentArtPrefab, environmentArtSpawnPoint.position, environmentArtSpawnPoint.rotation);
         m_hasSpawnedEnvironmentArt = true;
     }
-
-    /// <summary>直接获取生成点 Transform（不触发美术素材生成）</summary>
-    public bool TryGetDragonSpawnPoint(string enemyID, out Transform spawnPoint)
-    {
-        return m_spawnMap.TryGetValue(enemyID, out spawnPoint);
-    }
 }
 
 [System.Serializable]

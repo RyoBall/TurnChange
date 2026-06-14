@@ -124,6 +124,21 @@ public class Character : UnitCombatant
     public override void Die()
     {
         base.Die();
+        ResetAllCharactersSwitchCooldown();
+    }
+
+    /// <summary>
+    /// 有角色死亡时，清零所有角色的换人CD
+    /// </summary>
+    private static void ResetAllCharactersSwitchCooldown()
+    {
+        if (CharacterManager.Instance == null) return;
+
+        foreach (Character c in CharacterManager.Instance.allCharacters)
+        {
+            if (c == null) continue;
+            c.ResetSwitchCooldown();
+        }
     }
 
     /// <summary>
@@ -206,6 +221,16 @@ public class Character : UnitCombatant
     {
         bool wasOnCooldown = IsSwapOnCooldown;
         switchCooldownRemaining = Mathf.Max(0f, switchCooldownMax);
+        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
+    }
+
+    /// <summary>
+    /// 将换人CD清零（角色死亡时调用）
+    /// </summary>
+    public void ResetSwitchCooldown()
+    {
+        bool wasOnCooldown = IsSwapOnCooldown;
+        switchCooldownRemaining = 0f;
         NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
     }
 
@@ -475,11 +500,11 @@ public class Character : UnitCombatant
     }
 
     /// <summary>
-    /// 被切出时调用，清空当前盾值
+    /// 被切出时调用，护盾减半（向下取整）
     /// </summary>
     public void OnSwapOut()
     {
-        currentShield = 0;
+        currentShield /= 2;
     }
 
     public void LoadDataFromCSV()

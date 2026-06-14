@@ -199,6 +199,13 @@ public class SwordsmanEnemy : Enemy
             m_currentStanceState = newState;
             newState.OnEnter(oldStance);
         }
+
+        // 同步 Animator 的 Stance 参数，驱动 Idle 动画切换
+        if (Anim != null)
+        {
+            Anim.SetInteger("Stance", (int)newStance);
+            Anim.SetTrigger("Idle");
+        }
     }
 
     private void SwitchToNextStance()

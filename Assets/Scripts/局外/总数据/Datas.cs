@@ -40,6 +40,7 @@ public class Datas : MonoBehaviour
     /// <summary>序体被装载时的静态事件（供教程系统监听）</summary>
     public static event Action ModulePlacedStatic;
     public event Action BackpackWidthChanged;
+    public event Action GoldChanged;
     public event Action<string> LevelCompleted;
 
     [Header("角色列表")]
@@ -412,6 +413,7 @@ public class Datas : MonoBehaviour
         }
 
         gold = Mathf.Max(0, gold + amount);
+        GoldChanged?.Invoke();
     }
 
     public void AddExperience(float amount)

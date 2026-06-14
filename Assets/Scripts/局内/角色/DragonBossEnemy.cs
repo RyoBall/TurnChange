@@ -24,6 +24,22 @@ public class DragonBossEnemy : Enemy
         BattleDialogEvents.Raise(BattleDialogEventType.DragonEnter, enemy: this);
     }
 
+    protected override void InitializeEnemyRuntime()
+    {
+        base.InitializeEnemyRuntime();
+        DragonPositionSet();
+    }
+
+    /// <summary>根据 enemyID 从 DragonSpawnPositionManager 获取龙Boss的专属生成位置</summary>
+    private void DragonPositionSet()
+    {
+        if (DragonSpawnPositionManager.Instance == null) return;
+        if (!DragonSpawnPositionManager.Instance.TryGetDragonSpawnPosition(enemyID, out Vector3 position, out Quaternion rotation))
+            return;
+
+        transform.SetPositionAndRotation(position, rotation);
+    }
+
     /// <summary>被其他龙死亡时调用，提升强化等级</summary>
     public void ApplyReinforcement()
     {

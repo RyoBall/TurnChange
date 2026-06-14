@@ -17,12 +17,14 @@ public class Enemy : UnitCombatant
     public string enemyID;
     [Header("动画覆盖")]
     [SerializeField] private Animator animator;
+    protected Animator Anim => animator;
     [SerializeField] private EnemyAnimationOverrideDatabase animationOverrideDatabase;
     public float selectedScale = 1.1f;
     public float selectAnimDuration = 0.12f;
 
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
+    private Coroutine m_hitAnimCoroutine;
     public List<EnemySkillType> skills = new List<EnemySkillType>();
     private List<EnemySkillBase> m_skillInstances = new List<EnemySkillBase>();
     private Dictionary<EnemySkillType, EnemySkillBase> m_skillInstanceMap = new Dictionary<EnemySkillType, EnemySkillBase>();
@@ -132,7 +134,6 @@ public class Enemy : UnitCombatant
         
         TickSkillCooldowns();
         OnTurnStartBeforeStateSettlement();
-        enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(0.2f);
         yield return ProcessStatesOnTurnStart();
         //如果死亡了就直接结束回合
@@ -159,14 +160,29 @@ public class Enemy : UnitCombatant
     {
     }
 
-    public virtual void PlaySpawnEnterFeedback()
+    public override void TakeDamage(DamageInfo damageInfo)
     {
-        if (!m_isBattleVisible || dead)
-        {
-            return;
-        }
+        base.TakeDamage(damageInfo);
+        PlayHitAnimation();
+    }
 
-        enterFeedback?.PlayFeedbacks();
+    private void PlayHitAnimation()
+    {
+        if (animator == null) return;
+
+        if (m_hitAnimCoroutine != null)
+        {
+            StopCoroutine(m_hitAnimCoroutine);
+        }
+        m_hitAnimCoroutine = StartCoroutine(HitAnimationCoroutine());
+    }
+
+    private IEnumerator HitAnimationCoroutine()
+    {
+        animator.SetTrigger("EnterGetAttack");
+        yield return new WaitForSeconds(0.1f);
+        animator.SetTrigger("ExitGetAttack");
+        m_hitAnimCoroutine = null;
     }
 
     private IEnumerator ActionCoroutine()
@@ -191,7 +207,6 @@ public class Enemy : UnitCombatant
         yield return new WaitForSeconds(0.2f);
         FloatingTipGenerator.Instance?.ShowDefaultTip(skill.skillName);
         yield return new WaitForSeconds(0.5f);//进入回合动画
-        enterFeedback?.PlayFeedbacks();
         yield return new WaitForSeconds(0.5f);
         SkillExecuteManager.ExecuteSkill(this, skill);
         yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);

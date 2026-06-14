@@ -46,6 +46,7 @@ public class ShopModuleManager : MonoBehaviour
     private readonly List<ShopRuntimeEntry> m_runtimeEntries = new List<ShopRuntimeEntry>();
 
     private int m_nextSequentialIndex;
+    private int m_refreshCount;
     private string m_statusMessage = string.Empty;
     private string m_hoverDescription;
 
@@ -53,7 +54,6 @@ public class ShopModuleManager : MonoBehaviour
     /// <summary>购买序体时的静态事件（供教程系统监听）</summary>
     public static event Action<GridModuleDefinition, int, int> ItemPurchasedStatic;
     public event Action<GridModuleDefinition, int, int> PurchaseFailed;
-    public event Action ShopStateChanged;
 
     public int CurrentCurrency => GetCurrentCurrency();
 
@@ -61,6 +61,7 @@ public class ShopModuleManager : MonoBehaviour
     {
         ClampConfig();
         BindRefreshButton();
+        SubscribeGoldEvent();
 
         if (autoInitializeOnAwake)
         {
@@ -71,6 +72,7 @@ public class ShopModuleManager : MonoBehaviour
     private void OnDestroy()
     {
         UnbindRefreshButton();
+        UnsubscribeGoldEvent();
     }
     public void SetSpawnPoints(IReadOnlyList<RectTransform> points)
     {
@@ -93,13 +95,11 @@ public class ShopModuleManager : MonoBehaviour
     public void SetStatusTextTarget(TMP_Text target)
     {
         statusText = target;
-        UpdateCurrencyText();
     }
 
     public void SetCurrencyTextTarget(TMP_Text target)
     {
         currencyText = target;
-        UpdateCurrencyText();
     }
 
     public void SetRefreshButton(Button button)
@@ -112,6 +112,26 @@ public class ShopModuleManager : MonoBehaviour
         UnbindRefreshButton();
         refreshButton = button;
         BindRefreshButton();
+    }
+
+    public void ShowExternalStatusText(string message)
+    {
+        m_hoverDescription = message ?? string.Empty;
+
+        if (statusText != null)
+        {
+            statusText.text = m_hoverDescription;
+        }
+    }
+
+    public void ClearExternalStatusText()
+    {
+        m_hoverDescription = null;
+
+        if (statusText != null)
+        {
+            statusText.text = m_statusMessage;
+        }
     }
 
     public void InitializeShopItems()
@@ -167,13 +187,32 @@ public class ShopModuleManager : MonoBehaviour
         }
 
         RefreshVisualState();
-        SetStatusText("商店已初始化");
+        SetStatusText("买些东西吧");
     }
 
     public void RefreshCurrentItems()
     {
+        int cost = GetRefreshCost();
+        int currentCurrency = GetCurrentCurrency();
+        if (currentCurrency < cost)
+        {
+            SetStatusText("货币不足，无法刷新");
+            return;
+        }
+
+        if (Datas.Instance != null)
+        {
+            Datas.Instance.ModifyGold(-cost);
+        }
+
+        m_refreshCount++;
         InitializeShopItems();
-        SetStatusText("当前商品已刷新");
+        SetStatusText("当前商品已刷新，消耗: " + cost);
+    }
+
+    private int GetRefreshCost()
+    {
+        return 10 * (m_refreshCount + 1);
     }
 
     public bool TryPurchaseItem(int slotIndex)
@@ -247,7 +286,6 @@ public class ShopModuleManager : MonoBehaviour
         }
 
         UpdateCurrencyText();
-        ShopStateChanged?.Invoke();
     }
 
     private List<GridModuleDefinition> SelectModulesForRefresh(int spawnPointCount)
@@ -377,32 +415,16 @@ public class ShopModuleManager : MonoBehaviour
         {
             statusText.text = m_statusMessage;
         }
-
-        ShopStateChanged?.Invoke();
     }
 
     private void HandleItemPointerEnter(GridModuleDefinition module)
     {
-        m_hoverDescription = GetModuleDescription(module);
-
-        if (statusText != null)
-        {
-            statusText.text = m_hoverDescription;
-        }
-
-        ShopStateChanged?.Invoke();
+        ShowExternalStatusText(GetModuleDescription(module));
     }
 
     private void HandleItemPointerExit()
     {
-        m_hoverDescription = null;
-
-        if (statusText != null)
-        {
-            statusText.text = m_statusMessage;
-        }
-
-        ShopStateChanged?.Invoke();
+        ClearExternalStatusText();
     }
 
     private static string GetModuleDescription(GridModuleDefinition module)
@@ -426,6 +448,28 @@ public class ShopModuleManager : MonoBehaviour
         {
             currencyText.text = "货币: " + GetCurrentCurrency();
         }
+    }
+
+    private void SubscribeGoldEvent()
+    {
+        if (Datas.Instance != null)
+        {
+            Datas.Instance.GoldChanged += OnGoldChanged;
+        }
+    }
+
+    private void UnsubscribeGoldEvent()
+    {
+        if (Datas.Instance != null)
+        {
+            Datas.Instance.GoldChanged -= OnGoldChanged;
+        }
+    }
+
+    private void OnGoldChanged()
+    {
+        UpdateCurrencyText();
+        RefreshVisualState();
     }
 
     private void BindRefreshButton()

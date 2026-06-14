@@ -21,7 +21,6 @@ public class UnitCombatant : Combatant
     [Header("防护")]
     public int currentShield;
     [Header("MMF引用")]
-    [SerializeField] protected MMF_Player enterFeedback;
     [SerializeField] protected MMF_Player hitFeedback;
     [SerializeField] protected MMF_Player dieFeedback;
     [SerializeField] protected MMF_Player healFeedback;

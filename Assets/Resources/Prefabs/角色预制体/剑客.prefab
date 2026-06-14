@@ -13,6 +13,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u5251\u5BA2"
       objectReference: {fileID: 0}
+    - target: {fileID: 5493498301098380921, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: fcf7c1add9182944f955605ace2a6039,
+        type: 3}
     - target: {fileID: 5504820007762556165, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
       propertyPath: targetEnemy
@@ -68,11 +74,36 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6442450945462895029, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6855467949994890338, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
       propertyPath: m_Value
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6871428693882969215, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6871428693882969215, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6871428693882969215, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7672659784095963887, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: b3d67d77cea503c49a1eb9bfe631d745, type: 2}
     m_RemovedComponents:
     - {fileID: 3051947099722636805, guid: 5b6c1caa14253954e8542b97b4ce8a7c, type: 3}
     m_RemovedGameObjects: []
