@@ -8,6 +8,8 @@ public class CharacterStateUIManager : MonoBehaviour
     [SerializeField] private List<CharacterStateUIItem> characterUIs;
     [SerializeField] private float switchFadeDuration = 0.2f;
 
+    public IReadOnlyList<CharacterStateUIItem> CharacterUIs => characterUIs;
+
 
     private void Start()
     {

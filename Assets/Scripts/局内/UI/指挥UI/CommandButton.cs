@@ -29,6 +29,8 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private Tween m_scaleTween;
 
     public bool HasSkill => m_skill != null;
+    public bool IsChangeSkillButton =>
+        m_skill is CommandSkillBase commandSkill && commandSkill.commandSkillType == CommandSkillType.Change;
 
     private void Awake()
     {

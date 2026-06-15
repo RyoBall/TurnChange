@@ -819,6 +819,7 @@ GameObject:
   m_Component:
   - component: {fileID: 207855103}
   - component: {fileID: 207855104}
+  - component: {fileID: 207855105}
   m_Layer: 0
   m_Name: CharacterStateUIManager
   m_TagString: Untagged
@@ -857,6 +858,28 @@ MonoBehaviour:
   - {fileID: 1420265406}
   - {fileID: 574344329}
   switchFadeDuration: 0.2
+--- !u!114 &207855105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 207855102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7c4a1b92f3d4658a0b1c2d3e4f50602, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hpThreshold: 0.2
+  chaosThreshold: 4
+  characterStateUIManager: {fileID: 207855104}
+  characterStateItems:
+  - {fileID: 1420265406}
+  - {fileID: 574344329}
+  changeButtonPulse: {fileID: 0}
+  enablePreviewHotkey: 1
+  previewToggleKey: 101
+  showPreviewPanel: 1
 --- !u!1 &221178678
 GameObject:
   m_ObjectHideFlags: 0
@@ -3764,6 +3787,51 @@ PrefabInstance:
       propertyPath: damageDiffColor.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: pulseImage
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: rectOutset
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: whiteBoost
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: shapeSource
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: brightnessMin
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: redHaloPixels
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: whiteRimPixels
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: outerGlowPixels
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: outerGlowStrength
+      value: 16
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 6702376002319925207, guid: 6d9ed888a321b8d42b829fa71889a0e3, type: 3}
@@ -4312,6 +4380,18 @@ MonoBehaviour:
     FrequencyGain: 1
     Duration: 1
     m_NoiseOffsets: {x: 936.5659, y: 245.5057, z: -940.3701}
+--- !u!114 &661541410 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1714055243220684429, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+    type: 3}
+  m_PrefabInstance: {fileID: 1342525661}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &673228576
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7444,6 +7524,51 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: pulseImage
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: rectOutset
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: whiteBoost
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: shapeSource
+      value: 
+      objectReference: {fileID: 661541410}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: brightnessMin
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: redHaloPixels
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: whiteRimPixels
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: outerGlowPixels
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000001, guid: 6d9ed888a321b8d42b829fa71889a0e3,
+        type: 3}
+      propertyPath: outerGlowStrength
+      value: 16
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 6702376002319925207, guid: 6d9ed888a321b8d42b829fa71889a0e3, type: 3}
@@ -8988,6 +9113,46 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Color.a
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: redBoost
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: intensity
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: pulseImage
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: rectOutset
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: whiteBoost
+      value: 2.97
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: shapeSource
+      value: 
+      objectReference: {fileID: 1506320326}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: brightnessMin
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000000002, guid: bde7755414e30c24b932a38b9e80d7ef,
+        type: 3}
+      propertyPath: redHaloPixels
+      value: 18
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7881096340168173433, guid: bde7755414e30c24b932a38b9e80d7ef, type: 3}
