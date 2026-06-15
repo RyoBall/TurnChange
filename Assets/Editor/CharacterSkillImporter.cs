@@ -74,6 +74,7 @@ public static class CharacterSkillImporter
             skillAsset.extraData2 = GetFloat(row, "Extra_Data_2", 0f);
             skillAsset.extraData3 = GetFloat(row, "Extra_Data_3", 0f);
             skillAsset.extraData4 = GetFloat(row, "Extra_Data_4", 0f);
+            skillAsset.tags = ParseTagList(row);
 
             EditorUtility.SetDirty(skillAsset);
             importedCount++;
@@ -126,6 +127,28 @@ public static class CharacterSkillImporter
     {
         string value = GetString(row, key);
         return Enum.TryParse(value, true, out result);
+    }
+
+    private static List<string> ParseTagList(Dictionary<string, string> row)
+    {
+        string raw = GetString(row, "Tags");
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return new List<string>();
+        }
+
+        string[] parts = raw.Split(';');
+        List<string> result = new List<string>();
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string trimmed = parts[i].Trim();
+            if (!string.IsNullOrEmpty(trimmed))
+            {
+                result.Add(trimmed);
+            }
+        }
+
+        return result;
     }
 
     private static string SanitizeAssetName(string assetName)

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 9077086351322413564}
   - component: {fileID: 4488984618530138283}
   - component: {fileID: 3037145984609702159}
+  - component: {fileID: 1364214333445908922}
   m_Layer: 5
   m_Name: "\u79BB\u5F00"
   m_TagString: Untagged
@@ -148,6 +149,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panel: {fileID: 0}
   m_panelType: 0
+--- !u!114 &1364214333445908922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952081294321055350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e547ca13174a20646911e0c686f7c850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.12
+  enterDuration: 0.35
+  exitDuration: 0.45
+  elasticity: 0
+  vibrato: 0
+  targetTransformOverride: {fileID: 0}
+  useUnscaledTime: 1
+  resetOnDisable: 1
 --- !u!1 &2964861156065841980
 GameObject:
   m_ObjectHideFlags: 0

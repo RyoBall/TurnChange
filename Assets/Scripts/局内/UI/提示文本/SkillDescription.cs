@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -9,8 +8,6 @@ public class SkillDescription : MonoBehaviour
     public static SkillDescription Instance { get; private set; }
     private Sequence m_currentSequence;
     private SkillKeywordConfig m_keywordConfig { get { return SkillKeywordConfig.Instance; } set { } }
-    private float m_previousTimeScale;
-    private bool m_hasSavedTimeScale;
 
     private void Awake()
     {
@@ -26,6 +23,12 @@ public class SkillDescription : MonoBehaviour
     [SerializeField] private TMP_Text m_keywordDesText;
     [SerializeField] private CanvasGroup m_canvasGroup;
     [SerializeField] private GameObject m_keywordBackground;
+
+    [Header("标签")]
+    [SerializeField] private RectTransform m_tagAnchor;
+    [SerializeField] private GameObject m_tagPrefab;
+    [SerializeField] private float m_tagSpacing = 8f;
+    private readonly List<GameObject> m_spawnedTags = new List<GameObject>();
 
     void Start()
     {
@@ -50,15 +53,22 @@ public class SkillDescription : MonoBehaviour
         m_currentSequence = DOTween.Sequence().SetUpdate(true);
         if (skill != null)
         {
-            SlowDownTimeScale();
-            m_skillDesText.text = skill.shortDescription;
+            PauseCameraSway();
+            string description = skill.shortDescription;
+            if (m_keywordConfig != null)
+            {
+                description = m_keywordConfig.ApplyKeywordRichText(description);
+            }
+            m_skillDesText.text = description;
             UpdateKeywordText(skill);
+            SpawnTags(skill);
             m_currentSequence.Join(m_canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
             m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
         }
         else
         {
-            RestoreTimeScale();
+            ResumeCameraSway();
+            DestroySpawnedTags();
             m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
             m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
             m_currentSequence.AppendCallback(ClearDescriptionText);
@@ -74,20 +84,22 @@ public class SkillDescription : MonoBehaviour
         m_currentSequence = DOTween.Sequence().SetUpdate(true);
         if (state != null)
         {
-            SlowDownTimeScale();
+            PauseCameraSway();
             m_skillDesText.text = state.description;
             if (m_keywordDesText != null)
             {
                 m_keywordDesText.text = "";
             }
 
+            DestroySpawnedTags();
             UpdateKeywordBackground();
             m_currentSequence.Join(m_canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
             m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
         }
         else
         {
-            RestoreTimeScale();
+            ResumeCameraSway();
+            DestroySpawnedTags();
             m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
             m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
             m_currentSequence.AppendCallback(ClearDescriptionText);
@@ -158,13 +170,13 @@ public class SkillDescription : MonoBehaviour
 
             if (!string.IsNullOrEmpty(description))
             {
-                sb.Append(keyword);
+                sb.Append(SkillKeywordConfig.WrapKeyword(keyword));
                 sb.Append(":");
                 sb.Append(description);
             }
             else
             {
-                sb.Append(keyword);
+                sb.Append(SkillKeywordConfig.WrapKeyword(keyword));
             }
         }
 
@@ -192,40 +204,78 @@ public class SkillDescription : MonoBehaviour
     }
 
     /// <summary>
-    /// 将时间流速降为 0.1 倍速，并保存之前的流速以便恢复
+    /// 暂停摄像机摆动动画
     /// </summary>
-    private void SlowDownTimeScale()
+    private void PauseCameraSway()
     {
-        if (m_hasSavedTimeScale)
+        if (CinemachineCameraManager.Instance != null)
         {
-            return;
-        }
-
-        ITimeScaleController controller = TimeScaleController.Instance;
-        if (controller != null)
-        {
-            m_previousTimeScale = controller.CurrentTimeScale;
-            m_hasSavedTimeScale = true;
-            controller.SetTimeScale(0.1f);
+            CinemachineCameraManager.Instance.PauseSway();
         }
     }
 
     /// <summary>
-    /// 恢复为之前保存的时间流速
+    /// 继续摄像机摆动动画
     /// </summary>
-    private void RestoreTimeScale()
+    private void ResumeCameraSway()
     {
-        if (!m_hasSavedTimeScale)
+        if (CinemachineCameraManager.Instance != null)
+        {
+            CinemachineCameraManager.Instance.ResumeSway();
+        }
+    }
+
+    /// <summary>
+    /// 根据技能的标签列表，以 m_tagAnchor 为中心对称实例化标签预制体
+    /// </summary>
+    private void SpawnTags(SkillBase skill)
+    {
+        DestroySpawnedTags();
+
+        CharacterSkillBase characterSkill = skill as CharacterSkillBase;
+        if (characterSkill == null || characterSkill.tags == null || characterSkill.tags.Count == 0)
         {
             return;
         }
 
-        ITimeScaleController controller = TimeScaleController.Instance;
-        if (controller != null)
+        if (m_tagAnchor == null || m_tagPrefab == null)
         {
-            controller.SetTimeScale(m_previousTimeScale);
+            return;
         }
 
-        m_hasSavedTimeScale = false;
+        int count = characterSkill.tags.Count;
+        float totalWidth = (count - 1) * m_tagSpacing;
+        float startX = -totalWidth * 0.5f;
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject tagInstance = Instantiate(m_tagPrefab, m_tagAnchor);
+            RectTransform tagRect = tagInstance.GetComponent<RectTransform>();
+            if (tagRect != null)
+            {
+                tagRect.anchoredPosition = new Vector2(startX + i * m_tagSpacing, 0f);
+            }
+
+            TMP_Text tagText = tagInstance.GetComponentInChildren<TMP_Text>();
+            if (tagText != null)
+            {
+                tagText.text = characterSkill.tags[i];
+            }
+
+            m_spawnedTags.Add(tagInstance);
+        }
+    }
+
+    private void DestroySpawnedTags()
+    {
+        for (int i = m_spawnedTags.Count - 1; i >= 0; i--)
+        {
+            if (m_spawnedTags[i] != null)
+            {
+                Destroy(m_spawnedTags[i]);
+            }
+        }
+
+        m_spawnedTags.Clear();
     }
 }

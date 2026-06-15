@@ -13,7 +13,10 @@ public class DamageText : MonoBehaviour
     [SerializeField] private TMP_Text damageText;
     [SerializeField] private CanvasGroup canvasGroup;
 
-    [Header("参数引用")]
+    [Header("文字颜色")]
+    [SerializeField] private Color damageColor = Color.red;
+    [SerializeField] private Color dotDamageColor = Color.yellow;
+    [SerializeField] private Color healColor = Color.green;
 
     private RectTransform rectTransform;
     private RectTransform parentRectTransform;
@@ -46,15 +49,8 @@ public class DamageText : MonoBehaviour
     public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, string additionalText = "")
     {
         damageText.text = damage.ToString();
-        if (isDotDamage)
-        {
-            damageText.color = Color.yellow;
-        }
-        else
-        {
-            damageText.color = Color.red;
-        }
-        Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
+        damageText.color = isDotDamage ? dotDamageColor : damageColor;
+        Vector3 offset = GetRandomOffset();
         if (!TrySetCanvasPosition(worldPosition + offset))
         {
             ReturnToPool();
@@ -66,9 +62,9 @@ public class DamageText : MonoBehaviour
     public void ShowHeal(int healAmount, Vector3 worldPosition)
     {
         damageText.text = healAmount.ToString();
-        damageText.color = Color.green;
+        damageText.color = healColor;
 
-        Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
+        Vector3 offset = GetRandomOffset();
         if (!TrySetCanvasPosition(worldPosition + offset))
         {
             ReturnToPool();
@@ -80,12 +76,11 @@ public class DamageText : MonoBehaviour
     public void ShowCustomText(string customMessage, Vector3 position, Color color)
     {
         backGroundImage.GetComponent<Image>().enabled = true;
-        // 设置文本内容和颜色
         damageText.text = customMessage;
         damageText.color = color;
 
-        Vector3 offset = new Vector3(Random.Range(0, positionOffset.x), Random.Range(0, positionOffset.y), Random.Range(0, positionOffset.z));
-        if (!TrySetCanvasPosition(position + offset / 2))
+        Vector3 offset = GetRandomOffset();
+        if (!TrySetCanvasPosition(position + offset))
         {
             ReturnToPool();
             return;
@@ -94,11 +89,22 @@ public class DamageText : MonoBehaviour
         PlayAnimation(false);
     }
     #region DOTween动画
-    [Header("漂浮动画参数")]
-    [SerializeField] private float floatDistance = 60f;
-    [SerializeField] private float scaleDuration = 0.2f;   // ����ʱ��
-    [SerializeField] private float floatDuration = 0.6f;
-    [SerializeField] private Vector3 positionOffset;
+    [Header("动画参数")]
+    [SerializeField] private float scaleDuration = 0.3f;
+    [SerializeField] private float maxScaleMultiplier = 1.3f;
+    [SerializeField] private float fadeOutDuration = 1.2f;
+    [SerializeField] private float fadeOutDelay = 0.3f;
+    [SerializeField] private Vector2 randomOffsetRange = new Vector2(40f, 30f);
+
+    /// <summary>
+    /// 获取基于 randomOffsetRange 的双向随机偏移（世界坐标）
+    /// </summary>
+    private Vector3 GetRandomOffset()
+    {
+        float x = Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
+        float y = Random.Range(-randomOffsetRange.y, randomOffsetRange.y);
+        return new Vector3(x, y, 0f);
+    }
 
     private void PlayAnimation(bool isDamage)
     {
@@ -106,27 +112,22 @@ public class DamageText : MonoBehaviour
 
         rectTransform.localScale = originalScale;
         canvasGroup.alpha = 1f;
-        Vector2 startPos = rectTransform.anchoredPosition;
 
-        float finalFloatDistance = isDamage ? floatDistance : floatDistance * 0.5f;
-
+        // 弹性放大：先放大到 maxScale，再回弹到原始大小
         rectTransform.localScale = Vector3.zero;
+        Vector3 maxScale = originalScale * maxScaleMultiplier;
         currentSequence = DOTween.Sequence();
-        currentSequence.Append(rectTransform.DOScale(originalScale, scaleDuration).SetEase(Ease.OutElastic));
-        currentSequence.Join(
-            rectTransform.DOAnchorPosY(startPos.y + finalFloatDistance, floatDuration)
-                .SetEase(Ease.OutSine)
-        );
-        currentSequence.Join(
-            canvasGroup.DOFade(0f, floatDuration)
-                .SetEase(Ease.Linear)
-        );
+        currentSequence.Append(rectTransform.DOScale(maxScale, scaleDuration * 0.6f).SetEase(Ease.OutBack));
+        currentSequence.Append(rectTransform.DOScale(originalScale, scaleDuration * 0.4f).SetEase(Ease.OutBack));
+        // 停留片刻后缓缓淡出
+        currentSequence.AppendInterval(fadeOutDelay);
+        currentSequence.Append(canvasGroup.DOFade(0f, fadeOutDuration).SetEase(Ease.OutSine));
         currentSequence.OnComplete(ReturnToPool);
     }
     #endregion
     private void ReturnToPool()
     {
-        // ���ص������
+        // 返回对象池
         DamageTextPool.Instance?.ReturnToPool(this);
     }
 

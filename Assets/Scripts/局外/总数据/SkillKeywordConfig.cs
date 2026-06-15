@@ -60,6 +60,46 @@ public class SkillKeywordConfig : ScriptableObject
         return keywords.Contains(keyword);
     }
 
+    /// <summary>
+    /// 用富文本标签包裹单个关键词（加粗+下划线）
+    /// </summary>
+    public static string WrapKeyword(string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+        {
+            return keyword;
+        }
+
+        return $"<b><u>{keyword}</u></b>";
+    }
+
+    /// <summary>
+    /// 扫描文本中的关键词并用富文本标签包裹（加粗+下划线）
+    /// </summary>
+    public string ApplyKeywordRichText(string text)
+    {
+        if (string.IsNullOrEmpty(text) || keywords == null || keywords.Count == 0)
+        {
+            return text;
+        }
+
+        string result = text;
+        for (int i = 0; i < keywords.Count; i++)
+        {
+            string keyword = keywords[i];
+            if (string.IsNullOrEmpty(keyword) || keyword.Length == 0)
+            {
+                continue;
+            }
+
+            // 避免重复包裹已处理过的关键词
+            string wrapped = WrapKeyword(keyword);
+            result = result.Replace(keyword, wrapped);
+        }
+
+        return result;
+    }
+
 #if UNITY_EDITOR
     /// <summary>
     /// 校验关键词与注释列表长度是否一致（Editor 下使用）

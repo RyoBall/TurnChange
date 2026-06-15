@@ -59,6 +59,8 @@ public class CharacterSkillBase : SkillBase
     public float extraData4;
     [Header("关键词")]
     public List<string> words = new List<string>();
+    [Header("标签")]
+    public List<string> tags = new List<string>();
     [Header("目标选择设置")]
     public bool requiresEnemyTarget = false;
     [Min(1)]

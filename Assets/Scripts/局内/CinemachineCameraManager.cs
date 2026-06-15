@@ -72,6 +72,8 @@ public class CinemachineCameraManager : MonoBehaviour
 	private float m_mainCameraSwayCycleStartTime;
 	private bool m_isPlayingOpeningIntro;
 	private bool m_hasCompletedOpeningIntro;
+	private bool m_isSwayPaused;
+	private float m_pausedSwayElapsed;
 	public bool isOP=>m_isPlayingOpeningIntro;
 	public bool HasCompletedOpeningIntro => m_hasCompletedOpeningIntro;
 
@@ -83,6 +85,24 @@ public class CinemachineCameraManager : MonoBehaviour
 		{
 			ApplyMainCameraMinimumVignette();
 		}
+	}
+
+	/// <summary>
+	/// 暂停摄像机摆动动画，相机保持在当前位置
+	/// </summary>
+	public void PauseSway()
+	{
+		m_isSwayPaused = true;
+		m_pausedSwayElapsed = Mathf.Max(0f, Time.time - m_mainCameraSwayCycleStartTime);
+	}
+
+	/// <summary>
+	/// 继续摄像机摆动动画，从暂停时的相位恢复
+	/// </summary>
+	public void ResumeSway()
+	{
+		m_isSwayPaused = false;
+		m_mainCameraSwayCycleStartTime = Time.time - m_pausedSwayElapsed;
 	}
 
 	public ManagedCameraType CurrentCameraType { get; private set; } = ManagedCameraType.None;
@@ -347,7 +367,7 @@ public class CinemachineCameraManager : MonoBehaviour
 
 	private void UpdateMainCameraSway()//计算主摄像头的晃动效果
 	{
-		if (m_isPlayingOpeningIntro)
+		if (m_isPlayingOpeningIntro || m_isSwayPaused)
 		{
 			return;
 		}

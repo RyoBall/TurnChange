@@ -132,6 +132,16 @@ PrefabInstance:
       objectReference: {fileID: 250993600707232190}
     - target: {fileID: 6101253797047460483, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
+      propertyPath: m_LocalScale.x
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 6101253797047460483, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 6101253797047460483, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -362,4 +372,3 @@ MonoBehaviour:
   explodeState: 0
   dragonGroupId: dragon-boss
   rageThreshold: 2
-  m_spawnPosition: {fileID: 250993600707232190}

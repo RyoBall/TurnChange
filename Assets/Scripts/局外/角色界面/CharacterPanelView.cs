@@ -46,8 +46,14 @@ public class CharacterPanelView : MonoBehaviour
     [SerializeField] private GameObject keywordDescriptionPanel;
     [SerializeField] private TMP_Text keywordDescriptionText;
 
+    [Header("标签")]
+    [SerializeField] private RectTransform tagAnchor;
+    [SerializeField] private GameObject tagPrefab;
+    [SerializeField] private float tagSpacing = 8f;
+
     private readonly List<CharacterSelectButtonUI> m_characterButtons = new List<CharacterSelectButtonUI>();
     private readonly List<CharacterSkillButtonUI> m_skillButtons = new List<CharacterSkillButtonUI>();
+    private readonly List<GameObject> m_spawnedTags = new List<GameObject>();
 
     private CharacterRosterData m_currentCharacter;
     private Canvas m_parentCanvas;
@@ -55,8 +61,21 @@ public class CharacterPanelView : MonoBehaviour
     private void Awake()
     {
         m_parentCanvas = GetComponentInParent<Canvas>();
+        InitializeDescriptionPanelState();
+    }
 
-        HideSkillDescription();
+    private void InitializeDescriptionPanelState()
+    {
+        if (descriptionCanvasGroup != null)
+        {
+            descriptionCanvasGroup.alpha = 0f;
+            descriptionCanvasGroup.gameObject.SetActive(false);
+        }
+
+        if (keywordDescriptionPanel != null)
+        {
+            keywordDescriptionPanel.SetActive(false);
+        }
     }
 
     private void Start()
@@ -311,27 +330,23 @@ public class CharacterPanelView : MonoBehaviour
             string description = !string.IsNullOrWhiteSpace(skill.description)
                 ? skill.description
                 : skill.shortDescription;
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                SkillKeywordConfig config = SkillKeywordConfig.Instance;
+                description = config != null ? config.ApplyKeywordRichText(description) : description;
+            }
             skillDescriptionContentText.text = string.IsNullOrWhiteSpace(description) ? "暂无技能说明" : description;
         }
 
         UpdateKeywordDescription(skill);
+        SpawnTags(skill);
         StartSkillDescriptionFade(true);
     }
 
     public void HideSkillDescription()
     {
         StartSkillDescriptionFade(false);
-        HideKeywordDescription();
-    }
-
-    public void HideKeywordDescription()
-    {
-        if (keywordDescriptionPanel == null)
-        {
-            return;
-        }
-
-        keywordDescriptionPanel.SetActive(false);
+        DestroySpawnedTags();
     }
 
     /// <summary>
@@ -375,13 +390,13 @@ public class CharacterPanelView : MonoBehaviour
 
             if (!string.IsNullOrEmpty(description))
             {
-                sb.Append(keyword);
+                sb.Append(SkillKeywordConfig.WrapKeyword(keyword));
                 sb.Append(":");
                 sb.Append(description);
             }
             else
             {
-                sb.Append(keyword);
+                sb.Append(SkillKeywordConfig.WrapKeyword(keyword));
             }
         }
 
@@ -516,6 +531,60 @@ public class CharacterPanelView : MonoBehaviour
             ? m_parentCanvas.worldCamera
             : null;
         return RectTransformUtility.RectangleContainsScreenPoint(rectTransform, screenPosition, eventCamera);
+    }
+
+    /// <summary>
+    /// 根据技能的标签列表，以 tagAnchor 为中心对称实例化标签预制体
+    /// </summary>
+    private void SpawnTags(SkillBase skill)
+    {
+        DestroySpawnedTags();
+
+        CharacterSkillBase characterSkill = skill as CharacterSkillBase;
+        if (characterSkill == null || characterSkill.tags == null || characterSkill.tags.Count == 0)
+        {
+            return;
+        }
+
+        if (tagAnchor == null || tagPrefab == null)
+        {
+            return;
+        }
+
+        int count = characterSkill.tags.Count;
+        float totalWidth = (count - 1) * tagSpacing;
+        float startX = -totalWidth * 0.5f;
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject tagInstance = Instantiate(tagPrefab, tagAnchor);
+            RectTransform tagRect = tagInstance.GetComponent<RectTransform>();
+            if (tagRect != null)
+            {
+                tagRect.anchoredPosition = new Vector2(startX + i * tagSpacing, 0f);
+            }
+
+            TMP_Text tagText = tagInstance.GetComponentInChildren<TMP_Text>();
+            if (tagText != null)
+            {
+                tagText.text = characterSkill.tags[i];
+            }
+
+            m_spawnedTags.Add(tagInstance);
+        }
+    }
+
+    private void DestroySpawnedTags()
+    {
+        for (int i = m_spawnedTags.Count - 1; i >= 0; i--)
+        {
+            if (m_spawnedTags[i] != null)
+            {
+                Destroy(m_spawnedTags[i]);
+            }
+        }
+
+        m_spawnedTags.Clear();
     }
 
     private void ClearSpawnedButtons<T>(List<T> buttonList) where T : Component
