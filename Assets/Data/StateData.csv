@@ -43,3 +43,4 @@ Name,EnumName,Description,BaseMultiplier,IsDebuff,IsDot,MaxStacks,DurationType,D
 背水一战,SwordsmanLastStand,固定在亮剑姿态，伤害+50%，受到伤害+50%。,0,否,否,1,Special,0,100,1.5,伤害倍率,1.5,承伤倍率,0,预留,0,预留,5
 失衡,SwordsmanStagger,无法行动，受到伤害+40%。,0,是,否,1,ActionValue,1,100,1.4,承伤倍率,0,预留,0,预留,0,预留,6
 优雅体态,SwordsmanElegance,未处于失衡时拥有60%独立乘区伤害减免。,0,否,否,1,Special,0,100,0.4,减免后倍率,0,预留,0,预留,0,预留,7
+速度变化,SpeedChange,剑客Boss进入阶段二时获得的速度提升标记。,0,否,否,1,Special,99,100,0.2,速度倍率,0,预留,0,预留,0,预留,6

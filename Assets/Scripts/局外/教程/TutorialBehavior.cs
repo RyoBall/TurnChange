@@ -117,9 +117,19 @@ public class CharacterPanelTutorial : TutorialBehavior
     private bool m_enteredCharacterPanel = false;
 
     /// <summary>
-    /// 控制器 Start 时调用：直接启动本教程（游戏开始时立即触发）
+    /// 控制器 Start 时调用：监听开始游戏按钮点击事件
     /// </summary>
     public override void StartListening()
+    {
+        StartGameButton.GameStarted += OnStartGameClicked;
+    }
+
+    public override void StopListening()
+    {
+        StartGameButton.GameStarted -= OnStartGameClicked;
+    }
+
+    private void OnStartGameClicked()
     {
         m_controller.StartTutorial(m_data.Type);
     }

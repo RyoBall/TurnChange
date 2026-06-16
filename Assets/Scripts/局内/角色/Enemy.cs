@@ -14,6 +14,13 @@ public enum ExplodeType
 public class Enemy : UnitCombatant
 {
     public static event System.Action OnEnemyActEvent;
+
+    /// <summary>触发敌人行动事件（供子类调用）</summary>
+    protected static void InvokeOnEnemyActEvent()
+    {
+        OnEnemyActEvent?.Invoke();
+    }
+
     public string enemyID;
     [Header("动画覆盖")]
     [SerializeField] private Animator animator;
@@ -22,7 +29,7 @@ public class Enemy : UnitCombatant
     public float selectedScale = 1.1f;
     public float selectAnimDuration = 0.12f;
 
-    private Vector3 m_defaultScale;
+    protected Vector3 m_defaultScale;
     private Tween m_scaleTween;
     private Coroutine m_hitAnimCoroutine;
     public List<EnemySkillType> skills = new List<EnemySkillType>();
@@ -68,7 +75,7 @@ public class Enemy : UnitCombatant
         combatantName = string.IsNullOrEmpty(data.enemyName) ? data.enemyID : data.enemyName;
         skills = new List<EnemySkillType>(data.skills);
         this.standPosition = standPosition;
-        this.level = Mathf.Max(1, level);
+        this.level =level;
         participateInTurnLoopAtStart = ShouldRegisterAtBattleStart;
         InitializeAnimatorOverrides();
         InitializeEnemyRuntime();
@@ -113,8 +120,6 @@ public class Enemy : UnitCombatant
 
         InitializeSkill();
         LoadDataFromCSV();
-        currentHP *= 2;
-        maxHP *= 2;
         currentHP = Mathf.Min(currentHP, maxHP);
         m_defaultScale = transform.localScale;
         SetBattleVisibility(ShouldRegisterAtBattleStart);
@@ -332,7 +337,7 @@ public class Enemy : UnitCombatant
 
     private EnemySkillBase CreateSkillInstance(EnemySkillType skillType)
     {
-        EnemySkillBase template = EnemySkillDictionaryManager.GetEnemySkill(skillType);
+        EnemySkillBase template = EnemySkillDictionaryManager.GetEnemySkillTemplate(skillType);
         if (template == null)
         {
             return null;

@@ -47,6 +47,7 @@
      <Compile Include="Assets\Scripts\局内\UI\提示文本\UnitStateTextDisplay.cs" />
      <Compile Include="Assets\Scripts\局内\角色\SwordsmanEnemy.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventHandler.cs" />
+     <Compile Include="Assets\Scripts\局外\总数据\TagColorConfig.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
      <Compile Include="Assets\Scripts\局外\教程\TutorialBehaviorFactory.cs" />
      <Compile Include="Assets\Scripts\局内\角色\DragonBossEnemy.cs" />
@@ -73,6 +74,7 @@
      <Compile Include="Assets\Scripts\局外\总数据\LevelCharacterUnlockConfig.cs" />
      <Compile Include="Assets\Scripts\局内\MFF\GlobalFeedbacks.cs" />
      <Compile Include="Assets\Scripts\局内\UI\角色UI\UnitHealthBarController.cs" />
+     <Compile Include="Assets\Scripts\局外\商店\ModuleLevelProbabilityConfig.cs" />
      <Compile Include="Assets\Scripts\局内\UI\BattleSettlementView.cs" />
      <Compile Include="Assets\Scripts\局内\GameManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
@@ -94,6 +96,7 @@
      <Compile Include="Assets\Scripts\局内\角色\CombatantDeathMonitor.cs" />
      <Compile Include="Assets\Scripts\局内\角色\Enemy.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\LevelSetupManager.cs" />
+     <Compile Include="Assets\Scripts\局内\角色\TutorialSingleEnemy.cs" />
      <Compile Include="Assets\Scripts\局内\回合模块\TurnStateManager.cs" />
      <Compile Include="Assets\VFX\Lana Studio\Casual RPG VFX\Demo\Scripts\_InputKeyBoard.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\BattleDialogController.cs" />
@@ -144,6 +147,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\LevelCharacterSpawner.cs" />
      <Compile Include="Assets\Scripts\局内\回合模块\TurnManager.cs" />
+     <Compile Include="Assets\Scripts\Utils\UIMouseFollowEffect.cs" />
      <Compile Include="Assets\Scripts\局外\背包\ModulePlacementBoard.cs" />
      <Compile Include="Assets\Scripts\局内\DamageCounter.cs" />
      <Compile Include="Assets\Scripts\局内\DictionaryManager.cs" />
@@ -167,6 +171,7 @@
      <Compile Include="Assets\Scripts\局内\角色\UnitCombatant.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexJitter.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterPanelView.cs" />
+     <Compile Include="Assets\Scripts\局外\HoverImageSwapper.cs" />
      <Compile Include="Assets\Scripts\Utils\UIButtonHoverEffect.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\BattleDialogEvents.cs" />
      <Compile Include="Assets\Scripts\局外\背包\GridModuleDefinition.cs" />

@@ -442,7 +442,7 @@ public class Character : UnitCombatant
 
     private CharacterSkillBase CreateSkillInstance(CharacterSkillType skillType)
     {
-        CharacterSkillBase template = SkillDictionaryManager.GetSkill(skillType);
+        CharacterSkillBase template = SkillDictionaryManager.GetSkillTemplate(skillType);
         if (template == null)
         {
             return null;

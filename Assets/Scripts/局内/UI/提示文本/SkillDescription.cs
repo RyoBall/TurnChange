@@ -262,6 +262,12 @@ public class SkillDescription : MonoBehaviour
                 tagText.text = characterSkill.tags[i];
             }
 
+            TagColorConfig tagColorConfig = TagColorConfig.Instance;
+            if (tagColorConfig != null)
+            {
+                tagColorConfig.ApplyColorsToTag(tagInstance, characterSkill.tags[i]);
+            }
+
             m_spawnedTags.Add(tagInstance);
         }
     }

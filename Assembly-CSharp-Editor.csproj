@@ -42,6 +42,7 @@
   <ItemGroup>
      <Compile Include="Assets\Editor\CSVReader.cs" />
      <Compile Include="Assets\Editor\GridModuleImporter.cs" />
+     <Compile Include="Assets\Editor\TutorialEnemyRosterDataGenerator.cs" />
      <Compile Include="Assets\Editor\CharacterDataImporter.cs" />
      <Compile Include="Assets\Editor\CharacterAnimationOverrideEntryDrawer.cs" />
      <Compile Include="Assets\Editor\BattleLevelDataImporter.cs" />
@@ -51,12 +52,14 @@
      <Compile Include="Assets\Editor\SkillKeywordProcessor.cs" />
      <Compile Include="Assets\Editor\CFXFixer.cs" />
      <Compile Include="Assets\VFX\JMO Assets\Cartoon FX Easy Editor\Editor\CFXEasyEditor.cs" />
+     <Compile Include="Assets\Editor\TagColorConfigInitializer.cs" />
      <Compile Include="Assets\Editor\EnemyDataImporter.cs" />
      <Compile Include="Assets\Editor\CharacterSkillImporter.cs" />
      <Compile Include="Assets\Editor\LevelEnemyEntryDrawer.cs" />
      <Compile Include="Assets\Editor\SkillKeywordImporter.cs" />
      <Compile Include="Assets\Editor\StateImporter.cs" />
      <Compile Include="Assets\Editor\ReadOnlyDrawer.cs" />
+     <Compile Include="Assets\Editor\TagColorImporter.cs" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\CurveGrid.shader" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\Trackball.shader" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\ConvertToLog.shader" />

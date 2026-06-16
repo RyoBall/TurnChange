@@ -43,6 +43,10 @@ public class ShopModuleManager : MonoBehaviour
     [SerializeField] private TMP_Text currencyText;
     [SerializeField] private Button refreshButton;
 
+    [Header("序体等级概率")]
+    [Tooltip("根据队伍等级配置不同大小序体的刷新概率。若不赋值则所有大小的序体均等概率刷新。")]
+    [SerializeField] private ModuleLevelProbabilityConfig levelProbabilityConfig;
+
     private readonly List<ShopRuntimeEntry> m_runtimeEntries = new List<ShopRuntimeEntry>();
 
     private int m_nextSequentialIndex;
@@ -308,6 +312,9 @@ public class ShopModuleManager : MonoBehaviour
     {
         List<GridModuleDefinition> candidateModules = new List<GridModuleDefinition>();
 
+        // 根据队伍等级决定本次刷新允许的序体大小
+        GridModuleLevel rolledLevel = RollModuleLevelForCurrentTeam();
+
         for (int i = 0; i < productPool.Count; i++)
         {
             GridModuleDefinition product = productPool[i];
@@ -316,10 +323,42 @@ public class ShopModuleManager : MonoBehaviour
                 continue;
             }
 
-            candidateModules.Add(product);
+            // 仅添加与当前队伍等级概率匹配的序体大小
+            if (product.level == rolledLevel)
+            {
+                candidateModules.Add(product);
+            }
+        }
+
+        // 如果按概率筛选后没有可用模块，回退到全部模块
+        if (candidateModules.Count == 0)
+        {
+            for (int i = 0; i < productPool.Count; i++)
+            {
+                GridModuleDefinition product = productPool[i];
+                if (product != null)
+                {
+                    candidateModules.Add(product);
+                }
+            }
         }
 
         return candidateModules;
+    }
+
+    /// <summary>
+    /// 根据当前队伍等级和概率配置随机选取一个序体大小等级
+    /// </summary>
+    private GridModuleLevel RollModuleLevelForCurrentTeam()
+    {
+        if (levelProbabilityConfig == null)
+        {
+            // 未配置概率表时，均等随机
+            return (GridModuleLevel)UnityEngine.Random.Range(0, 3);
+        }
+
+        int teamLevel = Datas.Instance != null ? Datas.Instance.GetTeamLevel() : 1;
+        return levelProbabilityConfig.RollModuleLevel(teamLevel);
     }
 
     private ShopRuntimeEntry GetRuntimeEntry(int slotIndex)

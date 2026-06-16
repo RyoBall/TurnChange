@@ -10,7 +10,7 @@ using UnityEngine;
 /// - 读取所有 CharacterSkillBase 资产的描述文本
 /// - 根据 SkillKeywordConfig 中的关键词列表进行匹配
 /// - 将匹配到的关键词自动填入技能的 tags 列表
-/// - 在描述文本中将匹配到的关键词用 <b><color=black> 标签包裹
+/// - 在描述文本中将匹配到的关键词用 <b><u><color=yellow> 标签包裹
 /// </summary>
 public static class SkillKeywordProcessor
 {
@@ -107,7 +107,7 @@ public static class SkillKeywordProcessor
                 continue;
             }
 
-            // 4. 在原始描述文本中用 <b><color=black> 包裹匹配到的关键词
+            // 4. 在原始描述文本中用 <b><u><color=yellow> 包裹匹配到的关键词
             string newDescription = WrapKeywordsInText(skill.description, matchedKeywords);
             string newShortDescription = WrapKeywordsInText(skill.shortDescription, matchedKeywords);
 
@@ -169,7 +169,7 @@ public static class SkillKeywordProcessor
     }
 
     /// <summary>
-    /// 在原始文本中用 &lt;b&gt;&lt;color=black&gt;...&lt;/color&gt;&lt;/b&gt; 包裹匹配到的关键词
+    /// 在原始文本中用 &lt;b&gt;&lt;u&gt;&lt;color=yellow&gt;...&lt;/color&gt;&lt;/u&gt;&lt;/b&gt; 包裹匹配到的关键词
     /// 避免重复包裹已存在的标签
     /// </summary>
     private static string WrapKeywordsInText(string text, List<string> keywords)
@@ -189,7 +189,7 @@ public static class SkillKeywordProcessor
             }
 
             // 构造带包裹标签的关键词模式
-            string wrappedKeyword = $"<b><color=black>{keyword}</color></b>";
+            string wrappedKeyword = $"<b><u><color=yellow>{keyword}</color></u></b>";
 
             // 如果原文中已经包含包裹后的版本，则跳过
             if (result.Contains(wrappedKeyword))

@@ -125,7 +125,7 @@ public class Datas : MonoBehaviour
 
     private void MarkAsPersistent()
     {
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject.transform.parent.gameObject);
     }
 
     private void EnsureTimeScaleController()

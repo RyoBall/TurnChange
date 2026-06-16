@@ -57,7 +57,6 @@ public class CoroutineHelper : MonoBehaviour
         {
             GameObject obj = new GameObject("CoroutineHelper");
             Instance = obj.AddComponent<CoroutineHelper>();
-            DontDestroyOnLoad(obj);
         }
         return Instance;
     }

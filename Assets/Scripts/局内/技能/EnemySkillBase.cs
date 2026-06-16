@@ -95,13 +95,16 @@ public class EnemySkillBase : SkillBase
         Enemy self = unitCombatant as Enemy;
         if (self == null) yield break;
         if (!CanUse(self)) yield break;
+        bool enteredSkillCamera = false;
         if(targetType == targetType.Character)
         {
             yield return CinemachineCameraManager.Instance?.TransitionIntoSkillCamera(ManagedCameraType.Help);
+            enteredSkillCamera = true;
         }
         else if(targetType == targetType.Self)
         {
             yield return CinemachineCameraManager.Instance?.TransitionIntoSkillCamera(ManagedCameraType.Attack);
+            enteredSkillCamera = true;
         }
         switch (enemySkillType)
         {
@@ -194,16 +197,19 @@ public class EnemySkillBase : SkillBase
         }
         StartCooldown();
         yield return new WaitForSeconds(0.5f); // 技能执行后的小间隔
-        yield return CinemachineCameraManager.Instance?.TransitionOutOfSkillCamera();
+        if (enteredSkillCamera)
+        {
+            yield return CinemachineCameraManager.Instance?.TransitionOutOfSkillCamera();
+        }
     }
 
-    // 1.护盾手 技能一
+    // 1.护盾手 技能一：给当前HP最低的敌人（包括自己）加护盾
     private IEnumerator ShieldSupport_1(Enemy self)
     {
         Enemy target = null;
         foreach (Enemy enemy in EnemyManager.Instance.AliveEnemies)
         {
-            if (target != null && target.currentHP > enemy.currentHP)
+            if (target == null || target.currentHP > enemy.currentHP)
             {
                 target = enemy;
             }

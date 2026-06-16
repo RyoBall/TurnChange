@@ -276,7 +276,7 @@ public class CharacterPanelView : MonoBehaviour
         {
             for (int i = 0; i < rosterData.skills.Count; i++)
             {
-                SkillBase skill = SkillDictionaryManager.GetSkill(rosterData.skills[i]);
+                SkillBase skill = SkillDictionaryManager.GetSkillTemplate(rosterData.skills[i]);
                 if (skill == null)
                 {
                     continue;
@@ -289,7 +289,7 @@ public class CharacterPanelView : MonoBehaviour
                 ApplySkillButtonPosition(button.RectTransform, i);
             }
             //出场技能
-            var enterSkill = SkillDictionaryManager.GetSkill(rosterData.enterSkill);
+            var enterSkill = SkillDictionaryManager.GetSkillTemplate(rosterData.enterSkill);
             CharacterSkillButtonUI enterButton = Instantiate(skillButtonPrefab, skillButtonRoot);
             enterButton.Bind(enterSkill);
             m_skillButtons.Add(enterButton);
@@ -568,6 +568,12 @@ public class CharacterPanelView : MonoBehaviour
             if (tagText != null)
             {
                 tagText.text = characterSkill.tags[i];
+            }
+
+            TagColorConfig tagColorConfig = TagColorConfig.Instance;
+            if (tagColorConfig != null)
+            {
+                tagColorConfig.ApplyColorsToTag(tagInstance, characterSkill.tags[i]);
             }
 
             m_spawnedTags.Add(tagInstance);

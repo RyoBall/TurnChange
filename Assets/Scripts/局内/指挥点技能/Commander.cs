@@ -8,9 +8,9 @@ public class Commander : MonoBehaviour
 {
     private const int DefaultCommandPoints = 1;
     private const int DefaultMaxCommandPoints = 5;
-    private const int KillRecoveryAmount = 2;
+    private const int KillRecoveryAmount = 1;
     private const int GuaranteeRecoveryAmount = 1;
-    private const float GuaranteeActionValueThreshold = 100f;
+    private const float GuaranteeActionValueThreshold = 180f;
 
     [Header("指挥点飞行动画")]
     [SerializeField] private Camera effectCamera;
@@ -34,6 +34,15 @@ public class Commander : MonoBehaviour
     private int maxCommandPoints = DefaultMaxCommandPoints;
     private float actionValueSinceLastRecovery;
     public int MaxCommandPoints => maxCommandPoints;
+
+    /// <summary>
+    /// 设置初始指挥点（用于教程关等特殊关卡）
+    /// </summary>
+    public void SetInitialCommandPoints(int points)
+    {
+        commandPoints = Mathf.Clamp(points, 0, maxCommandPoints);
+        actionValueSinceLastRecovery = 0f;
+    }
 
     // 棋局Boss 王车易位机会系统
     private int m_castlingOpportunities;

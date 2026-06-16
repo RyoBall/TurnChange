@@ -20,13 +20,14 @@ public class EnemyDataImporter
         string enemyName = null;
         foreach (var row in csvData)
         {
-            if (GetInt(row, "Level") == -1)
+            // 如果Level列不是数字（如敌人名称标记行"Shield"），则切换当前敌人名称
+            if (!int.TryParse(row["Level"], out int level))
             {
                 enemyName = row["Level"];
                 Debug.Log($"正在导入敌人: {enemyName}");
                 continue;
             }
-            int level = GetInt(row, "Level");
+            // level 可以是 -1（自定义数值），正常处理
             EnemyLevelData levelData = new EnemyLevelData
             (
                 GetInt(row, "MaxHP"),

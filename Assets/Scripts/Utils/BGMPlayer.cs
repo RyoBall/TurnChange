@@ -28,7 +28,6 @@ public class BGMPlayer : MonoBehaviour
 
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private List<BGMEntry> bgmEntries = new List<BGMEntry>();
-    [SerializeField] private bool dontDestroyOnLoad = true;
 
     private readonly Dictionary<BGMType, AudioClip> m_BgmClipLookup = new Dictionary<BGMType, AudioClip>();
 
@@ -45,10 +44,6 @@ public class BGMPlayer : MonoBehaviour
         }
 
         Instance = this;
-        if (dontDestroyOnLoad)
-        {
-            DontDestroyOnLoad(gameObject);
-        }
         RebuildLookup();
     }
 

@@ -21,7 +21,6 @@ public class GameAudioInputObserver : MonoBehaviour
         }
 
         var observerObject = new GameObject(nameof(GameAudioInputObserver));
-        DontDestroyOnLoad(observerObject);
         observerObject.AddComponent<GameAudioInputObserver>();
         s_Bootstrapped = true;
     }

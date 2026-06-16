@@ -12,6 +12,7 @@ public class AppConfig : ScriptableObject
     public string StateDataCSVPath = "Assets/Data/StateData.csv";
     public string TutorialDataCSVPath = "Assets/Data/TutorialData.csv";
     public string KeyWordConfigCSVPath = "Assets/Data/KeyWordConfig.csv";
+    public string TagColorCSVPath = "Assets/Data/TagColor.csv";
     public string BattleLevelDataCSVPath = "Assets/Data/BattleLevelData.csv";
     public string CharacterSkillAssetOutputPath = "Assets/Resources/配置可编程物体/角色技能";
     public string LevelSelectionDataOutputPath = "Assets/Resources/配置可编程物体/关卡数据";
@@ -19,6 +20,7 @@ public class AppConfig : ScriptableObject
     public string StateAssetOutputPath = "Assets/Resources/配置可编程物体/状态";
     public string TutorialAssetOutputPath = "Assets/Resources/配置可编程物体/教程";
     public string KeyWordConfigAssetOutputPath = "Assets/Resources/配置可编程物体/技能/关键词配置";
+    public string TagColorAssetOutputPath = "Assets/Resources/配置可编程物体/技能/关键词配置";
 }
 
 // 全局访问

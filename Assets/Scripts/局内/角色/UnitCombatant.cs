@@ -244,8 +244,8 @@ public class UnitCombatant : Combatant
             return null;
         }
 
-        // 先获取模板以检查 canStack
-        State stateTemplate = StateDictionaryManager.GetState(stateType);
+        // 先获取模板以检查 canStack（只读，不需要 Instantiate）
+        State stateTemplate = StateDictionaryManager.GetStateTemplate(stateType);
         if (stateTemplate == null)
         {
             return null;

@@ -5,63 +5,99 @@ using UnityEditor;  // 仅在编辑器下使用
 
 public class StateDictionaryManager : MonoBehaviour
 {
-    private static Dictionary<StateType, State> stateDict;
+    private static Dictionary<StateType, State> s_stateDict;
+    private static bool s_initialized;
 
-    // 静态构造 + 编辑器自动刷新
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void Initialize()
+    private static void Initialize()
     {
         LoadAllStateEffects();
     }
 
 #if UNITY_EDITOR
-    [InitializeOnLoadMethod]  // 编辑器启动或脚本重编译时自动执行
-    static void EditorInitialize()
+    [InitializeOnLoadMethod]
+    private static void EditorInitialize()
     {
         LoadAllStateEffects();
-        // 可选：监听资产变化，自动刷新字典
-        EditorApplication.projectChanged -= LoadAllStateEffects;    
+        EditorApplication.projectChanged -= LoadAllStateEffects;
         EditorApplication.projectChanged += LoadAllStateEffects;
     }
 #endif
 
+    private static void EnsureInitialized()
+    {
+        if (!s_initialized)
+        {
+            LoadAllStateEffects();
+        }
+    }
+
     private static void LoadAllStateEffects()
     {
-        stateDict = new Dictionary<StateType, State>();
-        // 加载项目中所有指定类型的 ScriptableObject
+        s_stateDict = new Dictionary<StateType, State>();
         State[] allStates = Resources.LoadAll<State>("");
-        
-        // 如果你不想放在 Resources 文件夹，可以使用下面编辑器专用方法
-        // 但为了运行时能读取，建议还是把状态资产放到 Resources 或 Addressables
 
-        foreach (var State in allStates)
+        foreach (var state in allStates)
         {
-            if (!stateDict.ContainsKey(State.stateType))
-                stateDict.Add(State.stateType, State);
+            if (state == null)
+            {
+                continue;
+            }
+
+            if (!s_stateDict.ContainsKey(state.stateType))
+            {
+                s_stateDict.Add(state.stateType, state);
+            }
             else
-                Debug.LogWarning($"重复的状态类型: {State.stateType}，请检查资源命名和配置");
+            {
+                Debug.LogWarning($"重复的状态类型: {state.stateType}，请检查资源命名和配置");
+            }
         }
-        
-        Debug.Log($"状态字典加载完成，共 {stateDict.Count} 种状态");
+
+        s_initialized = true;
+        Debug.Log($"状态字典加载完成，共 {s_stateDict.Count} 种状态");
     }
-    public static State GetState(StateType stateType)
+
+    /// <summary>获取状态模板的只读引用（不 Instantiate，用于读取配置数据）</summary>
+    public static State GetStateTemplate(StateType stateType)
     {
-        if (stateDict != null && stateDict.TryGetValue(stateType, out var data))
-        {   
-            var state = Instantiate(data); // 返回实例化对象，避免修改原始数据
-            state.name = data.name; // 保持实例化对象的名字与原始数据一致，方便调试
-            return state;
+        EnsureInitialized();
+
+        if (s_stateDict != null && s_stateDict.TryGetValue(stateType, out var data))
+        {
+            return data;
         }
 
         Debug.LogError($"未找到状态: {stateType}");
         return null;
     }
+
+    /// <summary>获取状态的运行时实例（已 Instantiate，可安全修改）</summary>
+    public static State GetState(StateType stateType)
+    {
+        State template = GetStateTemplate(stateType);
+        if (template == null)
+        {
+            return null;
+        }
+
+        var state = Instantiate(template);
+        state.name = template.name;
+        return state;
+    }
+
     public static string GetStateName(StateType stateType)
     {
-        if (stateDict != null && stateDict.TryGetValue(stateType, out var data))
-            return data.name;
-        else if(stateType == StateType.None)
+        State template = GetStateTemplate(stateType);
+        if (template != null)
+        {
+            return template.name;
+        }
+
+        if (stateType == StateType.None)
+        {
             return "";
+        }
 
         Debug.LogError($"未找到状态: {stateType}");
         return null;
@@ -69,7 +105,8 @@ public class StateDictionaryManager : MonoBehaviour
 }
 public class EnvironmentDictionaryManager : MonoBehaviour
 {
-    private static Dictionary<EnvironmentType, BattleEnvironment> environmentDict;
+    private static Dictionary<EnvironmentType, BattleEnvironment> s_environmentDict;
+    private static bool s_initialized;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
@@ -87,9 +124,17 @@ public class EnvironmentDictionaryManager : MonoBehaviour
     }
 #endif
 
+    private static void EnsureInitialized()
+    {
+        if (!s_initialized)
+        {
+            LoadAllEnvironments();
+        }
+    }
+
     private static void LoadAllEnvironments()
     {
-        environmentDict = new Dictionary<EnvironmentType, BattleEnvironment>();
+        s_environmentDict = new Dictionary<EnvironmentType, BattleEnvironment>();
         BattleEnvironment[] allEnvironments = Resources.LoadAll<BattleEnvironment>(string.Empty);
 
         foreach (var environment in allEnvironments)
@@ -99,9 +144,9 @@ public class EnvironmentDictionaryManager : MonoBehaviour
                 continue;
             }
 
-            if (!environmentDict.ContainsKey(environment.environmentType))
+            if (!s_environmentDict.ContainsKey(environment.environmentType))
             {
-                environmentDict.Add(environment.environmentType, environment);
+                s_environmentDict.Add(environment.environmentType, environment);
             }
             else
             {
@@ -109,30 +154,42 @@ public class EnvironmentDictionaryManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"环境字典加载完成，共 {environmentDict.Count} 种环境");
+        s_initialized = true;
+        Debug.Log($"环境字典加载完成，共 {s_environmentDict.Count} 种环境");
     }
 
-    public static BattleEnvironment GetEnvironment(EnvironmentType environmentType)
+    /// <summary>获取环境模板的只读引用（不 Instantiate，用于读取配置数据）</summary>
+    public static BattleEnvironment GetEnvironmentTemplate(EnvironmentType environmentType)
     {
-        if (environmentDict == null)
-        {
-            LoadAllEnvironments();
-        }
+        EnsureInitialized();
 
-        if (environmentDict.TryGetValue(environmentType, out var environment))
+        if (s_environmentDict != null && s_environmentDict.TryGetValue(environmentType, out var environment))
         {
-            var environmentInstance = Instantiate(environment);
-            environmentInstance.name = environment.name;
-            return environmentInstance;
+            return environment;
         }
 
         Debug.LogError($"未找到环境: {environmentType}");
         return null;
     }
+
+    /// <summary>获取环境的运行时实例（已 Instantiate，可安全修改）</summary>
+    public static BattleEnvironment GetEnvironment(EnvironmentType environmentType)
+    {
+        BattleEnvironment template = GetEnvironmentTemplate(environmentType);
+        if (template == null)
+        {
+            return null;
+        }
+
+        var environmentInstance = Instantiate(template);
+        environmentInstance.name = template.name;
+        return environmentInstance;
+    }
 }
 public class SkillDictionaryManager : MonoBehaviour
 {
-    private static Dictionary<CharacterSkillType, CharacterSkillBase> skillDict;
+    private static Dictionary<CharacterSkillType, CharacterSkillBase> s_skillDict;
+    private static bool s_initialized;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
@@ -150,9 +207,17 @@ public class SkillDictionaryManager : MonoBehaviour
     }
 #endif
 
+    private static void EnsureInitialized()
+    {
+        if (!s_initialized)
+        {
+            LoadAllSkills();
+        }
+    }
+
     private static void LoadAllSkills()
     {
-        skillDict = new Dictionary<CharacterSkillType, CharacterSkillBase>();
+        s_skillDict = new Dictionary<CharacterSkillType, CharacterSkillBase>();
         CharacterSkillBase[] allSkills = Resources.LoadAll<CharacterSkillBase>(string.Empty);
 
         foreach (var skill in allSkills)
@@ -162,27 +227,26 @@ public class SkillDictionaryManager : MonoBehaviour
                 continue;
             }
 
-            if (!skillDict.ContainsKey(skill.skillType))
+            if (!s_skillDict.ContainsKey(skill.skillType))
             {
-                skillDict.Add(skill.skillType, skill);
+                s_skillDict.Add(skill.skillType, skill);
             }
             else
             {
                 Debug.LogWarning($"重复的技能类型: {skill.skillType}，请检查资源命名和配置");
             }
-        }   
-
-        Debug.Log($"技能字典加载完成，共 {skillDict.Count} 种技能");
-    }
-
-    public static CharacterSkillBase GetSkill(CharacterSkillType skillType)
-    {
-        if (skillDict == null)
-        {
-            LoadAllSkills();
         }
 
-        if (skillDict.TryGetValue(skillType, out var skill))
+        s_initialized = true;
+        Debug.Log($"技能字典加载完成，共 {s_skillDict.Count} 种技能");
+    }
+
+    /// <summary>获取技能模板的只读引用（不 Instantiate，用于读取配置数据或 UI 展示）</summary>
+    public static CharacterSkillBase GetSkillTemplate(CharacterSkillType skillType)
+    {
+        EnsureInitialized();
+
+        if (s_skillDict != null && s_skillDict.TryGetValue(skillType, out var skill))
         {
             return skill;
         }
@@ -190,17 +254,37 @@ public class SkillDictionaryManager : MonoBehaviour
         Debug.LogError($"未找到技能: {skillType}");
         return null;
     }
+
+    /// <summary>获取技能的运行时实例（已 Instantiate，可安全修改）</summary>
+    public static CharacterSkillBase GetSkill(CharacterSkillType skillType)
+    {
+        CharacterSkillBase template = GetSkillTemplate(skillType);
+        if (template == null)
+        {
+            return null;
+        }
+
+        var instance = Instantiate(template);
+        instance.name = template.name;
+        return instance;
+    }
+
     public static string GetSkillName(CharacterSkillType skillType)
     {
-        if (skillDict.TryGetValue(skillType, out var skill))
-            return skill.skillName;
+        CharacterSkillBase template = GetSkillTemplate(skillType);
+        if (template != null)
+        {
+            return template.skillName;
+        }
+
         Debug.LogError($"未找到技能: {skillType}");
         return null;
     }
 }
 public class EnemySkillDictionaryManager : MonoBehaviour
 {
-    private static Dictionary<EnemySkillType, EnemySkillBase> enemySkillDict;
+    private static Dictionary<EnemySkillType, EnemySkillBase> s_enemySkillDict;
+    private static bool s_initialized;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
@@ -218,9 +302,17 @@ public class EnemySkillDictionaryManager : MonoBehaviour
     }
 #endif
 
+    private static void EnsureInitialized()
+    {
+        if (!s_initialized)
+        {
+            LoadAllEnemySkills();
+        }
+    }
+
     private static void LoadAllEnemySkills()
     {
-        enemySkillDict = new Dictionary<EnemySkillType, EnemySkillBase>();
+        s_enemySkillDict = new Dictionary<EnemySkillType, EnemySkillBase>();
         EnemySkillBase[] allEnemySkills = Resources.LoadAll<EnemySkillBase>(string.Empty);
 
         foreach (var skill in allEnemySkills)
@@ -230,9 +322,9 @@ public class EnemySkillDictionaryManager : MonoBehaviour
                 continue;
             }
 
-            if (!enemySkillDict.ContainsKey(skill.enemySkillType))
+            if (!s_enemySkillDict.ContainsKey(skill.enemySkillType))
             {
-                enemySkillDict.Add(skill.enemySkillType, skill);
+                s_enemySkillDict.Add(skill.enemySkillType, skill);
             }
             else
             {
@@ -240,17 +332,16 @@ public class EnemySkillDictionaryManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"敌人技能字典加载完成，共 {enemySkillDict.Count} 种敌人技能");
+        s_initialized = true;
+        Debug.Log($"敌人技能字典加载完成，共 {s_enemySkillDict.Count} 种敌人技能");
     }
 
-    public static EnemySkillBase GetEnemySkill(EnemySkillType skillType)
+    /// <summary>获取敌人技能模板的只读引用（不 Instantiate，用于读取配置数据）</summary>
+    public static EnemySkillBase GetEnemySkillTemplate(EnemySkillType skillType)
     {
-        if (enemySkillDict == null)
-        {
-            LoadAllEnemySkills();
-        }
+        EnsureInitialized();
 
-        if (enemySkillDict.TryGetValue(skillType, out var skill))
+        if (s_enemySkillDict != null && s_enemySkillDict.TryGetValue(skillType, out var skill))
         {
             return skill;
         }
@@ -258,12 +349,34 @@ public class EnemySkillDictionaryManager : MonoBehaviour
         Debug.LogError($"未找到敌人技能: {skillType}");
         return null;
     }
+
+    /// <summary>获取敌人技能的运行时实例（已 Instantiate，可安全修改）</summary>
+    public static EnemySkillBase GetEnemySkill(EnemySkillType skillType)
+    {
+        EnemySkillBase template = GetEnemySkillTemplate(skillType);
+        if (template == null)
+        {
+            return null;
+        }
+
+        var instance = Instantiate(template);
+        instance.name = template.name;
+        return instance;
+    }
+
     public static string GetEnemySkillName(EnemySkillType skillType)
     {
-        if (enemySkillDict.TryGetValue(skillType, out var skill))
-            return skill.skillName;
-        else if(skillType == EnemySkillType.NoneNone)
+        EnemySkillBase template = GetEnemySkillTemplate(skillType);
+        if (template != null)
+        {
+            return template.skillName;
+        }
+
+        if (skillType == EnemySkillType.NoneNone)
+        {
             return "";
+        }
+
         Debug.Log($"未找到敌人技能: {skillType}");
         return null;
     }

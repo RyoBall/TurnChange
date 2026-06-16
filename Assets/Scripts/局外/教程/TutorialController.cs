@@ -51,7 +51,6 @@ public class TutorialController : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
         guideImage.alphaHitTestMinimumThreshold = 0.1f; // 设置图片的点击穿透阈值
     }
 

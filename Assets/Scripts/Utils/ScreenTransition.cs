@@ -35,8 +35,7 @@ public class ScreenTransition : MonoBehaviour
         }
         else
             Instance = this;
-        DontDestroyOnLoad(gameObject);
-        DontDestroyOnLoad(overlayCanvas.gameObject);
+
 
     }
 
@@ -109,7 +108,7 @@ public class ScreenTransition : MonoBehaviour
 
         overlayImage = img;
 
-        DontDestroyOnLoad(canvasGo);
+
     }
 
     private void SetAlpha(float a)

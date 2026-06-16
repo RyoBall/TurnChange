@@ -18,7 +18,6 @@ public class CombatantDeathMonitor : MonoBehaviour
             {
                 GameObject obj = new GameObject("CombatantDeathMonitor");
                 instance = obj.AddComponent<CombatantDeathMonitor>();
-                DontDestroyOnLoad(obj);
             }
 
             return instance;
@@ -34,7 +33,6 @@ public class CombatantDeathMonitor : MonoBehaviour
         }
 
         instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     public static void Register(UnitCombatant unit)

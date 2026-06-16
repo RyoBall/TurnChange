@@ -9,6 +9,9 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class StartGameButton : MonoBehaviour
 {
+    /// <summary>点击开始游戏按钮时的静态事件</summary>
+    public static event Action GameStarted;
+
     [SerializeField] private string mainSceneName = "Main";
     [SerializeField] private Button startButton;
 
@@ -41,8 +44,10 @@ public class StartGameButton : MonoBehaviour
             return;
         }
 
+
         ScreenTransition.Instance.Transition(() =>
         {
+            GameStarted?.Invoke();
             SceneManager.LoadScene(mainSceneName);
         });
     }

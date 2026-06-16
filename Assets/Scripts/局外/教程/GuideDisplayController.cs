@@ -8,6 +8,7 @@ using UnityEngine;
 /// </summary>
 public class GuideDisplayController : MonoBehaviour
 {
+    private static bool hasInited=false;
     [Header("高亮配置列表")]
     [SerializeField] private List<GuideHighlightConfig> m_highlightConfigs = new List<GuideHighlightConfig>();
 
@@ -27,16 +28,24 @@ public class GuideDisplayController : MonoBehaviour
 
     private void Awake()
     {
+        if(hasInited)
+        {
+            return;
+        }
         // 缓存 Shader 属性ID
+        m_highlightRect.gameObject.SetActive(true); // 初始隐藏高亮区域
         m_rectMinXId = Shader.PropertyToID("_RectMinX");
         m_rectMaxXId = Shader.PropertyToID("_RectMaxX");
         m_rectMinYId = Shader.PropertyToID("_RectMinY");
         m_rectMaxYId = Shader.PropertyToID("_RectMaxY");
+        m_guideMaterial.SetFloat(m_rectMaxXId, 1);
+        m_guideMaterial.SetFloat(m_rectMaxYId, 1);
 
         if (m_guideMaterial == null)
         {
             Debug.LogError("GuideDisplayController: 遮罩材质未赋值！");
         }
+        hasInited = true;
     }
 
     /// <summary>

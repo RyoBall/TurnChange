@@ -156,6 +156,7 @@ public static class BattleLevelDataImporter
     /// <summary>
     /// 解析敌人阵容配置字符串
     /// 格式: W1:E2*1+E5*1;W2:E1*1+E5*1
+    /// 支持独立等级: E2:-1*1 表示 E2 等级 -1
     /// 特殊敌人格式: W1:特殊_三头龙完整版*1
     /// W(Wave) = 波次, E = 敌人代号, *后面的数字 = 数量
     /// </summary>
@@ -208,30 +209,39 @@ public static class BattleLevelDataImporter
                 }
 
                 int count = 1;
+                int enemyLevel = defaultLevel;
                 EnemyRosterData enemyData = null;
 
-                // 尝试匹配标准敌人格式: E2*1
-                Match standardMatch = Regex.Match(entryTrimmed, @"^(E\d+)(?:\*(\d+))?$");
+                // 尝试匹配标准敌人格式（支持独立等级）: E2:-1*1 或 E2*1
+                Match standardMatch = Regex.Match(entryTrimmed, @"^(E\d+)(?::(-?\d+))?(?:\*(\d+))?$");
                 if (standardMatch.Success)
                 {
                     string enemyCode = standardMatch.Groups[1].Value;
                     if (standardMatch.Groups[2].Success)
                     {
-                        int.TryParse(standardMatch.Groups[2].Value, out count);
+                        int.TryParse(standardMatch.Groups[2].Value, out enemyLevel);
+                    }
+                    if (standardMatch.Groups[3].Success)
+                    {
+                        int.TryParse(standardMatch.Groups[3].Value, out count);
                     }
 
                     enemyData = ResolveEnemyData(enemyCode);
                 }
                 else
                 {
-                    // 尝试匹配特殊敌人格式: 特殊_名称*1
-                    Match specialMatch = Regex.Match(entryTrimmed, @"^特殊_(.+?)(?:\*(\d+))?$");
+                    // 尝试匹配特殊敌人格式: 特殊_名称:-1*1 或 特殊_名称*1
+                    Match specialMatch = Regex.Match(entryTrimmed, @"^特殊_(.+?)(?::(-?\d+))?(?:\*(\d+))?$");
                     if (specialMatch.Success)
                     {
                         string specialName = specialMatch.Groups[1].Value.Trim();
                         if (specialMatch.Groups[2].Success)
                         {
-                            int.TryParse(specialMatch.Groups[2].Value, out count);
+                            int.TryParse(specialMatch.Groups[2].Value, out enemyLevel);
+                        }
+                        if (specialMatch.Groups[3].Success)
+                        {
+                            int.TryParse(specialMatch.Groups[3].Value, out count);
                         }
 
                         enemyData = ResolveSpecialEnemyData(specialName);
@@ -255,7 +265,7 @@ public static class BattleLevelDataImporter
                     waveData.enemies.Add(new LevelEnemyEntry
                     {
                         enemyData = enemyData,
-                        level = defaultLevel
+                        level = enemyLevel
                     });
                 }
             }

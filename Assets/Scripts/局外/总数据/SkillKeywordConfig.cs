@@ -61,7 +61,7 @@ public class SkillKeywordConfig : ScriptableObject
     }
 
     /// <summary>
-    /// 用富文本标签包裹单个关键词（加粗+下划线）
+    /// 用富文本标签包裹单个关键词（黄色+加粗+下划线）
     /// </summary>
     public static string WrapKeyword(string keyword)
     {
@@ -70,11 +70,12 @@ public class SkillKeywordConfig : ScriptableObject
             return keyword;
         }
 
-        return $"<b><u>{keyword}</u></b>";
+        return $"<b><u><color=yellow>{keyword}</color></u></b>";
     }
 
     /// <summary>
-    /// 扫描文本中的关键词并用富文本标签包裹（加粗+下划线）
+    /// 扫描文本中的关键词并用富文本标签包裹（黄色+加粗+下划线）
+    /// 如果关键词已被包裹则跳过，避免重复嵌套
     /// </summary>
     public string ApplyKeywordRichText(string text)
     {
@@ -92,8 +93,14 @@ public class SkillKeywordConfig : ScriptableObject
                 continue;
             }
 
-            // 避免重复包裹已处理过的关键词
             string wrapped = WrapKeyword(keyword);
+
+            // 如果已包含包裹后的版本（Editor 导入时已处理），跳过
+            if (result.Contains(wrapped))
+            {
+                continue;
+            }
+
             result = result.Replace(keyword, wrapped);
         }
 

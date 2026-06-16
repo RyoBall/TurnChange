@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -8,6 +9,11 @@ public class DebugMode : MonoBehaviour
     public static DebugMode Instance { get; private set; }
 
     [SerializeField] private bool m_isDebugMode;
+
+    /// <summary>
+    /// Debug 模式下自动注入到 Datas 的角色列表
+    /// </summary>
+    [SerializeField] private List<CharacterType> m_debugCharacterTypes = new List<CharacterType>();
 
     public bool IsDebugMode => m_isDebugMode;
 
@@ -20,7 +26,11 @@ public class DebugMode : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start()
+    {
+        InjectDebugCharacters();
     }
 
     private void OnDestroy()
@@ -30,22 +40,25 @@ public class DebugMode : MonoBehaviour
             Instance = null;
         }
     }
-
     /// <summary>
-    /// 在运行时切换 Debug 模式
+    /// 将 Debug 角色列表中的角色注入到 Datas（Datas.AddCharacterData 内部已确保不会重复添加）
     /// </summary>
-    public void ToggleDebugMode()
+    private void InjectDebugCharacters()
     {
-        m_isDebugMode = !m_isDebugMode;
-        Debug.Log($"[DebugMode] Debug 模式已{(m_isDebugMode ? "开启" : "关闭")}");
-    }
+        if (!m_isDebugMode)
+        {
+            return;
+        }
 
-    /// <summary>
-    /// 设置 Debug 模式的开关状态
-    /// </summary>
-    public void SetDebugMode(bool enabled)
-    {
-        m_isDebugMode = enabled;
-        Debug.Log($"[DebugMode] Debug 模式已{(m_isDebugMode ? "开启" : "关闭")}");
+        if (Datas.Instance == null)
+        {
+            Debug.LogWarning("[DebugMode] Datas.Instance 为空，无法注入 Debug 角色。");
+            return;
+        }
+
+        for (int i = 0; i < m_debugCharacterTypes.Count; i++)
+        {
+            Datas.Instance.AddCharacterData(m_debugCharacterTypes[i]);
+        }
     }
 }

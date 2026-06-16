@@ -99,7 +99,7 @@ public static class BattleLaunchContext
                         battleWave.enemies.Add(new BattleEnemySpawnData
                         {
                             enemyData = entry.enemyData,
-                            level = Mathf.Max(1, entry.level),
+                            level = entry.level,
                         });
                     }
                 }

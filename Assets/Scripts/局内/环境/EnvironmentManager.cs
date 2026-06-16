@@ -48,7 +48,7 @@ public class EnvironmentManager : MonoBehaviour
             return;
         }
 
-        BattleEnvironment environmentTemplate = EnvironmentDictionaryManager.GetEnvironment(type);
+        BattleEnvironment environmentTemplate = EnvironmentDictionaryManager.GetEnvironmentTemplate(type);
         BattleEnvironment newEnvironment = environmentTemplate != null
             ? Instantiate(environmentTemplate)
             : ScriptableObject.CreateInstance<BattleEnvironment>();
