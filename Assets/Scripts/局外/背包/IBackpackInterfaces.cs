@@ -74,8 +74,17 @@ public interface IGridModule
     /// <summary>获取每个单元格的价格</summary>
     int GetPricePerCell();
 
+    /// <summary>获取模块颜色（渐变起点色）</summary>
+    Color ModuleColor { get; }
+
+    /// <summary>获取渐变终点颜色</summary>
+    Color GradientColorB { get; }
+
     /// <summary>克隆模块实例</summary>
     IGridModule Clone();
+
+    /// <summary>顺时针旋转模块形状 90°，以指定归一化单元格为锚点</summary>
+    void RotateClockwise(Vector2Int anchorNormalizedCell);
 }
 
 /// <summary>

@@ -15,15 +15,16 @@ public class BackpackExpansionShopItem : MonoBehaviour, IBackpackExpansionShopIt
     [Header("展示配置")]
     [SerializeField] private ShopModuleManager shopManager;
     [SerializeField] private string itemName = "背包扩容";
-    [SerializeField] private string itemDescription = "购买后背包大小加一。最多可购买两次。";
+    [SerializeField] private string itemDescription = "购买后背包大小加一。最多可购买三次。";
     [SerializeField] private Color normalColor = new Color(0.18f, 0.12f, 0.10f, 0.94f);
     [SerializeField] private Color disabledColor = new Color(0.13f, 0.13f, 0.13f, 0.72f);
 
     [Header("价格配置")]
     [SerializeField] private int firstUpgradePrice = 150;
     [SerializeField] private int secondUpgradePrice = 200;
+    [SerializeField] private int thirdUpgradePrice = 250;
     [SerializeField] private int initialBackpackWidth = 4;
-    [SerializeField] private int maxBackpackWidth = 6;
+    [SerializeField] private int maxBackpackWidth = 7;
 
     [Header("UI 引用")]
     [SerializeField] private Image background;
@@ -118,7 +119,7 @@ public class BackpackExpansionShopItem : MonoBehaviour, IBackpackExpansionShopIt
 
         if (priceText != null)
         {
-            priceText.text = isSoldOut ? "已售罄" : "价格: " + Mathf.Max(0, price);
+            priceText.text = isSoldOut ? "已售空" : "价格: " + Mathf.Max(0, price);
         }
     }
 
@@ -212,6 +213,11 @@ public class BackpackExpansionShopItem : MonoBehaviour, IBackpackExpansionShopIt
         if (width == initialBackpackWidth + 1)
         {
             return Mathf.Max(0, secondUpgradePrice);
+        }
+
+        if (width == initialBackpackWidth + 2)
+        {
+            return Mathf.Max(0, thirdUpgradePrice);
         }
 
         return 0;

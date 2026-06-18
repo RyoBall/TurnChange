@@ -20,7 +20,7 @@ public class BattleDialogController : MonoBehaviour
 
     [Header("低血量检测")]
     [Tooltip("低血量阈值（比例）")]
-    [SerializeField, Range(0f, 1f)] private float lowHealthThreshold = 0.3f;
+    [SerializeField, Range(0f, 1f)] private float lowHealthThreshold = 0.4f;
 
     // 已触发的一次性事件追踪
     private readonly HashSet<BattleDialogEventType> m_oncePerBattleEvents = new HashSet<BattleDialogEventType>();

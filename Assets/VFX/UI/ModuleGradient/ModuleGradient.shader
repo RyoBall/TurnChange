@@ -113,12 +113,6 @@ Shader "UI/ModuleGradient"
                 // Preserve vertex-color alpha (CanvasGroup, loaded-state fade, etc.)
                 col.a *= IN.color.a;
 
-                // Sprite alpha mask (rounded corners if the sprite has them)
-                col.a *= tex2D(_MainTex, IN.texcoord).a;
-
-                // UI scroll-rect / mask clipping
-                col.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
-
                 return col;
             }
             ENDCG

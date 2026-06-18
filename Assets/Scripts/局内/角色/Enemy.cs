@@ -22,6 +22,9 @@ public class Enemy : UnitCombatant
     }
 
     public string enemyID;
+    private Sprite m_turnImageSprite;
+    /// <summary>从 EnemyRosterData 中获取的回合图像 Sprite</summary>
+    public override Sprite TurnImageSprite => m_turnImageSprite;
     [Header("动画覆盖")]
     [SerializeField] private Animator animator;
     protected Animator Anim => animator;
@@ -76,6 +79,7 @@ public class Enemy : UnitCombatant
         skills = new List<EnemySkillType>(data.skills);
         this.standPosition = standPosition;
         this.level =level;
+        m_turnImageSprite = data.enemySprite;
         participateInTurnLoopAtStart = ShouldRegisterAtBattleStart;
         InitializeAnimatorOverrides();
         InitializeEnemyRuntime();

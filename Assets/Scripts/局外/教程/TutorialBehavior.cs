@@ -58,6 +58,7 @@ public abstract class TutorialBehavior
             m_controller.UpdateDialogText(m_data.TextList[m_currentIndex]);
             m_currentIndex++;
             OnProgress(m_currentIndex - 1);
+            m_controller.PlayProgressBounce();
         }
         else
         {
@@ -517,13 +518,17 @@ public class SkillDemoTutorial : TutorialBehavior
 
     /// <summary>
     /// 文本推进后的系统处理
-    /// 索引3 → 高亮追惩技能；索引5 → 切换高亮到敌人词条
+    /// 索引1 → 暂停镜头晃动并重置到原位置，高亮技能栏
+    /// 索引4 → 高亮追惩技能；索引5 → 高亮厄运播撒技能；索引6 → 高亮敌人词条
     /// </summary>
     public override void OnProgress(int index)
     {
         switch (index)
         {
             case 1:
+                CinemachineCameraManager.Instance?.PauseSway();
+                CinemachineCameraManager.Instance?.LockSway();
+                CinemachineCameraManager.Instance?.ResetMainCameraTransform();
                 m_controller.ShowGuideHighlight(GuideHighlightType.技能栏);
                 break;
             case 4:
@@ -567,6 +572,7 @@ public class SkillDemoTutorial : TutorialBehavior
         m_pursuitPunishExecuted = false;
         m_debuffSpreadExecuted = false;
         SkillExecuteManager.OnSkillExecuted -= OnSkillExecuted;
+        CinemachineCameraManager.Instance?.UnlockSway();
         base.OnTutorialEnd();
     }
 }
@@ -658,7 +664,7 @@ public class ShopDetailTutorial : TutorialBehavior
 
     public override bool CanProgress()
     {
-        if (m_currentIndex == 4) return m_itemPurchased;
+        if (m_currentIndex ==2) return m_itemPurchased;
         return Input.GetMouseButtonDown(0);
     }
 
@@ -832,7 +838,6 @@ public class SecondLevelIntroTutorial : TutorialBehavior
     }
 }
 #endregion
-
 #region 教程十三
 /// <summary>
 /// 第二关提示教程行为（教程十三）
@@ -841,6 +846,7 @@ public class SecondLevelIntroTutorial : TutorialBehavior
 public class SecondLevelTipTutorial : TutorialBehavior
 {
     private static bool s_tutorialTwelveCompleted = false;
+    private bool m_battleStarted = false;
 
     public override void OnProgress(int index)
     {
@@ -861,6 +867,13 @@ public class SecondLevelTipTutorial : TutorialBehavior
         LevelSelectionItemUI.BattleLevelSelected -= OnPanelSwitched;
     }
 
+    public override bool CanProgress()
+    {
+        if (m_currentIndex == 2)
+            return m_battleStarted;
+        return Input.GetMouseButtonDown(0);
+    }
+
     private void OnSecondLevelEnded(TutorialType type)
     {
         if (type == TutorialType.教程十二)
@@ -877,9 +890,27 @@ public class SecondLevelTipTutorial : TutorialBehavior
             m_controller.StartTutorial(m_data.Type);
         }
     }
+
+    public override void OnTutorialStart()
+    {
+        base.OnTutorialStart();
+        StartBattleButton.Clicked += OnBattleStarted;
+        StartBattleButton.BattleStarted += OnBattleStarted;
+    }
+
+    private void OnBattleStarted()
+    {
+        m_battleStarted = true;
+    }
+
+    public override void OnTutorialEnd()
+    {
+        StartBattleButton.Clicked -= OnBattleStarted;
+        StartBattleButton.BattleStarted -= OnBattleStarted;
+        base.OnTutorialEnd();
+    }
 }
 #endregion
-
 #region 教程十四
 /// <summary>
 /// 强敌提示教程行为（教程十四）
@@ -921,12 +952,14 @@ public class EnemyStrongTutorial : TutorialBehavior
 #region 教程十五
 /// <summary>
 /// 援军到达教程行为（教程十五）
-/// 教程十四完成后触发，高亮切人按键和指挥点，文本6等待换人回合结束
+/// 教程十四完成后开始监听敌人回合结束事件，计数到达2次后触发，高亮切人按键和指挥点，文本6等待换人回合结束
 /// </summary>
 public class ReinforcementArriveTutorial : TutorialBehavior
 {
     private bool m_swapCompleted = false;
-    private bool tutorialEnded = false;
+    private bool m_tutorialFourteenEnded = false;
+    private int m_enemyActCount = 0;
+    private const int RequiredEnemyActCount = 2;
 
     public override void StartListening()
     {
@@ -943,11 +976,15 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     private void OnOtherTutorialEnded(TutorialType type)
     {
         if (type == TutorialType.教程十四)
-            tutorialEnded = true;
+            m_tutorialFourteenEnded = true;
     }
     private void OnEnemyActEvent()
     {
-        if (tutorialEnded)
+        if (!m_tutorialFourteenEnded)
+            return;
+
+        m_enemyActCount++;
+        if (m_enemyActCount >= RequiredEnemyActCount)
         {
             m_controller.StartTutorial(m_data.Type);
             Enemy.OnEnemyActEvent -= OnEnemyActEvent;
@@ -971,7 +1008,7 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     public override void OnTutorialStart()
     {
         base.OnTutorialStart();
-        TimeScaleController.Instance?.Pause(); // 慢速以便观察
+        Commander.GetInstance()?.RecoverCommandPoints(1, "援军已到，指挥点+1");
         CommandButton.OnChangeButtonClicked += OnSwapCompleted;
     }
 
@@ -983,8 +1020,8 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     public override void OnTutorialEnd()
     {
         m_swapCompleted = false;
+        m_enemyActCount = 0;
         CommandButton.OnChangeButtonClicked -= OnSwapCompleted;
-        TimeScaleController.Instance?.ResetToDefault(); // 恢复正常速度
         base.OnTutorialEnd();
     }
 }

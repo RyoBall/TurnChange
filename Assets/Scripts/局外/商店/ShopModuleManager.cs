@@ -231,7 +231,7 @@ public class ShopModuleManager : MonoBehaviour
         if (entry.soldOut || currentCurrency < entry.price)
         {
             PurchaseFailed?.Invoke(entry.module, entry.price, slotIndex);
-            SetStatusText(entry.soldOut ? "该商品已售罄" : "货币不足，无法购买");
+            SetStatusText(entry.soldOut ? "该商品已售空" : "货币不足，无法购买");
             RefreshVisualState();
             return false;
         }

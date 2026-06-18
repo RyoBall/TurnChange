@@ -53,6 +53,7 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
     [TextArea(2, 5)] public string description;
     public GridModuleLevel level = GridModuleLevel.Small;
     public Color color = new Color(0.28f, 0.78f, 1f, 0.9f);
+    public Color gradientColorB = new Color(0.1f, 0.3f, 0.85f, 0.9f);
     public TemporaryBattleModifierData modifierData = new TemporaryBattleModifierData();
     [SerializeField]int privePerCell = 5;
     public List<Vector2Int> cells = new List<Vector2Int>
@@ -62,6 +63,8 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
     [NonSerialized] private bool m_isLoaded;
 
     public bool IsLoaded => m_isLoaded;
+    public Color ModuleColor => color;
+    public Color GradientColorB => gradientColorB;
     public int GetPricePerCell()
     {
         return Mathf.Max(0, privePerCell);
@@ -75,6 +78,7 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
         clone.description = description;
         clone.level = level;
         clone.color = color;
+        clone.gradientColorB = gradientColorB;
         clone.modifierData = modifierData != null ? modifierData.Clone() : null;
         clone.privePerCell = privePerCell;
         clone.cells = new List<Vector2Int>(cells.Count);
@@ -218,5 +222,53 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
     {
         Vector2Int size = GetSize();
         return Mathf.Max(size.x, size.y);
+    }
+
+    public void RotateClockwise(Vector2Int anchorNormalizedCell)
+    {
+        if (cells == null || cells.Count == 0)
+        {
+            return;
+        }
+
+        // 先归一化当前 cells 以便正确计算偏移
+        NormalizeCellsInPlace();
+
+        // 以 anchorNormalizedCell 为锚点顺时针旋转 90°:
+        // (x, y) 绕 (ax, ay) 旋转 → (ax + (y - ay), ay - (x - ax))
+        int ax = anchorNormalizedCell.x;
+        int ay = anchorNormalizedCell.y;
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            Vector2Int cell = cells[i];
+            cells[i] = new Vector2Int(ax + (cell.y - ay), ay - (cell.x - ax));
+        }
+
+        // 重新归一化，使最小坐标为 (0, 0)
+        NormalizeCellsInPlace();
+    }
+
+    private void NormalizeCellsInPlace()
+    {
+        if (cells == null || cells.Count == 0)
+        {
+            return;
+        }
+
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            Vector2Int cell = cells[i];
+            if (cell.x < minX) minX = cell.x;
+            if (cell.y < minY) minY = cell.y;
+        }
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            cells[i] = new Vector2Int(cells[i].x - minX, cells[i].y - minY);
+        }
     }
 }

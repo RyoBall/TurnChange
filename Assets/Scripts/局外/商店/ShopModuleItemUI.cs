@@ -31,6 +31,7 @@ public class ShopModuleItemUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     private readonly List<Image> m_shapeCells = new List<Image>();
     private readonly List<Vector2Int> m_normalizedCells = new List<Vector2Int>();
+    private readonly List<Material> m_cellMaterials = new List<Material>();
 
     // 以下变量属于运行期状态，只能由脚本初始化和维护。
     private Action<GridModuleDefinition> m_onPurchaseRequested;
@@ -70,7 +71,7 @@ public class ShopModuleItemUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
         m_button.interactable = interactable;
 
         m_titleText.text = module != null ? module.moduleName : string.Empty;
-        m_priceText.text = isSoldOut ? "已售罄" : "价格: " + Mathf.Max(0, price);
+        m_priceText.text = isSoldOut ? "已售空" : "价格: " + Mathf.Max(0, price);
         m_priceText.color = interactable ? priceColor : unavailablePriceColor;
     
         m_button.onClick.RemoveAllListeners();
@@ -207,6 +208,13 @@ public class ShopModuleItemUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         m_shapeCells.Clear();
 
+        for (int i = 0; i < m_cellMaterials.Count; i++)
+        {
+            if (m_cellMaterials[i] != null)
+                Destroy(m_cellMaterials[i]);
+        }
+        m_cellMaterials.Clear();
+
         if (m_module == null)
         {
             return;
@@ -214,31 +222,58 @@ public class ShopModuleItemUI : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         m_module.GetNormalizedCells(m_normalizedCells);
         Vector2 moduleCenter = m_module.GetNormalizedCenter();
-        float cellWidth = Mathf.Max(1f, drawCellSize.x);
-        float cellHeight = Mathf.Max(1f, drawCellSize.y);
-        float previewWidth = Mathf.Max(1f, cellWidth - 2f);
-        float previewHeight = Mathf.Max(1f, cellHeight - 2f);
+        float cellStepX = Mathf.Max(1f, drawCellSize.x);
+        float cellStepY = Mathf.Max(1f, drawCellSize.y);
+        float previewWidth = Mathf.Max(1f, cellStepX - 2f);
+        float previewHeight = Mathf.Max(1f, cellStepY - 2f);
+        Vector2 cellStep = new Vector2(cellStepX, cellStepY);
+        Vector2 cellDrawSize = new Vector2(previewWidth, previewHeight);
+
+        ModuleCellFactory.ComputeShapeBounds(
+            m_normalizedCells, moduleCenter, cellStep, cellDrawSize,
+            out Vector2 boundsMin, out Vector2 boundsMax);
+
+        Color moduleColor = m_module.color;
+        float cellAlpha = m_canBuy && !m_isSoldOut ? 1f : disabledAlpha;
 
         for (int i = 0; i < m_normalizedCells.Count; i++)
         {
             Vector2Int cell = m_normalizedCells[i];
-            GameObject cellObject = new GameObject("Cell", typeof(RectTransform), typeof(Image));
-            cellObject.transform.SetParent(m_shapeRoot, false);
+            ModuleCellFactory.ComputeCellPosition(cell, moduleCenter, cellStep,
+                out Vector2 anchoredPos, out Vector2 cellOffset);
 
-            RectTransform cellRect = cellObject.GetComponent<RectTransform>();
-            cellRect.anchorMin = new Vector2(0.5f, 0.5f);
-            cellRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cellRect.pivot = new Vector2(0.5f, 0.5f);
-            cellRect.sizeDelta = new Vector2(previewWidth, previewHeight);
-            cellRect.anchoredPosition = new Vector2(
-                (cell.x - moduleCenter.x) * cellWidth,
-                -(cell.y - moduleCenter.y) * cellHeight);
+            Material createdMaterial;
+            GameObject cellObject = ModuleCellFactory.CreateCell(
+                m_shapeRoot,
+                "Cell",
+                cellDrawSize,
+                anchoredPos,
+                moduleColor,
+                cellAlpha,
+                ModuleCellConfig.Instance,
+                m_module.gradientColorB,
+                cellOffset,
+                boundsMin,
+                boundsMax,
+                out createdMaterial);
+
+            if (createdMaterial != null)
+            {
+                m_cellMaterials.Add(createdMaterial);
+            }
 
             Image cellImage = cellObject.GetComponent<Image>();
-            Color cellColor = m_module.color;
-            cellColor.a *= m_canBuy && !m_isSoldOut ? 1f : disabledAlpha;
-            cellImage.color = cellColor;
             m_shapeCells.Add(cellImage);
         }
+    }
+
+    private void OnDestroy()
+    {
+        for (int i = 0; i < m_cellMaterials.Count; i++)
+        {
+            if (m_cellMaterials[i] != null)
+                Destroy(m_cellMaterials[i]);
+        }
+        m_cellMaterials.Clear();
     }
 }

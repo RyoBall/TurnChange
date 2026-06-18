@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class StartBattleButton : MonoBehaviour
 {
     /// <summary>开始战斗时的静态事件</summary>
+    public static event Action Clicked;
     public static event Action BattleStarted;
 
     [SerializeField] private Button startButton;
@@ -57,6 +58,9 @@ public class StartBattleButton : MonoBehaviour
             Debug.LogWarning("[StartBattleButton] 未配置战斗场景名，无法载入战斗场景。", this);
             return;
         }
+
+        Clicked?.Invoke();
+
         ScreenTransition.Instance.Transition(() =>  
         {
             if (BGMPlayer.Instance != null)

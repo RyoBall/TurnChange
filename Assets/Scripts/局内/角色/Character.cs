@@ -44,6 +44,9 @@ public class Character : UnitCombatant
     private Tween m_scaleTween;
     [Header("动画精灵")]
     [SerializeField] private SpriteRenderer spriteRenderer;
+    private Sprite m_turnImageSprite;
+    /// <summary>从 CharacterRosterData 中获取的回合图像 Sprite</summary>
+    public override Sprite TurnImageSprite => m_turnImageSprite;
     [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
     [Header("位移动画")]
     [SerializeField] private float moveAnimDuration = 0.5f;
@@ -505,6 +508,12 @@ public class Character : UnitCombatant
     public void OnSwapOut()
     {
         currentShield /= 2;
+    }
+
+    /// <summary>设置回合图像 Sprite，由 LevelCharacterSpawner 在配置角色时调用</summary>
+    public void SetTurnImageSprite(Sprite sprite)
+    {
+        m_turnImageSprite = sprite;
     }
 
     public void LoadDataFromCSV()

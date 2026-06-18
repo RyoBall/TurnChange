@@ -74,6 +74,7 @@ public class CinemachineCameraManager : MonoBehaviour
 	private bool m_hasCompletedOpeningIntro;
 	private bool m_isSwayPaused;
 	private float m_pausedSwayElapsed;
+	private bool m_isSwayLocked;
 	public bool isOP=>m_isPlayingOpeningIntro;
 	public bool HasCompletedOpeningIntro => m_hasCompletedOpeningIntro;
 
@@ -92,15 +93,44 @@ public class CinemachineCameraManager : MonoBehaviour
 	/// </summary>
 	public void PauseSway()
 	{
+		if (m_isSwayPaused)
+		{
+			return;
+		}
+
 		m_isSwayPaused = true;
 		m_pausedSwayElapsed = Mathf.Max(0f, Time.time - m_mainCameraSwayCycleStartTime);
 	}
 
 	/// <summary>
 	/// 继续摄像机摆动动画，从暂停时的相位恢复
+	/// 如果晃动被锁定（如教程期间），则忽略本次恢复请求
 	/// </summary>
 	public void ResumeSway()
 	{
+		if (m_isSwayLocked || !m_isSwayPaused)
+		{
+			return;
+		}
+
+		m_isSwayPaused = false;
+		m_mainCameraSwayCycleStartTime = Time.time - m_pausedSwayElapsed;
+	}
+
+	/// <summary>
+	/// 锁定镜头晃动状态，锁定后 ResumeSway 不会生效，直到调用 UnlockSway
+	/// </summary>
+	public void LockSway()
+	{
+		m_isSwayLocked = true;
+	}
+
+	/// <summary>
+	/// 解锁镜头晃动状态并恢复摆动
+	/// </summary>
+	public void UnlockSway()
+	{
+		m_isSwayLocked = false;
 		m_isSwayPaused = false;
 		m_mainCameraSwayCycleStartTime = Time.time - m_pausedSwayElapsed;
 	}
@@ -528,7 +558,7 @@ public class CinemachineCameraManager : MonoBehaviour
 		}
 	}
 
-	private void ResetMainCameraTransform()
+	public void ResetMainCameraTransform()
 	{
 		if (!m_cameraMap.TryGetValue(ManagedCameraType.Main, out CinemachineVirtualCameraBase mainCamera) || mainCamera == null)
 		{

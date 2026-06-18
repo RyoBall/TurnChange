@@ -20,10 +20,6 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointer
     private readonly List<Image> m_shapeCells = new List<Image>();
     private readonly List<Material> m_cellMaterials = new List<Material>();
 
-    [SerializeField] private Shader m_gradientShader;
-    [SerializeField] private Color m_gradientColorB = new Color(0.1f, 0.3f, 0.85f, 0.9f);
-    [SerializeField] private float m_gradientAngle = 45f;
-
     [SerializeField] private Image m_background;
     [SerializeField] private Button m_button;
     [SerializeField] private CanvasGroup m_canvasGroup;
@@ -175,75 +171,49 @@ public class BackpackModuleItemUI : MonoBehaviour, IPointerDownHandler, IPointer
         List<Vector2Int> normalizedCells = new List<Vector2Int>();
         m_module.GetNormalizedCells(normalizedCells);
         Vector2 moduleCenter = m_module.GetNormalizedCenter();
-        float cellWidth  = Mathf.Max(1f, drawCellSize.x);
-        float cellHeight = Mathf.Max(1f, drawCellSize.y);
-        float previewWidth  = Mathf.Max(1f, cellWidth  - 2f);
-        float previewHeight = Mathf.Max(1f, cellHeight - 2f);
+        float cellStepX = Mathf.Max(1f, drawCellSize.x);
+        float cellStepY = Mathf.Max(1f, drawCellSize.y);
+        float previewWidth  = Mathf.Max(1f, cellStepX - 2f);
+        float previewHeight = Mathf.Max(1f, cellStepY - 2f);
+        Vector2 cellStep = new Vector2(cellStepX, cellStepY);
+        Vector2 cellDrawSize = new Vector2(previewWidth, previewHeight);
 
-        // Compute shape bounding box in shapeRoot local space (pixels)
-        // anchoredPosition of each cell = (cell.x - centerX)*cellWidth, -(cell.y - centerY)*cellHeight
-        // Bounds extend ±half-cell around each anchor.
-        float halfW = previewWidth  * 0.5f;
-        float halfH = previewHeight * 0.5f;
-        float boundsMinX = float.MaxValue, boundsMinY = float.MaxValue;
-        float boundsMaxX = float.MinValue, boundsMaxY = float.MinValue;
-        for (int i = 0; i < normalizedCells.Count; i++)
-        {
-            Vector2Int cell = normalizedCells[i];
-            float cx =  (cell.x - moduleCenter.x) * cellWidth;
-            float cy = -(cell.y - moduleCenter.y) * cellHeight;
-            boundsMinX = Mathf.Min(boundsMinX, cx - halfW);
-            boundsMinY = Mathf.Min(boundsMinY, cy - halfH);
-            boundsMaxX = Mathf.Max(boundsMaxX, cx + halfW);
-            boundsMaxY = Mathf.Max(boundsMaxY, cy + halfH);
-        }
+        ModuleCellFactory.ComputeShapeBounds(
+            normalizedCells, moduleCenter, cellStep, cellDrawSize,
+            out Vector2 boundsMin, out Vector2 boundsMax);
 
         GridModuleDefinition moduleDef = m_module as GridModuleDefinition;
-        Color colorA = moduleDef != null ? moduleDef.color : Color.white;
-        colorA.a *= isLoaded ? loadedAlpha : 1f;
-
-        bool useGradient = m_gradientShader != null;
+        Color moduleColor = moduleDef != null ? moduleDef.color : Color.white;
+        Color gradientColorB = moduleDef != null ? moduleDef.gradientColorB : new Color(0.1f, 0.3f, 0.85f, 0.9f);
+        float cellAlpha = isLoaded ? loadedAlpha : 1f;
 
         for (int i = 0; i < normalizedCells.Count; i++)
         {
             Vector2Int cell = normalizedCells[i];
-            GameObject cellObject = new GameObject("Cell", typeof(RectTransform), typeof(Image));
-            cellObject.transform.SetParent(m_shapeRoot, false);
+            ModuleCellFactory.ComputeCellPosition(cell, moduleCenter, cellStep,
+                out Vector2 anchoredPos, out Vector2 cellOffset);
 
-            RectTransform cellRect = cellObject.GetComponent<RectTransform>();
-            cellRect.anchorMin = new Vector2(0.5f, 0.5f);
-            cellRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cellRect.pivot     = new Vector2(0.5f, 0.5f);
-            cellRect.sizeDelta = new Vector2(previewWidth, previewHeight);
-            float ax =  (cell.x - moduleCenter.x) * cellWidth;
-            float ay = -(cell.y - moduleCenter.y) * cellHeight;
-            cellRect.anchoredPosition = new Vector2(ax, ay);
+            Material createdMaterial;
+            GameObject cellObject = ModuleCellFactory.CreateCell(
+                m_shapeRoot,
+                "Cell",
+                cellDrawSize,
+                anchoredPos,
+                moduleColor,
+                cellAlpha,
+                ModuleCellConfig.Instance,
+                gradientColorB,
+                cellOffset,
+                boundsMin,
+                boundsMax,
+                out createdMaterial);
+
+            if (createdMaterial != null)
+            {
+                m_cellMaterials.Add(createdMaterial);
+            }
 
             Image cellImage = cellObject.GetComponent<Image>();
-
-            if (useGradient)
-            {
-                // White vertex color — gradient colors are fully in the shader
-                cellImage.color = new Color(1f, 1f, 1f, isLoaded ? loadedAlpha : 1f);
-
-                Material mat = new Material(m_gradientShader);
-                Color colorB = m_gradientColorB;
-                colorB.a = colorA.a;
-                mat.SetColor("_ColorA", colorA);
-                mat.SetColor("_ColorB", colorB);
-                mat.SetFloat("_GradientAngle", m_gradientAngle);
-                mat.SetVector("_CellOffset",  new Vector4(ax, ay, 0f, 0f));
-                mat.SetVector("_CellSize",    new Vector4(previewWidth, previewHeight, 0f, 0f));
-                mat.SetVector("_BoundsMin",   new Vector4(boundsMinX, boundsMinY, 0f, 0f));
-                mat.SetVector("_BoundsMax",   new Vector4(boundsMaxX, boundsMaxY, 0f, 0f));
-                cellImage.material = mat;
-                m_cellMaterials.Add(mat);
-            }
-            else
-            {
-                cellImage.color = colorA;
-            }
-
             m_shapeCells.Add(cellImage);
         }
     }

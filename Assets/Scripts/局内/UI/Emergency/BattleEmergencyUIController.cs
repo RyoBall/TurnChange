@@ -9,7 +9,7 @@ using UnityEngine;
 public class BattleEmergencyUIController : MonoBehaviour
 {
     [Header("Thresholds")]
-    [SerializeField, Range(0.01f, 1f)] private float hpThreshold = 0.2f;
+    [SerializeField, Range(0.01f, 1f)] private float hpThreshold = 0.4f;
     [SerializeField, Range(1, 5)] private int chaosThreshold = 4;
 
     [Header("Bindings")]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 教程关二 W1 专用敌人：攻击只打副C(standPosition=3)，禁止击杀，每2回合自动掉430血
+/// 教程关二 W1 专用敌人：攻击只打副C(standPosition=2)，禁止击杀，每2回合自动掉430血
 /// 继承自 Enemy，重写 PerformTurn 实现定制行为
 /// </summary>
 public class TutorialSingleEnemy : Enemy
@@ -58,7 +58,7 @@ public class TutorialSingleEnemy : Enemy
     }
 
     /// <summary>
-    /// 重写回合执行：添加掉血机制 + 只攻击副C + 禁止击杀
+    /// 重写回合执行：添加掉血机制 + 只攻击副C(standPosition=2) + 禁止击杀
     /// </summary>
     public override IEnumerator PerformTurn()
     {
@@ -97,7 +97,7 @@ public class TutorialSingleEnemy : Enemy
     }
 
     /// <summary>
-    /// 教程攻击协程：强制目标为副C(standPosition=3)，禁止击杀
+    /// 教程攻击协程：强制目标为副C(standPosition=2)，禁止击杀
     /// </summary>
     private IEnumerator TutorialAttackCoroutine()
     {
@@ -114,8 +114,8 @@ public class TutorialSingleEnemy : Enemy
         yield return new WaitForSeconds(0.5f);
         yield return new WaitForSeconds(0.5f);
 
-        // 获取副C（standPosition=3）
-        Character target = CharacterManager.Instance?.GetFieldCharacterByStandPosition(3);
+        // 获取副C（standPosition=2）
+        Character target = CharacterManager.Instance?.GetFieldCharacterByStandPosition(2);
         if (target == null || target.IsDead)
         {
             // 副C不存在则随机选一个

@@ -24,6 +24,7 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
 
     private readonly List<Vector2Int> m_shapeBuffer = new List<Vector2Int>();
     private readonly List<Image> m_cursorCells = new List<Image>();
+    private readonly List<Material> m_cursorMaterials = new List<Material>();
     private readonly List<PlacedModuleData> m_placedDataBuffer = new List<PlacedModuleData>();
     private readonly List<IGridModule> m_runtimeOwnedModules = new List<IGridModule>();
 
@@ -33,6 +34,7 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
     private Vector2 m_currentPreviewStep = Vector2.one;
     private Vector2 m_currentPreviewDrawSize = Vector2.one;
     private int m_selectionChangedFrame = -1;
+    private int m_rotationCount;
     private bool m_runtimeModulesPrepared;
 
     public int ModuleCount => GetOwnedModules().Count;
@@ -90,6 +92,13 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
         }
 
         UnsubscribeFromDataSource();
+
+        for (int i = 0; i < m_cursorMaterials.Count; i++)
+        {
+            if (m_cursorMaterials[i] != null)
+                Destroy(m_cursorMaterials[i]);
+        }
+        m_cursorMaterials.Clear();
     }
 
     private void Update()
@@ -114,9 +123,14 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
             HandleLeftMouseReleased();
         }
 
-        if (m_selectedModule != null && (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1)))
+        if (m_selectedModule != null && Input.GetKeyDown(KeyCode.Escape))
         {
             SetSelection(null);
+        }
+
+        if (m_selectedModule != null && Input.GetMouseButtonDown(1))
+        {
+            RotateSelectedModule();
         }
     }
 #endregion
@@ -259,6 +273,7 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
     private void SetSelection(GridModuleDefinition module)
     {
         m_selectedModule = module;
+        m_rotationCount = 0;
         if (m_selectedModule == null)
         {
             m_hoveredBoardCell = null;
@@ -276,6 +291,49 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
         selectionText.text = m_selectedModule == null
             ? "按住左键拿起背包中的模块，松开左键时自动尝试放置"
             : "已拿起：" + m_selectedModule.moduleName + "，松开左键时自动尝试放置";
+    }
+
+    private void RotateSelectedModule()
+    {
+        if (m_selectedModule == null)
+        {
+            return;
+        }
+
+        // 确定旋转锚点：优先使用鼠标悬停的棋盘单元格，否则使用模块中心
+        Vector2Int anchorNormalizedCell;
+        if (m_hoveredBoardCell.HasValue)
+        {
+            // 将棋盘单元格坐标转换为模块归一化坐标
+            // m_hoveredBoardCell 是锚点单元格（即模块左上角在棋盘上的位置）
+            // 需要找出鼠标悬停的那个棋盘格对应模块的哪个归一化单元格
+            anchorNormalizedCell = FindNormalizedCellUnderMouse();
+        }
+        else
+        {
+            // 鼠标不在棋盘上时，以模块几何中心旋转
+            Vector2 center = m_selectedModule.GetNormalizedCenter();
+            anchorNormalizedCell = new Vector2Int(Mathf.RoundToInt(center.x), Mathf.RoundToInt(center.y));
+        }
+
+        m_selectedModule.RotateClockwise(anchorNormalizedCell);
+        m_rotationCount = (m_rotationCount + 1) % 4;
+        RefreshCursorPreview();
+
+        if (selectionText != null)
+        {
+            selectionText.text = "已旋转：" + m_selectedModule.moduleName;
+        }
+    }
+
+    /// <summary>
+    /// 找到鼠标当前悬停的棋盘单元格对应的模块归一化单元格
+    /// 预览吸附时模块的 (0,0) 单元格对齐到 m_hoveredBoardCell，
+    /// 因此鼠标悬停的归一化单元格就是 (0,0)
+    /// </summary>
+    private Vector2Int FindNormalizedCellUnderMouse()
+    {
+        return Vector2Int.zero;
     }
 
     private void UpdateHoveredBoardCell()//更新鼠标悬停的网格单元格
@@ -391,10 +449,25 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
                 continue;
             }
 
+            // 恢复旋转状态
+            ApplyRotationToModule(module, placedModule.RotationCount);
+
             if (placementBoard.TryPlace(module, placedModule.AnchorCell))
             {
                 module.ApplyToBoard();
             }
+        }
+    }
+
+    /// <summary>
+    /// 对模块应用指定次数的顺时针旋转（以 (0,0) 为锚点）
+    /// </summary>
+    private void ApplyRotationToModule(GridModuleDefinition module, int rotationCount)
+    {
+        int rotations = rotationCount % 4;
+        for (int i = 0; i < rotations; i++)
+        {
+            module.RotateClockwise(Vector2Int.zero);
         }
     }
 
@@ -432,10 +505,12 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
         {
             GridModuleDefinition refreshedModule = GetOwnedModule(selectedModuleIndex);
             m_selectedModule = refreshedModule != null && !refreshedModule.IsLoaded ? refreshedModule : null;
+            m_rotationCount = 0;
         }
         else if (m_selectedModule != null)
         {
             m_selectedModule = null;
+            m_rotationCount = 0;
         }
 
         RefreshViews();
@@ -501,6 +576,13 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
 
         m_cursorCells.Clear();
 
+        for (int i = 0; i < m_cursorMaterials.Count; i++)
+        {
+            if (m_cursorMaterials[i] != null)
+                Destroy(m_cursorMaterials[i]);
+        }
+        m_cursorMaterials.Clear();
+
         if (m_selectedModule == null)
         {
             m_cursorRoot.gameObject.SetActive(false);
@@ -510,14 +592,40 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
         m_selectedModule.GetNormalizedCells(m_shapeBuffer);
         ApplyCursorPreviewLayout(false);
 
+        // 计算包围盒用于渐变 shader
+        Vector2 moduleCenter = m_selectedModule.GetNormalizedCenter();
+        ModuleCellFactory.ComputeShapeBounds(
+            m_shapeBuffer, moduleCenter, m_currentPreviewStep, m_currentPreviewDrawSize,
+            out Vector2 boundsMin, out Vector2 boundsMax);
+        Color moduleColor = m_selectedModule.color;
+
         for (int i = 0; i < m_shapeBuffer.Count; i++)
         {
-            GameObject cellObject = new GameObject("PreviewCell", typeof(RectTransform), typeof(Image));
-            cellObject.transform.SetParent(m_cursorRoot, false);
+            Vector2Int cell = m_shapeBuffer[i];
+            ModuleCellFactory.ComputeCellPosition(cell, moduleCenter, m_currentPreviewStep,
+                out Vector2 anchoredPos, out Vector2 cellOffset);
+
+            Material createdMaterial;
+            GameObject cellObject = ModuleCellFactory.CreateCell(
+                m_cursorRoot,
+                "PreviewCell",
+                m_currentPreviewDrawSize,
+                anchoredPos,
+                moduleColor,
+                0.65f,
+                ModuleCellConfig.Instance,
+                m_selectedModule.gradientColorB,
+                cellOffset,
+                boundsMin,
+                boundsMax,
+                out createdMaterial);
+
+            if (createdMaterial != null)
+            {
+                m_cursorMaterials.Add(createdMaterial);
+            }
 
             Image image = cellObject.GetComponent<Image>();
-            image.color = GetDefaultPreviewColor();
-            image.raycastTarget = false;
             m_cursorCells.Add(image);
         }
 
@@ -622,11 +730,23 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
             ? (canPlace ? validPlacementColor : invalidPlacementColor)
             : GetDefaultPreviewColor();
 
+        bool useGradient = ModuleCellConfig.Instance != null && ModuleCellConfig.Instance.GradientShader != null;
+
         for (int i = 0; i < m_cursorCells.Count; i++)
         {
             if (m_cursorCells[i] != null)
             {
-                m_cursorCells[i].color = targetColor;
+                if (useGradient && m_cursorCells[i].material != null)
+                {
+                    // 渐变模式下更新 material 的 _ColorA，保持 _ColorB 不变
+                    Color colorA = targetColor;
+                    colorA.a = targetColor.a;
+                    m_cursorCells[i].material.SetColor("_ColorA", colorA);
+                }
+                else
+                {
+                    m_cursorCells[i].color = targetColor;
+                }
             }
         }
     }
@@ -764,7 +884,7 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
             PlacedModuleData placedModule = placedModuleEntries[i];
             if (placedModule != null)
             {
-                results.Add(new PlacedModuleData(placedModule.ModuleIndex, placedModule.AnchorCell));
+                results.Add(new PlacedModuleData(placedModule.ModuleIndex, placedModule.AnchorCell, placedModule.RotationCount));
             }
         }
     }
@@ -783,7 +903,7 @@ public class ModulePlacementController : MonoBehaviour, IModulePlacementControll
         }
 
         RemovePlacedEntriesForModule(datas, moduleIndex);
-        datas.AddPlacedModuleEntry(new PlacedModuleData(moduleIndex, anchorCell));
+        datas.AddPlacedModuleEntry(new PlacedModuleData(moduleIndex, anchorCell, m_rotationCount));
         datas.NotifyModuleStateChanged();
         return true;
     }

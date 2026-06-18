@@ -7,18 +7,21 @@ public class PlacedModuleData
 {
     [SerializeField] private int moduleIndex;
     [SerializeField] private Vector2Int anchorCell;
+    [SerializeField] private int rotationCount;
 
     public int ModuleIndex => moduleIndex;
     public Vector2Int AnchorCell => anchorCell;
+    public int RotationCount => rotationCount;
 
     public PlacedModuleData()
     {
     }
 
-    public PlacedModuleData(int moduleIndex, Vector2Int anchorCell)
+    public PlacedModuleData(int moduleIndex, Vector2Int anchorCell, int rotationCount = 0)
     {
         this.moduleIndex = moduleIndex;
         this.anchorCell = anchorCell;
+        this.rotationCount = rotationCount;
     }
 }
 public enum CharacterType
@@ -388,6 +391,22 @@ public class Datas : MonoBehaviour
         }
         // 从当前等级升到下一级所需的经验 = 下一级累计阈值 - 当前级累计阈值
         return s_levelExpThresholds[level] - s_levelExpThresholds[level - 1];
+    }
+
+    /// <summary>获取当前等级内溢出的经验值（总经验 - 当前等级基础阈值）</summary>
+    public float GetCurrentLevelOverflowExp()
+    {
+        int level = GetTeamLevel();
+        if (level <= 1)
+        {
+            return currentExp;
+        }
+        // 满级时返回当前等级内的溢出经验
+        if (level > s_levelExpThresholds.Length)
+        {
+            return currentExp - s_levelExpThresholds[s_levelExpThresholds.Length - 1];
+        }
+        return currentExp - s_levelExpThresholds[level - 1];
     }
 
     public int GetGold()

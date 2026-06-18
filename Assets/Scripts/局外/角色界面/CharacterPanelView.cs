@@ -227,7 +227,7 @@ public class CharacterPanelView : MonoBehaviour
 
         if (experienceText != null)
         {
-            experienceText.text = hasData && dataSource != null ? $"{dataSource.GetCurrentExp()}/{dataSource.GetExpToNextLevel()}" : "经验 -";
+            experienceText.text = hasData && dataSource != null ? $"{dataSource.GetCurrentLevelOverflowExp()}/{dataSource.GetExpToNextLevel()}" : "经验 -";
         }
 
         if (attackText != null)

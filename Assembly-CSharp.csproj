@@ -160,6 +160,7 @@
      <Compile Include="Assets\Scripts\局外\教程\TutorialBehavior.cs" />
      <Compile Include="Assets\Scripts\局内\环境\BattleEnvironment.cs" />
      <Compile Include="Assets\Scripts\局外\切换界面\StartGameButton.cs" />
+     <Compile Include="Assets\Scripts\局外\背包\ModuleCellFactory.cs" />
      <Compile Include="Assets\Scripts\局内\状态\State.cs" />
      <Compile Include="Assets\Scripts\局内\CinemachineCameraManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ObjectSpin.cs" />
@@ -167,6 +168,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_PhoneNumberValidator.cs" />
      <Compile Include="Assets\Scripts\局外\商店\BackpackExpansionShopItem.cs" />
      <Compile Include="Assets\VFX\FieldDomain\Scripts\FieldDomainRenderFeature.cs" />
+     <Compile Include="Assets\Scripts\局内\关卡\SceneMaterialController.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\PreparationPanelView.cs" />
      <Compile Include="Assets\Scripts\局内\角色\UnitCombatant.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexJitter.cs" />
@@ -181,6 +183,8 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventCheck.cs" />
      <Compile Include="Assets\Scripts\局外\总数据\TimeScaleController.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_UiFrameRateCounter.cs" />
+     <Compile Include="Assets\Scripts\局外\背包\ModuleCellConfig.cs" />
+     <Compile Include="Assets\Scripts\局内\关卡\FloorTextureConfig.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ShopPanelView.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\SkillDescription.cs" />
      <Compile Include="Assets\VFX\FieldDomain\Scripts\FieldDomainEffectTester.cs" />
@@ -240,6 +244,7 @@
      <None Include="Assets\VFX\JMO Assets\Cartoon FX Remaster\CFXR Prefabs\Texts\_Make your own text effect.txt" />
      <None Include="Assets\VFX\JMO Assets\Cartoon FX Remaster\CFXR Assets\Shaders\CFXR_PASSES.cginc" />
      <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
+     <None Include="Assets\VFX\UI\ModuleGradient\ModuleGradient.shader" />
      <None Include="Assets\VFX\Lana Studio\Casual RPG VFX\Readme.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
      <None Include="Assets\VFX\CodeWee\cwGridShader(URP)\Shaders\cwGrid(URP).shader" />

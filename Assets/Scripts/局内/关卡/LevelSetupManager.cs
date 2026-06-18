@@ -234,7 +234,7 @@ public class LevelSetupManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 处理玩家战败：场上角色全部死亡时调用，显示结算界面但不发放奖励
+    /// 处理玩家战败：场上角色全部死亡时调用，先播放黑屏动画再显示结算界面，不发放奖励
     /// </summary>
     public IEnumerator ResolveDefeat()
     {
@@ -251,7 +251,7 @@ public class LevelSetupManager : MonoBehaviour
 
         if (settlementView != null)
         {
-            yield return settlementView.PlaySettlementSequence(0, 0);
+            yield return settlementView.PlayDefeatSettlementSequence();
             yield break;
         }
 

@@ -29,6 +29,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
 
     private RectTransform m_cellsRoot;
     private Image[,] m_cells;
+    private Material[,] m_cellMaterials;
     private bool[,] m_occupied;
     private PlacedModuleEntry[,] m_placedEntries;
 
@@ -103,13 +104,62 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
         };
 
         module.GetNormalizedCells(m_shapeBuffer);
+
+        // 计算模块形状包围盒（用于渐变 shader）
+        float cellSize = CalculateCellSize();
+        float cellStride = cellSize + spacing;
+        Vector2 cellStep = new Vector2(cellStride, cellStride);
+        Vector2 cellDrawSize = new Vector2(Mathf.Max(1f, cellSize - 2f), Mathf.Max(1f, cellSize - 2f));
+        Vector2 moduleCenter = module.GetNormalizedCenter();
+        ModuleCellFactory.ComputeShapeBounds(
+            m_shapeBuffer, moduleCenter, cellStep, cellDrawSize,
+            out Vector2 boundsMin, out Vector2 boundsMax);
+
+        bool useGradient = ModuleCellConfig.Instance != null && ModuleCellConfig.Instance.GradientShader != null;
+
         for (int i = 0; i < m_shapeBuffer.Count; i++)
         {
             Vector2Int boardCell = anchorCell + m_shapeBuffer[i];
             m_occupied[boardCell.x, boardCell.y] = true;
             m_placedEntries[boardCell.x, boardCell.y] = entry;
             entry.occupiedCells.Add(boardCell);
-            m_cells[boardCell.x, boardCell.y].color = moduleDef.color;
+
+            Image cellImage = m_cells[boardCell.x, boardCell.y];
+
+            if (useGradient)
+            {
+                Vector2Int normalizedCell = m_shapeBuffer[i];
+                ModuleCellFactory.ComputeCellPosition(normalizedCell, moduleCenter, cellStep,
+                    out Vector2 anchoredPos, out Vector2 cellOffset);
+
+                // 清理旧 material
+                if (m_cellMaterials[boardCell.x, boardCell.y] != null)
+                {
+                    Destroy(m_cellMaterials[boardCell.x, boardCell.y]);
+                }
+
+                Shader gradientShader = ModuleCellConfig.Instance.GradientShader;
+                Material mat = new Material(gradientShader);
+                Color colorA = moduleDef.color;
+                Color colorB = moduleDef.gradientColorB;
+                colorB.a = colorA.a;
+                mat.SetColor("_ColorA", colorA);
+                mat.SetColor("_ColorB", colorB);
+                mat.SetFloat("_GradientAngle", ModuleCellConfig.Instance.GradientAngle);
+                mat.SetVector("_CellOffset", new Vector4(cellOffset.x, cellOffset.y, 0f, 0f));
+                mat.SetVector("_CellSize", new Vector4(cellDrawSize.x, cellDrawSize.y, 0f, 0f));
+                mat.SetVector("_BoundsMin", new Vector4(boundsMin.x, boundsMin.y, 0f, 0f));
+                mat.SetVector("_BoundsMax", new Vector4(boundsMax.x, boundsMax.y, 0f, 0f));
+                mat.SetTexture("_MainTex", Texture2D.whiteTexture);
+                mat.SetVector("_ClipRect", new Vector4(-float.MaxValue, -float.MaxValue, float.MaxValue, float.MaxValue));
+                cellImage.material = mat;
+                cellImage.color = new Color(1f, 1f, 1f, 1f);
+                m_cellMaterials[boardCell.x, boardCell.y] = mat;
+            }
+            else
+            {
+                cellImage.color = moduleDef.color;
+            }
         }
 
         return true;
@@ -141,6 +191,15 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
             Vector2Int occupiedCell = entry.occupiedCells[i];
             m_occupied[occupiedCell.x, occupiedCell.y] = false;
             m_placedEntries[occupiedCell.x, occupiedCell.y] = null;
+
+            // 清理渐变 material
+            if (m_cellMaterials != null && m_cellMaterials[occupiedCell.x, occupiedCell.y] != null)
+            {
+                Destroy(m_cellMaterials[occupiedCell.x, occupiedCell.y]);
+                m_cellMaterials[occupiedCell.x, occupiedCell.y] = null;
+            }
+
+            m_cells[occupiedCell.x, occupiedCell.y].material = null;
             m_cells[occupiedCell.x, occupiedCell.y].color = emptyCellColor;
         }
 
@@ -198,6 +257,15 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
             {
                 m_occupied[x, y] = false;
                 m_placedEntries[x, y] = null;
+
+                // 清理渐变 material
+                if (m_cellMaterials != null && m_cellMaterials[x, y] != null)
+                {
+                    Destroy(m_cellMaterials[x, y]);
+                    m_cellMaterials[x, y] = null;
+                }
+
+                m_cells[x, y].material = null;
                 m_cells[x, y].color = emptyCellColor;
             }
         }
@@ -335,6 +403,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
         gridLayout.cellSize = new Vector2(cellSize, cellSize);
 
         m_cells = new Image[boardSize, boardSize];
+        m_cellMaterials = new Material[boardSize, boardSize];
         m_occupied = new bool[boardSize, boardSize];
         m_placedEntries = new PlacedModuleEntry[boardSize, boardSize];
 
@@ -434,5 +503,24 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
         }
 
         return Mathf.Max(1, datas.GetBackpackWidth());
+    }
+
+    private void OnDestroy()
+    {
+        if (m_cellMaterials != null)
+        {
+            int boardSize = GetBoardSize();
+            for (int y = 0; y < boardSize; y++)
+            {
+                for (int x = 0; x < boardSize; x++)
+                {
+                    if (m_cellMaterials[x, y] != null)
+                    {
+                        Destroy(m_cellMaterials[x, y]);
+                        m_cellMaterials[x, y] = null;
+                    }
+                }
+            }
+        }
     }
 }

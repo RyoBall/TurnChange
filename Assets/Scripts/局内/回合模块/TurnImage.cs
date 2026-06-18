@@ -13,6 +13,7 @@ public class TurnImage : MonoBehaviour
     public float CurrentLayoutScale { get; private set; } = 1f;
 
     [SerializeField] private RectTransform rectTransform;
+    [SerializeField] private Image iconImage;
     private CanvasGroup canvasGroup;
     private Tween moveTween;
     [SerializeField] private Sprite enemySprite;
@@ -43,13 +44,21 @@ public class TurnImage : MonoBehaviour
         {
             canvasGroup.alpha = 0f;
         }
-        if(combatant is Enemy)
+        // 优先使用 UnitCombatant 配置的专属 Sprite，否则回退到默认的敌我 Sprite
+        if (iconImage != null)
         {
-            GetComponent<Image>().sprite = enemySprite;
-        }
-        else
-        {
-            GetComponent<Image>().sprite = playerSprite;    
+            if (combatant is UnitCombatant unitCombatant && unitCombatant.TurnImageSprite != null)
+            {
+                iconImage.sprite = unitCombatant.TurnImageSprite;
+            }
+            else if (combatant is Enemy)
+            {
+                iconImage.sprite = enemySprite;
+            }
+            else
+            {
+                iconImage.sprite = playerSprite;
+            }
         }
         CurrentLayoutScale = initialScale;
         transform.localScale = Vector3.one;

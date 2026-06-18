@@ -233,6 +233,9 @@ MonoBehaviour:
   headerHeight: 24
   padding: 10
   loadedAlpha: 0.45
+  m_gradientShader: {fileID: 4800000, guid: 2cd3c3ae1c4c1fe46b2270d442a4d07b, type: 3}
+  m_gradientColorB: {r: 0.1, g: 0.3, b: 0.85, a: 0.9}
+  m_gradientAngle: 45
   m_background: {fileID: 3392025338037218845}
   m_button: {fileID: 5356654252123598801}
   m_canvasGroup: {fileID: 7092021503471486061}

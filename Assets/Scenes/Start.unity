@@ -478,6 +478,11 @@ PrefabInstance:
       propertyPath: m_isDebugMode
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1330521362744834025, guid: aa35eb7d4b89832469b5a7b49624b24d,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 26
+      objectReference: {fileID: 0}
     - target: {fileID: 4114094221850058218, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}
       propertyPath: m_IsActive

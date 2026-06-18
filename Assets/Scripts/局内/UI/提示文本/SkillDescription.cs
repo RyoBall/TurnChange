@@ -76,7 +76,7 @@ public class SkillDescription : MonoBehaviour
     }
 
     /// <summary>
-    /// 显示状态描述（状态没有关键词，只显示纯文本描述）
+    /// 显示状态描述（格式：状态名：状态解释）
     /// </summary>
     public void ChangeDescription(State state)
     {
@@ -85,7 +85,8 @@ public class SkillDescription : MonoBehaviour
         if (state != null)
         {
             PauseCameraSway();
-            m_skillDesText.text = state.description;
+            string stateName = StateDictionaryManager.GetStateName(state.stateType);
+            m_skillDesText.text = $"{stateName}：{state.description}";
             if (m_keywordDesText != null)
             {
                 m_keywordDesText.text = "";

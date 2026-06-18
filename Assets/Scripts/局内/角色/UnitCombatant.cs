@@ -30,6 +30,9 @@ public class UnitCombatant : Combatant
     [Header("悬停特效")]
     [SerializeField] protected ParticleSystem mouseHoverParticle;
 
+    /// <summary>用于回合顺序条中显示的图标，子类可 override 从 RosterData 中获取</summary>
+    public virtual Sprite TurnImageSprite => null;
+
     protected virtual void Awake()
     {
         CombatantDeathMonitor.Register(this);

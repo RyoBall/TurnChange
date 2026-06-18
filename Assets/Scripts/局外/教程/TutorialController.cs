@@ -29,6 +29,10 @@ public class TutorialController : MonoBehaviour
     [SerializeField] private float m_hideAnimDuration = 0.25f;
     [SerializeField] private Ease m_showEase = Ease.OutBack;
     [SerializeField] private Ease m_hideEase = Ease.InBack;
+    [Header("推进弹跳动画")]
+    [SerializeField] private float m_bounceScale = 1.08f;
+    [SerializeField] private float m_bounceDuration = 0.15f;
+    [SerializeField] private Ease m_bounceEase = Ease.OutQuad;
 
     // 根据数据创建的行为实例列表
     private List<TutorialBehavior> m_behaviorList = new List<TutorialBehavior>();
@@ -225,7 +229,7 @@ public class TutorialController : MonoBehaviour
         m_dialogCanvasGroup.alpha = 0f;
         m_dialogCanvasGroup.transform.localScale = Vector3.one * 0.5f;
 
-        Sequence seq = DOTween.Sequence();
+        Sequence seq = DOTween.Sequence().SetUpdate(true);
         seq.Join(m_dialogCanvasGroup.DOFade(1f, m_showAnimDuration).SetEase(Ease.OutQuad));
         seq.Join(m_dialogCanvasGroup.transform.DOScale(1f, m_showAnimDuration).SetEase(m_showEase));
         seq.OnComplete(onComplete);
@@ -245,7 +249,7 @@ public class TutorialController : MonoBehaviour
 
         KillDialogTween();
 
-        Sequence seq = DOTween.Sequence();
+        Sequence seq = DOTween.Sequence().SetUpdate(true);
         seq.Join(m_dialogCanvasGroup.DOFade(0f, m_hideAnimDuration).SetEase(Ease.InQuad));
         seq.Join(m_dialogCanvasGroup.transform.DOScale(0.5f, m_hideAnimDuration).SetEase(m_hideEase));
         seq.OnComplete(() =>
@@ -254,6 +258,23 @@ public class TutorialController : MonoBehaviour
             onComplete?.Invoke();
         }).OnKill(() => onComplete?.Invoke());
         m_dialogTween = seq;
+    }
+
+    /// <summary>
+    /// 播放对话框推进弹跳动画：先放大到 m_bounceScale，再缩回 1
+    /// </summary>
+    public void PlayProgressBounce()
+    {
+        if (m_dialogCanvasGroup == null)
+        {
+            return;
+        }
+
+        Transform dialogTransform = m_dialogCanvasGroup.transform;
+        dialogTransform.localScale = Vector3.one;
+        Sequence seq = DOTween.Sequence().SetUpdate(true);
+        seq.Append(dialogTransform.DOScale(m_bounceScale, m_bounceDuration).SetEase(m_bounceEase));
+        seq.Append(dialogTransform.DOScale(1f, m_bounceDuration).SetEase(m_bounceEase));
     }
 
     /// <summary>
