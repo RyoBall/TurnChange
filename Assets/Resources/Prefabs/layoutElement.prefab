@@ -448,6 +448,7 @@ MonoBehaviour:
   nameText: {fileID: 8808546281081826417}
   rectTransform: {fileID: 8094664619136422836}
   iconImage: {fileID: 129747754682154286}
+  backgroundImage: {fileID: 4496346709906534876}
   enemySprite: {fileID: 21300000, guid: c4011b65d76dd2a4fb7b0f351f6abfa0, type: 3}
   playerSprite: {fileID: 21300000, guid: f80759c831a4c9647b4f02a89c440863, type: 3}
 --- !u!225 &4346063182302119385

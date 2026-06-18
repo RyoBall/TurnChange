@@ -169,7 +169,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
         Shader shader = effectShader;
         if (shader == null)
         {
-            shader = Shader.Find("Hidden/TurnChange/FieldDomainEffect");
+            shader = Shader.Find("TurnChange/FieldDomainEffect");
         }
 
         if (shader == null)

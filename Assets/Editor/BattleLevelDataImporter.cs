@@ -109,11 +109,19 @@ public static class BattleLevelDataImporter
             int enemyLevel = GetInt(row, "敌人等级", 1);
             List<LevelEnemyWaveData> waves = ParseEnemyConfig(enemyConfig, enemyLevel);
 
-            // 更新 enemyWaves
-            levelAsset.enemyWaves.Clear();
-            if (waves != null)
+            // 更新 enemyWaves：仅在解析出有效敌人时才修改，避免因无法识别的特殊文字清空已有数据
+            if (waves != null && waves.Count > 0)
             {
+                levelAsset.enemyWaves.Clear();
                 levelAsset.enemyWaves.AddRange(waves);
+            }
+            else if (waves == null)
+            {
+                Debug.LogWarning($"[BattleLevelDataImporter] 关卡 {levelId} 的敌人阵容配置为空或无法解析，已保留原有敌人数据");
+            }
+            else
+            {
+                Debug.LogWarning($"[BattleLevelDataImporter] 关卡 {levelId} 的敌人阵容配置中所有敌人均无法识别，已保留原有敌人数据");
             }
 
             EditorUtility.SetDirty(levelAsset);

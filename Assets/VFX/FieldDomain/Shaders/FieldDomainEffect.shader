@@ -1,4 +1,4 @@
-Shader "Hidden/TurnChange/FieldDomainEffect"
+Shader "TurnChange/FieldDomainEffect"
 {
     Properties
     {

@@ -75,7 +75,7 @@ public class FieldDomainRenderFeature : ScriptableRendererFeature
 
         if (effectShader == null)
         {
-            effectShader = Shader.Find("Hidden/TurnChange/FieldDomainEffect");
+            effectShader = Shader.Find("TurnChange/FieldDomainEffect");
         }
 
         if (effectShader != null)

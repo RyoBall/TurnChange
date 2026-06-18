@@ -14,6 +14,7 @@ public class TurnImage : MonoBehaviour
 
     [SerializeField] private RectTransform rectTransform;
     [SerializeField] private Image iconImage;
+    [SerializeField] private Image backgroundImage;
     private CanvasGroup canvasGroup;
     private Tween moveTween;
     [SerializeField] private Sprite enemySprite;
@@ -51,14 +52,15 @@ public class TurnImage : MonoBehaviour
             {
                 iconImage.sprite = unitCombatant.TurnImageSprite;
             }
-            else if (combatant is Enemy)
-            {
-                iconImage.sprite = enemySprite;
-            }
-            else
-            {
-                iconImage.sprite = playerSprite;
-            }
+        }
+        // 根据战斗者类型设置背景图，敌人和玩家使用不同的默认背景
+        if (combatant is Enemy)
+        {
+            backgroundImage.sprite = enemySprite;
+        }
+        else
+        {
+            backgroundImage.sprite = playerSprite;
         }
         CurrentLayoutScale = initialScale;
         transform.localScale = Vector3.one;
