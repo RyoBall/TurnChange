@@ -8,6 +8,8 @@ public class CharacterRosterData : ScriptableObject
     public string characterName;
     public string characterID;
     public Sprite portraitSprite;
+    public Sprite illustrationSprite;
+    public Vector2 illustrationSize;
 
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;
@@ -26,5 +28,15 @@ public class CharacterRosterData : ScriptableObject
     public Sprite GetPortraitSprite()
     {
         return portraitSprite;
+    }
+
+    public Sprite GetIllustrationSprite()
+    {
+        return illustrationSprite;
+    }
+
+    public Vector2 GetIllustrationSize()
+    {
+        return illustrationSize;
     }
 }

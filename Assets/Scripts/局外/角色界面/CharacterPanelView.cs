@@ -21,6 +21,7 @@ public class CharacterPanelView : MonoBehaviour
 
     [Header("角色基础信息")]
     private Image characterIconImage;
+    [SerializeField] private Image characterIllustrationImage;
     [SerializeField] private TMP_Text characterNameText;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text experienceText;
@@ -213,6 +214,19 @@ public class CharacterPanelView : MonoBehaviour
         {
             characterIconImage.sprite = hasData ? data.GetPortraitSprite() : null;
             characterIconImage.enabled = characterIconImage.sprite != null;
+        }
+
+        if (characterIllustrationImage != null)
+        {
+            characterIllustrationImage.sprite = hasData ? data.GetIllustrationSprite() : null;
+            characterIllustrationImage.enabled = characterIllustrationImage.sprite != null;
+            if (characterIllustrationImage.enabled)
+            {
+                Vector2 size = data.GetIllustrationSize();
+                RectTransform illustrationRect = characterIllustrationImage.rectTransform;
+                illustrationRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
+                illustrationRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
+            }
         }
 
         if (characterNameText != null)
