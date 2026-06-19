@@ -48,6 +48,25 @@ public class GuideDisplayController : MonoBehaviour
         hasInited = true;
     }
 
+    private void OnDestroy()
+    {
+        ResetMaterialHighlightRange();
+    }
+
+    /// <summary>
+    /// 将材质的聚焦范围重置为全屏（0, 1, 0, 1），结束 Play Mode 时自动调用
+    /// </summary>
+    private void ResetMaterialHighlightRange()
+    {
+        if (m_guideMaterial == null)
+            return;
+
+        m_guideMaterial.SetFloat(m_rectMinXId, 0f);
+        m_guideMaterial.SetFloat(m_rectMaxXId, 1f);
+        m_guideMaterial.SetFloat(m_rectMinYId, 0f);
+        m_guideMaterial.SetFloat(m_rectMaxYId, 1f);
+    }
+
     /// <summary>
     /// 显示指定类型的高亮区域
     /// </summary>

@@ -664,7 +664,7 @@ public class ShopDetailTutorial : TutorialBehavior
 
     public override bool CanProgress()
     {
-        if (m_currentIndex ==2) return m_itemPurchased;
+        if (m_currentIndex == 3) return m_itemPurchased;
         return Input.GetMouseButtonDown(0);
     }
 
