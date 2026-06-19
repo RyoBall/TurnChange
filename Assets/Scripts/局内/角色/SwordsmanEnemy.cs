@@ -3,10 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
+/// 西洋剑客韧性点数据提供接口，供 UI 层读取韧性点状态
+/// </summary>
+public interface ISwordsmanTenacityProvider
+{
+    int CurrentTenacity { get; }
+    int MaxTenacity { get; }
+    event System.Action TenacityChanged;
+}
+
+/// <summary>
 /// 西洋剑客Boss — 三姿态循环、韧性点眩晕、背水一战
 /// 姿态管理使用状态机模式
 /// </summary>
-public class SwordsmanEnemy : Enemy
+public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
 {
     [Header("姿态配置")]
     [SerializeField] private float phaseTwoSpeedBonus = 0.2f;
@@ -93,11 +103,17 @@ public class SwordsmanEnemy : Enemy
     private bool m_phaseThreeTriggered;
     private int m_previousHp;
 
+    // ============ 指挥点奖励 ============
+    private const float SwordsmanGuaranteeThreshold = 200f;
+    private bool m_battleStartRewarded;
+    private bool m_phaseThreeRewarded;
+
     protected override void Start()
     {
         base.Start();
         m_previousHp = currentHP;
         m_currentTenacity = maxTenacity;
+        NotifyTenacityChanged();
 
         // 初始化姿态状态机
         m_stanceStates[SwordsmanStance.BrightSword] = new BrightSwordState();
@@ -114,6 +130,14 @@ public class SwordsmanEnemy : Enemy
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEnter);
         // 优雅体态提醒
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEleganceReminder);
+
+        // 指挥点奖励：战斗开始 +1，低保200AV
+        if (!m_battleStartRewarded)
+        {
+            m_battleStartRewarded = true;
+            Commander.GetInstance().RecoverCommandPoints(1, "剑客Boss战斗开始+1");
+            Commander.GetInstance().SetBossGuaranteeThreshold(SwordsmanGuaranteeThreshold);
+        }
     }
 
     public override void TakeDamage(DamageInfo damageInfo)
@@ -248,6 +272,7 @@ public class SwordsmanEnemy : Enemy
         }
 
         m_currentTenacity = Mathf.Max(0, m_currentTenacity - reduction);
+        NotifyTenacityChanged();
 
         if (m_currentTenacity <= 0)
         {
@@ -257,8 +282,10 @@ public class SwordsmanEnemy : Enemy
 
     private void EnterStagger()
     {
+        if (m_isInStagger) return;
         m_isInStagger = true;
-        m_currentTenacity = maxTenacity;
+        // 韧性点归零，在 ExitStagger 中恢复
+        NotifyTenacityChanged();
 
         // 通过状态机离开当前姿态
         m_currentStanceState?.OnExit(SwordsmanStance.Defense);
@@ -267,11 +294,16 @@ public class SwordsmanEnemy : Enemy
         AddState(StateType.SwordsmanStagger, this, staggerDuration, 1);
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "失衡！");
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStaggerEnter, enemy: this);
+
+        // 指挥点奖励：每次进入失衡 +1
+        Commander.GetInstance().RecoverCommandPoints(1, "剑客失衡+1");
     }
 
     public void ExitStagger()
     {
         m_isInStagger = false;
+        m_currentTenacity = maxTenacity;
+        NotifyTenacityChanged();
         // 强制切换至防御姿态
         TransitionTo(SwordsmanStance.Defense);
         m_stanceSwitchCountdown = 2;
@@ -304,6 +336,13 @@ public class SwordsmanEnemy : Enemy
             AddState(StateType.SwordsmanLastStand, this, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "背水一战！");
             BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanPhaseThree, enemy: this);
+
+            // 指挥点奖励：进入三阶段背水一战 +1
+            if (!m_phaseThreeRewarded)
+            {
+                m_phaseThreeRewarded = true;
+                Commander.GetInstance().RecoverCommandPoints(1, "剑客背水一战+1");
+            }
         }
     }
 
@@ -355,4 +394,32 @@ public class SwordsmanEnemy : Enemy
     public bool IsInStagger => m_isInStagger;
     public SwordsmanStance CurrentStance => m_currentStance;
     public bool IsLastStand => m_isLastStand;
+
+    // ============ ISwordsmanTenacityProvider 实现 ============
+
+    public int CurrentTenacity => m_currentTenacity;
+    public int MaxTenacity => maxTenacity;
+    public event System.Action TenacityChanged;
+
+    private void NotifyTenacityChanged()
+    {
+        TenacityChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Dot伤害批次结算时扣除1点韧性（同一批次多次Dot只扣1点）
+    /// 由 SwordsmanEleganceBehavior.OnCombatEventTriggered 在 DotTriggered 事件中调用
+    /// </summary>
+    public void ReduceTenacityByDot()
+    {
+        if (m_isInStagger) return;
+
+        m_currentTenacity = Mathf.Max(0, m_currentTenacity - 1);
+        NotifyTenacityChanged();
+
+        if (m_currentTenacity <= 0)
+        {
+            EnterStagger();
+        }
+    }
 }

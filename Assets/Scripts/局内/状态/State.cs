@@ -1976,6 +1976,31 @@ public class SwordsmanEleganceBehavior : StateBehaviorBase
         if (swordsman != null && swordsman.IsInStagger) return 1f;
         return DamageReduction;
     }
+
+    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
+    {
+        if (eventType != StateCombatEventType.DotTriggered) return;
+        if (state.owner == null || damagedUnits == null) return;
+
+        SwordsmanEnemy swordsman = state.owner as SwordsmanEnemy;
+        if (swordsman == null) return;
+
+        // 检查剑客是否在本批Dot伤害的目标中
+        bool isSwordsmanDamaged = false;
+        for (int i = 0; i < damagedUnits.Count; i++)
+        {
+            if (damagedUnits[i] == swordsman)
+            {
+                isSwordsmanDamaged = true;
+                break;
+            }
+        }
+
+        if (isSwordsmanDamaged)
+        {
+            swordsman.ReduceTenacityByDot();
+        }
+    }
 }
 
 public class InspectorReadOnlyAttribute : PropertyAttribute

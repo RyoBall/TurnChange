@@ -17,12 +17,17 @@ public class DamageText : MonoBehaviour
     [SerializeField] private Color damageColor = Color.red;
     [SerializeField] private Color dotDamageColor = Color.yellow;
     [SerializeField] private Color healColor = Color.green;
+    [SerializeField] private Color critDamageColor = new Color(1f, 0.5f, 0f); // 暴击颜色（橙色）
+
+    [Header("暴击设置")]
+    [SerializeField] private float critFontSizeMultiplier = 1.5f;
 
     private RectTransform rectTransform;
     private RectTransform parentRectTransform;
     private Canvas rootCanvas;
     private Camera uiCamera;
     private Vector3 originalScale;
+    private float originalFontSize;
     private Sequence currentSequence;
     [SerializeField] private Image backGroundImage;
 
@@ -35,6 +40,10 @@ public class DamageText : MonoBehaviour
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         originalScale = rectTransform.localScale;
+        if (damageText != null)
+        {
+            originalFontSize = damageText.fontSize;
+        }
     }
 
     public void Initialize(Canvas canvas, RectTransform parentRect)
@@ -46,10 +55,20 @@ public class DamageText : MonoBehaviour
             : null;
     }
 
-    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, string additionalText = "")
+    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, bool isCriticalHit = false)
     {
-        damageText.text = damage.ToString();
-        damageText.color = isDotDamage ? dotDamageColor : damageColor;
+        if (isCriticalHit)
+        {
+            damageText.text = damage.ToString() + "!";
+            damageText.color = critDamageColor;
+            damageText.fontSize = originalFontSize * critFontSizeMultiplier;
+        }
+        else
+        {
+            damageText.text = damage.ToString();
+            damageText.color = isDotDamage ? dotDamageColor : damageColor;
+            damageText.fontSize = originalFontSize;
+        }
         Vector3 offset = GetRandomOffset();
         if (!TrySetCanvasPosition(worldPosition + offset))
         {
@@ -57,12 +76,13 @@ public class DamageText : MonoBehaviour
             return;
         }
 
-        PlayAnimation(true);
+        PlayAnimation(true, isCriticalHit);
     }
     public void ShowHeal(int healAmount, Vector3 worldPosition)
     {
         damageText.text = healAmount.ToString();
         damageText.color = healColor;
+        damageText.fontSize = originalFontSize;
 
         Vector3 offset = GetRandomOffset();
         if (!TrySetCanvasPosition(worldPosition + offset))
@@ -78,6 +98,7 @@ public class DamageText : MonoBehaviour
         backGroundImage.GetComponent<Image>().enabled = true;
         damageText.text = customMessage;
         damageText.color = color;
+        damageText.fontSize = originalFontSize;
 
         Vector3 offset = GetRandomOffset();
         if (!TrySetCanvasPosition(position + offset))
@@ -106,7 +127,7 @@ public class DamageText : MonoBehaviour
         return new Vector3(x, y, 0f);
     }
 
-    private void PlayAnimation(bool isDamage)
+    private void PlayAnimation(bool isDamage, bool isCriticalHit = false)
     {
         currentSequence?.Kill();
 
@@ -115,7 +136,8 @@ public class DamageText : MonoBehaviour
 
         // 弹性放大：先放大到 maxScale，再回弹到原始大小
         rectTransform.localScale = Vector3.zero;
-        Vector3 maxScale = originalScale * maxScaleMultiplier;
+        float effectiveMaxScale = isCriticalHit ? maxScaleMultiplier * 1.2f : maxScaleMultiplier;
+        Vector3 maxScale = originalScale * effectiveMaxScale;
         currentSequence = DOTween.Sequence();
         currentSequence.Append(rectTransform.DOScale(maxScale, scaleDuration * 0.6f).SetEase(Ease.OutBack));
         currentSequence.Append(rectTransform.DOScale(originalScale, scaleDuration * 0.4f).SetEase(Ease.OutBack));
@@ -127,6 +149,11 @@ public class DamageText : MonoBehaviour
     #endregion
     private void ReturnToPool()
     {
+        // 恢复字体大小为原始大小（暴击时可能被修改）
+        if (damageText != null)
+        {
+            damageText.fontSize = originalFontSize;
+        }
         // 返回对象池
         DamageTextPool.Instance?.ReturnToPool(this);
     }

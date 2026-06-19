@@ -18,8 +18,9 @@ public enum EnemySkillType
     ChessPawnAction,
     ChessQueenChaosCharge,
     ChessQueenSummonPawn,
-    ChessQueenThroneAssault,
-    ChessQueenCoronation,
+    ChessQueenThroneAssault,     // [已废弃] 后袭王座 — 完整版皇后使用
+    ChessQueenCoronation,        // [已废弃] 王权加冕 — 完整版皇后使用
+    ChessQueenSingleBurst,       // 皇后单体爆发（预告关卡缩小版）
     // 龙Boss技能
     DragonDotSkill1,     // Dot龙技能一：龙息喷吐
     DragonDotSkill2,     // Dot龙技能二：净化
@@ -146,6 +147,9 @@ public class EnemySkillBase : SkillBase
                 break;
             case EnemySkillType.ChessQueenCoronation:
                 yield return ChessQueenCoronation(self);
+                break;
+            case EnemySkillType.ChessQueenSingleBurst:
+                yield return ChessQueenSingleBurst(self);
                 break;
             // 龙Boss技能
             case EnemySkillType.DragonDotSkill1:
@@ -450,7 +454,11 @@ public class EnemySkillBase : SkillBase
         TurnManager.Instance?.InsertCombatant(pawn);
 
         queen.AddPrestige(1);
-        queen.StartSummonCooldown();
+        // 预告关卡使用技能自身CD系统，不调用内部CD
+        if (!queen.IsPreviewBoss)
+        {
+            queen.StartSummonCooldown();
+        }
         FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}召唤兵卒");
     }
 
@@ -526,6 +534,24 @@ public class EnemySkillBase : SkillBase
         FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}消耗{prestigeConsumed}层威望");
     }
 
+    /// <summary>新技能：皇后单体爆发 — 对随机单体造成伤害，施加1点混沌值（预告关卡缩小版）</summary>
+    private IEnumerator ChessQueenSingleBurst(Enemy self)
+    {
+        ChessQueenEnemy queen = self as ChessQueenEnemy;
+        if (queen == null) yield break;
+
+        Character target = CharacterManager.Instance.GetCharacterByRand();
+        if (target == null) yield break;
+
+        float prestigeBonus = queen.GetPrestigeDamageBonus();
+        float totalCoef = skillCoef * prestigeBonus;
+
+        NotifyDamageSkillUsed(queen, new List<UnitCombatant> { target });
+        var damageInfo = DamageCounter.CountDamage(queen, target, totalCoef, skillBase, DamageType.Physical, true, false, false);
+        target.TakeDamage(damageInfo);
+        target.TryAddChaos(1);
+    }
+
     // ============ 辅助方法 ============
 
     private List<Character> GetAliveFieldCharacters(ChessQueenEnemy queen)
@@ -553,21 +579,6 @@ public class EnemySkillBase : SkillBase
             if (character.GetState(stateType) != null) return character;
         }
         return null;
-    }
-
-    private void TryTriggerCastling(ChessQueenEnemy queen)
-    {
-        if (!Commander.GetInstance().TryConsumeCastlingOpportunity()) return;
-
-        Character kingCharacter = FindCharacterWithState(StateType.ChessKingMark);
-        Character rookCharacter = FindCharacterWithState(StateType.ChessRookMark);
-        if (kingCharacter == null || rookCharacter == null || kingCharacter == rookCharacter) return;
-
-        if (CharacterManager.Instance.SwapFieldCharacters(kingCharacter, rookCharacter))
-        {
-            rookCharacter.AddState(StateType.Resist, queen, 99, 1);
-            FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, "王车易位");
-        }
     }
 
     private static EnemyRosterData GetSummonPawnRosterData(ChessQueenEnemy queen)

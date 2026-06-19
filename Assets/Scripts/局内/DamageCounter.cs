@@ -98,6 +98,10 @@ public class DamageCounter : MonoBehaviour
         {
             damageInfo = damageInfo.AsTrueDamage();
         }
+        if (isCrit)
+        {
+            damageInfo = damageInfo.AsCriticalHit();
+        }
 
         if (isCrit && attacker is Character)
         {

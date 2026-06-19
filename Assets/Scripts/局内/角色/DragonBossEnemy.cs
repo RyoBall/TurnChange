@@ -4,6 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// 龙Boss基类 — 三龙共享的强化/暴怒机制
+/// 指挥点奖励：战斗开始+1, 混沌龙技能+1, 击杀第一头+1, 强化阶段+1, 击杀第二头+1, 暴怒阶段+2, 暴怒技能+1
+/// 低保：阶段一200AV, 阶段二180AV, 阶段三240AV
 /// </summary>
 public class DragonBossEnemy : Enemy
 {
@@ -11,17 +13,66 @@ public class DragonBossEnemy : Enemy
     [SerializeField] private string dragonGroupId = "dragon-boss";
     [SerializeField, Min(0)] private int rageThreshold = 2;
 
+    // ============ 指挥点奖励静态追踪 ============
+    private static int s_dragonKillCount;
+    private static bool s_battleStartRewarded;
+    private static bool s_firstKillRewarded;
+    private static bool s_reinforcePhaseRewarded;
+    private static bool s_secondKillRewarded;
+    private static bool s_ragePhaseRewarded;
+    private const float DragonPhaseOneGuaranteeThreshold = 200f;
+    private const float DragonPhaseTwoGuaranteeThreshold = 180f;
+    private const float DragonPhaseThreeGuaranteeThreshold = 240f;
+
     private int m_reinforceLevel;
 
     public string DragonGroupId => dragonGroupId;
     public int ReinforceLevel => m_reinforceLevel;
     public bool IsRaging => m_reinforceLevel >= rageThreshold;
 
+    /// <summary>重置龙Boss指挥点奖励的静态状态（战斗开始时由第一个龙调用）</summary>
+    public static void ResetDragonCommandPointState()
+    {
+        s_dragonKillCount = 0;
+        s_battleStartRewarded = false;
+        s_firstKillRewarded = false;
+        s_reinforcePhaseRewarded = false;
+        s_secondKillRewarded = false;
+        s_ragePhaseRewarded = false;
+    }
+
     protected override void Start()
     {
         base.Start();
         // 三头龙入场对话（由第一个龙触发）
         BattleDialogEvents.Raise(BattleDialogEventType.DragonEnter, enemy: this);
+
+        // 战斗开始指挥点奖励（仅第一个龙触发一次）
+        if (!s_battleStartRewarded)
+        {
+            s_battleStartRewarded = true;
+            ResetDragonCommandPointState();
+            s_battleStartRewarded = true;
+            Commander.GetInstance().RecoverCommandPoints(1, "龙Boss战斗开始+1");
+            // 阶段一低保阈值：200AV
+            Commander.GetInstance().SetBossGuaranteeThreshold(DragonPhaseOneGuaranteeThreshold);
+        }
+    }
+
+    /// <summary>
+    /// 混沌龙使用技能时调用，奖励指挥点+1
+    /// </summary>
+    public void NotifyChaosDragonSkillUsed()
+    {
+        Commander.GetInstance().RecoverCommandPoints(1, "混沌龙技能+1");
+    }
+
+    /// <summary>
+    /// 暴怒技能释放后调用，奖励指挥点+1
+    /// </summary>
+    public void NotifyRageSkillUsed()
+    {
+        Commander.GetInstance().RecoverCommandPoints(1, "暴怒技能+1");
     }
 
     protected override void InitializeEnemyRuntime()
@@ -85,6 +136,14 @@ public class DragonBossEnemy : Enemy
             }
         }
 
+        // 指挥点奖励：击杀第一头龙 +1
+        s_dragonKillCount++;
+        if (s_dragonKillCount == 1 && !s_firstKillRewarded)
+        {
+            s_firstKillRewarded = true;
+            Commander.GetInstance().RecoverCommandPoints(1, "击杀第一头龙+1");
+        }
+
         if (aliveDragonCount == 0) return;
 
         // 第一头龙死亡：黑雾被吸收
@@ -93,14 +152,40 @@ public class DragonBossEnemy : Enemy
         // 当只剩最后一头龙时，回复生命
         if (aliveDragonCount == 1)
         {
+            // 指挥点奖励：击杀第二头龙 +1
+            if (!s_secondKillRewarded)
+            {
+                s_secondKillRewarded = true;
+                Commander.GetInstance().RecoverCommandPoints(1, "击杀第二头龙+1");
+            }
+
             // 第二头龙死亡：进入暴怒
             BattleDialogEvents.Raise(BattleDialogEventType.DragonSecondDeath);
             aliveDragons[0].ApplyReinforcement();
             aliveDragons[0].ApplyFinalDragonHeal();
+
+            // 指挥点奖励：暴怒阶段 +2
+            if (!s_ragePhaseRewarded)
+            {
+                s_ragePhaseRewarded = true;
+                Commander.GetInstance().RecoverCommandPoints(2, "暴怒阶段+2");
+                // 阶段三低保阈值：240AV
+                Commander.GetInstance().SetBossGuaranteeThreshold(DragonPhaseThreeGuaranteeThreshold);
+            }
+
             BattleDialogEvents.Raise(BattleDialogEventType.DragonLastStand);
         }
         else
         {
+            // 指挥点奖励：强化阶段 +1
+            if (!s_reinforcePhaseRewarded)
+            {
+                s_reinforcePhaseRewarded = true;
+                Commander.GetInstance().RecoverCommandPoints(1, "强化阶段+1");
+                // 阶段二低保阈值：180AV
+                Commander.GetInstance().SetBossGuaranteeThreshold(DragonPhaseTwoGuaranteeThreshold);
+            }
+
             // 技能强化
             BattleDialogEvents.Raise(BattleDialogEventType.DragonSkillReinforced);
             for (int i = 0; i < aliveDragons.Count; i++)

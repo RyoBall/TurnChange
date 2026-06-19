@@ -6,13 +6,15 @@ using UnityEngine;
 /// <summary>
 /// 棋局皇后Boss
 /// 阶段一隐藏，阶段二入场
-/// 技能：混沌横冲、兵卒召唤、后袭王座、王权加冕
+/// 完整版技能：混沌横冲、兵卒召唤、后袭王座、王权加冕
+/// 预告关卡版（isPreviewBoss=true）：混沌横冲、兵卒召唤、单体爆发
 /// </summary>
 public class ChessQueenEnemy : Enemy
 {
     [Header("皇后配置")]
     [SerializeField] private string bossGroupId = "chess-boss";
     [SerializeField] private bool startHiddenUntilPhaseTwo = true;
+    [SerializeField] private bool isPreviewBoss = false;
     [SerializeField] internal EnemyRosterData summonPawnData;
     [SerializeField, Min(1)] internal int summonPawnLevel = 1;
     [SerializeField] internal ChessSummonedPawnEnemy summonPawnPrefabFallback;
@@ -22,22 +24,29 @@ public class ChessQueenEnemy : Enemy
     [SerializeField] private bool immuneToTaunt = true;
     [SerializeField] private SpriteRenderer chessSpriteRenderer;
 
-    [Header("技能CD")]
+    [Header("技能CD（完整版）")]
     [SerializeField, Min(0)] private int summonPawnCooldown = 3;
     [SerializeField, Min(0)] private int throneAssaultCooldown = 4;
 
     // 内部状态
     private readonly HashSet<ChessSummonedPawnEnemy> m_summonedPawns = new HashSet<ChessSummonedPawnEnemy>();
     private int m_prestigeStacks;
+    private int m_maxPrestige = 3; // 预告关卡最多3层威望
     private bool m_hasUsedCoronation;
     private int m_summonedPawnKillCounter;
     private int m_summonSkillRemainingCooldown;
     private int m_throneAssaultRemainingCooldown;
-    private bool m_isChargingThroneAssault; // 后袭王座蓄力标记
+    private bool m_isChargingThroneAssault; // 后袭王座蓄力标记（仅完整版）
+
+    // ============ 指挥点奖励 ============
+    private const float ChessGuaranteeThreshold = 180f;
+    private bool m_battleStartRewarded;
+    private bool m_phaseTransitionRewarded;
 
     // 属性
     public string BossGroupId => bossGroupId;
     public bool IsChessQueenBoss => true;
+    public bool IsPreviewBoss => isPreviewBoss;
     public bool StartsHiddenUntilPhaseTwo => startHiddenUntilPhaseTwo;
     public override bool ShouldRegisterAtBattleStart => !StartsHiddenUntilPhaseTwo;
     public int PrestigeStacks => m_prestigeStacks;
@@ -52,6 +61,14 @@ public class ChessQueenEnemy : Enemy
         if (ChessStandPositionManager.Instance != null)
         {
             transform.position = ChessStandPositionManager.Instance.GetQueenStandPosition().position;
+        }
+
+        // 指挥点奖励：战斗开始 +1，低保180AV
+        if (!m_battleStartRewarded)
+        {
+            m_battleStartRewarded = true;
+            Commander.GetInstance().RecoverCommandPoints(1, "棋局Boss战斗开始+1");
+            Commander.GetInstance().SetBossGuaranteeThreshold(ChessGuaranteeThreshold);
         }
     }
 
@@ -73,11 +90,22 @@ public class ChessQueenEnemy : Enemy
             case EnemySkillType.ChessQueenChaosCharge:
                 return GetAliveFieldCharacters().Count > 0;
             case EnemySkillType.ChessQueenSummonPawn:
-                return m_summonSkillRemainingCooldown <= 0 && summonPawnData != null;
+                // 预告关卡：使用技能自身的CD系统；完整版：使用内部CD
+                if (isPreviewBoss)
+                    return summonPawnData != null;
+                else
+                    return m_summonSkillRemainingCooldown <= 0 && summonPawnData != null;
             case EnemySkillType.ChessQueenThroneAssault:
+                // 仅完整版可用
+                if (isPreviewBoss) return false;
                 return m_isChargingThroneAssault || (m_throneAssaultRemainingCooldown <= 0 && GetAliveFieldCharacters().Count >= 2);
             case EnemySkillType.ChessQueenCoronation:
+                // 仅完整版可用
+                if (isPreviewBoss) return false;
                 return ShouldUseCoronation();
+            case EnemySkillType.ChessQueenSingleBurst:
+                // 仅预告关卡可用
+                return isPreviewBoss && GetAliveFieldCharacters().Count > 0;
             default:
                 return true;
         }
@@ -85,7 +113,11 @@ public class ChessQueenEnemy : Enemy
 
     protected override EnemySkillBase GetForcedSkillForTurn()
     {
-        // 如果正在蓄力，强制使用后袭王座
+        // 预告关卡无强制技能
+        if (isPreviewBoss)
+            return base.GetForcedSkillForTurn();
+
+        // 完整版：如果正在蓄力，强制使用后袭王座
         if (m_isChargingThroneAssault)
         {
             EnemySkillBase throneSkill = GetSkillInstance(EnemySkillType.ChessQueenThroneAssault);
@@ -95,7 +127,7 @@ public class ChessQueenEnemy : Enemy
             }
         }
 
-        // 如果满足加冕条件，强制使用
+        // 完整版：如果满足加冕条件，强制使用
         EnemySkillBase coronationSkill = GetSkillInstance(EnemySkillType.ChessQueenCoronation);
         if (coronationSkill != null && coronationSkill.CanUse(this) && ShouldUseCoronation())
         {
@@ -120,6 +152,7 @@ public class ChessQueenEnemy : Enemy
             {
                 case EnemySkillType.ChessQueenChaosCharge:
                 case EnemySkillType.ChessQueenSummonPawn:
+                case EnemySkillType.ChessQueenSingleBurst:
                     FloatingTipGenerator.Instance?.ShowDefaultTip($"{selectedSkill.skillName}");
                     break;
                 case EnemySkillType.ChessQueenThroneAssault:
@@ -131,7 +164,6 @@ public class ChessQueenEnemy : Enemy
                     else
                     {
                         FloatingTipGenerator.Instance?.ShowDefaultTip($"后袭王座");
-                        // 蓄力技释放后触发力竭
                         BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenExhausted, enemy: this);
                     }
                     break;
@@ -151,6 +183,14 @@ public class ChessQueenEnemy : Enemy
         {
             return;
         }
+
+        // 指挥点奖励：阶段转换 +2（在消灭兵卒之前发放）
+        if (!m_phaseTransitionRewarded)
+        {
+            m_phaseTransitionRewarded = true;
+            Commander.GetInstance().RecoverCommandPoints(2, "棋局阶段转换+2");
+        }
+
         // 直接消灭所有残余召唤兵卒
         List<Enemy> enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         for (int i = 0; i < enemies.Count; i++)
@@ -164,7 +204,9 @@ public class ChessQueenEnemy : Enemy
             pawn.TakeDamage(new DamageInfo(pawn.currentHP).AsTrueDamage()); // 直接消灭所有残余兵卒
         }
 
-        m_prestigeStacks = Mathf.Max(0, prestigeStacks);
+        // 入场威望上限：预告关卡最多3层，完整版无上限（由调用方控制）
+        int maxPrestigeOnEnter = isPreviewBoss ? m_maxPrestige : int.MaxValue;
+        m_prestigeStacks = Mathf.Clamp(prestigeStacks, 0, maxPrestigeOnEnter);
         StartCoroutine(EnterPhaseTwoWithFadeIn());
     }
 
@@ -181,18 +223,35 @@ public class ChessQueenEnemy : Enemy
         ChangeActionValue(BaseActionValue, false);
         EnemyManager.Instance?.RegisterEnemy(this);
         TurnManager.Instance?.InsertCombatant(this);
+        BossHealthBarManager.Instance?.RegisterBoss(this);
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}升变入场");
         ClearLinkedPromotionPawns();
 
-        // 进入二阶段时标记王棋/车棋
-        MarkChessKingAndRook();
-
-        // 入场对话
-        BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenMarkingKing, enemy: this);
+        // 预告关卡：配置技能CD
+        if (isPreviewBoss)
+        {
+            ConfigurePreviewSkillCooldowns();
+        }
+        else
+        {
+            // 完整版：进入二阶段时标记王棋/车棋
+            MarkChessKingAndRook();
+            BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenMarkingKing, enemy: this);
+        }
 
         if (chessSpriteRenderer != null)
         {
             yield return chessSpriteRenderer.DOFade(1f, 0.5f).SetEase(Ease.OutQuad).WaitForCompletion();
+        }
+    }
+
+    /// <summary>预告关卡：配置技能CD（技能二至少5回合）</summary>
+    private void ConfigurePreviewSkillCooldowns()
+    {
+        EnemySkillBase summonSkill = GetSkillInstance(EnemySkillType.ChessQueenSummonPawn);
+        if (summonSkill != null)
+        {
+            summonSkill.cooldownTurns = 5;
         }
     }
 
@@ -226,7 +285,8 @@ public class ChessQueenEnemy : Enemy
 
         AddPrestige(-1);
         m_summonedPawnKillCounter++;
-        if (m_summonedPawnKillCounter >= 2)
+        // 完整版：每击杀2个召唤兵卒触发王车易位
+        if (!isPreviewBoss && m_summonedPawnKillCounter >= 2)
         {
             m_summonedPawnKillCounter -= 2;
             Commander.GetInstance().AddCastlingOpportunity(1, "兵卒击杀触发易位");
@@ -258,10 +318,14 @@ public class ChessQueenEnemy : Enemy
         if (m_throneAssaultRemainingCooldown > 0) m_throneAssaultRemainingCooldown--;
     }
 
-    /// <summary>添加威望层数</summary>
+    /// <summary>添加威望层数（预告关卡最多3层）</summary>
     public void AddPrestige(int delta)
     {
         m_prestigeStacks = Mathf.Max(0, m_prestigeStacks + delta);
+        if (isPreviewBoss)
+        {
+            m_prestigeStacks = Mathf.Min(m_prestigeStacks, m_maxPrestige);
+        }
     }
 
     /// <summary>消耗所有威望（加冕时调用）</summary>
@@ -317,7 +381,9 @@ public class ChessQueenEnemy : Enemy
     {
         // 收集所有可用技能
         List<EnemySkillBase> availableSkills = new List<EnemySkillBase>();
-        EnemySkillType[] skillTypes = { EnemySkillType.ChessQueenChaosCharge, EnemySkillType.ChessQueenSummonPawn, EnemySkillType.ChessQueenThroneAssault };
+        EnemySkillType[] skillTypes = isPreviewBoss
+            ? new EnemySkillType[] { EnemySkillType.ChessQueenChaosCharge, EnemySkillType.ChessQueenSummonPawn, EnemySkillType.ChessQueenSingleBurst }
+            : new EnemySkillType[] { EnemySkillType.ChessQueenChaosCharge, EnemySkillType.ChessQueenSummonPawn, EnemySkillType.ChessQueenThroneAssault };
 
         for (int i = 0; i < skillTypes.Length; i++)
         {

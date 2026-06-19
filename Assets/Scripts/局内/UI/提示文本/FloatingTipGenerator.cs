@@ -100,6 +100,28 @@ public class FloatingTipGenerator : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 获取 Canvas 坐标转换所需的 Camera。
+    /// Screen Space - Overlay 模式下必须传 null，否则 ScreenPointToLocalPointInRectangle 会返回 false。
+    /// </summary>
+    private Camera GetCanvasCamera()
+    {
+        if (rootCanvas == null) return null;
+        if (rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay) return null;
+        return rootCanvas.worldCamera;
+    }
+
+#if UNITY_EDITOR
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ShowCenterDialog($"【测试对话】persistentDialogYRatio={persistentDialogYRatio:F2}, screenCenter=({Screen.width / 2f}, {Screen.height * persistentDialogYRatio:F0})", 4f);
+        }
+    }
+#endif
+
     public void ShowDefaultTip(string message) 
     {
         ShowTipAtObject(pos, message,true);
@@ -145,7 +167,7 @@ public class FloatingTipGenerator : MonoBehaviour
 
         // 将屏幕坐标转换为UI局部坐标（以Canvas为基准）
         Vector2 uiPos;
-        Camera cam = rootCanvas != null ? rootCanvas.worldCamera : null;
+        Camera cam = GetCanvasCamera();
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, finalScreenPos, cam, out uiPos);
         if (!converted)
         {
@@ -438,7 +460,7 @@ public class FloatingTipGenerator : MonoBehaviour
         // 定位到屏幕中央偏上
         Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height * persistentDialogYRatio);
         Vector2 uiPos;
-        Camera cam = rootCanvas != null ? rootCanvas.worldCamera : null;
+        Camera cam = GetCanvasCamera();
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, screenCenter, cam, out uiPos);
         if (!converted)
         {

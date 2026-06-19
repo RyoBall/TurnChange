@@ -86,7 +86,9 @@ public class SkillDescription : MonoBehaviour
         {
             PauseCameraSway();
             string stateName = StateDictionaryManager.GetStateName(state.stateType);
-            m_skillDesText.text = $"{stateName}：{state.description}";
+            string text = $"{stateName}：{state.description}";
+            text += BuildStateDurationText(state);
+            m_skillDesText.text = text;
             if (m_keywordDesText != null)
             {
                 m_keywordDesText.text = "";
@@ -105,6 +107,27 @@ public class SkillDescription : MonoBehaviour
             m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
             m_currentSequence.AppendCallback(ClearDescriptionText);
         }
+    }
+
+    /// <summary>
+    /// 构建状态的层数和持续时间文本
+    /// </summary>
+    private string BuildStateDurationText(State state)
+    {
+        string result = $"\n层数：{state.StackCount}";
+        switch (state.DurationType)
+        {
+            case StateDurationType.Turn:
+                result += $"\n持续时间：{state.RemainingTurns}回合";
+                break;
+            case StateDurationType.ActionValue:
+                result += $"\n持续时间：{state.RemainingActionValue}行动值";
+                break;
+            case StateDurationType.Special:
+                // Special 类型不写持续时间
+                break;
+        }
+        return result;
     }
 
     /// <summary>

@@ -127,7 +127,25 @@ public class Enemy : UnitCombatant
         currentHP = Mathf.Min(currentHP, maxHP);
         m_defaultScale = transform.localScale;
         SetBattleVisibility(ShouldRegisterAtBattleStart);
+        RegisterAsBossIfApplicable();
         m_runtimeInitialized = true;
+    }
+
+    /// <summary>如果当前敌人是Boss类型，注册到BossHealthBarManager</summary>
+    private void RegisterAsBossIfApplicable()
+    {
+        if (IsBossEnemy())
+        {
+            BossHealthBarManager.Instance?.RegisterBoss(this);
+        }
+    }
+
+    /// <summary>判断当前敌人是否为Boss类型（皇后、剑客、三头龙及其子类）</summary>
+    protected bool IsBossEnemy()
+    {
+        return this is ChessQueenEnemy
+            || this is SwordsmanEnemy
+            || this is DragonBossEnemy;
     }
 
     public virtual void InitializeFromPendingLevelData(PendingBattleLevelData pendingData, IReadOnlyList<Enemy> spawnedEnemies)
@@ -226,8 +244,9 @@ public class Enemy : UnitCombatant
     public override void Die()
     {
         base.Die();
+        BossHealthBarManager.Instance?.UnregisterBoss(this);
         EnemyManager.Instance?.UnregisterEnemy(this);
-        if (currentHP <= 0)
+        if (currentHP <= 0 && !IsBossEnemy())
         {
             Commander.GetInstance().NotifyEnemyKilled();
         }

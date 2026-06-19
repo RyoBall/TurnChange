@@ -10,7 +10,13 @@ public class Commander : MonoBehaviour
     private const int DefaultMaxCommandPoints = 5;
     private const int KillRecoveryAmount = 1;
     private const int GuaranteeRecoveryAmount = 1;
-    private const float GuaranteeActionValueThreshold = 180f;
+    private const float DefaultGuaranteeActionValueThreshold = 180f;
+
+    /// <summary>
+    /// Boss战专用低保阈值，由各Boss通过 NotifyBossGuaranteeThreshold 设置。
+    /// 为0时使用默认阈值 DefaultGuaranteeActionValueThreshold。
+    /// </summary>
+    private float m_bossGuaranteeThreshold;
 
     [Header("指挥点飞行动画")]
     [SerializeField] private Camera effectCamera;
@@ -122,6 +128,16 @@ public class Commander : MonoBehaviour
         RecoverCommandPoints(KillRecoveryAmount, $"击杀回点+{KillRecoveryAmount}");
     }
 
+    /// <summary>
+    /// 设置Boss战低保阈值。设为0恢复默认阈值。
+    /// </summary>
+    public void SetBossGuaranteeThreshold(float threshold)
+    {
+        m_bossGuaranteeThreshold = Mathf.Max(0f, threshold);
+        // 切换阈值时重置累积进度，避免跨阶段蹭点
+        actionValueSinceLastRecovery = 0f;
+    }
+
     public void NotifyActionValueAdvanced(float actionValue)
     {
         if (actionValue <= 0f)
@@ -129,10 +145,12 @@ public class Commander : MonoBehaviour
             return;
         }
 
+        float threshold = m_bossGuaranteeThreshold > 0f ? m_bossGuaranteeThreshold : DefaultGuaranteeActionValueThreshold;
+
         actionValueSinceLastRecovery += actionValue;
-        while (actionValueSinceLastRecovery >= GuaranteeActionValueThreshold)
+        while (actionValueSinceLastRecovery >= threshold)
         {
-            actionValueSinceLastRecovery -= GuaranteeActionValueThreshold;
+            actionValueSinceLastRecovery -= threshold;
             RecoverCommandPointsInternal(GuaranteeRecoveryAmount, $"指挥点+{GuaranteeRecoveryAmount}");
         }
     }

@@ -4,6 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 混沌龙 — 施加混沌值，行动条操控
+/// 指挥点奖励：每次使用技能+1，暴怒技能+1
 /// </summary>
 public class ChaosDragonEnemy : DragonBossEnemy
 {
@@ -22,6 +23,57 @@ public class ChaosDragonEnemy : DragonBossEnemy
             default:
                 return true;
         }
+    }
+
+    public override IEnumerator PerformTurn()
+    {
+        if (!IsBattleVisible || dead)
+        {
+            yield break;
+        }
+
+        TickSkillCooldowns();
+        OnTurnStartBeforeStateSettlement();
+        yield return new WaitForSeconds(0.2f);
+        yield return ProcessStatesOnTurnStart();
+        if (dead)
+        {
+            yield break;
+        }
+        if (!CanActThisTurn())
+        {
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
+            yield break;
+        }
+
+        // 执行行动
+        EnemySkillBase selectedSkill = SelectSkillForTurn();
+        if (selectedSkill == null)
+        {
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}暂无可用技能");
+            yield break;
+        }
+
+        yield return new WaitForSeconds(0.2f);
+        FloatingTipGenerator.Instance?.ShowDefaultTip(selectedSkill.skillName);
+        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.5f);
+        SkillExecuteManager.ExecuteSkill(this, selectedSkill);
+        yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+
+        // 指挥点奖励：混沌龙每次使用技能 +1
+        bool isRageSkill = selectedSkill.enemySkillType == EnemySkillType.DragonChaosRage;
+        if (isRageSkill)
+        {
+            NotifyRageSkillUsed();
+        }
+        else
+        {
+            NotifyChaosDragonSkillUsed();
+        }
+
+        yield return WaitForDeathEvents();
+        InvokeOnEnemyActEvent();
     }
 
     private List<Character> GetAliveFieldCharacters()

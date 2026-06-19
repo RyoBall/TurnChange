@@ -222,6 +222,7 @@ RectTransform:
   - {fileID: 1720563549}
   - {fileID: 1008367140}
   - {fileID: 700564561}
+  - {fileID: 1876302832}
   - {fileID: 2122485859}
   - {fileID: 1211522034}
   - {fileID: 1738976026}
@@ -6419,6 +6420,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 631565993468548976, guid: aa35eb7d4b89832469b5a7b49624b24d,
+        type: 3}
+      propertyPath: m_isDebugMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4743303713127860164, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}
       propertyPath: m_IsActive
@@ -10549,6 +10555,61 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!1 &1876302831
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1876302832}
+  - component: {fileID: 1876302833}
+  m_Layer: 5
+  m_Name: "Boss\u8840\u6761"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1876302832
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876302831}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3200452}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1876302833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876302831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 839d6a358d989b247aff6b05b47a6eae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossHealthBarPrefab: {fileID: 4992108627790475868, guid: 1b5e02ae533da5c49b8dde21970c6127,
+    type: 3}
+  barsContainer: {fileID: 1876302832}
+  barWidth: 600
+  barHeight: 60
+  barSpacing: 16
+  topMargin: 20
 --- !u!1 &1878868957
 GameObject:
   m_ObjectHideFlags: 0
@@ -11120,7 +11181,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2122485858}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -11195,7 +11256,7 @@ MonoBehaviour:
   screenOffset: {x: 0, y: 50}
   persistentFontSize: 32
   persistentTextColor: {r: 1, g: 0.9, b: 0.5, a: 1}
-  persistentDialogYRatio: 0.3
+  persistentDialogYRatio: 0.65
   tipPrefab: {fileID: 5933796363307006524, guid: 3890fac269654c64b95ffeaaadde5f6a,
     type: 3}
   pos: {fileID: 1012902383}

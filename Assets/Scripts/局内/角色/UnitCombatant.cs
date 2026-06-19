@@ -56,6 +56,7 @@ public class UnitCombatant : Combatant
         public UnitCombatant Source;
         public bool IsDotDamage;
         public bool IsTrueDamage;
+        public bool IsCriticalHit;
         public DamageType DamageType;
         public StateType StateType;
 
@@ -66,6 +67,7 @@ public class UnitCombatant : Combatant
             Source = source;
             IsDotDamage = false;
             IsTrueDamage = false;
+            IsCriticalHit = false;
             DamageType = damageType;
             StateType = StateType.None;
         }
@@ -73,6 +75,7 @@ public class UnitCombatant : Combatant
         // 链式配置（流畅接口）
         public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
         public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
+        public DamageInfo AsCriticalHit() { IsCriticalHit = true; return this; }
         public DamageInfo WithDamageType(DamageType damageType) { DamageType = damageType; return this; }
         public DamageInfo WithState(StateType state) { StateType = state; return this; }//用于注明伤害来自于哪个状态
     }
@@ -100,7 +103,7 @@ public class UnitCombatant : Combatant
             TemporaryBattleModifierRuntimeManager.NotifyShieldBroken(this, damageInfo.Source);
         }
         hitFeedback?.PlayFeedbacks();
-        OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType);
+        OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType, damageInfo.IsCriticalHit);
         //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
@@ -137,10 +140,10 @@ public class UnitCombatant : Combatant
         TemporaryBattleModifierRuntimeManager.NotifyUnitHealed(this, amount);
     }
 
-    protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None)
+    protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None, bool isCriticalHit = false)
     {
         Debug.Log($"[{GetType().Name}] {gameObject.name} 受到 {damage} 点伤害");
-        DamageTextPool.Instance?.ShowDamage(damage, transform.position, isDotDamage);
+        DamageTextPool.Instance?.ShowDamage(damage, transform.position, isDotDamage, isCriticalHit);
     }
 
     public virtual void Die()

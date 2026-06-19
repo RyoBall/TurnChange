@@ -98,10 +98,10 @@ public class DamageTextPool : MonoBehaviour
         damageText.gameObject.SetActive(false);
         pool.Enqueue(damageText);
     }
-    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false)
+    public void ShowDamage(int damage, Vector3 worldPosition, bool isDotDamage = false, bool isCriticalHit = false)
     {
         DamageText damageText = Get();
-        damageText.ShowDamage(damage, worldPosition, isDotDamage);
+        damageText.ShowDamage(damage, worldPosition, isDotDamage, isCriticalHit);
     }
     public void ShowHeal(int healAmount, Vector3 worldPosition)
     {
