@@ -30,8 +30,17 @@ public class ShaderAwareRaycast : MonoBehaviour, ICanvasRaycastFilter
         bool insideHighlight = (uv.x >= minX && uv.x <= maxX && 
                                 uv.y >= minY && uv.y <= maxY);
         
-        // 高亮区域内：穿透遮罩（返回false）
+        // 判断高亮区域是否可交互
+        float interactable = guideMaterial.GetFloat("_HighlightInteractable");
+        bool isInteractable = interactable > 0.5f;
+
+        if (insideHighlight)
+        {
+            // 高亮区域内：可交互则穿透（返回false），不可交互则阻挡（返回true）
+            return !isInteractable;
+        }
+        
         // 遮罩区域：阻挡射线（返回true）
-        return !insideHighlight;
+        return true;
     }
 }

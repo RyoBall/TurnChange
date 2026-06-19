@@ -11,12 +11,14 @@ public class GuideHighlightConfig:ScriptableObject
     [SerializeField] private float m_rectMaxX;
     [SerializeField] private float m_rectMinY;
     [SerializeField] private float m_rectMaxY;
+    [SerializeField] private bool m_isInteractable = true;
 
     public GuideHighlightType HighlightType => m_highlightType;
     public float RectMinX => m_rectMinX;
     public float RectMaxX => m_rectMaxX;
     public float RectMinY => m_rectMinY;
     public float RectMaxY => m_rectMaxY;
+    public bool IsInteractable => m_isInteractable;
 
     public GuideHighlightConfig(GuideHighlightType type, float minX, float maxX, float minY, float maxY)
     {
@@ -25,6 +27,7 @@ public class GuideHighlightConfig:ScriptableObject
         m_rectMaxX = maxX;
         m_rectMinY = minY;
         m_rectMaxY = maxY;
+        m_isInteractable = true;
     }
 }
 

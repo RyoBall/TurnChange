@@ -16,6 +16,9 @@ Shader "UI/RectGuideMask"
 
         // 高亮区域是否显示（用于调试）
         _ShowHighlight ("Show Highlight Region", Range(0, 1)) = 0
+
+        // 高亮区域是否可交互（false 时高亮区域 alpha 降为 0.1 而非 0，且射线被阻挡）
+        [Toggle] _HighlightInteractable ("Highlight Interactable", Float) = 1
     }
 
     SubShader
@@ -64,6 +67,7 @@ Shader "UI/RectGuideMask"
             float _RectMaxY;
             float _EdgeSoftness;
             float _ShowHighlight;
+            float _HighlightInteractable;
 
             v2f vert(appdata_t IN)
             {
@@ -108,6 +112,12 @@ Shader "UI/RectGuideMask"
                 // 在边缘附近：0~_EdgeSoftness 范围内渐变
                 float edgeAlpha = 1 - smoothstep(-_EdgeSoftness, _EdgeSoftness, minDist);
                 float alpha = edgeAlpha * _Color.a;
+
+                // 如果高亮区域不可交互，高亮区域 alpha 设为 0.1 而非 0（视觉上半透明可见）
+                if (_HighlightInteractable < 0.5 && insideRect > 0.5)
+                {
+                    alpha = 0.1;
+                }
 
                 finalColor.a = alpha;
                 finalColor.rgb *= finalColor.a;   // premultiply alpha 防止边缘光晕

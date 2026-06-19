@@ -22,6 +22,7 @@ public class GuideDisplayController : MonoBehaviour
     private int m_rectMaxXId;
     private int m_rectMinYId;
     private int m_rectMaxYId;
+    private int m_highlightInteractableId;
 
     // 当前激活的高亮类型（用于防重复设置）
     private GuideHighlightType? m_currentHighlight;
@@ -38,6 +39,7 @@ public class GuideDisplayController : MonoBehaviour
         m_rectMaxXId = Shader.PropertyToID("_RectMaxX");
         m_rectMinYId = Shader.PropertyToID("_RectMinY");
         m_rectMaxYId = Shader.PropertyToID("_RectMaxY");
+        m_highlightInteractableId = Shader.PropertyToID("_HighlightInteractable");
         m_guideMaterial.SetFloat(m_rectMaxXId, 1);
         m_guideMaterial.SetFloat(m_rectMaxYId, 1);
 
@@ -91,6 +93,7 @@ public class GuideDisplayController : MonoBehaviour
         m_guideMaterial.SetFloat(m_rectMaxXId, config.RectMaxX);
         m_guideMaterial.SetFloat(m_rectMinYId, config.RectMinY);
         m_guideMaterial.SetFloat(m_rectMaxYId, config.RectMaxY);
+        m_guideMaterial.SetFloat(m_highlightInteractableId, config.IsInteractable ? 1f : 0f);
 
         m_currentHighlight = type;
 

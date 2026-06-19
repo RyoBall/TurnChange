@@ -952,14 +952,14 @@ public class EnemyStrongTutorial : TutorialBehavior
 #region 教程十五
 /// <summary>
 /// 援军到达教程行为（教程十五）
-/// 教程十四完成后开始监听敌人回合结束事件，计数到达2次后触发，高亮切人按键和指挥点，文本6等待换人回合结束
+/// 教程十四完成后开始监听敌人回合结束事件，计数到达1次后触发，高亮切人按键和指挥点，文本6等待换人回合结束
 /// </summary>
 public class ReinforcementArriveTutorial : TutorialBehavior
 {
     private bool m_swapCompleted = false;
     private bool m_tutorialFourteenEnded = false;
     private int m_enemyActCount = 0;
-    private const int RequiredEnemyActCount = 2;
+    private const int RequiredEnemyActCount = 1;
 
     public override void StartListening()
     {

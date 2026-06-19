@@ -809,8 +809,8 @@ MonoBehaviour:
   pressScale: 0.7
   overshootScale: 1.1
   animDuration: 0.15
-  hotspot: {x: 0, y: 50}
-  cursorScale: 0.59
+  hotspot: {x: 0, y: 37.5}
+  cursorScale: 0.3
 --- !u!114 &1128943724
 MonoBehaviour:
   m_ObjectHideFlags: 0
