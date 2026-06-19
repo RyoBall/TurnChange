@@ -179,6 +179,13 @@ public class Character : UnitCombatant
             return false;
         }
 
+        // 仿照状态添加时弹出文本，显示混沌状态提示
+        State chaosState = GetState(StateType.Chaos);
+        if (chaosState != null)
+        {
+            DamageTextPool.Instance?.ShowStateTipAtObject(transform, chaosState);
+        }
+
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"混沌+{chaosValue - before} ({chaosValue}/{MaxChaosValue})");
         if (chaosValue >= MaxChaosValue)
         {

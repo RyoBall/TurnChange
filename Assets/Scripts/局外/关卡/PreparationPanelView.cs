@@ -19,6 +19,8 @@ public class PreparationPanelView : MonoBehaviour
     [SerializeField] private List<RectTransform> characterButtonPositions = new List<RectTransform>();
     [SerializeField] private Image firstSelectedCharacterImage;
     [SerializeField] private Image secondSelectedCharacterImage;
+    [SerializeField] private Image firstCharacterIllustrationImage;
+    [SerializeField] private Image secondCharacterIllustrationImage;
     [SerializeField] private float listHiddenX = -680f;
     [SerializeField] private float listShownX = 0f;
     [SerializeField] private float listSlideSmoothTime = 0.12f;
@@ -448,6 +450,8 @@ public class PreparationPanelView : MonoBehaviour
     {
         ApplySelectedCharacterImage(firstSelectedCharacterImage, 0);
         ApplySelectedCharacterImage(secondSelectedCharacterImage, 1);
+        ApplyCharacterIllustrationImage(firstCharacterIllustrationImage, 0);
+        ApplyCharacterIllustrationImage(secondCharacterIllustrationImage, 1);
     }
 
     private void ApplySelectedCharacterImage(Image targetImage, int index)
@@ -460,6 +464,40 @@ public class PreparationPanelView : MonoBehaviour
         CharacterRosterData characterData = index >= 0 && index < m_selectedCharacters.Count ? m_selectedCharacters[index] : null;
         targetImage.sprite = characterData != null ? characterData.GetPortraitSprite() : null;
         targetImage.enabled = targetImage.sprite != null;
+    }
+
+    private void ApplyCharacterIllustrationImage(Image targetImage, int index)
+    {
+        if (targetImage == null)
+        {
+            return;
+        }
+
+        CharacterRosterData characterData = index >= 0 && index < m_selectedCharacters.Count ? m_selectedCharacters[index] : null;
+        if (characterData == null)
+        {
+            targetImage.sprite = null;
+            targetImage.enabled = false;
+            return;
+        }
+
+        Sprite illustration = characterData.GetIllustrationSprite();
+        targetImage.sprite = illustration;
+        targetImage.enabled = illustration != null;
+
+        if (illustration != null)
+        {
+            Vector2 size = characterData.GetIllustrationSize();
+            if (size.x > 0 && size.y > 0)
+            {
+                targetImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
+                targetImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
+            }
+            else
+            {
+                targetImage.SetNativeSize();
+            }
+        }
     }
 
     private void SetCharacterListVisible(bool visible, bool immediate = false)

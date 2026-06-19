@@ -45,22 +45,33 @@ public class TurnImage : MonoBehaviour
         {
             canvasGroup.alpha = 0f;
         }
-        // 优先使用 UnitCombatant 配置的专属 Sprite，否则回退到默认的敌我 Sprite
-        if (iconImage != null)
+        // 如果不是 UnitCombatant 或者 TurnImageSprite 为空，则头像和背景都置空
+        if (combatant is not UnitCombatant unitCombatant || unitCombatant.TurnImageSprite == null)
         {
-            if (combatant is UnitCombatant unitCombatant && unitCombatant.TurnImageSprite != null)
+            if (iconImage != null)
             {
-                iconImage.sprite = unitCombatant.TurnImageSprite;
+                iconImage.sprite = null;
             }
-        }
-        // 根据战斗者类型设置背景图，敌人和玩家使用不同的默认背景
-        if (combatant is Enemy)
-        {
-            backgroundImage.sprite = enemySprite;
+            if (backgroundImage != null)
+            {
+                backgroundImage.sprite = playerSprite; // 使用默认玩家背景图，敌人没有头像时也使用玩家背景图
+            }
         }
         else
         {
-            backgroundImage.sprite = playerSprite;
+            if (iconImage != null)
+            {
+                iconImage.sprite = unitCombatant.TurnImageSprite;
+            }
+            // 根据战斗者类型设置背景图，敌人和玩家使用不同的默认背景
+            if (combatant is Enemy)
+            {
+                backgroundImage.sprite = enemySprite;
+            }
+            else
+            {
+                backgroundImage.sprite = playerSprite;
+            }
         }
         CurrentLayoutScale = initialScale;
         transform.localScale = Vector3.one;

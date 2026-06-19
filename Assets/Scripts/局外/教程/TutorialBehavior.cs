@@ -673,8 +673,8 @@ public class ShopDetailTutorial : TutorialBehavior
         switch (index)
         {
             case 1: m_controller.ShowGuideHighlight(GuideHighlightType.序体商品); break;
-            case 4: m_controller.ShowGuideHighlight(GuideHighlightType.刷新按钮); break;
-            case 5: m_controller.ShowGuideHighlight(GuideHighlightType.扩容按钮); break;
+            case 3: m_controller.ShowGuideHighlight(GuideHighlightType.刷新按钮); break;
+            case 4: m_controller.ShowGuideHighlight(GuideHighlightType.扩容按钮); break;
         }
     }
 

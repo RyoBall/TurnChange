@@ -87,7 +87,17 @@ public class FloatingTipGenerator : MonoBehaviour
         }
         else
         {
+            // parentCanvasRect 可能不是 Canvas 自身的 RectTransform（比如是子物体的），
+            // 需要向上查找或通过 GetComponentInParent 获取 Canvas
             rootCanvas = parentCanvasRect.GetComponent<Canvas>();
+            if (rootCanvas == null)
+            {
+                rootCanvas = parentCanvasRect.GetComponentInParent<Canvas>();
+            }
+            if (rootCanvas == null)
+            {
+                Debug.LogError("[FloatingTipGenerator] parentCanvasRect 上及其父级都找不到 Canvas 组件！");
+            }
         }
     }
     public void ShowDefaultTip(string message) 
@@ -135,7 +145,13 @@ public class FloatingTipGenerator : MonoBehaviour
 
         // 将屏幕坐标转换为UI局部坐标（以Canvas为基准）
         Vector2 uiPos;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, finalScreenPos, rootCanvas.worldCamera, out uiPos);
+        Camera cam = rootCanvas != null ? rootCanvas.worldCamera : null;
+        bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, finalScreenPos, cam, out uiPos);
+        if (!converted)
+        {
+            // fallback：直接计算（仅对 Screen Space - Overlay 有效）
+            uiPos = finalScreenPos - new Vector2(Screen.width / 2f, Screen.height / 2f);
+        }
         rectTransform.anchoredPosition = uiPos;
 
         // 启动动画协程
@@ -422,7 +438,19 @@ public class FloatingTipGenerator : MonoBehaviour
         // 定位到屏幕中央偏上
         Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height * persistentDialogYRatio);
         Vector2 uiPos;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, screenCenter, rootCanvas.worldCamera, out uiPos);
+        Camera cam = rootCanvas != null ? rootCanvas.worldCamera : null;
+        bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, screenCenter, cam, out uiPos);
+        if (!converted)
+        {
+            Debug.LogError($"[FloatingTipGenerator] ScreenPointToLocalPointInRectangle 转换失败！" +
+                $"screenCenter=({screenCenter.x},{screenCenter.y}), " +
+                $"parentCanvasRect={(parentCanvasRect != null ? parentCanvasRect.name : "null")}, " +
+                $"rootCanvas={(rootCanvas != null ? rootCanvas.name : "null")}, " +
+                $"camera={(cam != null ? cam.name : "null")}, " +
+                $"Canvas renderMode={(rootCanvas != null ? rootCanvas.renderMode.ToString() : "N/A")}");
+            // fallback：直接使用屏幕中心作为 anchoredPosition（仅对 Screen Space - Overlay 有效）
+            uiPos = screenCenter - new Vector2(Screen.width / 2f, Screen.height / 2f);
+        }
         rect.anchoredPosition = uiPos;
 
         m_persistentDialogs[dialogId] = dialogObj;

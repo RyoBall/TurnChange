@@ -33,7 +33,7 @@ PrefabInstance:
         type: 3}
       propertyPath: targetEnemy
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: -3954100594010700347}
     - target: {fileID: 6101253797047460483, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
       propertyPath: m_LocalScale.x
