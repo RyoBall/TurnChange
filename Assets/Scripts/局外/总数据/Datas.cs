@@ -100,6 +100,7 @@ public class Datas : MonoBehaviour
         SubscribeInternalEvents();
         MarkAsPersistent();
         EnsureTimeScaleController();
+        EnsureAmbientFloatingParticlesHost();
     }
     private bool TryClaimSingleton()
     {
@@ -136,6 +137,15 @@ public class Datas : MonoBehaviour
         if (TimeScaleController.Instance == null)
         {
             gameObject.AddComponent<TimeScaleController>();
+        }
+    }
+
+    private void EnsureAmbientFloatingParticlesHost()
+    {
+        GameObject rootObject = transform.parent != null ? transform.parent.gameObject : gameObject;
+        if (rootObject.GetComponent<AmbientFloatingParticlesHost>() == null)
+        {
+            rootObject.AddComponent<AmbientFloatingParticlesHost>();
         }
     }
 
