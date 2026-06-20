@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using MoreMountains.Tools;
 using UnityEngine;
@@ -6,20 +5,12 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class GameAudioEventSoundPlayer : MonoBehaviour
 {
-    [Serializable]
-    private struct AudioBinding
-    {
-        public GameAudioEventType eventType;
-        public AudioClip clip;
-        public MMSoundManager.MMSoundManagerTracks track;
-        [Range(0f, 2f)] public float volume;
-        [Range(-3f, 3f)] public float pitch;
-        public bool useTargetPosition;
-    }
-
-    [SerializeField] private List<AudioBinding> audioBindings = new List<AudioBinding>();
+    [SerializeField] private GameAudioCatalog catalog;
 
     private bool m_HasWarnedMissingSoundManager;
+    private bool m_HasWarnedMissingCatalog;
+
+    private GameAudioCatalog Catalog => catalog != null ? catalog : GameAudioCatalog.Instance;
 
     private void OnEnable()
     {
@@ -33,6 +24,20 @@ public class GameAudioEventSoundPlayer : MonoBehaviour
 
     private void HandleGameAudioEvent(GameAudioEvent audioEvent)
     {
+        GameAudioCatalog activeCatalog = Catalog;
+        if (activeCatalog == null)
+        {
+            if (!m_HasWarnedMissingCatalog)
+            {
+                Debug.LogWarning("[GameAudioEventSoundPlayer] 未找到 GameAudioCatalog，请在 Resources 中放置 GameAudioCatalog.asset。", this);
+                m_HasWarnedMissingCatalog = true;
+            }
+
+            return;
+        }
+
+        m_HasWarnedMissingCatalog = false;
+
         if (!MMSoundManager.HasInstance)
         {
             if (!m_HasWarnedMissingSoundManager)
@@ -46,27 +51,32 @@ public class GameAudioEventSoundPlayer : MonoBehaviour
 
         m_HasWarnedMissingSoundManager = false;
 
-        for (int i = 0; i < audioBindings.Count; i++)
+        IReadOnlyList<GameAudioEntry> bindings = activeCatalog.GetEventBindings(audioEvent.EventType);
+        for (int i = 0; i < bindings.Count; i++)
         {
-            AudioBinding binding = audioBindings[i];
-            if (binding.eventType != audioEvent.EventType || binding.clip == null)
-            {
-                continue;
-            }
-            Debug.Log($"Playing sound for event {audioEvent.EventType} with clip {binding.clip.name}");
-            MMSoundManagerPlayOptions options = MMSoundManagerPlayOptions.Default;
-            options.MmSoundManagerTrack = binding.track;
-            options.Volume = binding.volume <= 0f ? 1f : binding.volume;
-            options.Pitch = Mathf.Approximately(binding.pitch, 0f) ? 1f : binding.pitch;
-            options.Location = binding.useTargetPosition
-                ? ResolveWorldPosition(audioEvent.Target != null ? audioEvent.Target : audioEvent.Source)
-                : Vector3.zero;
+            PlayBinding(audioEvent, bindings[i], activeCatalog);
+        }
+    }
 
-            AudioSource playedSource = MMSoundManager.Instance.PlaySound(binding.clip, options);
-            if (playedSource == null)
-            {
-                Debug.LogWarning($"[GameAudioEventSoundPlayer] 事件 {audioEvent.EventType} 已命中绑定 {binding.clip.name}，但 MMSoundManager 未返回 AudioSource。请检查 AudioClip、AudioListener 和音轨设置。", this);
-            }
+    private void PlayBinding(GameAudioEvent audioEvent, GameAudioEntry binding, GameAudioCatalog activeCatalog)
+    {
+        if (binding == null || binding.clip == null)
+        {
+            return;
+        }
+
+        MMSoundManagerPlayOptions options = MMSoundManagerPlayOptions.Default;
+        options.MmSoundManagerTrack = binding.track;
+        options.Volume = activeCatalog.ResolveVolume(binding);
+        options.Pitch = activeCatalog.ResolvePitch(binding);
+        options.Location = binding.useTargetPosition
+            ? ResolveWorldPosition(audioEvent.Target != null ? audioEvent.Target : audioEvent.Source)
+            : Vector3.zero;
+
+        AudioSource playedSource = MMSoundManager.Instance.PlaySound(binding.clip, options);
+        if (playedSource == null)
+        {
+            Debug.LogWarning($"[GameAudioEventSoundPlayer] 事件 {audioEvent.EventType} 已命中 {binding.entryId}，但 MMSoundManager 未返回 AudioSource。", this);
         }
     }
 
