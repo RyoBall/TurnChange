@@ -267,8 +267,8 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 5d59cbe1a6deeae4086fbd74d28bb593, type: 3}
-  m_PlayOnAwake: 1
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 1
@@ -366,11 +366,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 3482490657987949108}
-  bgmEntries:
-  - bgmType: 1
-    clip: {fileID: 8300000, guid: 5d59cbe1a6deeae4086fbd74d28bb593, type: 3}
-  - bgmType: 3
-    clip: {fileID: 8300000, guid: 2c96f1932486f0a478ff9b7223c11e3f, type: 3}
+  catalog: {fileID: 11400000, guid: 4c5ab80f970d96d4790060de4ad8e413, type: 2}
 --- !u!1 &2370144295095397041
 GameObject:
   m_ObjectHideFlags: 0
@@ -1216,37 +1212,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fb4ea0ad7c744d6ac3898c3a75dbeab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioBindings:
-  - eventType: 0
-    clip: {fileID: 8300000, guid: 8378807d371fc264f9628946390df8d1, type: 3}
-    track: 0
-    volume: 0
-    pitch: 0
-    useTargetPosition: 0
-  - eventType: 1
-    clip: {fileID: 8300000, guid: 3a3b0d5941d37f943bed3b6e56d0e8a2, type: 3}
-    track: 0
-    volume: 0
-    pitch: 0
-    useTargetPosition: 0
-  - eventType: 5
-    clip: {fileID: 8300000, guid: e0b7ae24b2caac5419eae50e343e4ed1, type: 3}
-    track: 0
-    volume: 0
-    pitch: 0
-    useTargetPosition: 0
-  - eventType: 6
-    clip: {fileID: 8300000, guid: 826b3506431cce84f8248d3d896e3a8f, type: 3}
-    track: 0
-    volume: 0
-    pitch: 0
-    useTargetPosition: 0
-  - eventType: 4
-    clip: {fileID: 8300000, guid: dd1e9a68d50bab04dbe5955033ff1bac, type: 3}
-    track: 0
-    volume: 0
-    pitch: 0
-    useTargetPosition: 0
+  catalog: {fileID: 11400000, guid: 4c5ab80f970d96d4790060de4ad8e413, type: 2}
 --- !u!114 &4500131897652043652
 MonoBehaviour:
   m_ObjectHideFlags: 0

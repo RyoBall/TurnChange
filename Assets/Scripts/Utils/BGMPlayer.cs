@@ -17,23 +17,16 @@ public class BGMPlayer : MonoBehaviour
         Result = 5
     }
 
-    [Serializable]
-    public class BGMEntry
-    {
-        public BGMType bgmType;
-        public AudioClip clip;
-    }
-
     public static BGMPlayer Instance { get; private set; }
 
     [SerializeField] private AudioSource audioSource;
-    [SerializeField] private List<BGMEntry> bgmEntries = new List<BGMEntry>();
-
-    private readonly Dictionary<BGMType, AudioClip> m_BgmClipLookup = new Dictionary<BGMType, AudioClip>();
+    [SerializeField] private GameAudioCatalog catalog;
 
     private Coroutine m_PlayCoroutine;
 
     public BGMType CurrentBGMType { get; private set; } = BGMType.None;
+
+    private GameAudioCatalog Catalog => catalog != null ? catalog : GameAudioCatalog.Instance;
 
     private void Awake()
     {
@@ -44,7 +37,28 @@ public class BGMPlayer : MonoBehaviour
         }
 
         Instance = this;
-        RebuildLookup();
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+        // 避免 Prefab 上 Play On Awake 直接播 BGM，绕过配置表。
+        audioSource.playOnAwake = false;
+        if (audioSource.isPlaying)
+        {
+            audioSource.Stop();
+        }
+    }
+
+    private void Start()
+    {
+        if (CurrentBGMType != BGMType.None)
+        {
+            return;
+        }
+
+        PlayBGM(BGMType.Lobby);
     }
 
     public void PlayBGM(BGMType bgmType, float delayBeforePlay = 0f)
@@ -55,9 +69,9 @@ public class BGMPlayer : MonoBehaviour
             return;
         }
 
-        if (!TryGetClip(bgmType, out AudioClip clip))
+        if (!TryGetEntry(bgmType, out GameAudioEntry entry))
         {
-            Debug.LogWarning($"[BGMPlayer] 未找到 {bgmType} 对应的 BGM。", this);
+            Debug.LogWarning($"[BGMPlayer] 未找到 {bgmType} 对应的 BGM 配置。", this);
             return;
         }
 
@@ -66,7 +80,7 @@ public class BGMPlayer : MonoBehaviour
             StopCoroutine(m_PlayCoroutine);
         }
 
-        m_PlayCoroutine = StartCoroutine(PlayBGMRoutine(bgmType, clip, Mathf.Max(0f, delayBeforePlay)));
+        m_PlayCoroutine = StartCoroutine(PlayBGMRoutine(bgmType, entry, Mathf.Max(0f, delayBeforePlay)));
     }
 
     public void PauseBGM()
@@ -104,15 +118,29 @@ public class BGMPlayer : MonoBehaviour
 
     public bool TryGetClip(BGMType bgmType, out AudioClip clip)
     {
-        if (m_BgmClipLookup.Count == 0)
+        if (TryGetEntry(bgmType, out GameAudioEntry entry))
         {
-            RebuildLookup();
+            clip = entry.clip;
+            return clip != null;
         }
 
-        return m_BgmClipLookup.TryGetValue(bgmType, out clip) && clip != null;
+        clip = null;
+        return false;
     }
 
-    private IEnumerator PlayBGMRoutine(BGMType bgmType, AudioClip clip, float delayBeforePlay)
+    private bool TryGetEntry(BGMType bgmType, out GameAudioEntry entry)
+    {
+        GameAudioCatalog activeCatalog = Catalog;
+        if (activeCatalog == null)
+        {
+            entry = null;
+            return false;
+        }
+
+        return activeCatalog.TryGetBgmEntry(bgmType, out entry);
+    }
+
+    private IEnumerator PlayBGMRoutine(BGMType bgmType, GameAudioEntry entry, float delayBeforePlay)
     {
         if (audioSource.isPlaying)
         {
@@ -125,26 +153,34 @@ public class BGMPlayer : MonoBehaviour
         }
 
         audioSource.Stop();
-        audioSource.clip = clip;
+        audioSource.clip = entry.clip;
+        audioSource.loop = entry.loop;
+        ApplyEntrySettings(entry);
         audioSource.Play();
 
         CurrentBGMType = bgmType;
         m_PlayCoroutine = null;
     }
 
-    private void RebuildLookup()
+    public void RefreshCurrentBgmSettings()
     {
-        m_BgmClipLookup.Clear();
-
-        for (int i = 0; i < bgmEntries.Count; i++)
+        if (CurrentBGMType == BGMType.None || audioSource == null)
         {
-            BGMEntry entry = bgmEntries[i];
-            if (entry == null || entry.clip == null || entry.bgmType == BGMType.None)
-            {
-                continue;
-            }
-
-            m_BgmClipLookup[entry.bgmType] = entry.clip;
+            return;
         }
+
+        if (!TryGetEntry(CurrentBGMType, out GameAudioEntry entry))
+        {
+            return;
+        }
+
+        ApplyEntrySettings(entry);
+    }
+
+    private void ApplyEntrySettings(GameAudioEntry entry)
+    {
+        GameAudioCatalog activeCatalog = Catalog;
+        audioSource.volume = activeCatalog != null ? activeCatalog.ResolveVolume(entry) : 1f;
+        audioSource.pitch = activeCatalog != null ? activeCatalog.ResolvePitch(entry) : 1f;
     }
 }
