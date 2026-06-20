@@ -224,6 +224,9 @@ public class LevelSetupManager : MonoBehaviour
         //结束战斗增益会话，结算界面可能需要读取一些数据来显示，因此放在前面执行，耦合度略高
         TemporaryBattleModifierRuntimeManager.CompleteBattleModifierSession();
 
+        // 播放战后剧情对话（仅在胜利时）
+        yield return StartCoroutine(PlayPostBattleDialogs());
+
         if (settlementView != null)
         {
             yield return settlementView.PlaySettlementSequence(rewardExperience, rewardGold);
@@ -231,6 +234,22 @@ public class LevelSetupManager : MonoBehaviour
         }
 
         Debug.LogWarning("[LevelSetupManager] 缺少 BattleSettlementView，已结算奖励但未显示结算界面。", this);
+    }
+
+    /// <summary>
+    /// 播放战后剧情对话（仅在胜利时）
+    /// </summary>
+    private IEnumerator PlayPostBattleDialogs()
+    {
+        if (m_pendingBattleLevelData == null || !m_pendingBattleLevelData.HasPostBattleDialogs)
+        {
+            yield break;
+        }
+
+        if (BattleStoryDialogPlayer.Instance != null)
+        {
+            yield return BattleStoryDialogPlayer.Instance.PlayDialogs(m_pendingBattleLevelData.postBattleDialogs);
+        }
     }
 
     /// <summary>

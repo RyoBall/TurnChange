@@ -160,6 +160,7 @@
      <Compile Include="Assets\Scripts\局内\回合模块\TurnManager.cs" />
      <Compile Include="Assets\Scripts\Utils\UIMouseFollowEffect.cs" />
      <Compile Include="Assets\Scripts\局外\背包\ModulePlacementBoard.cs" />
+     <Compile Include="Assets\Scripts\局内\关卡\BattleStoryDialogData.cs" />
      <Compile Include="Assets\Scripts\局内\DamageCounter.cs" />
      <Compile Include="Assets\Scripts\局内\DictionaryManager.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelSelectionListLoader.cs" />
@@ -172,6 +173,7 @@
      <Compile Include="Assets\Scripts\局内\环境\BattleEnvironment.cs" />
      <Compile Include="Assets\Scripts\局外\切换界面\StartGameButton.cs" />
      <Compile Include="Assets\Scripts\局外\背包\ModuleCellFactory.cs" />
+     <Compile Include="Assets\Scripts\局内\关卡\BattleStoryDialogPlayer.cs" />
      <Compile Include="Assets\Scripts\局内\状态\State.cs" />
      <Compile Include="Assets\Scripts\局内\CinemachineCameraManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ObjectSpin.cs" />

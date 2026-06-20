@@ -16,6 +16,12 @@ public class LevelSelectionData : ScriptableObject//关卡数据
     [Min(0)] public int rewardExperience;
     [Min(0)] public int rewardGold;
 
+    [Header("剧情对话")]
+    [Tooltip("战前对话（在切入技之前播放）")]
+    public List<BattleStoryDialogData> preBattleDialogs = new List<BattleStoryDialogData>();
+    [Tooltip("战后对话（仅在胜利时播放，在结算界面之前）")]
+    public List<BattleStoryDialogData> postBattleDialogs = new List<BattleStoryDialogData>();
+
     public IReadOnlyList<LevelEnemyWaveData> GetEnemyWaves()
     {
         return enemyWaves != null ? enemyWaves : Array.Empty<LevelEnemyWaveData>();

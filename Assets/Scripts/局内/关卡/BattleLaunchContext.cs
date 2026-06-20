@@ -26,8 +26,12 @@ public class PendingBattleLevelData
     public int rewardGold;
     public List<BattleEnemyWaveData> enemyWaves = new List<BattleEnemyWaveData>();
     public List<CharacterRosterData> selectedFieldCharacters = new List<CharacterRosterData>();
+    public List<BattleStoryDialogData> preBattleDialogs = new List<BattleStoryDialogData>();
+    public List<BattleStoryDialogData> postBattleDialogs = new List<BattleStoryDialogData>();
 
     public int WaveCount => enemyWaves != null ? enemyWaves.Count : 0;
+    public bool HasPreBattleDialogs => preBattleDialogs != null && preBattleDialogs.Count > 0;
+    public bool HasPostBattleDialogs => postBattleDialogs != null && postBattleDialogs.Count > 0;
 
     public IReadOnlyList<BattleEnemySpawnData> GetWaveEnemies(int waveIndex)
     {
@@ -123,6 +127,16 @@ public static class BattleLaunchContext
             }
         }
 
+        // 传递剧情对话数据
+        if (source.preBattleDialogs != null)
+        {
+            pendingData.preBattleDialogs.AddRange(source.preBattleDialogs);
+        }
+        if (source.postBattleDialogs != null)
+        {
+            pendingData.postBattleDialogs.AddRange(source.postBattleDialogs);
+        }
+
         s_pendingLevelData = pendingData;
     }
 
@@ -141,5 +155,13 @@ public static class BattleLaunchContext
     public static void ClearPendingLevelData()
     {
         s_pendingLevelData = null;
+    }
+
+    /// <summary>
+    /// 从已有的 PendingBattleLevelData 重新设置（不消费，用于 TurnManager 读取后还原）
+    /// </summary>
+    public static void SetPendingLevelDataFromPending(PendingBattleLevelData pendingData)
+    {
+        s_pendingLevelData = pendingData;
     }
 }

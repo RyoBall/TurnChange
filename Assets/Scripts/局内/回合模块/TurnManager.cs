@@ -117,7 +117,20 @@ public class TurnManager : MonoBehaviour
             yield return new WaitUntil(() => TutorialController.Instance == null || !TutorialController.Instance.IsTutorialActive);
         }
         TemporaryBattleModifierRuntimeManager.NotifyBattleStarted();
+
+        // 播放战前剧情对话（在切入技之前）
+        yield return StartCoroutine(PlayPreBattleDialogs());
+
         yield return StartCoroutine(TriggerOpeningEnterSkills());
+        // 开场技能可能导致敌人直接死亡，在进入回合循环前先检查一次战斗进度
+        if (LevelSetupManager.Instance != null)
+        {
+            yield return LevelSetupManager.Instance.ResolveBattleProgressAfterTurn();
+            if (LevelSetupManager.Instance.IsBattleResolved)
+            {
+                yield break;
+            }
+        }
         //回合开始
         isTurnInitialized = true;
         yield return StartCoroutine(RunTurnLoop());
@@ -151,6 +164,30 @@ public class TurnManager : MonoBehaviour
             SkillExecuteManager.ExecuteSkill(character, enterSkill);
             yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
             yield return new WaitForSeconds(0.5f);
+        }
+    }
+
+    /// <summary>
+    /// 播放战前剧情对话（在切入技之前）
+    /// </summary>
+    private IEnumerator PlayPreBattleDialogs()
+    {
+        PendingBattleLevelData pendingData = BattleLaunchContext.ConsumePendingLevelData();
+        // 注意：ConsumePendingLevelData 会清空静态数据，这里先消费再立即设回去
+        // 因为 LevelSetupManager 之后还需要消费一次
+        if (pendingData != null)
+        {
+            BattleLaunchContext.SetPendingLevelDataFromPending(pendingData);
+        }
+
+        if (pendingData == null || !pendingData.HasPreBattleDialogs)
+        {
+            yield break;
+        }
+
+        if (BattleStoryDialogPlayer.Instance != null)
+        {
+            yield return BattleStoryDialogPlayer.Instance.PlayDialogs(pendingData.preBattleDialogs);
         }
     }
 
