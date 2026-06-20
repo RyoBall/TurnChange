@@ -533,7 +533,9 @@ public class CharacterSkillBase : SkillBase
         bool ifAttack = false;
         State.RunBatchedDotEvent(character, () =>
         {
-            foreach (var state in target.States)
+            // 遍历前拷贝列表，防止 DotTrigger 内 EndState 修改原集合导致枚举异常
+            var statesSnapshot = new List<State>(target.States);
+            foreach (var state in statesSnapshot)
             {
                 if (state != null && state.isDot)
                 {
