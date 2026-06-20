@@ -8,10 +8,20 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2098231368019806602, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3016266750698704662, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
       propertyPath: m_Name
       value: SummonedChess
+      objectReference: {fileID: 0}
+    - target: {fileID: 3494023799144250641, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5504820007762556165, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
@@ -160,18 +170,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &7592298607768642005 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3195374147485118276, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
-    type: 3}
-  m_PrefabInstance: {fileID: 4973518256220343953}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7844868267848548743 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3016266750698704662, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
@@ -204,7 +202,6 @@ MonoBehaviour:
   critDamage: 0
   K: 0
   currentShield: 0
-  enterFeedback: {fileID: 7592298607768642005}
   hitFeedback: {fileID: 5932543080969438605}
   dieFeedback: {fileID: 7436429943132800902}
   healFeedback: {fileID: 1580991869983694534}
