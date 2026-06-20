@@ -200,9 +200,13 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
         if (m_isInStagger) return null;
 
         List<EnemySkillBase> stanceSkills = GetSkillsForCurrentStance();
-        if (stanceSkills.Count == 0) return null;
+        if (stanceSkills.Count > 0)
+        {
+            return stanceSkills[Random.Range(0, stanceSkills.Count)];
+        }
 
-        return stanceSkills[Random.Range(0, stanceSkills.Count)];
+        // 当前姿态技能全部不可用时，回退到基类通用收集逻辑
+        return base.GetForcedSkillForTurn();
     }
 
     // ============ 姿态状态机 ============

@@ -27,22 +27,9 @@ public class ChaosDragonEnemy : DragonBossEnemy
 
     public override IEnumerator PerformTurn()
     {
-        if (!IsBattleVisible || dead)
+        yield return BeginTurnPreActions();
+        if (!CanProceedWithTurn)
         {
-            yield break;
-        }
-
-        TickSkillCooldowns();
-        OnTurnStartBeforeStateSettlement();
-        yield return new WaitForSeconds(0.2f);
-        yield return ProcessStatesOnTurnStart();
-        if (dead)
-        {
-            yield break;
-        }
-        if (!CanActThisTurn())
-        {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
             yield break;
         }
 

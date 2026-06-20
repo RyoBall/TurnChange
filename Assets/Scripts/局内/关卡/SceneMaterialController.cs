@@ -26,6 +26,12 @@ public class SceneMaterialController : MonoBehaviour
     /// <summary>克隆后的材质B</summary>
     private Material m_clonedMaterialB;
 
+    /// <summary>克隆后的材质A（只读）</summary>
+    public Material ClonedMaterialA => m_clonedMaterialA;
+
+    /// <summary>克隆后的材质B（只读）</summary>
+    public Material ClonedMaterialB => m_clonedMaterialB;
+
     /// <summary>是否已初始化材质</summary>
     private bool m_materialsInitialized;
 

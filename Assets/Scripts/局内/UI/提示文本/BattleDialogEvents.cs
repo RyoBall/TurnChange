@@ -44,6 +44,9 @@ public enum BattleDialogEventType
     /// <summary>皇后加冕后耗尽威望</summary>
     ChessQueenPrestigeDepleted,
 
+    /// <summary>皇后后袭王座落空（王棋丢失）</summary>
+    ChessQueenThroneMissed,
+
     // ============ 三头龙 Boss ============
     /// <summary>三头龙入场提示</summary>
     DragonEnter,

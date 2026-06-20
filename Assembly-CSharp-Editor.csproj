@@ -42,6 +42,7 @@
   <ItemGroup>
      <Compile Include="Assets\Editor\CSVReader.cs" />
      <Compile Include="Assets\Editor\GridModuleImporter.cs" />
+     <Compile Include="Assets\Editor\EnemySkillImporter.cs" />
      <Compile Include="Assets\Editor\AmbientFloatingParticlesPrefabCreator.cs" />
      <Compile Include="Assets\Editor\TutorialEnemyRosterDataGenerator.cs" />
      <Compile Include="Assets\Editor\CharacterDataImporter.cs" />

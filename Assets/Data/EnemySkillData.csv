@@ -1,0 +1,38 @@
+敌人/技能名称,Type,SkillCoef,SkillBase,TargetType,CooldownTurns,ExtraData1,ExtraData2,ExtraData3,ExtraData4,备注
+敌人/技能名称,Type,SkillCoef,SkillBase,TargetType,CooldownTurns,ExtraData1,ExtraData2,ExtraData3,ExtraData4,备注
+护盾术,ShieldSupport_1,0,0,Self,0,0.15,0,0,0,护盾=HPmax×ExtraData1(15%); ExtraData1=护盾比例
+盾击,ShieldSupport_2,0.28,15,Character,0,0.4,0,0,0,行动延后=BaseActionValue×ExtraData1(40%)
+刺击,SingleAttack,0.9,15,Character,0,2,0,0,0,混沌值层数=ExtraData1(2)
+迷幻,Debuff_1,0,0,Character,0,2,0,0,0,混沌值层数=ExtraData1(2)
+瞩目,Debuff_2,0.45,15,Character,0,1,0,0,0,造成伤害+瞩目层数=ExtraData1(1)
+爆,Exploder,0,0,None,0,0,0,0,0,技能一仅提示启动失败(空过); ExtraData1=技能二可用概率(默认0.5即75%选一/25%选二)
+爆,Exploder2,0.6,0,Character,0,0.5,2,3,0,ExtraData1=CanUse概率(0.5); ExtraData2=倒计时层数(2); ExtraData3=爆炸混沌层数(3)
+鸩毒,DotMaster_1,0.24,0,Character,0,2,0,0,0,造成伤害+鸩毒层数=ExtraData1(2)
+毒爆,DotMaster_2,0.15,5,Character,0,0.2,0.5,1,0,ExtraData1=判定概率系数(0.2); ExtraData2=削减比例(0.5); ExtraData3=失败额外层数(1)
+走,ChessPawnAction,0.4,10,Character,0,0,0,0,0,原始伤害=Atk×0.40+10
+混沌冲击,ChessQueenChaosCharge,0.45,25,Character,0,2,0,0,0,命中目标施加2点混沌值
+兵卒召唤,ChessQueenSummonPawn,0,0,Self,0,0,0,0,0,召唤1个兵获得1威望
+后袭王座,ChessQueenThroneAssault,1.5,60,Character,0,0,0,0,0,蓄力后释放自身行动延后100力竭1回合
+王权加冕,ChessQueenCoronation,0.8,50,Character,0,0.2,0,0,0,消耗威望额外伤害 无视抵御
+单体爆发,ChessQueenSingleBurst,0.85,25,Character,0,1,0,0,0,命中目标施加1点混沌值
+窒息龙息,DragonDotSkill1,0.3,10,Character,0,1,0,0,0,命中目标施加1层龙息
+窒息龙息,DragonDotSkill1,0.5,15,Character,0,2,0,0,0,强化版 命中目标施加2层龙息
+净化吞噬,DragonDotSkill2,0,0,Self,0,1,0,0,0,清除所有友方1种随机异常状态
+净化吞噬,DragonDotSkill2,0,0,Self,0,2,0,0,0,强化版 清除所有友方2种随机异常状态
+沉重鞭击,DragonDirectSkill1,0.65,20,Character,0,0,0,0,0,随机目标无额外效果
+沉重鞭击,DragonDirectSkill1,0.9,25,Character,0,1,0,0,0,强化版 命中目标施加1层瞩目
+瞩目诅咒,DragonDirectSkill2,0,0,Character,0,1,0,0,0,命中目标施加1层瞩目
+瞩目诅咒,DragonDirectSkill2,0,0,Character,0,2,0,0,0,强化版 命中目标施加2层瞩目
+混沌迟滞,DragonChaosSkill1,0,0,Character,0,15,1,0,0,AV_target+=15; 给予1点指挥点
+混沌迟滞,DragonChaosSkill1,0.15,0,Character,0,30,2,0,0,强化版 AV_target+=30; 根据混沌点结算额外伤害
+混沌跃动,DragonChaosSkill2,0,0,Character,0,0.4,0,0,0,自身和命中目标速度步长-40%
+混沌跃动,DragonChaosSkill2,0,0,Character,0,0.5,0.2,0,0,强化版 速度步长-50%; 自身下次输出+20%
+无尽炼狱,DragonDotRage,0.3,15,Character,0,1,0,0,0,命中目标施加一层不灭之焰
+终末宣判,DragonDirectRage,1.35,60,Character,0,0,0,0,0,即死保底伤害=Atk×1.35+60
+震慑溃灭,DragonChaosRage,1.5,50,Character,0,2,0,0,0,震慑引爆伤害=Atk×1.5+50
+易伤突刺,SwordsmanThrust,0.45,15,Character,0,2,0,0,0,命中目标施加2层易伤 伤害×1.3
+剑舞连斩,SwordsmanDance,0.18,5,Character,0,1,0,0,0,随机5次对象每次命中施加1层混沌值
+铁壁格挡,SwordsmanBlock,0,0,Self,0,1,2,0,0,自身1层抵御 随机1名敌人2层混沌值
+稳固架势,SwordsmanSteady,0,0,Self,0,0.05,0,0,0,回复5%MaxHP清除1种负面状态
+扰敌步法,SwordsmanDisrupt,0.15,5,Character,0,0,0,0,0,自身下次行动提前50%
+迅影刺击,SwordsmanShadow,0.3,10,Character,0,0,0,0,0,锁定行动条最前单位 行动延后30%

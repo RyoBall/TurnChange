@@ -63,14 +63,14 @@ public class SkillDescription : MonoBehaviour
             UpdateKeywordText(skill);
             SpawnTags(skill);
             m_currentSequence.Join(m_canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
-            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
+            BackgroundManager.Instance.ChangeBackground(true);
         }
         else
         {
             ResumeCameraSway();
             DestroySpawnedTags();
             m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
-            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
+            BackgroundManager.Instance.ChangeBackground(false);
             m_currentSequence.AppendCallback(ClearDescriptionText);
         }
     }
@@ -97,14 +97,14 @@ public class SkillDescription : MonoBehaviour
             DestroySpawnedTags();
             UpdateKeywordBackground();
             m_currentSequence.Join(m_canvasGroup.DOFade(1, 0.3f).SetEase(Ease.InOutQuad));
-            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(true));
+            BackgroundManager.Instance.ChangeBackground(true);
         }
         else
         {
             ResumeCameraSway();
             DestroySpawnedTags();
             m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
-            m_currentSequence.Join(BackgroundManager.Instance.ChangeBackground(false));
+            BackgroundManager.Instance.ChangeBackground(false);
             m_currentSequence.AppendCallback(ClearDescriptionText);
         }
     }

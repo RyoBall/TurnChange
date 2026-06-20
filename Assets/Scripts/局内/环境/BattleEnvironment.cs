@@ -14,7 +14,7 @@ public class BattleEnvironment : ScriptableObject
     public EnvironmentType environmentType;
     [Tooltip("默认持续行动值")]
     [Min(1)]
-    [SerializeField] private int defaultDurationActionValue = 1000;
+    [SerializeField] private int defaultDurationActionValue = 500;
 
     [Tooltip("剩余持续行动值（运行时）")]
     private int remainingActionValue;

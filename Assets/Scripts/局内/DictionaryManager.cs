@@ -328,7 +328,17 @@ public class EnemySkillDictionaryManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"重复的敌人技能类型: {skill.enemySkillType}，请检查资源命名和配置");
+                // 同一 EnemySkillType 存在多个变体（如普通版/强化版），保留系数更高的版本
+                EnemySkillBase existing = s_enemySkillDict[skill.enemySkillType];
+                if (skill.skillCoef > existing.skillCoef || skill.skillBase > existing.skillBase)
+                {
+                    s_enemySkillDict[skill.enemySkillType] = skill;
+                    Debug.Log($"敌人技能 {skill.enemySkillType} 替换为更高数值版本: coef={skill.skillCoef} base={skill.skillBase}");
+                }
+                else
+                {
+                    Debug.LogWarning($"敌人技能 {skill.enemySkillType} 存在多个变体，保留数值更高的版本");
+                }
             }
         }
 
@@ -372,7 +382,7 @@ public class EnemySkillDictionaryManager : MonoBehaviour
             return template.skillName;
         }
 
-        if (skillType == EnemySkillType.NoneNone)
+        if (skillType == EnemySkillType.Exploder2)
         {
             return "";
         }

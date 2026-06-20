@@ -30,6 +30,10 @@ public class Character : UnitCombatant
     private const int MaxChaosValue = 5;
     public int ChaosValue => chaosValue;
     public int MaxChaosValueConst => MaxChaosValue;
+
+    /// <summary>场上行动值混沌累加器：每累计 100 行动值自动加 1 混沌点，下场后清零</summary>
+    private float m_actionValueChaosAccumulator = 0f;
+    private const float ActionValuePerChaosPoint = 100f;
     [Header("换人冷却")]
     [SerializeField] private float switchCooldownRemaining;
     [SerializeField] private float switchCooldownMax = 200f;
@@ -47,6 +51,12 @@ public class Character : UnitCombatant
     private Sprite m_turnImageSprite;
     /// <summary>从 CharacterRosterData 中获取的回合图像 Sprite</summary>
     public override Sprite TurnImageSprite => m_turnImageSprite;
+    private Sprite m_illustrationSprite;
+    /// <summary>从 CharacterRosterData 中获取的立绘 Sprite</summary>
+    public Sprite IllustrationSprite => m_illustrationSprite;
+    private Vector2 m_illustrationSize;
+    /// <summary>从 CharacterRosterData 中获取的立绘尺寸</summary>
+    public Vector2 IllustrationSize => m_illustrationSize;
     [SerializeField] private List<CanvasGroup> slidersCanvasGroups;
     [Header("位移动画")]
     [SerializeField] private float moveAnimDuration = 0.5f;
@@ -127,6 +137,7 @@ public class Character : UnitCombatant
     public override void Die()
     {
         base.Die();
+        ResetActionValueChaosAccumulator();
         ResetAllCharactersSwitchCooldown();
     }
 
@@ -224,6 +235,33 @@ public class Character : UnitCombatant
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"混沌-{reducedValue} ({chaosValue}/{MaxChaosValue})");
         TemporaryBattleModifierRuntimeManager.NotifyChaosReduced(this, reducedValue);
         return reducedValue;
+    }
+
+    /// <summary>
+    /// 累加场上行动值。每累计 ActionValuePerChaosPoint 点行动值，自动增加 1 点混沌值。
+    /// 由 TurnManager 在推进行动值时调用。
+    /// </summary>
+    public void AccumulateActionValueForChaos(float actionValue)
+    {
+        if (dead || chaosValue >= MaxChaosValue)
+        {
+            return;
+        }
+
+        m_actionValueChaosAccumulator += actionValue;
+        while (m_actionValueChaosAccumulator >= ActionValuePerChaosPoint && chaosValue < MaxChaosValue)
+        {
+            m_actionValueChaosAccumulator -= ActionValuePerChaosPoint;
+            TryAddChaos(1);
+        }
+    }
+
+    /// <summary>
+    /// 清零行动值混沌累加器。角色下场（被切出/死亡）时调用。
+    /// </summary>
+    public void ResetActionValueChaosAccumulator()
+    {
+        m_actionValueChaosAccumulator = 0f;
     }
     #region  换人cd相关
 
@@ -332,18 +370,18 @@ public class Character : UnitCombatant
     private void OnMouseDown()
     {
         Debug.Log($"Clicked on character: {name}");
-        if (CharacterManager.Instance.IsSelectingFieldCharacter)
-        {
-            CharacterManager.Instance?.OnFieldCharacterClicked(this);
-            SkillDescription.Instance.HideDescription();
-            StopMouseHoverEffect();
-        }
         if (SkillManager.Instance.IsSelectingCharacters)
         {
             if (dead)
                 return;
             SkillManager.Instance?.OnCharacterClicked(this);
-            StopMouseHoverEffect(); 
+            StopMouseHoverEffect();
+        }
+        else if (CharacterManager.Instance.IsSelectingFieldCharacter)
+        {
+            CharacterManager.Instance?.OnFieldCharacterClicked(this);
+            SkillDescription.Instance.HideDescription();
+            StopMouseHoverEffect();
         }
     }
 
@@ -510,17 +548,25 @@ public class Character : UnitCombatant
     }
 
     /// <summary>
-    /// 被切出时调用，护盾减半（向下取整）
+    /// 被切出时调用，护盾减半（向下取整），并清零行动值混沌累加器
     /// </summary>
     public void OnSwapOut()
     {
         currentShield /= 2;
+        ResetActionValueChaosAccumulator();
     }
 
     /// <summary>设置回合图像 Sprite，由 LevelCharacterSpawner 在配置角色时调用</summary>
     public void SetTurnImageSprite(Sprite sprite)
     {
         m_turnImageSprite = sprite;
+    }
+
+    /// <summary>设置立绘 Sprite 和尺寸，由 LevelCharacterSpawner 在配置角色时调用</summary>
+    public void SetIllustration(Sprite sprite, Vector2 size)
+    {
+        m_illustrationSprite = sprite;
+        m_illustrationSize = size;
     }
 
     public void LoadDataFromCSV()

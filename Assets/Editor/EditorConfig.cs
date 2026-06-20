@@ -8,6 +8,7 @@ public class AppConfig : ScriptableObject
     public string CharacterDataCSVPath = "Assets/Data/CharacterData.csv";
     public string EnemyDataCSVPath = "Assets/Data/EnemyData.csv";
     public string CharacterSkillCSVPath = "Assets/Data/CharacterSkillData.csv";
+    public string EnemySkillCSVPath = "Assets/Data/EnemySkillData.csv";
     public string GridModuleCSVPath = "Assets/Data/GridModuleData.csv";
     public string StateDataCSVPath = "Assets/Data/StateData.csv";
     public string TutorialDataCSVPath = "Assets/Data/TutorialData.csv";
@@ -15,6 +16,7 @@ public class AppConfig : ScriptableObject
     public string TagColorCSVPath = "Assets/Data/TagColor.csv";
     public string BattleLevelDataCSVPath = "Assets/Data/BattleLevelData.csv";
     public string CharacterSkillAssetOutputPath = "Assets/Resources/配置可编程物体/角色技能";
+    public string EnemySkillAssetOutputPath = "Assets/Resources/配置可编程物体/敌人技能";
     public string LevelSelectionDataOutputPath = "Assets/Resources/配置可编程物体/关卡数据";
     public string GridModuleAssetOutputPath = "Assets/Resources/配置可编程物体/模块";
     public string StateAssetOutputPath = "Assets/Resources/配置可编程物体/状态";

@@ -154,28 +154,84 @@ public class Enemy : UnitCombatant
 
     public override IEnumerator PerformTurn()
     {
-        if (!m_isBattleVisible || dead)
+        yield return BeginTurnPreActions();
+        if (!CanProceedWithTurn)
         {
             yield break;
         }
-        
-        TickSkillCooldowns();
-        OnTurnStartBeforeStateSettlement();
-        yield return new WaitForSeconds(0.2f);
-        yield return ProcessStatesOnTurnStart();
-        //如果死亡了就直接结束回合
-        if (dead)
+        // 自爆兵：倒计时归零后自动爆炸
+        if (explodeState == ExplodeType.ReadyToBurst)
         {
-            yield break;
-        }
-        if (!CanActThisTurn())
-        {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
+            yield return PerformExploderBurst();
             yield break;
         }
         //执行行动
         yield return ActionCoroutine();
         OnEnemyActEvent?.Invoke();
+    }
+
+    /// <summary>
+    /// 回合前置步骤：可见性检查 → 冷却Tick → 状态结算 → 死亡检查 → 无法行动检查。
+    /// 调用后检查 m_canProceedWithTurn 决定是否继续执行回合行动。
+    /// 子类覆盖 PerformTurn 时应调用此方法作为第一步。
+    /// </summary>
+    private bool m_canProceedWithTurn;
+
+    /// <summary>回合前置步骤完成后是否为可继续状态。子类在 BeginTurnPreActions() 后检查此值。</summary>
+    protected bool CanProceedWithTurn => m_canProceedWithTurn;
+
+    protected IEnumerator BeginTurnPreActions()
+    {
+        m_canProceedWithTurn = false;
+
+        if (!m_isBattleVisible || dead)
+        {
+            yield break;
+        }
+
+        TickSkillCooldowns();
+        OnTurnStartBeforeStateSettlement();
+        yield return new WaitForSeconds(0.2f);
+        yield return ProcessStatesOnTurnStart();
+
+        if (dead)
+        {
+            yield break;
+        }
+
+        if (!CanActThisTurn())
+        {
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
+            yield break;
+        }
+
+        m_canProceedWithTurn = true;
+    }
+
+    /// <summary>自爆兵爆炸：对全体造成伤害后自毁</summary>
+    private IEnumerator PerformExploderBurst()
+    {
+        // 获取技能二的实例来读取伤害参数
+        EnemySkillBase burstSkill = GetSkillInstance(EnemySkillType.Exploder2);
+        float coef = burstSkill != null ? burstSkill.skillCoef : 0.6f;
+        float baseDmg = burstSkill != null ? burstSkill.skillBase : 0f;
+        float chaosExtraData = burstSkill != null && burstSkill.extraData3 > 0f ? burstSkill.extraData3 : 3f;
+        int chaosAmount = Mathf.Max(0, Mathf.RoundToInt(chaosExtraData));
+
+        var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        State.NotifyDamageSkillUsed(this, allies);
+        foreach (var ally in allies)
+        {
+            if (ally == null) continue;
+            var damageInfo = DamageCounter.CountDamage(this, ally, coef, baseDmg, DamageType.Physical, true, false, false);
+            ally.TakeDamage(damageInfo);
+            if (chaosAmount > 0)
+            {
+                ally.TryAddChaos(chaosAmount);
+            }
+        }
+        TakeDamage(new UnitCombatant.DamageInfo(maxHP, this).AsTrueDamage());
+        yield return WaitForDeathEvents();
     }
 
     public override float ConsumeTurnEndActionValue()

@@ -105,6 +105,9 @@ public class BattleDialogController : MonoBehaviour
             case BattleDialogEventType.ChessQueenPrestigeDepleted:
                 ShowCenterDialog("皇后已耗尽所有威望层数，强度极大被削弱！", importantDialogDuration);
                 break;
+            case BattleDialogEventType.ChessQueenThroneMissed:
+                ShowCenterDialog("由于王棋丢失，皇后的攻击落空了", importantDialogDuration);
+                break;
 
             // ============ 三头龙 ============
             case BattleDialogEventType.DragonEnter:

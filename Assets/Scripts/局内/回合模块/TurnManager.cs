@@ -67,7 +67,7 @@ public class TurnManager : MonoBehaviour
             if (extraCombatant != null)
             {
                 extraCombatant.Initialize(character);
-                extraCombatant.standPosition = character.standPosition;
+                extraCombatant.standPosition = -1; // 换人回合standPosition为0，额外回合设为-1确保在换人回合前执行
             }
             extraCombatant.combatantName = character.combatantName;
             extraCombatant.ChangeActionValue(0f, false);
@@ -298,6 +298,15 @@ public class TurnManager : MonoBehaviour
             {
                 combatant.ChangeActionValue(Mathf.Max(0f, combatant.currentActionValue - advanceValue), false);
             }
+            // 场上角色每累计 100 行动值加 1 混沌点
+            if (CharacterManager.Instance != null)
+            {
+                for (int i = 0; i < CharacterManager.Instance.fieldCharacters.Count; i++)
+                {
+                    Character fieldCharacter = CharacterManager.Instance.fieldCharacters[i];
+                    fieldCharacter?.AccumulateActionValueForChaos(advanceValue);
+                }
+            }
             //推进换人技能的冷却
             if (CharacterManager.Instance != null)
             {
@@ -338,6 +347,9 @@ public class TurnManager : MonoBehaviour
                 actedUnit.ProcessStatesOnTurnEnd();
                 EnvironmentManager.Instance.NotifyCombatantActed(actedUnit);
             }
+
+            // 结算回合结束状态后检查死亡（如燃血自损致死）
+            yield return UnitCombatant.WaitForPendingDeaths();
 
             // 回合结束后重新计算当前角色的下一次行动值。
             if (nextCombatant != null && nextCombatant is UnitCombatant unitCombatant && !unitCombatant.IsDead)

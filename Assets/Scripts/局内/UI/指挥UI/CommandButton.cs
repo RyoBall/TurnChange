@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -27,6 +26,7 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     private RectTransform m_rectTransform;
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
+    private bool m_isPointerOver;
 
     public bool HasSkill => m_skill != null;
     public bool IsChangeSkillButton =>
@@ -64,6 +64,10 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         {
             CharacterManager.Instance.OnReserveSwapAvailabilityChanged -= HandleReserveSwapAvailabilityChanged;
         }
+
+        // 安全复位：防止鼠标离开事件丢失导致按钮保持放大
+        ResetScaleImmediate();
+        m_isPointerOver = false;
     }
 
     void Start()
@@ -96,12 +100,14 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        m_isPointerOver = true;
         SkillDescription.Instance?.ChangeDescription(m_skill);
         PlaySelectAnimation();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        m_isPointerOver = false;
         SkillDescription.Instance?.HideDescription();
         PlayDeselectAnimation();
     }
@@ -118,6 +124,12 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         if (skill == null)
         {
             PlayDeselectAnimation(true);
+        }
+
+        // 技能变更后，如果鼠标不在按钮上，确保缩放复位
+        if (!m_isPointerOver)
+        {
+            ResetScaleImmediate();
         }
     }
 
@@ -202,42 +214,35 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
         KillScaleTween();
         var target = m_defaultScale * selectedScale;
-
-        if (m_rectTransform != null)
-        {
-            m_scaleTween = m_rectTransform.DOScale(target, selectAnimDuration).SetEase(Ease.OutQuad);
-        }
-        else
-        {
-            m_scaleTween = m_rectTransform.DOScale(target, selectAnimDuration).SetEase(Ease.OutQuad);
-        }
+        var t = m_rectTransform != null ? m_rectTransform : (RectTransform)transform;
+        m_scaleTween = t.DOScale(target, selectAnimDuration).SetEase(Ease.OutQuad);
     }
 
     public void PlayDeselectAnimation(bool immediate = false)
     {
         KillScaleTween();
 
-        if (m_rectTransform != null)
+        var t = m_rectTransform != null ? m_rectTransform : (RectTransform)transform;
+        if (immediate)
         {
-            if (immediate)
-            {
-                m_rectTransform.localScale = m_defaultScale;
-            }
-            else
-            {
-                m_scaleTween = m_rectTransform.DOScale(m_defaultScale, selectAnimDuration).SetEase(Ease.OutQuad);
-            }
+            t.localScale = m_defaultScale;
         }
         else
         {
-            if (immediate)
-            {
-                transform.localScale = m_defaultScale;
-            }
-            else
-            {
-                m_scaleTween = transform.DOScale(m_defaultScale, selectAnimDuration).SetEase(Ease.OutQuad);
-            }
+            m_scaleTween = t.DOScale(m_defaultScale, selectAnimDuration).SetEase(Ease.OutQuad);
+        }
+    }
+
+    /// <summary>
+    /// 立即复位缩放，不做动画。用于 OnDisable 等需要同步复位的场景。
+    /// </summary>
+    private void ResetScaleImmediate()
+    {
+        KillScaleTween();
+        var t = m_rectTransform != null ? m_rectTransform : (RectTransform)transform;
+        if (t != null)
+        {
+            t.localScale = m_defaultScale;
         }
     }
 
