@@ -139,10 +139,13 @@ public class ChessQueenEnemy : Enemy
 
     public override IEnumerator PerformTurn()
     {
-        if (!IsBattleVisible || dead)
+        yield return BeginTurnPreActions();
+        if (!CanProceedWithTurn)
         {
             yield break;
         }
+
+        TickQueenSkillCooldowns();
 
         // 随机选择技能（排除不能使用的）
         EnemySkillBase selectedSkill = SelectRandomAvailableSkill();
@@ -173,7 +176,6 @@ public class ChessQueenEnemy : Enemy
             }
             yield return selectedSkill.Execute(this);
         }
-        TickQueenSkillCooldowns();
     }
 
     /// <summary>进入阶段二</summary>
@@ -261,6 +263,9 @@ public class ChessQueenEnemy : Enemy
         List<Character> aliveCharacters = GetAliveFieldCharacters();
         if (aliveCharacters.Count < 2) return;
 
+        // 先移除所有在场角色已有的王棋/车棋标记
+        ClearAllChessMarks(aliveCharacters);
+
         aliveCharacters.Sort((a, b) => a.speed.CompareTo(b.speed));
         Character kingCharacter = aliveCharacters[0];
         Character rookCharacter = aliveCharacters[1];
@@ -273,6 +278,56 @@ public class ChessQueenEnemy : Enemy
         // 触发标记对话
         BattleDialogEvents.Raise(BattleDialogEventType.ChessKingMarked, character: kingCharacter);
         BattleDialogEvents.Raise(BattleDialogEventType.ChessRookMarked, character: rookCharacter);
+    }
+
+    /// <summary>清除所有在场角色的王棋/车棋标记</summary>
+    private void ClearAllChessMarks(List<Character> aliveCharacters)
+    {
+        for (int i = 0; i < aliveCharacters.Count; i++)
+        {
+            Character character = aliveCharacters[i];
+            if (character == null) continue;
+
+            State kingState = character.GetState(StateType.ChessKingMark);
+            if (kingState != null) character.RemoveState(kingState);
+
+            State rookState = character.GetState(StateType.ChessRookMark);
+            if (rookState != null) character.RemoveState(rookState);
+        }
+    }
+
+    /// <summary>
+    /// 确保王棋和车棋标记都存在。
+    /// 如果任一标记丢失，清除所有旧标记并重新分配。
+    /// 返回 true 表示两个标记都存在（或成功重新分配）；返回 false 表示场上角色不足2人，无法标记。
+    /// </summary>
+    public bool TryEnsureChessMarks()
+    {
+        List<Character> aliveCharacters = GetAliveFieldCharacters();
+        if (aliveCharacters.Count < 2)
+        {
+            return false;
+        }
+
+        // 检查两个标记是否都存在
+        bool kingExists = false;
+        bool rookExists = false;
+        for (int i = 0; i < aliveCharacters.Count; i++)
+        {
+            Character character = aliveCharacters[i];
+            if (character == null) continue;
+            if (character.HasState(StateType.ChessKingMark)) kingExists = true;
+            if (character.HasState(StateType.ChessRookMark)) rookExists = true;
+        }
+
+        if (kingExists && rookExists)
+        {
+            return true; // 两个标记都存在，无需操作
+        }
+
+        // 标记不全，重新分配
+        MarkChessKingAndRook();
+        return true;
     }
 
     /// <summary>通知召唤兵卒被击杀</summary>
@@ -396,8 +451,14 @@ public class ChessQueenEnemy : Enemy
 
         if (availableSkills.Count == 0)
         {
-            // 所有技能都不可用，回退到默认
-            return GetSkillInstance(EnemySkillType.ChessQueenChaosCharge);
+            // 所有技能都不可用，回退到默认技能（仍需通过 CanUse 检查）
+            EnemySkillBase fallbackSkill = GetSkillInstance(EnemySkillType.ChessQueenChaosCharge);
+            if (fallbackSkill != null && fallbackSkill.CanUse(this))
+            {
+                return fallbackSkill;
+            }
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}暂无可用技能");
+            return null;
         }
 
         return availableSkills[Random.Range(0, availableSkills.Count)];

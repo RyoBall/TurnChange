@@ -104,6 +104,7 @@ public class CharacterManager : MonoBehaviour
 			{
 				Debug.Log("[CharacterManager] 换人流程取消：未选择场上角色");
 				SetPromptVisible(false);
+				m_isSelectingFieldCharacter = false;
 				yield break;
 			}
 		}

@@ -171,10 +171,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50
-  m_fontSizeBase: 50
+  m_fontSize: 100
+  m_fontSizeBase: 100
   m_fontWeight: 400
-  m_enableAutoSizing: 1
+  m_enableAutoSizing: 0
   m_fontSizeMin: 50
   m_fontSizeMax: 72
   m_fontStyle: 1
@@ -230,6 +230,8 @@ MonoBehaviour:
   damageColor: {r: 1, g: 1, b: 1, a: 1}
   dotDamageColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   healColor: {r: 0, g: 1, b: 0, a: 1}
+  critDamageColor: {r: 1, g: 0.5, b: 0, a: 1}
+  critFontSizeMultiplier: 1.5
   backGroundImage: {fileID: 8400863438778069764}
   scaleDuration: 0.2
   maxScaleMultiplier: 1.8

@@ -124,7 +124,7 @@ public class SkillManager : MonoBehaviour
         UpdatePromptText();
     }
 
-    public IEnumerator SelectCharactersCoroutine(int requiredCount, List<Character> selectedResult, Character sourceCharacter = null)
+    public IEnumerator SelectCharactersCoroutine(int requiredCount, List<Character> selectedResult)
     {
         int aliveCount = CharacterManager.Instance != null ? CharacterManager.Instance.fieldCharacters.Count : 0;
         int safeRequiredCount = Mathf.Max(1, requiredCount);

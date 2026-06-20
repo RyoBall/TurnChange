@@ -282,11 +282,60 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ad8f65ad9c3b5a4da8377bc34a1cd76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backgroundMaterial: {fileID: 2100000, guid: a8effda136f6e9c488fd53b308983f8e, type: 2}
-  defaultColor: {r: 1, g: 1, b: 1, a: 1}
-  darkColor: {r: 0.35220122, g: 0.35220122, b: 0.35220122, a: 1}
-  duration: 0.3
-  easeType: 10
+  m_defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  m_darkColor: {r: 0.43137255, g: 0.43137255, b: 0.43137255, a: 1}
+  m_duration: 0.3
+  m_easeType: 7
+  m_extraMaterialSource: 1
+--- !u!1 &28579573
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 28579574}
+  - component: {fileID: 28579575}
+  m_Layer: 0
+  m_Name: "\u5267\u60C5\u7BA1\u7406\u5668"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &28579574
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28579573}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1321639318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &28579575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28579573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78889623c0ee9734f868d7f4db65812c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_dialogDisplayDuration: 3
+  m_dialogInterval: 0.5
+  m_fadeInDuration: 0.4
+  m_fadeOutDuration: 0.3
+  m_dialogYRatio: 0.75
 --- !u!1 &53602674
 GameObject:
   m_ObjectHideFlags: 0
@@ -5111,6 +5160,53 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &708462020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 708462021}
+  - component: {fileID: 708462022}
+  m_Layer: 0
+  m_Name: "\u573A\u666F\u7EB9\u7406\u7BA1\u7406\u5668"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &708462021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708462020}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1321639318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &708462022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708462020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 939b3eddbc6b4b64f9d0497b8b250aeb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRendererA: {fileID: 509479072}
+  targetRendererB: {fileID: 536125238}
+  floorTextureConfig: {fileID: 11400000, guid: 1b28c56315a9a4a4994ba9dc76d0cb8b, type: 2}
 --- !u!1 &713058148
 GameObject:
   m_ObjectHideFlags: 0
@@ -7574,6 +7670,8 @@ Transform:
   - {fileID: 1517433198}
   - {fileID: 713058150}
   - {fileID: 395917113}
+  - {fileID: 28579574}
+  - {fileID: 708462021}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1330856277
@@ -8179,7 +8277,7 @@ MonoBehaviour:
   reserveButtonPrefab: {fileID: 1644372549910762980, guid: 1aa82dc45b9adf642a677f04958df1b4,
     type: 3}
   buttonSpacing: 100
-  buttonHorizontalSpacing: 250
+  buttonHorizontalSpacing: 360
   buttonSlideDuration: 0.2
   buttonStagger: 0.05
   hiddenOffsetY: -300

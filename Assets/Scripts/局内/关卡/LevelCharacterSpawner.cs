@@ -393,6 +393,7 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
         instance.participateInTurnLoopAtStart = participateInTurnLoop;
         instance.standPosition = standPosition;
         instance.SetTurnImageSprite(data.portraitSprite);
+        instance.SetIllustration(data.illustrationSprite, data.illustrationSize);
         // Debug 模式使用关卡配置的角色等级，否则使用全局战队等级
         if (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode)
         {

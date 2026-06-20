@@ -822,7 +822,15 @@ public class BurningBloodStateBehavior : StateBehaviorBase
 
         float selfDamageRatio = state.baseExtraData1;
         int selfDamage = Mathf.RoundToInt(state.owner.maxHP * selfDamageRatio);
-        state.owner.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, state.owner).AsTrueDamage());
+        // 若当前生命不足以承受自损，则降至1点而不会死亡
+        if (state.owner.currentHP <= selfDamage)
+        {
+            state.owner.TakeDamage(new UnitCombatant.DamageInfo(state.owner.currentHP - 1, state.owner).AsTrueDamage());
+        }
+        else
+        {
+            state.owner.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, state.owner).AsTrueDamage());
+        }
     }
 
     public static bool ConsumeKillFlag(UnitCombatant owner)

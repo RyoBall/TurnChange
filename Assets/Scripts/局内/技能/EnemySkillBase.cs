@@ -12,7 +12,7 @@ public enum EnemySkillType
     Debuff_1,        // 负面手技能一
     Debuff_2,        // 负面手技能二
     Exploder,      // 群体自爆手技能一
-    NoneNone,      // 群体自爆手技能二
+    Exploder2,      // 群体自爆手技能二
     DotMaster_1,     // 持续伤害Dot施加手技能一
     DotMaster_2,      // 持续伤害Dot施加手技能二
     ChessPawnAction,
@@ -71,7 +71,32 @@ public class EnemySkillBase : SkillBase
 
     public bool CanUse(Enemy owner)
     {
-        return m_remainingCooldown <= 0 && (owner == null || owner.CanUseEnemySkill(this));
+        if (m_remainingCooldown > 0) return false;
+        if (owner == null) return true;
+        if (!owner.CanUseEnemySkill(this)) return false;
+
+        // 自爆兵技能一：启动后不可用；启动前始终可用
+        if (enemySkillType == EnemySkillType.Exploder)
+        {
+            if (owner.explodeState == ExplodeType.hasStarted || owner.explodeState == ExplodeType.ReadyToBurst)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        // 自爆兵技能二：启动后不可用；启动前以 extraData1 概率可用（默认0.5，即配合技能一实现75%/25%选择）
+        if (enemySkillType == EnemySkillType.Exploder2)
+        {
+            if (owner.explodeState == ExplodeType.hasStarted || owner.explodeState == ExplodeType.ReadyToBurst)
+            {
+                return false;
+            }
+            float chance = extraData1 > 0f ? extraData1 : 0.5f;
+            return Random.value < chance;
+        }
+
+        return true;
     }
 
     public void TickCooldown()
@@ -126,6 +151,9 @@ public class EnemySkillBase : SkillBase
                 break;
             case EnemySkillType.Exploder:
                 yield return ExploderSkill(self);
+                break;
+            case EnemySkillType.Exploder2:
+                yield return ExploderBurstSkill(self);
                 break;
             case EnemySkillType.DotMaster_1:
                 yield return DotMaster_1(self);
@@ -207,7 +235,7 @@ public class EnemySkillBase : SkillBase
         }
     }
 
-    // 1.护盾手 技能一：给当前HP最低的敌人（包括自己）加护盾
+    // 1.护盾手 技能一：给当前HP绝对值最低的敌方单位施加护盾（护盾比例=extraData1，默认15%最大HP）
     private IEnumerator ShieldSupport_1(Enemy self)
     {
         Enemy target = null;
@@ -220,26 +248,28 @@ public class EnemySkillBase : SkillBase
         }
         if (target != null)
         {
-            int shield = Mathf.RoundToInt(self.maxHP * 0.1f);
+            float shieldRatio = extraData1 > 0f ? extraData1 : 0.15f;
+            int shield = Mathf.RoundToInt(self.maxHP * shieldRatio);
             target.AddShield(shield);
         }
         yield break;
     }
-    // 1.护盾手 技能二
+    // 1.护盾手 技能二：对我方全体造成少量伤害，并使我方全体行动延后（延后比例=extraData1，默认40%）
     private IEnumerator ShieldSupport_2(Enemy self)
     {
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
+        float delayRatio = extraData1 > 0f ? extraData1 : 0.4f;
         foreach (var ally in allies)
         {
             if (ally == null) continue;
             var damageInfo = DamageCounter.CountDamage(self, ally, this, DamageType.Physical);
             ally.TakeDamage(damageInfo);
-            ally.ChangeActionValue(ally.currentActionValue + ally.BaseActionValue * 0.2f);
+            ally.ChangeActionValue(ally.currentActionValue + ally.BaseActionValue * delayRatio);
         }
         yield break;
     }
-    // 2.单体攻击手
+    // 2.单体攻击手：随机对我方单体造成伤害，并施加混沌值（混沌层数=extraData1，默认2）
     private IEnumerator SingleAttack(Enemy self)
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
@@ -247,53 +277,47 @@ public class EnemySkillBase : SkillBase
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(self, target, this, DamageType.Physical, true);
         target.TakeDamage(damageInfo);
-        target.TryAddChaos(1);
+        int chaosAmount = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 2f));
+        target.TryAddChaos(chaosAmount);
         yield break;
     }
-    // 3.负面手 技能一
+    // 3.负面手 技能一：对我方全体施加混沌值（混沌层数=extraData1，默认2）
     private IEnumerator Debuff_1(Enemy self)
     {
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        int chaosAmount = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 2f));
         foreach (var ally in allies)
         {
             if (ally == null) continue;
-            ally.TryAddChaos(1);
+            ally.TryAddChaos(chaosAmount);
         }
         yield break;
     }
-    // 3.负面手 技能二
+    // 3.负面手 技能二：随机对我方单体造成伤害并施加瞩目（瞩目层数=extraData1，默认1）
     private IEnumerator Debuff_2(Enemy self)
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        target.AddState(StateType.Attract, self, 1);
+        // 造成伤害（使用 skillCoef 和 skillBase）
+        NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+        var damageInfo = DamageCounter.CountDamage(self, target, this, DamageType.Physical, true);
+        target.TakeDamage(damageInfo);
+        int attractStacks = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 1f));
+        target.AddState(StateType.Attract, self, 1, attractStacks);
         yield break;
     }
-    // 4.群体自爆手
+    // 4.群体自爆手 技能一：引爆倒计时 — 空过回合，提示启动失败
     private IEnumerator ExploderSkill(Enemy self)
     {
-        if (self == null)
+        if (self == null) yield break;
+
+        // 已经启动或已爆炸，不再执行
+        if (self.explodeState == ExplodeType.hasStarted || self.explodeState == ExplodeType.ReadyToBurst)
         {
             yield break;
         }
 
-        if (self.explodeState == ExplodeType.Normal || self.explodeState == ExplodeType.None)
-        {
-            if (Random.value < 0.5f)
-            {
-                yield return StartExploder(self);
-                yield break;
-            }
-            FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动失败...",true);
-        }
-        else if (self.explodeState == ExplodeType.hasStarted)
-        {
-            yield break;
-        }
-        else if (self.explodeState == ExplodeType.ReadyToBurst)
-        {
-            yield return ExploderBurst(self);
-        }
+        FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动失败...", true);
     }
 
     private IEnumerator StartExploder(Enemy self)
@@ -304,8 +328,25 @@ public class EnemySkillBase : SkillBase
         }
 
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}启动自爆");
-        self.AddState(StateType.ExploderProcess, self, 2);
+        // extraData2：自爆倒计时层数，默认2层
+        int countdownStacks = Mathf.Max(1, Mathf.RoundToInt(extraData2 > 0f ? extraData2 : 2f));
+        self.AddState(StateType.ExploderProcess, self, countdownStacks);
         yield break;
+    }
+
+    /// <summary>自爆兵技能二：致命自爆 — 启动自爆流程（施加倒计时状态），倒计时归零后自动爆炸</summary>
+    private IEnumerator ExploderBurstSkill(Enemy self)
+    {
+        if (self == null) yield break;
+
+        if (self.explodeState == ExplodeType.hasStarted || self.explodeState == ExplodeType.ReadyToBurst)
+        {
+            // 已启动或已就绪，不再重复启动
+            yield break;
+        }
+
+        // 启动自爆流程
+        yield return StartExploder(self);
     }
 
     private IEnumerator ExploderBurst(Enemy self)
@@ -315,40 +356,63 @@ public class EnemySkillBase : SkillBase
         foreach (var ally in allies)
         {
             if (ally == null) continue;
-            var damageInfo = DamageCounter.CountDamage(self, ally, 0.6f, 0f, DamageType.Physical, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, ally, skillCoef, (float)skillBase, DamageType.Physical, true, false, false);
             ally.TakeDamage(damageInfo);
-            ally.TryAddChaos(1);
+            // 施加混沌值（混沌层数=extraData3，默认3）
+            int chaosAmount = Mathf.Max(0, Mathf.RoundToInt(extraData3 > 0f ? extraData3 : 3f));
+            if (chaosAmount > 0)
+            {
+                ally.TryAddChaos(chaosAmount);
+            }
         }
-        self.TakeDamage(new UnitCombatant.DamageInfo(self.maxHP,self).AsTrueDamage());
+        self.TakeDamage(new UnitCombatant.DamageInfo(self.maxHP, self).AsTrueDamage());
         yield break;
     }
-    // 5.Dot施加手 技能一
+    // 5.Dot施加手 技能一：随机对我方单体造成少量伤害并施加鸩毒（鸩毒层数=extraData1，默认2）
     private IEnumerator DotMaster_1(Enemy self)
     {
         var target = CharacterManager.Instance.GetCharacterByRand();
         if (target == null) yield break;
-        target.AddState(StateType.Poison, self, 99, 2);
+        // 造成伤害
+        NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+        var damageInfo = DamageCounter.CountDamage(self, target, this, DamageType.Physical, true);
+        target.TakeDamage(damageInfo);
+        int poisonStacks = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 2f));
+        target.AddState(StateType.Poison, self, 99, poisonStacks);
         yield break;
     }
-    // 5.Dot施加手 技能二
+    // 5.Dot施加手 技能二：对我方全体造成少量伤害，并独立判定鸩毒转化
+    //   extraData1=判定概率系数（默认0.2），extraData2=削减比例（默认0.5），extraData3=失败额外施加层数（默认1）
     private IEnumerator DotMaster_2(Enemy self)
     {
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        // 全体伤害
+        NotifyDamageSkillUsed(self, allies);
+        foreach (var ally in allies)
+        {
+            if (ally == null) continue;
+            var damageInfo = DamageCounter.CountDamage(self, ally, this, DamageType.Physical, true);
+            ally.TakeDamage(damageInfo);
+        }
+        // 独立判定鸩毒转化
+        float chanceCoeff = extraData1 > 0f ? extraData1 : 0.2f;
+        float reduceRatio = extraData2 > 0f ? extraData2 : 0.5f;
+        int failExtraStacks = Mathf.Max(1, Mathf.RoundToInt(extraData3 > 0f ? extraData3 : 1f));
         foreach (var ally in allies)
         {
             if (ally == null) continue;
             State poison = ally.GetState(StateType.Poison);
             int poisonStacks = poison != null ? poison.Stacks : 0;
-            float chance = 0.2f * poisonStacks;
+            float chance = chanceCoeff * poisonStacks;
             if (poisonStacks > 0 && Random.value < chance)
             {
                 ally.TryAddChaos(1);
-                int reduce = Mathf.FloorToInt(poisonStacks * 0.5f);
+                int reduce = Mathf.FloorToInt(poisonStacks * reduceRatio);
                 if (reduce > 0) poison.Stacks -= reduce;
             }
             else if (poisonStacks > 0)
             {
-                ally.AddState(StateType.Poison, self,99, 2);
+                ally.AddState(StateType.Poison, self, 99, failExtraStacks);
             }
         }
         yield break;
@@ -471,12 +535,19 @@ public class EnemySkillBase : SkillBase
         // 如果正在蓄力，执行蓄力攻击
         if (queen.IsChargingThroneAssault)
         {
-            yield return CinemachineCameraManager.Instance?.TransitionIntoSkillCamera(ManagedCameraType.Help);
             yield return ExecuteThroneAssaultStrike(queen);
             yield break;
         }
 
-        // 否则标记蓄力（王棋/车棋已在进入二阶段时标记）
+        // 蓄力前确保王棋/车棋标记存在
+        if (!queen.TryEnsureChessMarks())
+        {
+            // 场上角色不足2人，无法蓄力
+            FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, "场上目标不足，无法蓄力");
+            yield break;
+        }
+
+        // 标记蓄力
         queen.SetChargingThroneAssault(true);
         FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}蓄力中...");
     }
@@ -490,10 +561,13 @@ public class EnemySkillBase : SkillBase
         Character kingTarget = FindCharacterWithState(StateType.ChessKingMark);
         if (kingTarget == null)
         {
-            // 如果没有王棋，随机选一个
-            List<Character> alive = GetAliveFieldCharacters(queen);
-            if (alive.Count == 0) yield break;
-            kingTarget = alive[0];
+            // 王棋丢失，攻击落空
+            BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenThroneMissed, enemy: queen);
+            FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, "由于王棋丢失，皇后的攻击落空了");
+            // 仍然施加力竭和行动延后（蓄力后的代价）
+            queen.DelayActionValue(1f);
+            queen.AddState(StateType.ChessExhaustion, queen, 1, 1);
+            yield break;
         }
 
         float prestigeBonus = queen.GetPrestigeDamageBonus();

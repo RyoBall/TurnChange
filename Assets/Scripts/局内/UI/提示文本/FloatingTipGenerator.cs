@@ -124,7 +124,54 @@ public class FloatingTipGenerator : MonoBehaviour
 
     public void ShowDefaultTip(string message) 
     {
-        ShowTipAtObject(pos, message,true);
+        if (pos == null)
+        {
+            Debug.LogError("[FloatingTipGenerator] pos 未设置，无法显示默认提示。");
+            return;
+        }
+        ShowTipAtUIPosition(pos, message);
+    }
+
+    /// <summary>
+    /// 直接在指定 UI Transform 的位置显示提示文本（跳过屏幕坐标转换，避免二次转换导致坐标错位）
+    /// </summary>
+    private void ShowTipAtUIPosition(Transform uiTarget, string message)
+    {
+        if (parentCanvasRect == null)
+        {
+            Debug.LogError("父Canvas RectTransform未设置，无法生成提示文本。");
+            return;
+        }
+
+        GameObject tipObj = CreateTipObject(message);
+        RectTransform tipRect = tipObj.GetComponent<RectTransform>();
+        tipObj.transform.SetParent(parentCanvasRect, false);
+
+        RectTransform targetRect = uiTarget.GetComponent<RectTransform>();
+        if (targetRect != null)
+        {
+            // 将目标 UI 元素的 anchoredPosition 转换到 parentCanvasRect 坐标系
+            Vector2 targetAnchored = targetRect.anchoredPosition;
+            // 如果目标的父级就是 parentCanvasRect，直接使用
+            if (targetRect.parent == parentCanvasRect)
+            {
+                tipRect.anchoredPosition = targetAnchored + screenOffset;
+            }
+            else
+            {
+                // 目标在不同层级，转换坐标
+                Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(GetCanvasCamera(), targetRect.position);
+                Camera cam = GetCanvasCamera();
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parentCanvasRect, screenPos, cam, out Vector2 uiPos);
+                tipRect.anchoredPosition = uiPos + screenOffset;
+            }
+        }
+        else
+        {
+            tipRect.anchoredPosition = screenOffset;
+        }
+
+        StartCoroutine(AnimateTip(tipObj));
     }
     public void ShowTipAtObject(Transform targetTransform, string message,bool ifUse=false)
     {

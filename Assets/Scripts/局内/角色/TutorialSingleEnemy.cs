@@ -62,17 +62,8 @@ public class TutorialSingleEnemy : Enemy
     /// </summary>
     public override IEnumerator PerformTurn()
     {
-        if (!IsBattleVisible || dead)
-        {
-            yield break;
-        }
-
-        TickSkillCooldowns();
-        OnTurnStartBeforeStateSettlement();
-        yield return new WaitForSeconds(0.2f);
-        yield return ProcessStatesOnTurnStart();
-
-        if (dead)
+        yield return BeginTurnPreActions();
+        if (!CanProceedWithTurn)
         {
             yield break;
         }
@@ -82,12 +73,6 @@ public class TutorialSingleEnemy : Enemy
 
         if (dead)
         {
-            yield break;
-        }
-
-        if (!CanActThisTurn())
-        {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "无法行动");
             yield break;
         }
 

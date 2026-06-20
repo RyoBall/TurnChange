@@ -275,7 +275,7 @@ public class CharacterSkillBase : SkillBase
     #region 技能具体执行逻辑
     private IEnumerator EnterSkillOne(Character character)
     {
-        const int durationActionValue = 200;
+        const int durationActionValue = 100;
         float verdictDotMultiplier = extraData2;
         DamageType damageType = GetCurrentSkillDamageType();
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}释放重裁域场");
@@ -992,7 +992,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        const int durationActionValue = 100;
+        const int durationActionValue = 50;
         if (FieldDomainScreenEffectController.Instance != null)
         {
             yield return FieldDomainScreenEffectController.Instance.PlayExpand(EnvironmentType.MiracleField, character.transform);
