@@ -82,6 +82,7 @@ public static class SettingsPanelPrefabFactory
             typeof(SettingsPanelView));
         StretchFull(host.GetComponent<RectTransform>());
         Canvas hostCanvas = host.GetComponent<Canvas>();
+        hostCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
         hostCanvas.overrideSorting = true;
         hostCanvas.sortingOrder = 100;
 

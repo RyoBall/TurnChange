@@ -20,6 +20,12 @@ public interface ITimeScaleController
 
     /// <summary>暂停时间（timeScale = 0）</summary>
     void Pause();
+
+    /// <summary>压栈暂停：首次调用时缓存当前流速，可嵌套配对 PopPause</summary>
+    void PushPause();
+
+    /// <summary>弹栈恢复：仅当栈空时恢复到 PushPause 前的流速</summary>
+    void PopPause();
 }
 
 /// <summary>
@@ -28,6 +34,7 @@ public interface ITimeScaleController
 /// 其他模块只能通过 ITimeScaleController 接口访问，禁止直接引用此类。
 /// 挂载在 Datas 所在的 DontDestroyOnLoad GameObject 上。
 /// </summary>
+[DefaultExecutionOrder(100)]
 public class TimeScaleController : MonoBehaviour, ITimeScaleController
 {
     private const float DefaultTimeScale = 1.5f;
@@ -36,6 +43,8 @@ public class TimeScaleController : MonoBehaviour, ITimeScaleController
     public static ITimeScaleController Instance { get; private set; }
 
     private float m_currentTimeScale = DefaultTimeScale;
+    private float m_savedTimeScaleBeforePause = DefaultTimeScale;
+    private int m_pauseDepth;
 
     float ITimeScaleController.CurrentTimeScale => m_currentTimeScale;
 
@@ -96,6 +105,7 @@ public class TimeScaleController : MonoBehaviour, ITimeScaleController
 
         m_currentTimeScale = clamped;
         m_timeScaleChanged?.Invoke(m_currentTimeScale);
+        SyncTimeScaleToEngine();
     }
 
     void ITimeScaleController.ResetToDefault()
@@ -106,6 +116,31 @@ public class TimeScaleController : MonoBehaviour, ITimeScaleController
     void ITimeScaleController.Pause()
     {
         ((ITimeScaleController)this).SetTimeScale(0f);
+    }
+
+    void ITimeScaleController.PushPause()
+    {
+        if (m_pauseDepth == 0)
+        {
+            m_savedTimeScaleBeforePause = m_currentTimeScale > 0f ? m_currentTimeScale : DefaultTimeScale;
+        }
+
+        m_pauseDepth++;
+        ((ITimeScaleController)this).SetTimeScale(0f);
+    }
+
+    void ITimeScaleController.PopPause()
+    {
+        if (m_pauseDepth <= 0)
+        {
+            return;
+        }
+
+        m_pauseDepth--;
+        if (m_pauseDepth == 0)
+        {
+            ((ITimeScaleController)this).SetTimeScale(m_savedTimeScaleBeforePause);
+        }
     }
 
     private void SyncTimeScaleToEngine()
