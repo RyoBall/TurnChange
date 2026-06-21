@@ -235,6 +235,11 @@ public class Datas : MonoBehaviour
     {
         get
         {
+            if (DebugMode.Instance != null && DebugMode.Instance.IsDebugMode)
+            {
+                return true;
+            }
+
             CondensedLevelConfig config = ResolveCondensedLevelConfig();
             return config != null && config.ShouldUseLevelConfiguredPlayerLevel;
         }

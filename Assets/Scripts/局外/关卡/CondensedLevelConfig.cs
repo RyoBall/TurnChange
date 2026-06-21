@@ -25,7 +25,7 @@ public class CondensedLevelConfig : ScriptableObject, ICondensedLevelConfig
     [SerializeField] private bool m_isCondensedModeEnabled;
 
     [Header("关卡等级")]
-    [Tooltip("进入战斗时使用关卡配置的 playerLevel，而非战队等级")]
+    [Tooltip("进入战斗时使用关卡配置的 playerLevel，而非战队等级。Debug 模式开启时也会自动启用（见 Datas.ShouldUseLevelConfiguredPlayerLevel）。")]
     [SerializeField] private bool m_useLevelConfiguredPlayerLevel;
 
     [Header("一号列表（常规关卡）")]

@@ -361,12 +361,14 @@ public class Enemy : UnitCombatant
         // OnMouseDown 默认响应鼠标左键，这里把点击事件转发给选敌系统。
         SkillManager.Instance?.OnEnemyClicked(this);
         StopMouseHoverEffect();
+        TurnImageManager.Instance?.ClearCombatantHoverHighlight();
     }
     private void OnMouseEnter()
     {
         if (m_isBattleVisible && SkillManager.Instance != null && SkillManager.Instance.IsSelectingEnemies)
         {
             PlayMouseHoverEffect();
+            TurnImageManager.Instance?.SetCombatantHoverHighlight(this, true);
         }
     }
     private void OnMouseExit()
@@ -374,6 +376,7 @@ public class Enemy : UnitCombatant
         if (m_isBattleVisible && SkillManager.Instance != null && SkillManager.Instance.IsSelectingEnemies)
         {
             StopMouseHoverEffect();
+            TurnImageManager.Instance?.SetCombatantHoverHighlight(this, false);
         }
     }
 

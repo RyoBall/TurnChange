@@ -210,6 +210,8 @@ public class SkillManager : MonoBehaviour
 
     private void ClearSelectionState()
     {
+        TurnImageManager.Instance?.ClearCombatantHoverHighlight();
+
         for (int i = 0; i < m_selectedEnemies.Count; i++)
         {
             if (m_selectedEnemies[i] != null)

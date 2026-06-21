@@ -21,6 +21,7 @@ public class TurnImageManager : MonoBehaviour
     public float enterDelay = 0.08f;
     public float highlightScale = 1.2f;
     public float normalScale = 1f;
+    public float hoverHighlightDuration = 0.25f;
     public float slideDistance = 80f;
     public Ease moveEase = Ease.OutQuad;
     public Ease fadeEase = Ease.OutCubic;
@@ -40,6 +41,7 @@ public class TurnImageManager : MonoBehaviour
 
     private List<TurnImage> removedImages = new List<TurnImage>();
     private List<TurnImage> addedImages = new List<TurnImage>();
+    private Combatant m_hoverHighlightedCombatant;
 
     /// 单例初始化：如果已存在另一个实例，则销毁当前对象。
     private void Awake()
@@ -408,6 +410,79 @@ public class TurnImageManager : MonoBehaviour
         }, to, duration).SetEase(ease);
     }
     #endregion
+
+    #region 选敌悬停高亮
+    /// <summary>
+    /// 选敌悬停时高亮对应回合图像；移开或取消选敌时恢复。
+    /// </summary>
+    public void SetCombatantHoverHighlight(Combatant combatant, bool highlighted)
+    {
+        if (combatant == null)
+        {
+            return;
+        }
+
+        if (highlighted)
+        {
+            if (m_hoverHighlightedCombatant == combatant)
+            {
+                return;
+            }
+
+            if (m_hoverHighlightedCombatant != null)
+            {
+                PlayHoverHighlightOut(m_hoverHighlightedCombatant);
+            }
+
+            m_hoverHighlightedCombatant = combatant;
+            PlayHoverHighlightIn(combatant);
+            return;
+        }
+
+        if (m_hoverHighlightedCombatant != combatant)
+        {
+            return;
+        }
+
+        PlayHoverHighlightOut(combatant);
+        m_hoverHighlightedCombatant = null;
+    }
+
+    /// <summary>
+    /// 清除当前选敌悬停高亮（选敌结束或点击敌人时调用）。
+    /// </summary>
+    public void ClearCombatantHoverHighlight()
+    {
+        if (m_hoverHighlightedCombatant == null)
+        {
+            return;
+        }
+
+        PlayHoverHighlightOut(m_hoverHighlightedCombatant);
+        m_hoverHighlightedCombatant = null;
+    }
+
+    private void PlayHoverHighlightIn(Combatant combatant)
+    {
+        if (!imageMap.TryGetValue(combatant, out TurnImage turnImage))
+        {
+            return;
+        }
+
+        turnImage.PlayHoverHighlightIn(hoverHighlightDuration);
+    }
+
+    private void PlayHoverHighlightOut(Combatant combatant)
+    {
+        if (!imageMap.TryGetValue(combatant, out TurnImage turnImage))
+        {
+            return;
+        }
+
+        turnImage.PlayHoverHighlightOut(hoverHighlightDuration);
+    }
+    #endregion
+
     #region NotUsed
     /// <summary>
     /// 回合结束后重新排序回合图像：当前图像淡出、插入合适位置、其他图像移动、首位放大、高亮。

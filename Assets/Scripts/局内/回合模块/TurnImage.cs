@@ -15,10 +15,16 @@ public class TurnImage : MonoBehaviour
     [SerializeField] private RectTransform rectTransform;
     [SerializeField] private Image iconImage;
     [SerializeField] private Image backgroundImage;
+    [SerializeField] private Image highlightImage;
+    [SerializeField] private Sprite highlightSprite;
     private CanvasGroup canvasGroup;
     private Tween moveTween;
+    private Tween m_highlightFillTween;
     [SerializeField] private Sprite enemySprite;
     [SerializeField] private Sprite playerSprite;
+
+    private const string HighlightSpriteResourcePath = "Art/UIs/HighLight";
+
     private void Awake()
     {
         if (rectTransform == null)
@@ -30,6 +36,8 @@ public class TurnImage : MonoBehaviour
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
+
+        EnsureHighlightImageReady();
     }
 
     public void Initialize(Vector2 size, float initialScale)
@@ -77,6 +85,7 @@ public class TurnImage : MonoBehaviour
         }
         CurrentLayoutScale = initialScale;
         transform.localScale = Vector3.one;
+        ResetHoverHighlightImmediate();
     }
 
     private void Update()
@@ -188,6 +197,140 @@ public class TurnImage : MonoBehaviour
     {
         return transform.DOScale(Vector3.one * scale, duration).SetTarget(gameObject);
     }
+
+    /// <summary>
+    /// 选敌悬停：高亮 FillAmount 0 → 1。
+    /// </summary>
+    public void PlayHoverHighlightIn(float duration)
+    {
+        EnsureHighlightImageReady();
+        if (highlightImage == null)
+        {
+            return;
+        }
+
+        KillHighlightFillTween();
+        highlightImage.enabled = true;
+        m_highlightFillTween = highlightImage
+            .DOFillAmount(1f, duration)
+            .SetEase(Ease.OutQuad)
+            .SetTarget(gameObject);
+    }
+
+    /// <summary>
+    /// 选敌悬停结束：高亮 FillAmount 1 → 0。
+    /// </summary>
+    public void PlayHoverHighlightOut(float duration)
+    {
+        if (highlightImage == null)
+        {
+            return;
+        }
+
+        KillHighlightFillTween();
+        m_highlightFillTween = highlightImage
+            .DOFillAmount(0f, duration)
+            .SetEase(Ease.OutQuad)
+            .SetTarget(gameObject);
+    }
+
+    /// <summary>
+    /// 立即清除高亮（选敌结束等场景）。
+    /// </summary>
+    public void ResetHoverHighlightImmediate()
+    {
+        KillHighlightFillTween();
+        if (highlightImage == null)
+        {
+            return;
+        }
+
+        highlightImage.fillAmount = 0f;
+    }
+
+    private void EnsureHighlightImageReady()
+    {
+        if (highlightImage == null)
+        {
+            Transform highlightTransform = transform.Find("Highlight");
+            if (highlightTransform != null)
+            {
+                highlightImage = highlightTransform.GetComponent<Image>();
+            }
+        }
+
+        if (highlightImage == null)
+        {
+            highlightImage = CreateHighlightImageChild();
+        }
+
+        if (highlightImage == null)
+        {
+            return;
+        }
+
+        Sprite sprite = highlightSprite != null ? highlightSprite : LoadHighlightSprite();
+        if (sprite != null)
+        {
+            highlightImage.sprite = sprite;
+        }
+
+        highlightImage.type = Image.Type.Filled;
+        highlightImage.fillMethod = Image.FillMethod.Horizontal;
+        highlightImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+        highlightImage.raycastTarget = false;
+        highlightImage.fillAmount = 0f;
+    }
+
+    private Image CreateHighlightImageChild()
+    {
+        var highlightObject = new GameObject("Highlight", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        highlightObject.transform.SetParent(transform, false);
+        highlightObject.transform.SetAsLastSibling();
+
+        var highlightRect = highlightObject.GetComponent<RectTransform>();
+        highlightRect.anchorMin = Vector2.zero;
+        highlightRect.anchorMax = Vector2.one;
+        highlightRect.offsetMin = Vector2.zero;
+        highlightRect.offsetMax = Vector2.zero;
+
+        return highlightObject.GetComponent<Image>();
+    }
+
+    private static Sprite LoadHighlightSprite()
+    {
+        Sprite[] sprites = Resources.LoadAll<Sprite>(HighlightSpriteResourcePath);
+        if (sprites == null || sprites.Length == 0)
+        {
+            return Resources.Load<Sprite>(HighlightSpriteResourcePath);
+        }
+
+        for (int i = 0; i < sprites.Length; i++)
+        {
+            if (sprites[i] != null)
+            {
+                return sprites[i];
+            }
+        }
+
+        return null;
+    }
+
+    private void KillHighlightFillTween()
+    {
+        if (m_highlightFillTween != null && m_highlightFillTween.IsActive())
+        {
+            m_highlightFillTween.Kill();
+        }
+
+        m_highlightFillTween = null;
+    }
+
+    private void OnDestroy()
+    {
+        KillHighlightFillTween();
+    }
+
     #region NotUse
     /* 改变尺寸时保持右上角视觉位置不变，避免元素因 pivot 不同出现位移
 public void SetSizeAndKeepTopRight(Vector2 size)
