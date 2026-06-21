@@ -481,13 +481,13 @@ public class PreparationPanelView : MonoBehaviour
             return;
         }
 
-        Sprite illustration = characterData.GetIllustrationSprite();
+        Sprite illustration = characterData.GetPreparationIllustrationSprite();
         targetImage.sprite = illustration;
         targetImage.enabled = illustration != null;
 
         if (illustration != null)
         {
-            Vector2 size = characterData.GetIllustrationSize();
+            Vector2 size = characterData.GetPreparationIllustrationSize();
             if (size.x > 0 && size.y > 0)
             {
                 targetImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);

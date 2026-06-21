@@ -10,6 +10,8 @@ public class CharacterRosterData : ScriptableObject
     public Sprite portraitSprite;
     public Sprite illustrationSprite;
     public Vector2 illustrationSize;
+    public Sprite preparationIllustrationSprite;
+    public Vector2 preparationIllustrationSize;
 
     public List<CharacterSkillType> skills = new List<CharacterSkillType>();
     public CharacterSkillType enterSkill;
@@ -37,6 +39,23 @@ public class CharacterRosterData : ScriptableObject
 
     public Vector2 GetIllustrationSize()
     {
+        return illustrationSize;
+    }
+
+    public Sprite GetPreparationIllustrationSprite()
+    {
+        return preparationIllustrationSprite != null ? preparationIllustrationSprite : illustrationSprite;
+    }
+
+    public Vector2 GetPreparationIllustrationSize()
+    {
+        if (preparationIllustrationSprite != null
+            && preparationIllustrationSize.x > 0f
+            && preparationIllustrationSize.y > 0f)
+        {
+            return preparationIllustrationSize;
+        }
+
         return illustrationSize;
     }
 }

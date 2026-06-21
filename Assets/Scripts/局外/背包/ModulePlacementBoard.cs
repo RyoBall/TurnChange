@@ -200,7 +200,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
             }
 
             m_cells[occupiedCell.x, occupiedCell.y].material = null;
-            m_cells[occupiedCell.x, occupiedCell.y].color = emptyCellColor;
+            ApplyEmptyCellAppearance(m_cells[occupiedCell.x, occupiedCell.y]);
         }
 
         module = entry.module;
@@ -266,7 +266,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
                 }
 
                 m_cells[x, y].material = null;
-                m_cells[x, y].color = emptyCellColor;
+                ApplyEmptyCellAppearance(m_cells[x, y]);
             }
         }
     }
@@ -415,7 +415,7 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
                 cellObject.transform.SetParent(m_cellsRoot, false);
 
                 Image image = cellObject.GetComponent<Image>();
-                image.color = emptyCellColor;
+                ApplyEmptyCellAppearance(image);
                 image.raycastTarget = false;
 
                 Outline outline = cellObject.GetComponent<Outline>();
@@ -492,6 +492,25 @@ public class ModulePlacementBoard : MonoBehaviour, IPointerClickHandler, IModule
         float widthSize = (rect.width - spacing * (boardSize - 1)) / boardSize;
         float heightSize = (rect.height - spacing * (boardSize - 1)) / boardSize;
         return Mathf.Max(1f, Mathf.Min(widthSize, heightSize));
+    }
+
+    private void ApplyEmptyCellAppearance(Image image)
+    {
+        if (image == null)
+        {
+            return;
+        }
+
+        Sprite emptySprite = ModuleCellConfig.Instance != null ? ModuleCellConfig.Instance.EmptyCellSprite : null;
+        if (emptySprite != null)
+        {
+            image.sprite = emptySprite;
+            image.color = Color.white;
+            return;
+        }
+
+        image.sprite = null;
+        image.color = emptyCellColor;
     }
 
     private int GetBoardSize()
