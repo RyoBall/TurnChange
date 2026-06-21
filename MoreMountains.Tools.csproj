@@ -152,8 +152,8 @@
     <Compile Include="Assets\Feel\MMTools\Accessories\MMDebugMenu\Scripts\Tabs\MMDebugMenuTab.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\MMTools\Feedbacks\MMF_TextFontSize.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Springs\Core\Components\MMSpringColorComponent.cs" />
-    <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\URP\Springs\MMSpringColorAdjustmentsSaturation_URP.cs" />
     <Compile Include="Assets\Feel\MMTools\Accessories\MMDebugMenu\Scripts\MMDebugMenuItems\MMDebugMenuItemTitle.cs" />
+    <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\URP\Springs\MMSpringColorAdjustmentsSaturation_URP.cs" />
     <Compile Include="Assets\Feel\MMTools\Accessories\MMActivation\MMTriggerAndCollisionFilter.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Springs\Core\MMSpringFloat.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\HDRP\Feedbacks\MMF_ChromaticAberration_HDRP.cs" />
@@ -239,8 +239,8 @@
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Shakers\MMLightShaker.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\PostProcessing\Feedbacks\MMF_DepthOfField.cs" />
     <Compile Include="Assets\Feel\MMTools\Accessories\MMMovement\MMPathMovement\MMPath.cs" />
-    <Compile Include="Assets\Feel\MMTools\Core\MMHelpers\MMScene.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\HDRP\Springs\MMSpringWhiteBalanceTemperature_HDRP.cs" />
+    <Compile Include="Assets\Feel\MMTools\Core\MMHelpers\MMScene.cs" />
     <Compile Include="Assets\Feel\MMTools\Accessories\MMProcedural\MMGridGenerators\MMGridGeneratorRandom.cs" />
     <Compile Include="Assets\Feel\FeelDemos\MMSoundManager\Scripts\PlaylistDemo.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\PostProcessing\Springs\MMSpringColorGradingContrast.cs" />
@@ -330,8 +330,8 @@
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Feedbacks\MMF_AudioFilterReverb.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Feedbacks\MMF_Destroy.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\HDRP\Feedbacks\MMF_PaniniProjection_HDRP.cs" />
-    <Compile Include="Assets\Feel\MMTools\Core\MMHelpers\MMConsole.cs" />
     <Compile Include="Assets\Feel\MMTools\Core\MMAudio\MMSoundManager\Events\MMSoundManagerEvent.cs" />
+    <Compile Include="Assets\Feel\MMTools\Core\MMHelpers\MMConsole.cs" />
     <Compile Include="Assets\Feel\MMTools\Core\MMHelpers\MMLayers.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Springs\Core\MMSpringVector2.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\HDRP\Shakers\MMMotionBlurShaker_HDRP.cs" />
@@ -725,10 +725,10 @@
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacks\Springs\Springs\MMSpringCameraOrthographicSize.cs" />
     <Compile Include="Assets\Feel\FeelDemos\SquashAndStretch\Scripts\FeelSquashAndStretchCarController.cs" />
     <Compile Include="Assets\Feel\MMTools\Accessories\MMInstantiation\MMSpawnAround.cs" />
-    <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\TextMeshPro\Feedbacks\MMF_TMPSoftness.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\HDRP\Springs\MMSpringDepthOfFieldFocusDistance_HDRP.cs" />
     <Compile Include="Assets\Feel\MMTools\Foundation\MMControls\MMControlsTestInputManager.cs" />
     <Compile Include="Assets\Feel\MMTools\Foundation\MMControls\MMTouchFollowerJoystick.cs" />
+    <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\TextMeshPro\Feedbacks\MMF_TMPSoftness.cs" />
     <Compile Include="Assets\Feel\MMTools\Accessories\MMProcedural\MMGridGenerators\MMGridGeneratorPerlinNoiseGround.cs" />
     <Compile Include="Assets\Feel\MMFeedbacks\MMFeedbacksForThirdParty\PostProcessing\Feedbacks\MMF_GlobalPPVolumeAutoBlend.cs" />
     <Compile Include="Assets\Feel\MMTools\Core\MMTimeManager\MMTimeManager.cs" />
@@ -1216,6 +1216,10 @@
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1.9.4\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@3.2.1\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.TextureAssets">
