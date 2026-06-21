@@ -222,6 +222,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
      <Compile Include="Assets\Scripts\局外\背包\IBackpackInterfaces.cs" />
      <Compile Include="Assets\Scripts\局内\技能\SkillManager.cs" />
+     <Compile Include="Assets\Scripts\Audio\GameAudioCatalog.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\EnemyRosterData.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\VFX Library\UICanvasManager.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ShopModuleItemUI.cs" />

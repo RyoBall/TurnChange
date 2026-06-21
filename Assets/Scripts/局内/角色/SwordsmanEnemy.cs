@@ -19,13 +19,12 @@ public interface ISwordsmanTenacityProvider
 public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
 {
     [Header("姿态配置")]
-    [SerializeField] private float phaseTwoSpeedBonus = 0.2f;
     [SerializeField] private float phaseTwoHpThreshold = 0.5f;
     [SerializeField] private float phaseThreeHpThreshold = 0.25f;
 
     [Header("韧性配置")]
-    [SerializeField] private int maxTenacity = 10;
-    [SerializeField] private int staggerDuration = 100;
+    private const int maxTenacity = 20;
+    private const int staggerDuration = 100;
 
     public enum SwordsmanStance
     {

@@ -108,6 +108,10 @@ public class CharacterManager : MonoBehaviour
 				yield break;
 			}
 		}
+		else
+		{
+			m_selectedFieldCharacter=selectedFieldCharacter;
+		}
 		m_isSelectingFieldCharacter = false;
 		m_isSelectingReserveCharacter = true;
 		//第二步:选择候补角色
@@ -121,6 +125,7 @@ public class CharacterManager : MonoBehaviour
 			Debug.Log("[CharacterManager] 换人流程取消：未选择候补角色");
 			HideReserveButtonsImmediate();
 			SetPromptVisible(false);
+			m_isSelectingReserveCharacter = false;
 			yield break;
 		}
 
@@ -142,6 +147,11 @@ public class CharacterManager : MonoBehaviour
 	public void OnFieldCharacterClicked(Character character)//处理场上角色被点击的逻辑
 	{
 		if (!m_isSelectingFieldCharacter || character == null)
+		{
+			return;
+		}
+
+		if (character.IsDead)
 		{
 			return;
 		}
@@ -242,6 +252,8 @@ public class CharacterManager : MonoBehaviour
 		}
 		yield return oldCharacter.PlayExitAnimation();
 		oldCharacter.transform.position = exitPosition;
+		// 退场动画完成后禁用碰撞体，防止被误点击（角色已不在场上）
+		oldCharacter.SetInteractable(false);
 		//交换角色列表中的角色
 		int fieldIndex = fieldCharacters.IndexOf(oldCharacter);
 		fieldCharacters[fieldIndex] = newCharacter;
@@ -431,6 +443,7 @@ public class CharacterManager : MonoBehaviour
 		m_runtimeButtons.Clear();
 	}
 	#endregion
+
 	private void UpdatePromptText(string text)
 	{
 		if (promptText == null)

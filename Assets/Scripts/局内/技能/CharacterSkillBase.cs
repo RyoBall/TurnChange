@@ -169,7 +169,6 @@ public class CharacterSkillBase : SkillBase
         bool useSkillCameraTransition = cameraManager != null;
         if (useSkillCameraTransition && shouldEndTurn)
         {
-            //使按钮取消
             TurnStateManager.Instance.ChangeState(TurnState.OutCharacterTurn, unitCombatant as Character);
             if (skillTargetType == SkillTargetType.Enemy)
             {
@@ -999,7 +998,10 @@ public class CharacterSkillBase : SkillBase
         }
         EnvironmentManager.Instance?.AddEnvironment(EnvironmentType.MiracleField, durationActionValue, character);
 
-        TurnStateManager.Instance?.ChangeState(TurnState.OutCharacterTurn, character);
+        if (TurnStateManager.Instance != null)
+        {
+            yield return TurnStateManager.Instance.ChangeState(TurnState.OutCharacterTurn, character);
+        }
         if (CharacterManager.Instance != null)
         {
             yield return CharacterManager.Instance.SelectAndSwapCoroutine(character);

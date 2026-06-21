@@ -34,8 +34,6 @@ public class ChessQueenEnemy : Enemy
     private int m_maxPrestige = 3; // 预告关卡最多3层威望
     private bool m_hasUsedCoronation;
     private int m_summonedPawnKillCounter;
-    private int m_summonSkillRemainingCooldown;
-    private int m_throneAssaultRemainingCooldown;
     private bool m_isChargingThroneAssault; // 后袭王座蓄力标记（仅完整版）
 
     // ============ 指挥点奖励 ============
@@ -90,15 +88,12 @@ public class ChessQueenEnemy : Enemy
             case EnemySkillType.ChessQueenChaosCharge:
                 return GetAliveFieldCharacters().Count > 0;
             case EnemySkillType.ChessQueenSummonPawn:
-                // 预告关卡：使用技能自身的CD系统；完整版：使用内部CD
-                if (isPreviewBoss)
-                    return summonPawnData != null;
-                else
-                    return m_summonSkillRemainingCooldown <= 0 && summonPawnData != null;
+                // CD 由 EnemySkillBase.cooldownTurns 统一管理
+                return summonPawnData != null;
             case EnemySkillType.ChessQueenThroneAssault:
-                // 仅完整版可用
+                // 仅完整版可用，CD 由 EnemySkillBase.cooldownTurns 统一管理
                 if (isPreviewBoss) return false;
-                return m_isChargingThroneAssault || (m_throneAssaultRemainingCooldown <= 0 && GetAliveFieldCharacters().Count >= 2);
+                return m_isChargingThroneAssault || GetAliveFieldCharacters().Count >= 2;
             case EnemySkillType.ChessQueenCoronation:
                 // 仅完整版可用
                 if (isPreviewBoss) return false;
@@ -144,8 +139,6 @@ public class ChessQueenEnemy : Enemy
         {
             yield break;
         }
-
-        TickQueenSkillCooldowns();
 
         // 随机选择技能（排除不能使用的）
         EnemySkillBase selectedSkill = SelectRandomAvailableSkill();
@@ -229,12 +222,10 @@ public class ChessQueenEnemy : Enemy
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}升变入场");
         ClearLinkedPromotionPawns();
 
-        // 预告关卡：配置技能CD
-        if (isPreviewBoss)
-        {
-            ConfigurePreviewSkillCooldowns();
-        }
-        else
+        // 配置技能 CD（统一使用 EnemySkillBase.cooldownTurns）
+        ConfigureSkillCooldowns();
+
+        if (!isPreviewBoss)
         {
             // 完整版：进入二阶段时标记王棋/车棋
             MarkChessKingAndRook();
@@ -247,13 +238,23 @@ public class ChessQueenEnemy : Enemy
         }
     }
 
-    /// <summary>预告关卡：配置技能CD（技能二至少5回合）</summary>
-    private void ConfigurePreviewSkillCooldowns()
+    /// <summary>配置技能 CD 到 EnemySkillBase.cooldownTurns（统一 CD 系统）</summary>
+    private void ConfigureSkillCooldowns()
     {
-        EnemySkillBase summonSkill = GetSkillInstance(EnemySkillType.ChessQueenSummonPawn);
-        if (summonSkill != null)
+        if (isPreviewBoss)
         {
-            summonSkill.cooldownTurns = 5;
+            // 预告关卡：召唤 CD=5
+            EnemySkillBase summonSkill = GetSkillInstance(EnemySkillType.ChessQueenSummonPawn);
+            if (summonSkill != null) summonSkill.cooldownTurns = 5;
+        }
+        else
+        {
+            // 完整版：召唤 CD=3，后袭王座 CD=4
+            EnemySkillBase summonSkill = GetSkillInstance(EnemySkillType.ChessQueenSummonPawn);
+            if (summonSkill != null) summonSkill.cooldownTurns = summonPawnCooldown;
+
+            EnemySkillBase throneSkill = GetSkillInstance(EnemySkillType.ChessQueenThroneAssault);
+            if (throneSkill != null) throneSkill.cooldownTurns = throneAssaultCooldown;
         }
     }
 
@@ -352,25 +353,6 @@ public class ChessQueenEnemy : Enemy
     public void SetChargingThroneAssault(bool charging)
     {
         m_isChargingThroneAssault = charging;
-    }
-
-    /// <summary>开始召唤技能CD</summary>
-    public void StartSummonCooldown()
-    {
-        m_summonSkillRemainingCooldown = summonPawnCooldown;
-    }
-
-    /// <summary>开始后袭王座CD</summary>
-    public void StartThroneAssaultCooldown()
-    {
-        m_throneAssaultRemainingCooldown = throneAssaultCooldown;
-    }
-
-    /// <summary>Tick皇后技能CD</summary>
-    private void TickQueenSkillCooldowns()
-    {
-        if (m_summonSkillRemainingCooldown > 0) m_summonSkillRemainingCooldown--;
-        if (m_throneAssaultRemainingCooldown > 0) m_throneAssaultRemainingCooldown--;
     }
 
     /// <summary>添加威望层数（预告关卡最多3层）</summary>

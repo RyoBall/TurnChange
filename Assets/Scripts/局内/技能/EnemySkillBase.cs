@@ -518,11 +518,7 @@ public class EnemySkillBase : SkillBase
         TurnManager.Instance?.InsertCombatant(pawn);
 
         queen.AddPrestige(1);
-        // 预告关卡使用技能自身CD系统，不调用内部CD
-        if (!queen.IsPreviewBoss)
-        {
-            queen.StartSummonCooldown();
-        }
+        // CD 由 EnemySkillBase.Execute() 末尾的 StartCooldown() 统一处理
         FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, $"{queen.combatantName}召唤兵卒");
     }
 
@@ -555,7 +551,7 @@ public class EnemySkillBase : SkillBase
     private IEnumerator ExecuteThroneAssaultStrike(ChessQueenEnemy queen)
     {
         queen.SetChargingThroneAssault(false);
-        queen.StartThroneAssaultCooldown();
+        // CD 由 EnemySkillBase.Execute() 末尾的 StartCooldown() 统一处理
 
         // 找到有王棋状态的角色
         Character kingTarget = FindCharacterWithState(StateType.ChessKingMark);

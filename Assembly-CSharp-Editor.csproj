@@ -41,10 +41,12 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Editor\CSVReader.cs" />
+     <Compile Include="Assets\Editor\GameAudioCatalogEditor.cs" />
      <Compile Include="Assets\Editor\GridModuleImporter.cs" />
      <Compile Include="Assets\Editor\EnemySkillImporter.cs" />
      <Compile Include="Assets\Editor\AmbientFloatingParticlesPrefabCreator.cs" />
      <Compile Include="Assets\Editor\TutorialEnemyRosterDataGenerator.cs" />
+     <Compile Include="Assets\Editor\GameAudioCatalogInitializer.cs" />
      <Compile Include="Assets\Editor\CharacterDataImporter.cs" />
      <Compile Include="Assets\Editor\CharacterAnimationOverrideEntryDrawer.cs" />
      <Compile Include="Assets\Editor\BattleLevelDataImporter.cs" />
@@ -60,6 +62,7 @@
      <Compile Include="Assets\Editor\LevelEnemyEntryDrawer.cs" />
      <Compile Include="Assets\Editor\SkillKeywordImporter.cs" />
      <Compile Include="Assets\Editor\StateImporter.cs" />
+     <Compile Include="Assets\Editor\GameAudioCatalogWindow.cs" />
      <Compile Include="Assets\Editor\ReadOnlyDrawer.cs" />
      <Compile Include="Assets\Editor\TagColorImporter.cs" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\CurveGrid.shader" />

@@ -97,18 +97,19 @@ public class Character : UnitCombatant
         //结算状态
         yield return ProcessStatesOnTurnStart();
         //如果死亡就结束回合
-        if(dead)
+        if (dead)
         {
             yield break;
         }
-        EnterMoveDOT();
-        yield return new WaitForSeconds(moveAnimDuration);
 
         if (!CanActThisTurn())
         {
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
-            EndTurn();
+            yield return WaitForDeathEvents();
+            yield break;
         }
+        EnterMoveDOT();
+        yield return new WaitForSeconds(moveAnimDuration);
         //展示攻击逻辑
         yield return TurnStateManager.Instance.ChangeState(TurnState.InCharacterTurn, this);
         OnCharacterEnterTurn?.Invoke(this);
@@ -416,8 +417,21 @@ public class Character : UnitCombatant
         exitSequence.Join(spriteRenderer.DOFade(0, duration));
         yield return exitSequence.WaitForCompletion();
     }
+
+    /// <summary>设置角色是否可被点击交互（启用/禁用 Collider2D）</summary>
+    public void SetInteractable(bool interactable)
+    {
+        var col = GetComponent<Collider>();
+        if (col != null)
+        {
+            col.enabled = interactable;
+        }
+    }
+
     public IEnumerator PlayEnterAnimation()
     {
+        // 入场时重新启用交互
+        SetInteractable(true);
         //简单的入场动画：从右侧飞入并淡入
         Vector3 startPosition = transform.position + new Vector3(2f, 0, 0);
         transform.position = startPosition;

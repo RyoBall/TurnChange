@@ -172,9 +172,10 @@ MonoBehaviour:
   bossGroupId: chess-boss
   startHiddenUntilPhaseTwo: 1
   isPreviewBoss: 0
-  summonPawnData: {fileID: 0}
+  summonPawnData: {fileID: 11400000, guid: 0aacec4bfd4170048a5aedd3dd782094, type: 2}
   summonPawnLevel: 1
-  summonPawnPrefabFallback: {fileID: 0}
+  summonPawnPrefabFallback: {fileID: -5650470034739271892, guid: 2c9eebfd1b3decc4992423aede510566,
+    type: 3}
   chessSummonPoints: []
   summonedPawnHealRatio: 0.03
   immuneToDaze: 1

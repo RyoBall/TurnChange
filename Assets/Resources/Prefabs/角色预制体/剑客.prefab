@@ -214,7 +214,7 @@ MonoBehaviour:
   phaseTwoSpeedBonus: 0.2
   phaseTwoHpThreshold: 0.5
   phaseThreeHpThreshold: 0.25
-  maxTenacity: 10
+  maxTenacity: 20
   staggerDuration: 100
 --- !u!114 &2089526796964737016 stripped
 MonoBehaviour:

@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> For quick-reference conventions and coding rules, see [AGENTS.md](./AGENTS.md).
+> For out-of-battle (局外) panel switching, data persistence, module placement, and scene transition patterns, see [局外系统开发规范](.github/instructions/局外系统开发规范.instructions.md).
+
 ## Project Overview
 
 This is a Unity turn-based RPG with a lobby/battle two-scene structure (局外/局内). The game uses a time-axis (Action Value) turn order system, character swapping, multi-wave enemies, and a roguelike-style temporary battle modifier system.
@@ -34,7 +37,7 @@ This is a Unity turn-based RPG with a lobby/battle two-scene structure (局外/�
 1. `[RuntimeInitializeOnLoadMethod(BeforeSceneLoad)]` fires in `DictionaryManager.cs` — loads all State/Environment/Skill/EnemySkill `ScriptableObject` assets from `Resources/` into static dictionaries.
 2. `[RuntimeInitializeOnLoadMethod(AfterSceneLoad)]` — `GameAudioInputObserver` creates a DontDestroyOnLoad click-listener.
 3. `Datas.Awake()` — central persistent singleton (DontDestroyOnLoad). Initializes character roster, clamps progression values, sets `Time.timeScale`.
-4. `StarterBranchRuntimeController.Start()` — shows starter branch (流派) selection overlay if not yet chosen.
+4. `StarterBranchRuntimeController.Start()` — shows starter branch (流派) selection overlay if not yet chosen. (Note: this class no longer exists; character unlocking is now handled via `LevelCharacterUnlockConfig`.)
 
 ### Entering Battle (Main → Fight)
 1. Player selects characters & level in lobby → clicks `StartBattleButton`.
@@ -109,7 +112,7 @@ Roguelike-style run modifiers. Session lifecycle: `BeginBattleModifierSession()`
 - `PreparationPanelView` — character selection (pick 2 for field), level data display
 - `ShopPanelView` / `ShopModuleManager` — shop for grid modules
 - `BackpackInventoryView` / `ModulePlacementController` — grid-based module placement
-- `StarterBranchRuntimeController` — starter branch (流派) selection
+- `LevelCharacterUnlockConfig` — character unlocking based on level completion (replaces former StarterBranchRuntimeController)
 - `StartBattleButton` — transitions to Fight scene, bridges data via `BattleLaunchContext`
 
 ## Editor Tools (Unity Menu Items)
@@ -175,7 +178,10 @@ Assets/
 ## Coding Conventions
 
 - **Language:** The codebase uses Chinese for class/field comments, enum names (e.g., 角色/技能/状态 directories), and UI-facing strings. Code identifiers are in English.
+- **Interface-first:** All externally exposed functionality must define interfaces. Other modules reference only interface types. Variables are `private`, accessed through interface readonly properties.
 - **Singleton pattern:** Most managers use `public static X Instance { get; private set; }` with duplicate-destroy logic in `Awake()` and null-on-destroy in `OnDestroy()`.
 - **ScriptableObjects:** All game data (skills, states, characters, enemies, grid modules) are ScriptableObjects created via the CSV import pipeline.
 - **Coroutines:** Heavy use of `IEnumerator` coroutines for turn sequences, animations, and selection flows. `yield return new WaitUntil(...)` is commonly used for waiting on player input.
-- **Events:** Managers expose C# `event Action` / `event Action<T>` for decoupled communication (e.g., `CharacterRosterChanged`, `OnTurnOrderChanged`).
+- **Events:** Managers expose C# `event Action` / `event Action<T>` for decoupled communication (e.g., `CharacterRosterChanged`, `OnTurnOrderChanged`). Both instance and static events are used.
+- **Time scale:** Use `TimeScaleController` instead of raw `Time.timeScale` assignment.
+- **Panel switching:** Decentralized event pattern — `ChangePanelButton.PanelSwitched` / `ExitButton.PanelClosed` static events, all transitions through `ScreenTransition.Instance`.
