@@ -13790,11 +13790,6 @@ PrefabInstance:
       propertyPath: m_isDebugMode
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 1977110280919525233, guid: aa35eb7d4b89832469b5a7b49624b24d,
-        type: 3}
-      propertyPath: m_Alpha
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 2085543814576786045, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}
       propertyPath: m_AnchorMax.x

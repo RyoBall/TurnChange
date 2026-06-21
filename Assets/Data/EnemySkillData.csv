@@ -1,12 +1,12 @@
-敌人/技能名称,Type,SkillCoef,SkillBase,TargetType,CooldownTurns,ExtraData1,ExtraData2,ExtraData3,ExtraData4,备注
+﻿敌人/技能名称,Type,SkillCoef,SkillBase,TargetType,CooldownTurns,ExtraData1,ExtraData2,ExtraData3,ExtraData4,备注
 敌人/技能名称,Type,SkillCoef,SkillBase,TargetType,CooldownTurns,ExtraData1,ExtraData2,ExtraData3,ExtraData4,备注
 护盾术,ShieldSupport_1,0,0,Self,0,0.15,0,0,0,护盾=HPmax×ExtraData1(15%); ExtraData1=护盾比例
 盾击,ShieldSupport_2,0.28,15,Character,0,0.4,0,0,0,行动延后=BaseActionValue×ExtraData1(40%)
 刺击,SingleAttack,0.9,15,Character,0,2,0,0,0,混沌值层数=ExtraData1(2)
 迷幻,Debuff_1,0,0,Character,0,2,0,0,0,混沌值层数=ExtraData1(2)
 瞩目,Debuff_2,0.45,15,Character,0,1,0,0,0,造成伤害+瞩目层数=ExtraData1(1)
-爆,Exploder,0,0,None,0,0,0,0,0,技能一仅提示启动失败(空过); ExtraData1=技能二可用概率(默认0.5即75%选一/25%选二)
-爆,Exploder2,0.6,0,Character,0,0.5,2,3,0,ExtraData1=CanUse概率(0.5); ExtraData2=倒计时层数(2); ExtraData3=爆炸混沌层数(3)
+启动,Exploder,0,0,None,0,0,0,0,0,技能一仅提示启动失败(空过); ExtraData1=技能二可用概率(默认0.5即75%选一/25%选二)
+致命爆破,Exploder2,0.6,0,Character,0,0.5,2,3,0,ExtraData1=CanUse概率(0.5); ExtraData2=倒计时层数(2); ExtraData3=爆炸混沌层数(3)
 鸩毒,DotMaster_1,0.24,0,Character,0,2,0,0,0,造成伤害+鸩毒层数=ExtraData1(2)
 毒爆,DotMaster_2,0.15,5,Character,0,0.2,0.5,1,0,ExtraData1=判定概率系数(0.2); ExtraData2=削减比例(0.5); ExtraData3=失败额外层数(1)
 走,ChessPawnAction,0.4,10,Character,0,0,0,0,0,原始伤害=Atk×0.40+10
