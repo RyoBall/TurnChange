@@ -1,0 +1,25 @@
+---
+description: Unity Editor 导入工具与 CSV 流水线
+globs: Assets/Editor/**/*
+alwaysApply: false
+---
+
+# Editor 工具规范
+
+## CSV 导入流水线
+
+```
+Assets/Data/*.csv → CSVReader → MenuItem Importer → ScriptableObject → Resources/
+```
+
+- 配置路径: `Resources/AppConfig.asset`，访问 `Config.Instance`
+- Importer 位于 `Assets/Editor/`（如 `CharacterDataImporter.cs`）
+- 使用 `[InitializeOnLoadMethod]` + `EditorApplication.projectChanged` 做增量导入
+- 菜单项在 `Tools/` 与 `TurnChange/` 下
+
+## 新增数据类型步骤
+
+1. 在 `Assets/Data/` 添加 CSV
+2. 参考现有 Importer 编写或扩展
+3. 运行对应 `Tools/Import*` 菜单
+4. 确保 SO 输出到 `Resources/` 并被 `DictionaryManager` 加载

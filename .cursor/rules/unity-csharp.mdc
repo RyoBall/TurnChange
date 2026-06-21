@@ -1,0 +1,41 @@
+---
+description: TurnChange C# 编码约定（Scripts 目录）
+globs: Assets/Scripts/**/*.cs
+alwaysApply: false
+---
+
+# C# 编码约定
+
+## 命名
+
+- 类/方法/变量: 英文 PascalCase；私有字段 `m_` 前缀；静态私有 `s_` 前缀
+- 注释与 UI 字符串: 中文；目录名: 中文（局内、局外、回合模块 等）
+
+## Unity 引用与生命周期
+
+- 全部字段 `private`；Inspector 引用用 `[SerializeField] private`
+- **禁止** `FindObjectOfType` / `GameObject.Find`
+- `Instantiate` / `Destroy` 仅出现在 factory/manager 脚本
+- **Awake**: 缓存组件、单例 setup、init；无业务逻辑
+- **Start**: 读 `Datas.Instance`、订阅事件、`RefreshViews()`
+- **Update**: 仅输入转发与状态轮询
+- **OnDestroy**: 仅取消订阅与销毁自建对象
+- 生命周期方法 >5 行须拆成命名 private 方法
+- 生命周期内禁止直接 `Time.timeScale` / `Resources.Load` / `DontDestroyOnLoad`
+
+## 单例模板
+
+```csharp
+public static XxxManager Instance { get; private set; }
+private void Awake() {
+    if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+    Instance = this;
+}
+private void OnDestroy() { if (Instance == this) Instance = null; }
+```
+
+## 数据与事件
+
+- ScriptableObject 经 CSV 导入 → `Resources/`；从字典取时 **必须 `Instantiate()`**
+- 事件用 C# `event Action` / `Action<T>`，无自定义 event bus
+- 协程广泛用于回合/动画/选择流程
