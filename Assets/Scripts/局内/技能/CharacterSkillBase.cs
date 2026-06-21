@@ -645,7 +645,7 @@ public class CharacterSkillBase : SkillBase
         float shieldHpCoef = extraData1;
         float advanceRatio = extraData2;
         float shieldAttackCoef = extraData4;
-        int shield = Mathf.RoundToInt(target.maxHP * shieldHpCoef + character.attack * shieldAttackCoef);
+        int shield = Mathf.RoundToInt(character.maxHP * shieldHpCoef + shieldAttackCoef *2);
         target.AddShield(shield);
         State boost = target.AddState(StateType.DamageChange, character, 1, 1);
 

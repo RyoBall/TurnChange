@@ -189,6 +189,7 @@
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterPanelView.cs" />
      <Compile Include="Assets\Scripts\局外\HoverImageSwapper.cs" />
      <Compile Include="Assets\Scripts\Utils\UIButtonHoverEffect.cs" />
+     <Compile Include="Assets\Scripts\局内\VFX\SelectionReticleController.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\BattleDialogEvents.cs" />
      <Compile Include="Assets\Scripts\局外\背包\GridModuleDefinition.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextConsoleSimulator.cs" />
@@ -243,9 +244,11 @@
      <None Include="Assets\Epic Toon FX\Prefabs\Environment\Environment FX.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\Epic Toon FX\Prefabs\Combat\Combat FX.txt" />
+     <None Include="Assets\VFX\UsedVFX\Shaders\SelectionReticleFill.shader" />
      <None Include="Assets\VFX\FieldDomain\Shaders\FieldDomainEffect.shader" />
      <None Include="Assets\VFX\JMO Assets\Cartoon FX Remaster\CFXR Assets\Shaders\CFXR_SETTINGS.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
+     <None Include="Assets\VFX\UsedVFX\Shaders\SelectionReticleGlow.shader" />
      <None Include="Assets\TextMesh Pro\Examples &amp; Extras\Fonts\Oswald-Bold - OFL.txt" />
      <None Include="Assets\TextMesh Pro\Examples &amp; Extras\Fonts\Anton OFL.txt" />
      <None Include="Assets\VFX\JMO Assets\Cartoon FX Remaster\CFXR Assets\Shaders\CFXR.cginc" />
