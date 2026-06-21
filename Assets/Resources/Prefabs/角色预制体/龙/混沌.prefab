@@ -44,6 +44,11 @@ PrefabInstance:
       propertyPath: managedReferences[8038954313273835526].ParentTransform
       value: 
       objectReference: {fileID: 250993600707232190}
+    - target: {fileID: 2098231368019806602, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2258807827590684503, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
       propertyPath: m_LocalRotation.w
@@ -78,6 +83,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: "\u6DF7\u6C8C"
+      objectReference: {fileID: 0}
+    - target: {fileID: 3494023799144250641, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 4151670972647814381, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}

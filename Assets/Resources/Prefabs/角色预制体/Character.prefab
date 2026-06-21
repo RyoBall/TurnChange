@@ -2062,14 +2062,8 @@ MonoBehaviour:
   critDamage: 0
   K: 0
   currentShield: 0
-  enterFeedback: {fileID: 0}
-  exitFeedback: {fileID: 0}
   hitFeedback: {fileID: 7761085058810267624}
-  actionFeedback: {fileID: 0}
   dieFeedback: {fileID: 4481696051725417001}
-  mouseEnterFeedback: {fileID: 0}
-  mouseExitFeedback: {fileID: 0}
-  selectFeedback: {fileID: 0}
   healFeedback: {fileID: 7522055913020228937}
   shieldFeedback: {fileID: 0}
   buffAppliedFeedback: {fileID: 5035462693451213566}
@@ -2087,7 +2081,6 @@ MonoBehaviour:
   additionalSkillType: 0
   additionalSkill: {fileID: 0}
   chaosValue: 0
-  pendingChaosRecover: 0
   switchCooldownRemaining: 0
   switchCooldownMax: 200
   selectedScale: 1
