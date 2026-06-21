@@ -27,6 +27,9 @@ public class CharacterManager : MonoBehaviour
 	[Header("换人提示")]
 	public TMP_Text promptText;
 
+	[Header("切人弹窗动画")]
+	[SerializeField] private CharacterSwitchPopupView m_switchPopupView;
+
 	[Header("候补按钮UI")]
 	public RectTransform reserveButtonContainer;
 	public Button reserveButtonPrefab;
@@ -44,7 +47,6 @@ public class CharacterManager : MonoBehaviour
 	public bool IsSelectingReserveCharacter => m_isSelectingReserveCharacter;
 	private Character m_selectedFieldCharacter;
 	private Character m_selectedReserveCharacter;
-	private readonly List<Character> m_boundReserveCharacters = new List<Character>();
 
 	private void Awake()
 	{
@@ -65,8 +67,6 @@ public class CharacterManager : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		UnbindReserveCharacterEvents();
-
 		if (Instance == this)
 		{
 			Instance = null;
@@ -83,9 +83,7 @@ public class CharacterManager : MonoBehaviour
 
 		if (!CanStartSwapFlow())
 		{
-			Debug.LogWarning(reserveCharacters.Count <= 0
-				? "[CharacterManager] 候补角色列表为空，无法执行换人"
-				: "[CharacterManager] 所有候补角色均处于换人冷却中，无法执行换人");
+			Debug.LogWarning("[CharacterManager] 候补角色列表为空，无法执行换人");
 			yield break;
 		}
 
@@ -259,7 +257,6 @@ public class CharacterManager : MonoBehaviour
 		fieldCharacters[fieldIndex] = newCharacter;
 		if (applySwapOutPenalty)
 		{
-			oldCharacter.TriggerSwapCooldown();
 			oldCharacter.ReduceChaos(3);
 		}
 
@@ -268,6 +265,10 @@ public class CharacterManager : MonoBehaviour
 		RefreshReserveCharacterBindings();
 		OnReserveSwapAvailabilityChanged?.Invoke();
 		newCharacter.ChangeActionValue(newCharacter.BaseActionValue, false);
+		if (m_switchPopupView != null)
+		{
+			yield return m_switchPopupView.PlayPopupAnimation(newCharacter.characterType);
+		}
 		//执行入场动画
 		yield return newCharacter.PlayEnterAnimation();
 		//执行入场技能
@@ -308,7 +309,7 @@ public class CharacterManager : MonoBehaviour
 			return false;
 		}
 
-		Character reserveCharacter = GetFirstAvailableReserveCharacter(requireAvailableForSwap: true);
+		Character reserveCharacter = GetFirstAvailableReserveCharacter();
 		if (reserveCharacter == null || !fieldCharacters.Contains(oldCharacter) || !reserveCharacters.Contains(reserveCharacter))
 		{
 			return false;
@@ -368,7 +369,6 @@ public class CharacterManager : MonoBehaviour
 
 			Character captured = reserve;
 			button.GetComponent<EnterCharacterButton>()?.Initialize(captured);
-			button.interactable = !captured.IsSwapOnCooldown;
 			button.onClick.AddListener(() => OnReserveButtonClicked(captured));
 			m_runtimeButtons.Add(button);
 		}
@@ -491,40 +491,7 @@ public class CharacterManager : MonoBehaviour
 
 		private void RefreshReserveCharacterBindings()
 		{
-			UnbindReserveCharacterEvents();
-
-			for (int i = 0; i < reserveCharacters.Count; i++)
-			{
-				Character reserveCharacter = reserveCharacters[i];
-				if (reserveCharacter == null)
-				{
-					continue;
-				}
-
-				reserveCharacter.OnSwapCooldownAvailabilityChanged += HandleReserveSwapCooldownAvailabilityChanged;
-				m_boundReserveCharacters.Add(reserveCharacter);
-			}
-		}
-
-		private void UnbindReserveCharacterEvents()
-		{
-			for (int i = 0; i < m_boundReserveCharacters.Count; i++)
-			{
-				Character reserveCharacter = m_boundReserveCharacters[i];
-				if (reserveCharacter == null)
-				{
-					continue;
-				}
-
-				reserveCharacter.OnSwapCooldownAvailabilityChanged -= HandleReserveSwapCooldownAvailabilityChanged;
-			}
-
-			m_boundReserveCharacters.Clear();
-		}
-
-		private void HandleReserveSwapCooldownAvailabilityChanged(Character reserveCharacter)
-		{
-			OnReserveSwapAvailabilityChanged?.Invoke();
+			// 换人冷却已移除，不再需要绑定冷却事件
 		}
 
 	#region 角色相关工具
@@ -592,24 +559,14 @@ public class CharacterManager : MonoBehaviour
 
 	public bool CanStartSwapFlow()
 	{
-		return GetFirstAvailableReserveCharacter(requireAvailableForSwap: true) != null;
+		return GetFirstAvailableReserveCharacter() != null;
 	}
 
-	private Character GetFirstAvailableReserveCharacter(bool requireAvailableForSwap = false)
+	private Character GetFirstAvailableReserveCharacter()
 	{
 		for (int i = 0; i < reserveCharacters.Count; i++)
 		{
 			Character reserveCharacter = reserveCharacters[i];
-			if (reserveCharacter == null)
-			{
-				continue;
-			}
-
-			if (requireAvailableForSwap && reserveCharacter.IsSwapOnCooldown)
-			{
-				continue;
-			}
-
 			if (reserveCharacter != null)
 			{
 				return reserveCharacter;

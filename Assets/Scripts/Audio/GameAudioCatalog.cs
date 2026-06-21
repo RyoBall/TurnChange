@@ -143,6 +143,31 @@ public class GameAudioCatalog : ScriptableObject
         return m_BgmLookup.TryGetValue(bgmType, out entry);
     }
 
+    /// <summary>
+    /// 根据 AudioClip 查找对应的 GameAudioEntry（用于获取 volume/pitch 等播放参数）。
+    /// </summary>
+    public bool TryGetEntryByClip(AudioClip clip, out GameAudioEntry entry)
+    {
+        if (clip == null)
+        {
+            entry = null;
+            return false;
+        }
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            GameAudioEntry candidate = entries[i];
+            if (candidate != null && candidate.clip == clip)
+            {
+                entry = candidate;
+                return true;
+            }
+        }
+
+        entry = null;
+        return false;
+    }
+
     public bool TryGetById(string entryId, out GameAudioEntry entry)
     {
         for (int i = 0; i < entries.Count; i++)

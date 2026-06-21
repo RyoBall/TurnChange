@@ -77,6 +77,7 @@
      <Compile Include="Assets\Scripts\Utils\AmbientFloatingParticlesHost.cs" />
      <Compile Include="Assets\Scripts\局内\MFF\GlobalFeedbacks.cs" />
      <Compile Include="Assets\Scripts\局内\UI\角色UI\UnitHealthBarController.cs" />
+     <Compile Include="Assets\Scripts\Audio\GameAudioVolumeController.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ModuleLevelProbabilityConfig.cs" />
      <Compile Include="Assets\Scripts\局内\UI\BattleSettlementView.cs" />
      <Compile Include="Assets\Scripts\局内\GameManager.cs" />
@@ -154,6 +155,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeB.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelDataTypes.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\EnemyInfoDisplayUI.cs" />
+     <Compile Include="Assets\Scripts\局内\UI\CharacterSwitchPopupView.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\DropdownSample.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\LevelCharacterSpawner.cs" />
@@ -215,6 +217,7 @@
      <Compile Include="Assets\VFX\FieldDomain\Scripts\FieldDomainEffectProfile.cs" />
      <Compile Include="Assets\Scripts\局外\背包\BackpackInventoryView.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SkewTextExample.cs" />
+     <Compile Include="Assets\Scripts\Utils\SettingsPanelOpener.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\WarpTextExample.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshProFloatingText.cs" />
      <Compile Include="Assets\Scripts\局外\教程\TutorialData.cs" />
@@ -240,6 +243,7 @@
      <Compile Include="Assets\Scripts\局内\角色\ChessSummonedPawnEnemy.cs" />
      <Compile Include="Assets\Scripts\局内\UI\伤害文本\DamageTextPool.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />
+     <Compile Include="Assets\Scripts\Utils\SettingsPanelView.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\Epic Toon FX\Prefabs\Environment\Environment FX.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />

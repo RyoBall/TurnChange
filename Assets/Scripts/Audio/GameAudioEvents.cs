@@ -9,7 +9,8 @@ public enum GameAudioEventType
     LevelScroll,
     CombatDamage,
     CombatBuffGain,
-    CombatDebuffGain
+    CombatDebuffGain,
+    CharacterSwitch
 }
 
 public readonly struct GameAudioEvent

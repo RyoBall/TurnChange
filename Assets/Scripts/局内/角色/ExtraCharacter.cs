@@ -5,6 +5,9 @@ using UnityEngine;
 public class ExtraCharacter : UnitCombatant
 {
     public Character character;
+
+    public override Sprite TurnImageSprite => character != null ? character.TurnImageSprite : null;
+
     public void Initialize(Character character)
     {
         this.character = character;

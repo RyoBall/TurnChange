@@ -8,7 +8,6 @@ using System;
 public class Character : UnitCombatant
 
 {
-    public event Action<Character> OnSwapCooldownAvailabilityChanged;
     public static event Action<Character> OnCharacterEnterTurn;
     public Transform spriteTransform;
     public string characterID;
@@ -34,12 +33,8 @@ public class Character : UnitCombatant
     /// <summary>场上行动值混沌累加器：每累计 100 行动值自动加 1 混沌点，下场后清零</summary>
     private float m_actionValueChaosAccumulator = 0f;
     private const float ActionValuePerChaosPoint = 100f;
-    [Header("换人冷却")]
-    [SerializeField] private float switchCooldownRemaining;
-    [SerializeField] private float switchCooldownMax = 200f;
-    public float SwitchCooldownRemaining => switchCooldownRemaining;
-    public float SwitchCooldownMax => switchCooldownMax;
-    public bool IsSwapOnCooldown => switchCooldownRemaining > 0f;
+    /// <summary>换人冷却已移除，始终返回 false</summary>
+    public bool IsSwapOnCooldown => false;
     bool endTurn = false;
     [Header("选中效果")]
     public float selectedScale = 1.1f;
@@ -139,21 +134,6 @@ public class Character : UnitCombatant
     {
         base.Die();
         ResetActionValueChaosAccumulator();
-        ResetAllCharactersSwitchCooldown();
-    }
-
-    /// <summary>
-    /// 有角色死亡时，清零所有角色的换人CD
-    /// </summary>
-    private static void ResetAllCharactersSwitchCooldown()
-    {
-        if (CharacterManager.Instance == null) return;
-
-        foreach (Character c in CharacterManager.Instance.allCharacters)
-        {
-            if (c == null) continue;
-            c.ResetSwitchCooldown();
-        }
     }
 
     /// <summary>
@@ -264,60 +244,19 @@ public class Character : UnitCombatant
     {
         m_actionValueChaosAccumulator = 0f;
     }
-    #region  换人cd相关
+    #region  换人cd相关（已移除冷却逻辑，保留方法签名以兼容外部调用）
 
-    public void TriggerSwapCooldown()
-    {
-        bool wasOnCooldown = IsSwapOnCooldown;
-        switchCooldownRemaining = Mathf.Max(0f, switchCooldownMax);
-        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
-    }
+    /// <summary>换人冷却已移除，此方法为空操作</summary>
+    public void TriggerSwapCooldown() { }
 
-    /// <summary>
-    /// 将换人CD清零（角色死亡时调用）
-    /// </summary>
-    public void ResetSwitchCooldown()
-    {
-        bool wasOnCooldown = IsSwapOnCooldown;
-        switchCooldownRemaining = 0f;
-        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
-    }
+    /// <summary>换人冷却已移除，此方法为空操作</summary>
+    public void ResetSwitchCooldown() { }
 
-    public void SetSwitchCooldownMax(float value, bool clampCurrent = true)
-    {
-        bool wasOnCooldown = IsSwapOnCooldown;
-        switchCooldownMax = Mathf.Max(0f, value);
-        if (clampCurrent)
-        {
-            switchCooldownRemaining = Mathf.Min(switchCooldownRemaining, switchCooldownMax);
-        }
+    /// <summary>换人冷却已移除，此方法为空操作</summary>
+    public void SetSwitchCooldownMax(float value, bool clampCurrent = true) { }
 
-        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
-    }
-
-    public float ReduceSwitchCooldown(float amount)
-    {
-        if (amount <= 0f || switchCooldownRemaining <= 0f)
-        {
-            return 0f;
-        }
-
-        bool wasOnCooldown = IsSwapOnCooldown;
-        float before = switchCooldownRemaining;
-        switchCooldownRemaining = Mathf.Max(0f, switchCooldownRemaining - amount);
-        NotifySwapCooldownAvailabilityChangedIfNeeded(wasOnCooldown);
-        return before - switchCooldownRemaining;
-    }
-
-    private void NotifySwapCooldownAvailabilityChangedIfNeeded(bool wasOnCooldown)
-    {
-        if (wasOnCooldown == IsSwapOnCooldown)
-        {
-            return;
-        }
-
-        OnSwapCooldownAvailabilityChanged?.Invoke(this);
-    }
+    /// <summary>换人冷却已移除，始终返回 0</summary>
+    public float ReduceSwitchCooldown(float amount) => 0f;
 
     #endregion
     private void EnterMoveDOT()

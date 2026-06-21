@@ -307,13 +307,12 @@ public class TurnManager : MonoBehaviour
                     fieldCharacter?.AccumulateActionValueForChaos(advanceValue);
                 }
             }
-            //推进换人技能的冷却
+            //推进候补角色的临时战斗修饰符
             if (CharacterManager.Instance != null)
             {
                 for (int i = 0; i < CharacterManager.Instance.reserveCharacters.Count; i++)
                 {
                     Character reserveCharacter = CharacterManager.Instance.reserveCharacters[i];
-                    reserveCharacter?.ReduceSwitchCooldown(advanceValue);
                     if (reserveCharacter != null)
                     {
                         TemporaryBattleModifierRuntimeManager.NotifyReserveActionValueAdvanced(reserveCharacter, advanceValue);

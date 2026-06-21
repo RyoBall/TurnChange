@@ -67,7 +67,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
         if (m_button != null)
         {
-            m_button.interactable = character != null && !character.IsSwapOnCooldown;
+            m_button.interactable = character != null;
         }
 
         RefreshCardInfo();

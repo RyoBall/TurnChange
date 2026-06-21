@@ -66,6 +66,10 @@ public class LevelSetupManager : MonoBehaviour
         }
 
         m_pendingBattleLevelData = BattleLaunchContext.ConsumePendingLevelData();
+
+        // 根据关卡ID播放对应BGM
+        PlayLevelBackgroundMusic();
+
         //导入局外数据，注意这里的时机是在角色生成之前，因此会影响角色生成的结果（如玩家角色池的确定），后续如果有需要也可以考虑增加一个接口在角色生成之后再导入一次，以覆盖掉角色生成时无法预知的数据（如玩家选择的上阵角色）
         TemporaryBattleModifierRuntimeManager.BeginBattleModifierSession();
         allPlayerCharacters = ResolveRuntimePlayerCharacters();
@@ -102,6 +106,18 @@ public class LevelSetupManager : MonoBehaviour
         TurnManager.Instance?.InitializeTurnOrder(spawnedFieldCharacters, spawnedEnemies);
 
         m_initialized = true;
+    }
+
+    private void PlayLevelBackgroundMusic()
+    {
+        if (BGMPlayer.Instance == null)
+        {
+            return;
+        }
+
+        string levelId = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.levelId : string.Empty;
+        AudioClip levelBgmClip = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.levelBgmClip : null;
+        BGMPlayer.Instance.PlayLevelBGM(levelId, levelBgmClip);
     }
 
     private void InitializeSpawnedEnemies(List<Enemy> spawnedEnemies)

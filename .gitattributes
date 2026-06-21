@@ -6,3 +6,4 @@ Assets/Resources/font/fusion-pixel-12px-monospaced-zh_hans[[:space:]]SDF.asset f
 *.jpg filter=lfs diff=lfs merge=lfs -text
 HXFL/* filter=lfs diff=lfs merge=lfs -text
 HXFL/**/* filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text

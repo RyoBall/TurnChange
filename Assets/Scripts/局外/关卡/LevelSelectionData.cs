@@ -16,6 +16,10 @@ public class LevelSelectionData : ScriptableObject//关卡数据
     [Min(0)] public int rewardExperience;
     [Min(0)] public int rewardGold;
 
+    [Header("BGM")]
+    [Tooltip("本关卡专属BGM（为空则从通用战斗BGM中随机选取）")]
+    public AudioClip levelBgmClip;
+
     [Header("剧情对话")]
     [Tooltip("战前对话（在切入技之前播放）")]
     public List<BattleStoryDialogData> preBattleDialogs = new List<BattleStoryDialogData>();

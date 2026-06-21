@@ -51,6 +51,7 @@ public class TurnImage : MonoBehaviour
             if (iconImage != null)
             {
                 iconImage.sprite = null;
+                iconImage.enabled = false;
             }
             if (backgroundImage != null)
             {
@@ -62,6 +63,7 @@ public class TurnImage : MonoBehaviour
             if (iconImage != null)
             {
                 iconImage.sprite = unitCombatant.TurnImageSprite;
+                iconImage.enabled = true;
             }
             // 根据战斗者类型设置背景图，敌人和玩家使用不同的默认背景
             if (combatant is Enemy)

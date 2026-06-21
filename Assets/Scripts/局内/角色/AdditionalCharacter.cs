@@ -2,9 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AdditionalCharacter : Combatant
+public class AdditionalCharacter : UnitCombatant
 {
     public Character character;
+
+    public override Sprite TurnImageSprite => character != null ? character.TurnImageSprite : null;
+
     private SkillBase m_skillOverride;
     private List<Enemy> m_selectedEnemies;
 

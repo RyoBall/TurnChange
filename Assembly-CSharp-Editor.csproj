@@ -44,6 +44,7 @@
      <Compile Include="Assets\Editor\GameAudioCatalogEditor.cs" />
      <Compile Include="Assets\Editor\GridModuleImporter.cs" />
      <Compile Include="Assets\Editor\EnemySkillImporter.cs" />
+     <Compile Include="Assets\Editor\CharacterSwitchAnimationSetup.cs" />
      <Compile Include="Assets\Editor\AmbientFloatingParticlesPrefabCreator.cs" />
      <Compile Include="Assets\Editor\TutorialEnemyRosterDataGenerator.cs" />
      <Compile Include="Assets\Editor\GameAudioCatalogInitializer.cs" />
@@ -55,6 +56,7 @@
      <Compile Include="Assets\Editor\EditorConfig.cs" />
      <Compile Include="Assets\Editor\SkillKeywordProcessor.cs" />
      <Compile Include="Assets\Editor\CFXFixer.cs" />
+     <Compile Include="Assets\Editor\SettingsPanelPrefabFactory.cs" />
      <Compile Include="Assets\VFX\JMO Assets\Cartoon FX Easy Editor\Editor\CFXEasyEditor.cs" />
      <Compile Include="Assets\Editor\TagColorConfigInitializer.cs" />
      <Compile Include="Assets\Editor\EnemyDataImporter.cs" />
