@@ -702,5 +702,16 @@ public class FloatingTipGenerator : MonoBehaviour
         StartPersistentDialog(dialogId, message, duration);
     }
 
+    /// <summary>等待中央对话框队列播放完毕（含淡出）</summary>
+    public IEnumerator WaitForDialogQueueIdle()
+    {
+        while (m_dialogQueueCoroutine != null || m_dialogQueue.Count > 0 || m_isShowingQueuedDialog)
+        {
+            yield return null;
+        }
+
+        yield return null;
+    }
+
     #endregion
 }

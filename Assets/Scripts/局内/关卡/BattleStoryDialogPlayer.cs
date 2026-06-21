@@ -61,6 +61,11 @@ public class BattleStoryDialogPlayer : MonoBehaviour
 
         m_isPlaying = true;
 
+        if (FloatingTipGenerator.Instance != null)
+        {
+            FloatingTipGenerator.Instance.ClearAllPersistentDialogs();
+        }
+
         for (int i = 0; i < dialogs.Count; i++)
         {
             BattleStoryDialogData dialog = dialogs[i];
@@ -69,27 +74,15 @@ public class BattleStoryDialogPlayer : MonoBehaviour
                 continue;
             }
 
-            string dialogId = $"story_{i}";
             string displayText = BuildDisplayText(dialog);
-
-            // 显示当前对话
-            ShowDialog(dialogId, displayText);
-
-            // 等待显示时长
-            yield return new WaitForSeconds(m_dialogDisplayDuration);
-
-            // 关闭当前对话
-            HideDialog(dialogId);
-
-            // 段间间隔
-            if (i < dialogs.Count - 1)
-            {
-                yield return new WaitForSeconds(m_dialogInterval);
-            }
+            yield return PlaySingleStoryDialog(displayText, i < dialogs.Count - 1);
         }
 
-        // 等待最后一段对话完全淡出
-        yield return new WaitForSeconds(m_fadeOutDuration);
+        if (FloatingTipGenerator.Instance != null)
+        {
+            yield return FloatingTipGenerator.Instance.WaitForDialogQueueIdle();
+        }
+
         m_isPlaying = false;
     }
 
@@ -115,19 +108,22 @@ public class BattleStoryDialogPlayer : MonoBehaviour
         return $"【{dialog.speakerName}】\n{dialog.content}";
     }
 
-    private void ShowDialog(string dialogId, string message)
+    private IEnumerator PlaySingleStoryDialog(string message, bool hasFollowingDialog)
     {
-        if (FloatingTipGenerator.Instance == null) return;
+        if (FloatingTipGenerator.Instance == null)
+        {
+            yield break;
+        }
 
-        // 使用 FloatingTipGenerator 的持续对话框功能，不自动消失
-        FloatingTipGenerator.Instance.StartPersistentDialog(dialogId, message, 0f);
-    }
+        FloatingTipGenerator.Instance.ShowCenterDialog(message, m_dialogDisplayDuration);
+        float lineDuration = m_fadeInDuration * 0.6f + m_dialogDisplayDuration + m_fadeOutDuration * 0.5f;
+        if (hasFollowingDialog)
+        {
+            lineDuration += m_dialogInterval;
+        }
 
-    private void HideDialog(string dialogId)
-    {
-        if (FloatingTipGenerator.Instance == null) return;
-
-        FloatingTipGenerator.Instance.StopPersistentDialog(dialogId);
+        yield return new WaitForSeconds(lineDuration);
+        yield return FloatingTipGenerator.Instance.WaitForDialogQueueIdle();
     }
 
     private void ClearAllDialogs()

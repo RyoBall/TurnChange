@@ -12,7 +12,7 @@ using UnityEngine;
 public static class BattleLevelDataImporter
 {
     /// <summary>
-    /// CSV 中敌人代号 → EnemyRosterData.enemyID 的映射表
+    /// CSV 中敌人代号 → EnemyRosterData.enemyID 的映射表（E=普通敌人，B=Boss/特殊敌人）
     /// </summary>
     private static readonly Dictionary<string, string> EnemyCodeToID = new Dictionary<string, string>
     {
@@ -21,6 +21,21 @@ public static class BattleLevelDataImporter
         { "E3", "Debuff" },   // 负面手
         { "E4", "Bomb" },     // 群体自爆手
         { "E5", "Dot" },      // 持续伤害施加手
+        { "B1", "剑客" },
+        { "B2", "混沌龙" },
+        { "B3", "Dot龙" },
+        { "B4", "直伤龙" },
+        { "B5", "Chess" },    // 初始棋子
+        { "B6", "Queen" },    // 皇后
+    };
+
+    /// <summary>
+    /// 教程敌人代号 → 资产路径（与 E1/E2 等同 enemyID，需按路径区分）
+    /// </summary>
+    private static readonly Dictionary<string, string> TutorialEnemyCodeToAssetPath = new Dictionary<string, string>
+    {
+        { "T1", "Assets/Resources/配置可编程物体/参战者/敌人/教程/教程_护盾手(仅技能一).asset" },
+        { "T2", "Assets/Resources/配置可编程物体/参战者/敌人/教程/教程_单体攻击手(定制).asset" },
     };
 
     // 缓存：enemyID → EnemyRosterData，避免重复查找
@@ -165,8 +180,9 @@ public static class BattleLevelDataImporter
     /// 解析敌人阵容配置字符串
     /// 格式: W1:E2*1+E5*1;W2:E1*1+E5*1
     /// 支持独立等级: E2:-1*1 表示 E2 等级 -1
-    /// 特殊敌人格式: W1:特殊_三头龙完整版*1
-    /// W(Wave) = 波次, E = 敌人代号, *后面的数字 = 数量
+    /// 教程敌人: T1=教程盾手, T2=教程单体
+    /// Boss敌人: B1=剑客, B2=混沌龙, B3=Dot龙, B4=直伤龙, B5=初始棋子, B6=皇后
+    /// W(Wave) = 波次, *后面的数字 = 数量
     /// </summary>
     private static List<LevelEnemyWaveData> ParseEnemyConfig(string config, int defaultLevel)
     {
@@ -220,8 +236,8 @@ public static class BattleLevelDataImporter
                 int enemyLevel = defaultLevel;
                 EnemyRosterData enemyData = null;
 
-                // 尝试匹配标准敌人格式（支持独立等级）: E2:-1*1 或 E2*1
-                Match standardMatch = Regex.Match(entryTrimmed, @"^(E\d+)(?::(-?\d+))?(?:\*(\d+))?$");
+                // 尝试匹配代号格式（支持独立等级）: E2:-1*1、T1*1、B3*1
+                Match standardMatch = Regex.Match(entryTrimmed, @"^([ETB]\d+)(?::(-?\d+))?(?:\*(\d+))?$");
                 if (standardMatch.Success)
                 {
                     string enemyCode = standardMatch.Groups[1].Value;
@@ -295,6 +311,18 @@ public static class BattleLevelDataImporter
         if (s_enemyCache == null)
         {
             BuildEnemyCache();
+        }
+
+        if (TutorialEnemyCodeToAssetPath.TryGetValue(enemyCode, out string assetPath))
+        {
+            EnemyRosterData tutorialEnemy = AssetDatabase.LoadAssetAtPath<EnemyRosterData>(assetPath);
+            if (tutorialEnemy != null)
+            {
+                return tutorialEnemy;
+            }
+
+            Debug.LogWarning($"[BattleLevelDataImporter] 教程敌人代号 {enemyCode} 的资产未找到: {assetPath}");
+            return null;
         }
 
         // 先查代号映射表

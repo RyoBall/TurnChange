@@ -5,7 +5,9 @@ description: TurnChange 项目 Unity MCP 连接与验证。当用户询问 MCP �
 
 # Unity MCP 一次性连接（Unity 侧）
 
-Cursor 侧 MCP 已配置为 HTTP：`http://localhost:8080/mcp`（见 `.cursor/mcp.json`）。
+Cursor 侧 MCP 已配置为 **stdio**（见 `.cursor/mcp.json`）。一键重配：`.cursor/configure-unity-mcp.ps1`
+
+若 HTTP 启动失败，stdio 更稳定（Cursor 自行启动 `uvx`，无需 Unity HTTP 服务器）。
 
 ## Unity 中安装 MCP for Unity（仅需一次）
 

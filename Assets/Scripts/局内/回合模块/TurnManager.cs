@@ -145,6 +145,11 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator TriggerOpeningEnterSkills()
     {
+        if (BattleDialogController.Instance != null)
+        {
+            BattleDialogController.Instance.EnableBattleHints();
+        }
+
         var openingCharacters = combatants
             .OfType<Character>()
             .Where(character => character != null && character.participateInTurnLoopAtStart)
@@ -172,23 +177,23 @@ public class TurnManager : MonoBehaviour
     /// </summary>
     private IEnumerator PlayPreBattleDialogs()
     {
-        PendingBattleLevelData pendingData = BattleLaunchContext.ConsumePendingLevelData();
-        // 注意：ConsumePendingLevelData 会清空静态数据，这里先消费再立即设回去
-        // 因为 LevelSetupManager 之后还需要消费一次
-        if (pendingData != null)
-        {
-            BattleLaunchContext.SetPendingLevelDataFromPending(pendingData);
-        }
+        // 关卡数据已在 LevelSetupManager.InitializeLevel 中消费并缓存，勿再次 ConsumePendingLevelData
+        IReadOnlyList<BattleStoryDialogData> preBattleDialogs = LevelSetupManager.Instance != null
+            ? LevelSetupManager.Instance.PreBattleDialogs
+            : null;
 
-        if (pendingData == null || !pendingData.HasPreBattleDialogs)
+        if (preBattleDialogs == null || preBattleDialogs.Count == 0)
         {
             yield break;
         }
 
-        if (BattleStoryDialogPlayer.Instance != null)
+        if (BattleStoryDialogPlayer.Instance == null)
         {
-            yield return BattleStoryDialogPlayer.Instance.PlayDialogs(pendingData.preBattleDialogs);
+            Debug.LogWarning("[TurnManager] 存在战前剧情对话但 BattleStoryDialogPlayer 未就绪，已跳过播放");
+            yield break;
         }
+
+        yield return BattleStoryDialogPlayer.Instance.PlayDialogs(preBattleDialogs);
     }
 
     public void InitializeTurnOrder(List<Character> fieldCharacters, List<Enemy> fieldEnemies)

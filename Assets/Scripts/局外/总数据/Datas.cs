@@ -45,6 +45,7 @@ public class Datas : MonoBehaviour
     public event Action BackpackWidthChanged;
     public event Action GoldChanged;
     public event Action<string> LevelCompleted;
+    public event Action LevelFloorsChanged;
 
     [Header("角色列表")]
     [SerializeField] private List<CharacterRosterData> characterDatas = new List<CharacterRosterData>();
@@ -84,6 +85,9 @@ public class Datas : MonoBehaviour
     [Header("关卡角色解锁")]
     [SerializeField] private LevelCharacterUnlockConfig levelCharacterUnlockConfig;
 
+    [Header("浓缩关配置")]
+    [SerializeField] private CondensedLevelConfig condensedLevelConfig;
+
     public readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
     private bool m_characterLookupBuilt;
 
@@ -96,6 +100,7 @@ public class Datas : MonoBehaviour
 
         InitializeCharacterLookup();
         NormalizeUnlockedCharacters();
+        ApplyLevelFloorsFromConfig();
         ClampProgressionData();
         SubscribeInternalEvents();
         MarkAsPersistent();
@@ -226,6 +231,23 @@ public class Datas : MonoBehaviour
     }
     #endregion
     #region 关卡进度相关
+    public bool ShouldUseLevelConfiguredPlayerLevel
+    {
+        get
+        {
+            CondensedLevelConfig config = ResolveCondensedLevelConfig();
+            return config != null && config.ShouldUseLevelConfiguredPlayerLevel;
+        }
+    }
+
+    public void RefreshLevelFloorsFromConfig()
+    {
+        ApplyLevelFloorsFromConfig();
+        ClampProgressionData();
+        UpdateLevelUnlockStates(GetCurrentFloorData());
+        LevelFloorsChanged?.Invoke();
+    }
+
     public IReadOnlyList<LevelSelectionFloorData> GetLevelFloors()
     {
         return levelFloors;
@@ -378,6 +400,70 @@ public class Datas : MonoBehaviour
         }
 
         return null;
+    }
+
+    private CondensedLevelConfig ResolveCondensedLevelConfig()
+    {
+        if (condensedLevelConfig != null)
+        {
+            return condensedLevelConfig;
+        }
+
+        return CondensedLevelConfig.LoadDefaultAsset();
+    }
+
+    private void ApplyLevelFloorsFromConfig()
+    {
+        CondensedLevelConfig config = ResolveCondensedLevelConfig();
+        if (config == null)
+        {
+            return;
+        }
+
+        if (levelFloors == null)
+        {
+            levelFloors = new List<LevelSelectionFloorData>();
+        }
+        else
+        {
+            levelFloors.Clear();
+        }
+
+        IReadOnlyList<LevelSelectionFloorData> sourceFloors = config.GetActiveLevelFloors();
+        if (sourceFloors == null || sourceFloors.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < sourceFloors.Count; i++)
+        {
+            LevelSelectionFloorData floorData = CloneFloorData(sourceFloors[i]);
+            if (floorData != null)
+            {
+                levelFloors.Add(floorData);
+            }
+        }
+    }
+
+    private static LevelSelectionFloorData CloneFloorData(LevelSelectionFloorData source)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        var clone = new LevelSelectionFloorData();
+        IReadOnlyList<LevelSelectionData> levels = source.GetLevels();
+        for (int i = 0; i < levels.Count; i++)
+        {
+            LevelSelectionData level = levels[i];
+            if (level != null)
+            {
+                clone.levels.Add(level);
+            }
+        }
+
+        return clone.levels.Count > 0 ? clone : null;
     }
 
     public int GetTeamLevel()

@@ -605,27 +605,19 @@ public class CharacterSkillBase : SkillBase
 
     private IEnumerator TauntPull(Character character, List<Enemy> selectedEnemies)
     {
-        if (selectedEnemies == null || selectedEnemies.Count <= 0)
+        Enemy target = GetPrimaryEnemy(selectedEnemies);
+        if (character == null || target == null)
         {
             yield break;
         }
 
-        Enemy target = selectedEnemies[0];
-        if (target == null)
-        {
-            yield break;
-        }
-        //读取参数：extraData1 进度条推进比例，extraData2 伤害减免比例，extraData3 嘲讽持续回合数
-        float advanceRatio = extraData1;
-        float damageReduction = extraData2;
         int tauntDuration = Mathf.Max(1, Mathf.RoundToInt(extraData3));
 
         target.AddState(StateType.Taunt, character, tauntDuration, 1);
-        if (damageReduction > 0f)
-        {
-            State weakened = target.AddState(StateType.ActionWeakened, character, 1, 1);
-        }
-        target.ChangeActionValue(Mathf.Max(0f, target.currentActionValue - target.currentActionValue * advanceRatio));
+        target.AddState(StateType.ActionWeakened, character, 1, 1);
+        NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
+        var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, DamageType.Physical, false, true, true);
+        target.TakeDamage(damageInfo);
         yield break;
     }
 

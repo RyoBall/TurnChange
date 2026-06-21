@@ -231,7 +231,6 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
         if (Anim != null)
         {
             Anim.SetInteger("Stance", (int)newStance);
-            Anim.SetTrigger("Idle");
         }
     }
 

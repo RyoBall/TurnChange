@@ -31,7 +31,7 @@
 终末宣判,DragonDirectRage,1.35,60,Character,0,0,0,0,0,即死保底伤害=Atk×1.35+60
 震慑溃灭,DragonChaosRage,1.5,50,Character,0,2,0,0,0,震慑引爆伤害=Atk×1.5+50
 易伤突刺,SwordsmanThrust,0.45,15,Character,0,2,0,0,0,命中目标施加2层易伤 伤害×1.3
-剑舞连斩,SwordsmanDance,0.18,5,Character,0,1,0,0,0,随机5次对象每次命中施加1层混沌值
+剑舞连斩,SwordsmanDance,0.1,5,Character,0,1,0,0,0,随机5次对象每次命中施加1层混沌值
 铁壁格挡,SwordsmanBlock,0,0,Self,0,1,2,0,0,自身1层抵御 随机1名敌人2层混沌值
 稳固架势,SwordsmanSteady,0,0,Self,0,0.05,0,0,0,回复5%MaxHP清除1种负面状态
 扰敌步法,SwordsmanDisrupt,0.15,5,Character,0,0,0,0,0,自身下次行动提前50%

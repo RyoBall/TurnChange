@@ -27,6 +27,7 @@ public class Enemy : UnitCombatant
     public override Sprite TurnImageSprite => m_turnImageSprite;
     [Header("动画覆盖")]
     [SerializeField] private Animator animator;
+    [SerializeField] private float m_hitAnimationHoldDuration = 0.1f;
     protected Animator Anim => animator;
     [SerializeField] private EnemyAnimationOverrideDatabase animationOverrideDatabase;
     public float selectedScale = 1.1f;
@@ -35,6 +36,9 @@ public class Enemy : UnitCombatant
     protected Vector3 m_defaultScale;
     private Tween m_scaleTween;
     private Coroutine m_hitAnimCoroutine;
+    private const int s_hitAnimLayer = 0;
+    private static readonly int s_getAttackStateHash = Animator.StringToHash("GetAttack");
+    private static readonly int s_normalGetAttackStateHash = Animator.StringToHash("NormalGetAttack");
     public List<EnemySkillType> skills = new List<EnemySkillType>();
     private List<EnemySkillBase> m_skillInstances = new List<EnemySkillBase>();
     private Dictionary<EnemySkillType, EnemySkillBase> m_skillInstanceMap = new Dictionary<EnemySkillType, EnemySkillBase>();
@@ -245,27 +249,58 @@ public class Enemy : UnitCombatant
 
     public override void TakeDamage(DamageInfo damageInfo)
     {
+        int hpBefore = currentHP;
+        int shieldBefore = currentShield;
         base.TakeDamage(damageInfo);
-        PlayHitAnimation();
+
+        bool absorbedDamage = hpBefore > currentHP || shieldBefore > currentShield;
+        if (absorbedDamage)
+        {
+            PlayHitAnimation();
+        }
     }
 
     private void PlayHitAnimation()
     {
         if (animator == null) return;
+        // 受击动画播放中忽略重复触发，避免协程打断导致 Exit 丢失
+        if (m_hitAnimCoroutine != null) return;
 
-        if (m_hitAnimCoroutine != null)
-        {
-            StopCoroutine(m_hitAnimCoroutine);
-        }
         m_hitAnimCoroutine = StartCoroutine(HitAnimationCoroutine());
     }
 
     private IEnumerator HitAnimationCoroutine()
     {
         animator.SetTrigger("EnterGetAttack");
-        yield return new WaitForSeconds(0.1f);
+
+        const float enterTimeout = 0.5f;
+        float elapsed = 0f;
+        yield return null;
+        while (!IsInGetAttackState() && elapsed < enterTimeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (IsInGetAttackState())
+        {
+            float holdElapsed = 0f;
+            while (holdElapsed < m_hitAnimationHoldDuration)
+            {
+                holdElapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
+
         animator.SetTrigger("ExitGetAttack");
         m_hitAnimCoroutine = null;
+    }
+
+    private bool IsInGetAttackState()
+    {
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(s_hitAnimLayer);
+        int hash = stateInfo.shortNameHash;
+        return hash == s_getAttackStateHash || hash == s_normalGetAttackStateHash;
     }
 
     private IEnumerator ActionCoroutine()

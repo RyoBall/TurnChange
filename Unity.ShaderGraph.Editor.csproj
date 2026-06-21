@@ -308,9 +308,9 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\MeshDeformation\LinearBlendSkinningNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Interfaces\Graph\GraphDrawingData.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Legacy\StickyNoteData0.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\SubTarget.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Drawing\Inspector\PropertyDrawers\Texture3DPropertyDrawer.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Utility\Logic\AndNode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\SubTarget.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Math\Wave\TriangleWaveNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\Contexts\TargetFieldContext.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Interface\IRequiresData.cs" />
@@ -438,8 +438,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\Processors\Generator.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Drawing\INodeModificationListener.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Math\Vector\SphereMaskNode.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Input\Texture\SampleRawCubemapNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Drawing\Controls\ToggleControl.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Input\Texture\SampleRawCubemapNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Graphs\VirtualTextureShaderProperty.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\Collections\KernelCollection.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\Descriptors\IncludeDescriptor.cs" />
@@ -482,8 +482,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Legacy\ShaderInput0.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Math\Matrix\MatrixSplitNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Graphs\TextureSamplerState.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\Collections\IncludeCollection.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Graphs\GraphValidation.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Generation\Collections\IncludeCollection.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Math\Advanced\ExponentialNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Input\Geometry\ViewVectorNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@14.0.12\Editor\Data\Nodes\Input\Texture\SamplerStateNode.cs" />
@@ -1117,6 +1117,9 @@
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
         <HintPath>D:\Github Store\Library\PackageCache\com.unity.visualscripting@1.9.4\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+        <HintPath>D:\Github Store\Library\PackageCache\com.unity.nuget.newtonsoft-json@3.2.1\Runtime\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Unity.VisualScripting.TextureAssets">
         <HintPath>D:\Github Store\Library\PackageCache\com.unity.visualscripting@1.9.4\Editor\VisualScripting.Core\EditorAssetResources\Unity.VisualScripting.TextureAssets.dll</HintPath>

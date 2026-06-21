@@ -219,6 +219,8 @@ public class LevelSelectionListLoader : MonoBehaviour
 
         m_dataSource.LevelCompleted -= RebuildLevelListAfterCompletion;
         m_dataSource.LevelCompleted += RebuildLevelListAfterCompletion;
+        m_dataSource.LevelFloorsChanged -= ApplyLevels;
+        m_dataSource.LevelFloorsChanged += ApplyLevels;
     }
 
     private void UnsubscribeFromDataSource()
@@ -229,6 +231,7 @@ public class LevelSelectionListLoader : MonoBehaviour
         }
 
         m_dataSource.LevelCompleted -= RebuildLevelListAfterCompletion;
+        m_dataSource.LevelFloorsChanged -= ApplyLevels;
         m_dataSource = null;
     }
     private void RebuildLevelListAfterCompletion(string levelId)

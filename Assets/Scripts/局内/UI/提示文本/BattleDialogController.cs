@@ -27,6 +27,8 @@ public class BattleDialogController : MonoBehaviour
     private readonly HashSet<string> m_characterLowHealthTriggered = new HashSet<string>();
     private readonly HashSet<string> m_characterChaosMaxTriggered = new HashSet<string>();
     private readonly HashSet<string> m_dragonDeathTriggered = new HashSet<string>();
+    private readonly List<BattleDialogEventData> m_pendingDialogEvents = new List<BattleDialogEventData>();
+    private bool m_battleHintsAllowed;
 
     private void Awake()
     {
@@ -60,10 +62,37 @@ public class BattleDialogController : MonoBehaviour
         ResetForNewBattle();
     }
 
+    /// <summary>允许战斗提示对话显示，并处理战前暂存的事件（在角色入场技前调用）</summary>
+    public void EnableBattleHints()
+    {
+        if (m_battleHintsAllowed)
+        {
+            return;
+        }
+
+        m_battleHintsAllowed = true;
+        for (int i = 0; i < m_pendingDialogEvents.Count; i++)
+        {
+            ProcessDialogEvent(m_pendingDialogEvents[i]);
+        }
+        m_pendingDialogEvents.Clear();
+    }
+
     private void OnDialogEvent(BattleDialogEventData data)
     {
         if (data == null) return;
 
+        if (!m_battleHintsAllowed)
+        {
+            m_pendingDialogEvents.Add(data);
+            return;
+        }
+
+        ProcessDialogEvent(data);
+    }
+
+    private void ProcessDialogEvent(BattleDialogEventData data)
+    {
         switch (data.EventType)
         {
             // ============ 通用 ============
@@ -253,6 +282,7 @@ public class BattleDialogController : MonoBehaviour
     /// <summary>重置所有一次性事件追踪（新战斗开始时调用）</summary>
     public void ResetForNewBattle()
     {
+        m_battleHintsAllowed = false;
         m_oncePerBattleEvents.Clear();
         m_characterLowHealthTriggered.Clear();
         m_characterChaosMaxTriggered.Clear();

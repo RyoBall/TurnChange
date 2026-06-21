@@ -28,6 +28,12 @@ public class LevelSetupManager : MonoBehaviour
     public List<EnemyRosterData> FieldEnemies => fieldEnemies;
     public bool IsBattleResolved => m_battleResolved;
 
+    /// <summary>当前关卡的战前剧情对话（由 LevelSetupManager 在初始化时从 BattleLaunchContext 缓存）</summary>
+    public IReadOnlyList<BattleStoryDialogData> PreBattleDialogs =>
+        m_pendingBattleLevelData != null && m_pendingBattleLevelData.HasPreBattleDialogs
+            ? m_pendingBattleLevelData.preBattleDialogs
+            : null;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
