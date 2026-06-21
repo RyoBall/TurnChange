@@ -1,0 +1,32 @@
+---
+description: TurnChange 项目核心原则与架构速查（始终生效）
+alwaysApply: true
+---
+
+# TurnChange 核心规范
+
+- **引擎**: Unity 2022.3 LTS (URP)；**语言**: C#，无 asmdef，全部编译进 `Assembly-CSharp`
+- **场景**: `Assets/Scenes/Main.unity`（局外）→ `Assets/Scenes/Fight.unity`（局内）
+- **详细架构**: 读 `CLAUDE.md`；**通用约定**: 读 `AGENTS.md`
+
+## 三大原则
+
+1. **尽可能复用已有代码** — 先搜索类似实现，优先扩展而非新建
+2. **接口优先** — 对外功能定义接口；变量 `private`；通过接口属性/方法访问
+3. **不破坏对外契约** — 改现有函数前先列出所有调用方
+
+## 关键单例与桥接
+
+| 模块 | 文件 |
+|------|------|
+| 持久化数据 | `Assets/Scripts/局外/总数据/Datas.cs` |
+| 场景桥接 | `Assets/Scripts/局内/关卡/BattleLaunchContext.cs` |
+| 回合循环 | `Assets/Scripts/局内/回合模块/TurnManager.cs` |
+| 时间缩放 | `Assets/Scripts/局外/总数据/TimeScaleController.cs`（勿直接用 `Time.timeScale`） |
+
+## 已知陷阱
+
+- `Datas.Update()` 每帧覆盖 `Time.timeScale`
+- `BattleLaunchContext` 数据在 `ConsumePendingLevelData()` 后清空
+- `GameManager.Awake()` 无重复 Instance 检查，勿复制其单例模式
+- `StarterBranchRuntimeController` 已废弃，角色解锁走 `LevelCharacterUnlockConfig`

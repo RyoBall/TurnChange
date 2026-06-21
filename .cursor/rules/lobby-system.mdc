@@ -1,0 +1,23 @@
+---
+description: 局外系统开发规范（Main 场景、Datas、商店、背包、面板切换）
+globs: Assets/Scripts/局外/**/*
+alwaysApply: false
+---
+
+# 局外系统
+
+完整规范见 `.github/instructions/局外系统开发规范.instructions.md`。
+
+## 核心模式
+
+- **数据**: `Datas.Instance`（DontDestroyOnLoad）；订阅 `CharacterRosterChanged` / `ModuleStateChanged` 等
+- **面板切换**: `ChangePanelButton.PanelSwitched` / `ExitButton.PanelClosed`；转场必须走 `ScreenTransition.Instance`
+- **进战斗**: `BattleLaunchContext.SetPendingLevelData()` → `SceneManager.LoadScene("Fight")`
+- **模块放置**: `ModulePlacementController` 协调；定义在 `GridModuleDefinition` SO
+- **时间缩放**: 局外勿依赖 `Time.timeScale`（被 `Datas.Update()` 覆盖）
+
+## 添加新面板
+
+1. 创建 Prefab + 脚本
+2. 按钮引用目标面板，协程内 `ScreenTransition` 转场
+3. 数据经 `Datas.Instance` 读写

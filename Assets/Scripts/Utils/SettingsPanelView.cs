@@ -29,8 +29,7 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     [SerializeField] private Slider m_volumeSlider;
     [SerializeField] private TMP_Text m_volumeValueText;
 
-    /// <summary>打开面板前的时间流速缓存，关闭时恢复</summary>
-    private float m_cachedTimeScale = 1.5f;
+    private bool m_hasPushedTimeScalePause;
 
     private CanvasGroup m_canvasGroup;
     private Tweener m_fadeTween;
@@ -46,16 +45,18 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
         }
 
         Instance = this;
-        InitializeComponents();
+        EnsureComponentsInitialized();
     }
 
     private void Start()
     {
+        EnsureComponentsInitialized();
         ApplyPanelTypography();
     }
 
     private void OnDestroy()
     {
+        ReleaseTimeScalePause();
         m_fadeTween?.Kill();
         m_fadeTween = null;
 
@@ -65,12 +66,20 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
         }
     }
 
-    private void InitializeComponents()
+    private void EnsureComponentsInitialized()
     {
-        m_canvasGroup = GetComponent<CanvasGroup>();
-        m_canvasGroup.alpha = 0f;
-        m_canvasGroup.interactable = false;
-        m_canvasGroup.blocksRaycasts = false;
+        if (m_canvasGroup == null)
+        {
+            m_canvasGroup = GetComponent<CanvasGroup>();
+            if (m_canvasGroup == null)
+            {
+                m_canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+
+            m_canvasGroup.alpha = 0f;
+            m_canvasGroup.interactable = false;
+            m_canvasGroup.blocksRaycasts = false;
+        }
 
         EnsureModalCanvas();
 
@@ -110,6 +119,23 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
             canvas = gameObject.AddComponent<Canvas>();
         }
 
+        Canvas rootCanvas = transform.parent != null
+            ? transform.parent.GetComponentInParent<Canvas>()
+            : null;
+
+        if (rootCanvas != null
+            && rootCanvas.renderMode == RenderMode.ScreenSpaceCamera
+            && rootCanvas.worldCamera != null)
+        {
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = rootCanvas.worldCamera;
+            canvas.planeDistance = rootCanvas.planeDistance;
+        }
+        else
+        {
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        }
+
         canvas.overrideSorting = true;
         canvas.sortingOrder = 100;
 
@@ -122,19 +148,26 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     /// <summary>打开设置 Panel — 绑定到外部 Button.onClick</summary>
     public void Open()
     {
+        EnsureComponentsInitialized();
+
+        if (m_canvasGroup == null)
+        {
+            Debug.LogError("[SettingsPanelView] 无法打开：CanvasGroup 初始化失败。", this);
+            return;
+        }
+
         if (m_panelRoot == null)
         {
             Debug.LogError("[SettingsPanelView] 无法打开：m_panelRoot 未配置。", this);
             return;
         }
 
-        // 缓存当前时间流速并暂停
-        ITimeScaleController timeScale = TimeScaleController.Instance;
-        if (timeScale != null)
+        if (IsOpen)
         {
-            m_cachedTimeScale = timeScale.CurrentTimeScale;
-            timeScale.Pause();
+            return;
         }
+
+        PushTimeScalePause();
 
         SyncVolumeControls();
         transform.SetAsLastSibling();
@@ -144,19 +177,21 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     /// <summary>关闭设置 Panel（返回游戏）— 绑定到 Panel 内 Button.onClick</summary>
     public void Close()
     {
-        FadeOut();
+        EnsureComponentsInitialized();
 
-        // 恢复时间流速
-        ITimeScaleController timeScale = TimeScaleController.Instance;
-        if (timeScale != null)
+        if (m_canvasGroup == null)
         {
-            timeScale.SetTimeScale(m_cachedTimeScale);
+            return;
         }
+
+        ReleaseTimeScalePause();
+        FadeOut();
     }
 
     /// <summary>退出游戏 — 绑定到 Panel 内 Button.onClick</summary>
     public void QuitGame()
     {
+        ReleaseTimeScalePause();
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -169,6 +204,35 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     {
         GameAudioVolumeController.SetMasterVolume(value);
         UpdateVolumeLabel(value);
+    }
+
+    private void PushTimeScalePause()
+    {
+        if (m_hasPushedTimeScalePause)
+        {
+            return;
+        }
+
+        ITimeScaleController timeScale = TimeScaleController.Instance;
+        if (timeScale == null)
+        {
+            return;
+        }
+
+        timeScale.PushPause();
+        m_hasPushedTimeScalePause = true;
+    }
+
+    private void ReleaseTimeScalePause()
+    {
+        if (!m_hasPushedTimeScalePause)
+        {
+            return;
+        }
+
+        ITimeScaleController timeScale = TimeScaleController.Instance;
+        timeScale?.PopPause();
+        m_hasPushedTimeScalePause = false;
     }
 
     private void FadeIn()

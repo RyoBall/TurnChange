@@ -1,0 +1,31 @@
+---
+description: 局内战斗系统规范（回合、技能、状态、角色交换）
+globs: Assets/Scripts/局内/**/*
+alwaysApply: false
+---
+
+# 局内战斗系统
+
+详细架构见 `CLAUDE.md` 中 Key Systems 章节。
+
+## 回合系统
+
+- `TurnManager` 维护按 `currentActionValue` 升序的 `LinkedList<Combatant>`
+- 外部通过 `InsertCombatant()` / `RemoveCombatant()` 修改顺序
+- 特殊插入: `Changer`（换人）、`ExtraCharacter`、`AdditionalCharacter`
+
+## 技能与状态
+
+- 技能: `SkillExecuteManager` 协调；`SkillBase.Execute()` 为协程
+- 状态: `StateDictionaryManager.GetState(type)` 返回 **Instantiate 克隆**
+- 选人/选敌: `SkillManager` 协程 + 点击选择
+
+## 角色交换
+
+- `CharacterManager`: `fieldCharacters`（2）+ `reserveCharacters`
+- 换人后刷新链: `Character → CharacterManager → CommandButton`（勿只依赖 `OnTurnOrderChanged`）
+
+## 战斗启动
+
+- `LevelSetupManager.InitializeLevel()` 消费 `BattleLaunchContext.ConsumePendingLevelData()`
+- 修改器: `TemporaryBattleModifierRuntimeManager` 会话生命周期

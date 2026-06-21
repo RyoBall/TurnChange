@@ -1,0 +1,32 @@
+﻿# Unity generated / cache
+Library/
+Temp/
+Logs/
+obj/
+Build/
+Builds/
+UserSettings/
+MemoryCaptures/
+Recordings/
+
+# IDE / solution artifacts
+*.csproj
+*.sln
+*.slnx
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Local build output
+HXFL/
+
+# Large third-party asset packs (keep game scripts indexable)
+Assets/Feel/
+Assets/Epic Toon FX/
+Assets/TextMesh Pro/Examples & Extras/
