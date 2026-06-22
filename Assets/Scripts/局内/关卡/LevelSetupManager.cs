@@ -240,9 +240,11 @@ public class LevelSetupManager : MonoBehaviour
 
         m_battleResolved = true;
 
-        int rewardExperience = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardExperience : 0;
-        int rewardGold = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardGold : 0;
-        Datas.Instance?.MarkLevelCompleted(m_pendingBattleLevelData != null ? m_pendingBattleLevelData.levelId : string.Empty);
+        string levelId = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.levelId : string.Empty;
+        int baseExperience = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardExperience : 0;
+        int baseGold = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardGold : 0;
+        ResolveCondensedBattleRewards(levelId, baseExperience, baseGold, out int rewardExperience, out int rewardGold, out bool hideExperienceOnSettlement);
+        Datas.Instance?.MarkLevelCompleted(levelId);
         //结束战斗增益会话，结算界面可能需要读取一些数据来显示，因此放在前面执行，耦合度略高
         TemporaryBattleModifierRuntimeManager.CompleteBattleModifierSession();
 
@@ -251,11 +253,35 @@ public class LevelSetupManager : MonoBehaviour
 
         if (settlementView != null)
         {
-            yield return settlementView.PlaySettlementSequence(rewardExperience, rewardGold);
+            yield return settlementView.PlaySettlementSequence(rewardExperience, rewardGold, hideExperienceOnSettlement);
             yield break;
         }
 
         Debug.LogWarning("[LevelSetupManager] 缺少 BattleSettlementView，已结算奖励但未显示结算界面。", this);
+    }
+
+    private static void ResolveCondensedBattleRewards(
+        string levelId,
+        int baseExperience,
+        int baseGold,
+        out int rewardExperience,
+        out int rewardGold,
+        out bool hideExperienceOnSettlement)
+    {
+        ICondensedLevelConfig config = Datas.Instance != null ? Datas.Instance.GetCondensedLevelConfig() : null;
+        if (config == null || !config.IsCondensedModeEnabled)
+        {
+            rewardExperience = baseExperience;
+            rewardGold = baseGold;
+            hideExperienceOnSettlement = false;
+            return;
+        }
+
+        hideExperienceOnSettlement = true;
+        rewardExperience = 0;
+        rewardGold = CondensedLevelConfig.ShouldApplyCondensedGoldMultiplier(config, levelId)
+            ? baseGold * config.NonTutorialGoldMultiplier
+            : baseGold;
     }
 
     /// <summary>

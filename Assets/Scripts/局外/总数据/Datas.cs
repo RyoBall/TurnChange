@@ -245,6 +245,20 @@ public class Datas : MonoBehaviour
         }
     }
 
+    public bool IsCondensedModeEnabled
+    {
+        get
+        {
+            CondensedLevelConfig config = ResolveCondensedLevelConfig();
+            return config != null && config.IsCondensedModeEnabled;
+        }
+    }
+
+    public ICondensedLevelConfig GetCondensedLevelConfig()
+    {
+        return ResolveCondensedLevelConfig();
+    }
+
     public void RefreshLevelFloorsFromConfig()
     {
         ApplyLevelFloorsFromConfig();

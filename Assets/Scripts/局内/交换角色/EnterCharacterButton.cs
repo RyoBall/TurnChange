@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    private const int PreviewMaxChaosValue = 5;
+
     public Character character;
 
     [Header("悬停缩放")]
@@ -20,6 +22,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
     private Vector3 m_defaultScale;
     private Tween m_scaleTween;
     private bool m_isPointerOver;
+    private bool m_isPreviewMode;
 
     [Header("换人卡片信息")]
     [SerializeField] private TMP_Text m_nameText;
@@ -59,6 +62,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public void Initialize(Character character)
     {
+        m_isPreviewMode = false;
         this.character = character;
         if (m_button == null)
         {
@@ -67,10 +71,54 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
         if (m_button != null)
         {
+            m_button.enabled = true;
             m_button.interactable = character != null;
         }
 
         RefreshCardInfo();
+    }
+
+    /// <summary>
+    /// 备战页预览：用角色配置数据填充切人卡，不绑定战斗 Character 实例。
+    /// </summary>
+    public void InitializePreview(CharacterRosterData rosterData, int teamLevel)
+    {
+        m_isPreviewMode = true;
+        character = null;
+        if (m_button == null)
+        {
+            m_button = GetComponent<Button>();
+        }
+
+        if (m_button != null)
+        {
+            // 禁用 Button 组件而非 interactable，避免 ColorTint 把整张卡变灰
+            m_button.onClick.RemoveAllListeners();
+            m_button.enabled = false;
+        }
+
+        if (rosterData == null)
+        {
+            return;
+        }
+
+        CharacterSkillBase enterSkill = SkillDictionaryManager.GetSkillTemplate(rosterData.enterSkill) as CharacterSkillBase;
+        int maxHp = 0;
+        if (LevelDataContainer.TryGetCharacterLevelData(rosterData.GetCharacterId(), teamLevel, out CharacterLevelData levelData))
+        {
+            maxHp = levelData.maxHP;
+        }
+
+        ApplyCardDisplay(
+            rosterData.GetDisplayName(),
+            maxHp,
+            maxHp,
+            0,
+            PreviewMaxChaosValue,
+            enterSkill,
+            rosterData.GetIllustrationSprite(),
+            rosterData.GetIllustrationSize(),
+            0);
     }
 
     /// <summary>
@@ -83,28 +131,46 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
             return;
         }
 
-        // 名字显示
+        ApplyCardDisplay(
+            character.combatantName,
+            character.currentHP,
+            character.maxHP,
+            character.ChaosValue,
+            character.MaxChaosValueConst,
+            character.GetEnterSkillInstance(),
+            character.IllustrationSprite,
+            character.IllustrationSize,
+            character.currentShield);
+    }
+
+    private void ApplyCardDisplay(
+        string displayName,
+        int currentHp,
+        int maxHp,
+        int chaosValue,
+        int maxChaosValue,
+        CharacterSkillBase enterSkill,
+        Sprite illustration,
+        Vector2 illustrationSize,
+        int currentShield)
+    {
         if (m_nameText != null)
         {
-            m_nameText.text = character.combatantName;
+            m_nameText.text = displayName;
         }
 
-        // 血量显示
         if (m_hpText != null)
         {
-            m_hpText.text = $"HP: {character.currentHP} / {character.maxHP}";
+            m_hpText.text = maxHp > 0 ? $"HP: {currentHp} / {maxHp}" : "HP: -";
         }
 
-        // 混沌点显示
         if (m_chaosText != null)
         {
-            m_chaosText.text = $"{character.ChaosValue} / {character.MaxChaosValueConst}";
+            m_chaosText.text = $"{chaosValue} / {maxChaosValue}";
         }
 
-        // 切入技描述
         if (m_enterSkillText != null)
         {
-            CharacterSkillBase enterSkill = character.GetEnterSkillInstance();
             if (enterSkill != null)
             {
                 m_enterSkillText.text = enterSkill.shortDescription;
@@ -115,17 +181,13 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
             }
         }
 
-        // 立绘显示
         if (m_portraitImage != null)
         {
-            Sprite illustration = character.IllustrationSprite;
             if (illustration != null)
             {
                 m_portraitImage.sprite = illustration;
                 m_portraitImage.enabled = true;
 
-                // 应用立绘尺寸
-                Vector2 illustrationSize = character.IllustrationSize;
                 if (illustrationSize.x > 0 && illustrationSize.y > 0)
                 {
                     RectTransform imageRect = m_portraitImage.rectTransform;
@@ -139,33 +201,29 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
             }
         }
 
-        // 血条
         if (m_hpSlider != null)
         {
-            m_hpSlider.maxValue = character.maxHP;
-            m_hpSlider.value = character.currentHP;
+            m_hpSlider.maxValue = Mathf.Max(1, maxHp);
+            m_hpSlider.value = currentHp;
         }
 
-        // 盾条
         if (m_shieldSlider != null)
         {
-            int maxShield = character.maxHP;
+            int maxShield = Mathf.Max(1, maxHp);
             m_shieldSlider.maxValue = maxShield;
-            m_shieldSlider.value = character.currentShield;
+            m_shieldSlider.value = currentShield;
         }
 
-        // 切入技标签
-        SpawnSkillTags();
+        SpawnSkillTags(enterSkill);
     }
 
     /// <summary>
     /// 以 m_tagAnchor 为中心对称生成切入技的标签
     /// </summary>
-    private void SpawnSkillTags()
+    private void SpawnSkillTags(CharacterSkillBase enterSkill)
     {
         DestroySpawnedTags();
 
-        CharacterSkillBase enterSkill = character.GetEnterSkillInstance();
         if (enterSkill == null || enterSkill.tags == null || enterSkill.tags.Count == 0)
         {
             return;
@@ -220,7 +278,8 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
     private bool CanRespondToPointer()
     {
-        return CharacterManager.Instance != null
+        return !m_isPreviewMode
+            && CharacterManager.Instance != null
             && CharacterManager.Instance.IsSelectingReserveCharacter
             && m_button != null
             && m_button.interactable;
@@ -228,7 +287,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (m_isPointerOver)
+        if (m_isPreviewMode || m_isPointerOver)
         {
             return;
         }
@@ -248,6 +307,11 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
     public void OnPointerExit(PointerEventData eventData)
     {
         m_isPointerOver = false;
+        if (m_isPreviewMode)
+        {
+            return;
+        }
+
         // 无论 CanRespondToPointer 状态如何，都要播放退出动画，防止按钮卡在放大状态
         PlayExitAnimation();
         // 隐藏描述只在可响应时执行
@@ -276,7 +340,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
             .SetEase(Ease.OutQuad);
     }
 
-    private void ResetScaleImmediate()
+    public void ResetScaleImmediate()
     {
         KillScaleTween();
         var t = m_rectTransform != null ? m_rectTransform : (RectTransform)transform;

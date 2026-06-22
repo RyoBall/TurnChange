@@ -32,6 +32,9 @@ public class PreparationPanelView : MonoBehaviour
     [Header("关卡名称")]
     [SerializeField] private TMP_Text levelNameText;
 
+    [Header("切人卡预览")]
+    [SerializeField] private PreparationSwitchCardPreviewView m_switchCardPreview;
+
     public LevelSelectionData CurrentLevelData { get; private set; }
 
     public bool HasEnoughSelectedCharacters
@@ -75,6 +78,7 @@ public class PreparationPanelView : MonoBehaviour
     private Vector2 m_ListVelocity;
     private bool m_IsCharacterListVisible;
     private int m_activeTargetSlot = -1; // 0 = first slot, 1 = second slot, -1 = none
+    private CharacterRosterData m_hoveredPreviewCharacter;
 
     private void Awake()
     {
@@ -99,6 +103,7 @@ public class PreparationPanelView : MonoBehaviour
 
     private void OnDisable()
     {
+        HideSwitchCardPreview();
         UnsubscribeFromDataSource();
         UnbindSlotButtons();
     }
@@ -153,6 +158,7 @@ public class PreparationPanelView : MonoBehaviour
     private void Update()
     {
         UpdateCharacterListPosition();
+        UpdateSwitchCardPreviewHover();
 
         if (m_IsCharacterListVisible && Input.GetMouseButtonDown(1))
         {
@@ -233,6 +239,7 @@ public class PreparationPanelView : MonoBehaviour
 
     private void RebuildCharacterButtons()
     {
+        HideSwitchCardPreview();
         ClearCharacterButtons();
 
         if (characterButtonRoot == null || characterButtonPrefab == null || Datas.Instance == null)
@@ -503,6 +510,11 @@ public class PreparationPanelView : MonoBehaviour
     private void SetCharacterListVisible(bool visible, bool immediate = false)
     {
         m_IsCharacterListVisible = visible;
+        if (!visible)
+        {
+            HideSwitchCardPreview();
+        }
+
         if (characterListPanel == null)
         {
             return;
@@ -515,6 +527,90 @@ public class PreparationPanelView : MonoBehaviour
             characterListPanel.anchoredPosition = anchoredPosition;
             m_ListVelocity = Vector2.zero;
         }
+    }
+
+    private void HideSwitchCardPreview()
+    {
+        m_hoveredPreviewCharacter = null;
+        if (m_switchCardPreview == null)
+        {
+            return;
+        }
+
+        m_switchCardPreview.Hide();
+    }
+
+    private void UpdateSwitchCardPreviewHover()
+    {
+        if (panelRoot != null && !panelRoot.activeInHierarchy)
+        {
+            if (m_hoveredPreviewCharacter != null)
+            {
+                HideSwitchCardPreview();
+            }
+
+            return;
+        }
+
+        if (!m_IsCharacterListVisible || m_switchCardPreview == null)
+        {
+            if (m_hoveredPreviewCharacter != null)
+            {
+                HideSwitchCardPreview();
+            }
+
+            return;
+        }
+
+        CharacterRosterData hoveredCharacter = GetHoveredCharacterButtonData();
+        if (hoveredCharacter == m_hoveredPreviewCharacter)
+        {
+            return;
+        }
+
+        m_hoveredPreviewCharacter = hoveredCharacter;
+        if (hoveredCharacter != null)
+        {
+            m_switchCardPreview.Show(hoveredCharacter);
+        }
+        else
+        {
+            m_switchCardPreview.Hide();
+        }
+    }
+
+    private CharacterRosterData GetHoveredCharacterButtonData()
+    {
+        for (int i = 0; i < m_characterButtons.Count; i++)
+        {
+            CharacterSelectButtonUI button = m_characterButtons[i];
+            if (button == null || button.BoundData == null)
+            {
+                continue;
+            }
+
+            if (IsPointerOverRect(button.RectTransform))
+            {
+                return button.BoundData;
+            }
+        }
+
+        return null;
+    }
+
+    private bool IsPointerOverRect(RectTransform rectTransform)
+    {
+        if (rectTransform == null)
+        {
+            return false;
+        }
+
+        Canvas canvas = rectTransform.GetComponentInParent<Canvas>();
+        Camera eventCamera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? canvas.worldCamera
+            : null;
+
+        return RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, eventCamera);
     }
 
     private void UpdateCharacterListPosition()
