@@ -404,10 +404,7 @@ public class FieldDomainScreenEffectController : MonoBehaviour
             return m_DefaultFlameNoiseTexture;
         }
 
-#if UNITY_EDITOR
-        m_DefaultFlameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
-            "Assets/VFX/Textures/NoiseSmooth04.png");
-#endif
+        m_DefaultFlameNoiseTexture = FieldDomainRuntimeResources.GetFlameNoiseTexture();
         return m_DefaultFlameNoiseTexture;
     }
 

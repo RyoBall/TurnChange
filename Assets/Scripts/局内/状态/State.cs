@@ -1794,6 +1794,9 @@ public class ActionWeakenedStateBehavior : StateBehaviorBase//盾手专用减伤
 
 public class ChargeStateBehavior : StateBehaviorBase
 {
+    private const float BurstDamageSkillBase = 20f;
+    private const float BurstShieldTargetCapRatio = 0.3f;
+
     public static event Action<UnitCombatant> OnCounterChargeTriggered;
     public override void OnStackChange()
     {
@@ -1816,7 +1819,7 @@ public class ChargeStateBehavior : StateBehaviorBase
         {
             float shieldHpRatio = state.baseExtraData1;
             float fixedShieldScale = state.baseExtraData3;
-            int shieldValue = Mathf.RoundToInt(state.owner.maxHP * shieldHpRatio + fixedShieldScale);
+            float enemyDelayRatio = state.baseExtraData4 > 0f ? state.baseExtraData4 : 0.2f;
             foreach (var ally in CharacterManager.Instance.fieldCharacters)
             {
                 if (ally == null)
@@ -1824,25 +1827,53 @@ public class ChargeStateBehavior : StateBehaviorBase
                     continue;
                 }
 
-                ally.AddShield(shieldValue);
-            }
-            foreach (var enemy in EnemyManager.Instance.AliveEnemies)
-            {
-                if (enemy == null)
+                int shieldValue = CalculateBurstShieldGrant(state.owner, ally, shieldHpRatio, fixedShieldScale, BurstShieldTargetCapRatio);
+                if (shieldValue > 0)
                 {
-                    continue;
+                    ally.AddShield(shieldValue);
+                }
+            }
+
+            if (EnemyManager.Instance != null)
+            {
+                foreach (var enemy in EnemyManager.Instance.AliveEnemies)
+                {
+                    if (enemy == null)
+                    {
+                        continue;
+                    }
+
+                    enemy.TakeDamage(DamageCounter.CountDamage(
+                        state.owner,
+                        enemy,
+                        state.skillCoef,
+                        BurstDamageSkillBase,
+                        DamageType.Physical,
+                        false,
+                        false,
+                        true));
+                    enemy.ChangeActionValue(enemy.currentActionValue + enemy.BaseActionValue * enemyDelayRatio);
                 }
 
-                enemy.TakeDamage(DamageCounter.CountDamage(state.owner, enemy, state.skillCoef, 0f, DamageType.Physical, false, false, true));
-                enemy.ChangeActionValue(enemy.currentActionValue + enemy.currentActionValue * state.baseExtraData4);
-                //推条
+                State.NotifyDamageSkillUsed(state.owner, new List<UnitCombatant>(EnemyManager.Instance.AliveEnemies));
             }
-            State.NotifyDamageSkillUsed(state.owner, new List<UnitCombatant>(EnemyManager.Instance.AliveEnemies));
         }
 
         TurnManager.Instance?.ExtraTurnInsert(state.owner as Character);
         FloatingTipGenerator.Instance?.ShowTipAtObject(state.owner.transform, $"{state.owner.name}触发蓄势逆击");
         OnCounterChargeTriggered?.Invoke(state.owner);
+    }
+
+    private static int CalculateBurstShieldGrant(UnitCombatant owner, UnitCombatant target, float hpRatio, float fixedScale, float perTargetCapRatio)
+    {
+        if (owner == null || target == null)
+        {
+            return 0;
+        }
+
+        int rawShield = Mathf.RoundToInt(owner.maxHP * hpRatio + fixedScale);
+        int perTargetCap = Mathf.RoundToInt(target.maxHP * perTargetCapRatio);
+        return Mathf.Min(rawShield, perTargetCap);
     }
 }
 

@@ -115,6 +115,9 @@ public class BattleDialogController : MonoBehaviour
             case BattleDialogEventType.CharacterChaosMaxReached:
                 HandleCharacterChaosMaxReached(data);
                 break;
+            case BattleDialogEventType.CombatantTurnSkipped:
+                HandleCombatantTurnSkipped(data);
+                break;
 
             // ============ 西洋象棋 ============
             case BattleDialogEventType.ChessPawnsEnter:
@@ -167,6 +170,9 @@ public class BattleDialogController : MonoBehaviour
             case BattleDialogEventType.DragonDotUltimate:
                 ShowCenterDialog("漆黑的火焰席卷全场——全体受到【不灭之焰】！", importantDialogDuration);
                 break;
+            case BattleDialogEventType.DragonDotPurify:
+                ShowCenterDialog("三头龙的负面状态被清除了！", defaultDialogDuration);
+                break;
             case BattleDialogEventType.DragonInstantDeathWarning:
                 ShowCenterDialog("死亡宣告落下……龙首将降下【即死】！", importantDialogDuration);
                 break;
@@ -175,6 +181,9 @@ public class BattleDialogController : MonoBehaviour
                 break;
             case BattleDialogEventType.DragonChaosUltimate:
                 ShowCenterDialog("混沌吐息侵蚀全场——全体混沌值上升，震慑中的单位将承受重击。", importantDialogDuration);
+                break;
+            case BattleDialogEventType.DragonChaosLeap:
+                ShowCenterDialog("三头龙的行动提前了！", defaultDialogDuration);
                 break;
 
             // ============ 西洋剑剑客 ============
@@ -235,6 +244,12 @@ public class BattleDialogController : MonoBehaviour
         ShowCenterDialog($"{data.RelatedCharacter.combatantName}生命垂危！", importantDialogDuration);
     }
 
+    private void HandleCombatantTurnSkipped(BattleDialogEventData data)
+    {
+        string combatantName = ResolveCombatantName(data);
+        ShowCenterDialog($"{combatantName}动弹不得!", defaultDialogDuration);
+    }
+
     private void HandleCharacterChaosMaxReached(BattleDialogEventData data)
     {
         if (data.RelatedCharacter == null) return;
@@ -278,6 +293,21 @@ public class BattleDialogController : MonoBehaviour
         if (m_oncePerBattleEvents.Contains(eventType)) return;
         m_oncePerBattleEvents.Add(eventType);
         ShowCenterDialog(message, importantDialogDuration);
+    }
+
+    private static string ResolveCombatantName(BattleDialogEventData data)
+    {
+        if (data.RelatedCharacter != null)
+        {
+            return data.RelatedCharacter.combatantName;
+        }
+
+        if (data.RelatedEnemy != null)
+        {
+            return data.RelatedEnemy.combatantName;
+        }
+
+        return "未知单位";
     }
 
     /// <summary>在屏幕中央显示对话</summary>

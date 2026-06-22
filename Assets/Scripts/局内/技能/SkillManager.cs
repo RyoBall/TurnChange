@@ -121,7 +121,7 @@ public class SkillManager : MonoBehaviour
             enemy.SetSelectedVisual(true);
         }
 
-        UpdatePromptText();
+        UpdatePromptText($"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}");
     }
 
     public IEnumerator SelectCharactersCoroutine(int requiredCount, List<Character> selectedResult)
@@ -192,12 +192,14 @@ public class SkillManager : MonoBehaviour
         UpdatePromptText($"请选择技能作用的我方角色:{m_selectedCharacters.Count}/{m_requiredCharacterCount}");
     }
 
+    private const string CancelSelectionSuffix = "，右键以取消选择";
+
     private void UpdatePromptText(string text = "")//更新提示文本内容
     {
         if (targetPromptText == null)
             return;
 
-        targetPromptText.text = $"{text}";
+        targetPromptText.text = string.IsNullOrEmpty(text) ? text : $"{text}{CancelSelectionSuffix}";
     }
 
     private void SetPromptVisible(bool visible)//设置提示文本是否可见

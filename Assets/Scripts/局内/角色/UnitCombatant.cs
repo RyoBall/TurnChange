@@ -213,6 +213,15 @@ public class UnitCombatant : Combatant
         {
             return;
         }
+
+        const float maxTotalShieldRatio = 0.5f;
+        int maxTotalShield = Mathf.RoundToInt(maxHP * maxTotalShieldRatio);
+        amount = Mathf.Min(amount, Mathf.Max(0, maxTotalShield - currentShield));
+        if (amount <= 0)
+        {
+            return;
+        }
+
         DamageTextPool.Instance?.ShowCustomText($"获得护盾 {amount}", transform.position, Color.cyan);
         shieldFeedback?.PlayFeedbacks();
         currentShield += amount;
@@ -497,6 +506,23 @@ public class UnitCombatant : Combatant
         }
 
         return true;
+    }
+
+    /// <summary>因震慑、混沌等状态无法行动时，播放音效并触发战斗对话。</summary>
+    protected void NotifyTurnSkipped()
+    {
+        GameAudioEvents.Raise(GameAudioEventType.CombatTurnSkipped, this, this);
+
+        if (this is Character character)
+        {
+            BattleDialogEvents.Raise(BattleDialogEventType.CombatantTurnSkipped, character: character);
+            return;
+        }
+
+        if (this is Enemy enemy)
+        {
+            BattleDialogEvents.Raise(BattleDialogEventType.CombatantTurnSkipped, enemy: enemy);
+        }
     }
 
     public bool HasState(StateType stateType)

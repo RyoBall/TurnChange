@@ -71,7 +71,11 @@ public class EnemySkillBase : SkillBase
 
     public bool CanUse(Enemy owner)
     {
-        if (m_remainingCooldown > 0) return false;
+        if (m_remainingCooldown > 0 && (owner == null || !owner.ShouldBypassSkillCooldown(this)))
+        {
+            return false;
+        }
+
         if (owner == null) return true;
         if (!owner.CanUseEnemySkill(this)) return false;
 
@@ -749,6 +753,8 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonDotPurify, enemy: self);
+
         int clearCount = ResolveReinforcedInt(extraData3, extraData4, 1, 2, dragon.ReinforceLevel >= 1);
         if (EnemyManager.Instance == null) yield break;
 
@@ -910,6 +916,8 @@ public class EnemySkillBase : SkillBase
     {
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
+
+        BattleDialogEvents.Raise(BattleDialogEventType.DragonChaosLeap, enemy: self);
 
         bool isReinforced = dragon.ReinforceLevel >= 1;
         float advanceRatio = ResolveReinforcedFloat(extraData1, extraData3, 0.4f, 0.5f, isReinforced);

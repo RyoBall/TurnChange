@@ -274,7 +274,7 @@ public class CharacterSkillBase : SkillBase
     #region 技能具体执行逻辑
     private IEnumerator EnterSkillOne(Character character)
     {
-        const int durationActionValue = 100;
+        int durationActionValue = Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 100f);
         float verdictDotMultiplier = extraData2;
         DamageType damageType = GetCurrentSkillDamageType();
         FloatingTipGenerator.Instance.ShowTipAtObject(character.transform, $"{character.name}释放重裁域场");
@@ -429,7 +429,8 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        const int durationActionValue = 300;
+        const int fallbackDurationActionValue = 300;
+        int durationActionValue = Mathf.RoundToInt(extraData1 > 0f ? extraData1 : fallbackDurationActionValue);
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
         foreach (var enemy in enemies)
         {
@@ -485,7 +486,6 @@ public class CharacterSkillBase : SkillBase
         }
 
         int dotDuration = Mathf.RoundToInt(extraData2);
-        float dotSkillCoef = extraData1;
         float refreshMultiplier = extraData3;
         DamageType damageType = GetCurrentSkillDamageType();
         var enemies = new List<Enemy>(EnemyManager.Instance.AliveEnemies);
@@ -559,11 +559,24 @@ public class CharacterSkillBase : SkillBase
         }
         //叠层
         character.AddState(StateType.CounterCharge, character, 99, 1);
+        if (extraData1 > 0f)
+        {
+            State chargeState = character.GetState(StateType.Charge);
+            if (chargeState != null)
+            {
+                chargeState.ChangeStackCount(Mathf.RoundToInt(extraData1));
+            }
+        }
 
         if (CharacterManager.Instance == null)
         {
             yield break;
         }
+
+        const float defaultAdvanceRatio = 0.5f;
+        float advanceRatio = extraData2 > 0f ? extraData2 : defaultAdvanceRatio;
+        int resistStacks = Mathf.Max(1, Mathf.RoundToInt(extraData3 > 0f ? extraData3 : 1f));
+
         //拉条与抵御
         foreach (var ally in CharacterManager.Instance.fieldCharacters)
         {
@@ -572,8 +585,8 @@ public class CharacterSkillBase : SkillBase
                 continue;
             }
 
-            ally.AddState(StateType.Resist, character, 99, 1);
-            ally.ChangeActionValue(Mathf.Max(0f, ally.currentActionValue - ally.currentActionValue * 0.5f));
+            ally.AddState(StateType.Resist, character, 99, resistStacks);
+            ally.ChangeActionValue(ally.currentActionValue - ally.BaseActionValue * advanceRatio);
         }
 
         yield break;
@@ -612,9 +625,13 @@ public class CharacterSkillBase : SkillBase
         }
 
         int tauntDuration = Mathf.Max(1, Mathf.RoundToInt(extraData3));
+        float pullRatio = extraData1 > 0f ? extraData1 : 1f;
+        float weakenedOutputRatio = extraData2 > 0f && extraData2 < 1f ? 1f - extraData2 : 0.4f;
 
         target.AddState(StateType.Taunt, character, tauntDuration, 1);
-        target.AddState(StateType.ActionWeakened, character, 1, 1);
+        State weakenedState = target.AddState(StateType.ActionWeakened, character, 1, 1);
+        ApplyStateBaseExtraData(weakenedState, extra1: weakenedOutputRatio);
+        target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * pullRatio);
         NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, DamageType.Physical, false, true, true);
         target.TakeDamage(damageInfo);
@@ -636,13 +653,14 @@ public class CharacterSkillBase : SkillBase
 
         float shieldHpCoef = extraData1;
         float advanceRatio = extraData2;
+        float nextActionDamageBoost = extraData3 > 0f ? 1f + extraData3 : 1.2f;
         float shieldAttackCoef = extraData4;
         int shield = Mathf.RoundToInt(character.maxHP * shieldHpCoef + shieldAttackCoef *2);
         target.AddShield(shield);
         State boost = target.AddState(StateType.DamageChange, character, 1, 1);
+        ApplyStateBaseExtraData(boost, extra1: nextActionDamageBoost);
 
-
-        target.ChangeActionValue(target.currentActionValue - target.currentActionValue * advanceRatio);
+        target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * advanceRatio);
         yield break;
     }
 
@@ -653,7 +671,9 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        character.AddState(StateType.BerserkFeast, character, 200, 1);
+        int feastDuration = Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 200f);
+        State berserkFeast = character.AddState(StateType.BerserkFeast, character, feastDuration, 1);
+        ApplyBerserkFeastCritBonus(berserkFeast, extraData2);
         character.AddState(StateType.BurningBlood, character, 99, 1);
         Enemy target = EnemyManager.Instance.GetLowestHPRatioEnemy();
         if (target == null)
@@ -763,9 +783,17 @@ public class CharacterSkillBase : SkillBase
         }
 
         State deadlyArmorState = character.AddState(StateType.DeadlyArmor, character, 1, 1);
-        if (deadlyArmorState != null && extraData2 > 0f)
+        if (deadlyArmorState != null)
         {
-            deadlyArmorState.baseExtraData1 = extraData2;
+            if (extraData1 > 0f)
+            {
+                deadlyArmorState.baseExtraData2 = extraData1;
+            }
+
+            if (extraData2 > 0f)
+            {
+                deadlyArmorState.baseExtraData1 = extraData2;
+            }
         }
         yield break;
     }
@@ -894,7 +922,15 @@ public class CharacterSkillBase : SkillBase
         State bloodSurgeHeal = character.AddState(StateType.BloodSurgeHeal, character, 99, healTriggerCount);
         if (bloodSurgeHeal != null)
         {
-            bloodSurgeHeal.baseExtraData1 = extraData4;
+            if (extraData2 > 0f)
+            {
+                bloodSurgeHeal.baseExtraData2 = extraData2;
+            }
+
+            if (extraData4 > 0f)
+            {
+                bloodSurgeHeal.baseExtraData1 = extraData4;
+            }
         }
         FloatingTipGenerator.Instance?.ShowTipAtObject(character.transform, $"{character.name}进入浴血反哺");
         yield break;
@@ -915,11 +951,14 @@ public class CharacterSkillBase : SkillBase
 
         List<Character> allies = GetAllLivingAllies();
 
-        RemoveDebuffs(target, 3);
+        int debuffClearCount = Mathf.Max(1, Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 3f));
+        float missingHpHealRatio = extraData2 > 0f ? extraData2 : 0.4f;
+
+        RemoveDebuffs(target, debuffClearCount);
 
         target.AddState(StateType.RestorationSurge, character, 1, 1);
 
-        HealAlliesByMissingHp(allies, 0.4f);
+        HealAlliesByMissingHp(allies, missingHpHealRatio);
         yield break;
     }
 
@@ -971,8 +1010,11 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        HealAlliesByMaxHp(GetAllLivingAllies(), 0.1f);
-        target.AddState(StateType.HealingSpring, character, 1, 1);
+        float maxHpHealRatio = extraData1 > 0f ? extraData1 : 0.1f;
+        int healingSpringDuration = Mathf.Max(1, Mathf.RoundToInt(extraData2 > 0f ? extraData2 : 1f));
+
+        HealAlliesByMaxHp(GetAllLivingAllies(), maxHpHealRatio);
+        target.AddState(StateType.HealingSpring, character, healingSpringDuration, 1);
         yield break;
     }
 
@@ -983,7 +1025,7 @@ public class CharacterSkillBase : SkillBase
             yield break;
         }
 
-        const int durationActionValue = 50;
+        int durationActionValue = Mathf.RoundToInt(extraData1 > 0f ? extraData1 : 100f);
         if (FieldDomainScreenEffectController.Instance != null)
         {
             yield return FieldDomainScreenEffectController.Instance.PlayExpand(EnvironmentType.MiracleField, character.transform);
@@ -1303,6 +1345,46 @@ public class CharacterSkillBase : SkillBase
 
         List<StateType> pool = missing.Count > 0 ? missing : candidates;
         return pool[UnityEngine.Random.Range(0, pool.Count)];
+    }
+
+    private static void ApplyStateBaseExtraData(State state, float? extra1 = null, float? extra2 = null, float? extra3 = null, float? extra4 = null)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        if (extra1.HasValue)
+        {
+            state.baseExtraData1 = extra1.Value;
+        }
+
+        if (extra2.HasValue)
+        {
+            state.baseExtraData2 = extra2.Value;
+        }
+
+        if (extra3.HasValue)
+        {
+            state.baseExtraData3 = extra3.Value;
+        }
+
+        if (extra4.HasValue)
+        {
+            state.baseExtraData4 = extra4.Value;
+        }
+    }
+
+    private static void ApplyBerserkFeastCritBonus(State berserkFeast, float critBonus)
+    {
+        if (berserkFeast == null || berserkFeast.owner == null || critBonus <= 0f)
+        {
+            return;
+        }
+
+        berserkFeast.owner.critRate = Mathf.Max(0f, berserkFeast.owner.critRate - berserkFeast.baseExtraData2);
+        berserkFeast.baseExtraData2 = critBonus;
+        berserkFeast.owner.critRate += critBonus;
     }
 
     public int GetRemainingCooldown(Character owner)

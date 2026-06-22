@@ -10,7 +10,8 @@ public enum GameAudioEventType
     CombatDamage,
     CombatBuffGain,
     CombatDebuffGain,
-    CharacterSwitch
+    CharacterSwitch,
+    CombatTurnSkipped
 }
 
 public readonly struct GameAudioEvent

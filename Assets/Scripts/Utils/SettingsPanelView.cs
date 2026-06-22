@@ -40,11 +40,13 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     {
         if (Instance != null && Instance != this)
         {
+            SettingsPanelDebugOverlay.NotifyPanelAwake(this, false);
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
+        SettingsPanelDebugOverlay.NotifyPanelAwake(this, true);
         EnsureComponentsInitialized();
     }
 
@@ -148,6 +150,8 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     /// <summary>打开设置 Panel — 绑定到外部 Button.onClick</summary>
     public void Open()
     {
+        SettingsPanelDebugOverlay.LogSettingsDiagnostics("View.Open");
+
         EnsureComponentsInitialized();
 
         if (m_canvasGroup == null)

@@ -31,6 +31,8 @@ public class SettingsPanelOpener : MonoBehaviour
     /// <summary>Button.onClick 绑定此方法</summary>
     public void OnButtonClick()
     {
+        SettingsPanelDebugOverlay.LogSettingsDiagnostics("Opener.OnButtonClick", m_settingsPanel);
+
         SettingsPanelView panel = SettingsPanelView.Instance != null
             ? SettingsPanelView.Instance
             : m_settingsPanel;

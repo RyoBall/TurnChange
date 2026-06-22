@@ -99,7 +99,7 @@ public class Character : UnitCombatant
 
         if (!CanActThisTurn())
         {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
+            NotifyTurnSkipped();
             yield return WaitForDeathEvents();
             yield break;
         }

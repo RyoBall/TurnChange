@@ -106,20 +106,23 @@ public class ChessQueenEnemy : Enemy
         }
     }
 
+    public override bool ShouldBypassSkillCooldown(EnemySkillBase skill)
+    {
+        return m_isChargingThroneAssault
+            && skill != null
+            && skill.enemySkillType == EnemySkillType.ChessQueenThroneAssault;
+    }
+
     protected override EnemySkillBase GetForcedSkillForTurn()
     {
         // 预告关卡无强制技能
         if (isPreviewBoss)
             return base.GetForcedSkillForTurn();
 
-        // 完整版：如果正在蓄力，强制使用后袭王座
+        // 完整版：如果正在蓄力，强制使用后袭王座（忽略 CD）
         if (m_isChargingThroneAssault)
         {
-            EnemySkillBase throneSkill = GetSkillInstance(EnemySkillType.ChessQueenThroneAssault);
-            if (throneSkill != null && throneSkill.CanUse(this))
-            {
-                return throneSkill;
-            }
+            return GetSkillInstance(EnemySkillType.ChessQueenThroneAssault);
         }
 
         // 完整版：如果满足加冕条件，强制使用
@@ -420,6 +423,12 @@ public class ChessQueenEnemy : Enemy
 
     private EnemySkillBase SelectRandomAvailableSkill()
     {
+        EnemySkillBase forcedSkill = GetForcedSkillForTurn();
+        if (forcedSkill != null)
+        {
+            return forcedSkill;
+        }
+
         // 收集所有可用技能
         List<EnemySkillBase> availableSkills = new List<EnemySkillBase>();
         EnemySkillType[] skillTypes = isPreviewBoss

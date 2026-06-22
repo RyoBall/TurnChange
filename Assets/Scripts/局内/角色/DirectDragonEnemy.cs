@@ -18,16 +18,24 @@ public class DirectDragonEnemy : DragonBossEnemy
 
     protected override EnemySkillBase GetForcedSkillForTurn()
     {
+        // 蓄力中优先于基类暴怒选技，确保下一回合触发即死（可忽略 CD）
         if (m_isChargingRage)
         {
             EnemySkillBase rageSkill = GetSkillInstance(EnemySkillType.DragonDirectRage);
-            if (rageSkill != null && rageSkill.CanUse(this))
+            if (rageSkill != null)
             {
                 return rageSkill;
             }
         }
 
         return base.GetForcedSkillForTurn();
+    }
+
+    public override bool ShouldBypassSkillCooldown(EnemySkillBase skill)
+    {
+        return m_isChargingRage
+            && skill != null
+            && skill.enemySkillType == EnemySkillType.DragonDirectRage;
     }
 
     public override bool CanUseEnemySkill(EnemySkillBase skill)

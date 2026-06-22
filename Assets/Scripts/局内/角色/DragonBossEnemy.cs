@@ -30,6 +30,66 @@ public class DragonBossEnemy : Enemy
     public int ReinforceLevel => m_reinforceLevel;
     public bool IsRaging => m_reinforceLevel >= rageThreshold;
 
+    public override bool CanUseEnemySkill(EnemySkillBase skill)
+    {
+        if (!base.CanUseEnemySkill(skill))
+        {
+            return false;
+        }
+
+        // 暴怒状态下优先暴怒技能；暴怒技能 CD 中则随机释放普通/强化技能
+        if (IsRaging && skill != null && !IsDragonRageSkill(skill.enemySkillType))
+        {
+            EnemySkillBase rageSkill = TryGetRageSkillInstance();
+            if (rageSkill != null && rageSkill.CanUse(this))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected override EnemySkillBase GetForcedSkillForTurn()
+    {
+        if (!IsRaging)
+        {
+            return null;
+        }
+
+        EnemySkillBase rageSkill = TryGetRageSkillInstance();
+        if (rageSkill != null && rageSkill.CanUse(this))
+        {
+            return rageSkill;
+        }
+
+        return null;
+    }
+
+    private static bool IsDragonRageSkill(EnemySkillType skillType)
+    {
+        return skillType == EnemySkillType.DragonDotRage
+            || skillType == EnemySkillType.DragonDirectRage
+            || skillType == EnemySkillType.DragonChaosRage;
+    }
+
+    private EnemySkillBase TryGetRageSkillInstance()
+    {
+        EnemySkillBase dotRage = GetSkillInstance(EnemySkillType.DragonDotRage);
+        if (dotRage != null)
+        {
+            return dotRage;
+        }
+
+        EnemySkillBase directRage = GetSkillInstance(EnemySkillType.DragonDirectRage);
+        if (directRage != null)
+        {
+            return directRage;
+        }
+
+        return GetSkillInstance(EnemySkillType.DragonChaosRage);
+    }
+
     /// <summary>重置龙Boss指挥点奖励的静态状态（战斗开始时由第一个龙调用）</summary>
     public static void ResetDragonCommandPointState()
     {

@@ -439,6 +439,8 @@ public class CharacterManager : MonoBehaviour
 	}
 	#endregion
 
+	private const string CancelSelectionSuffix = "，右键以取消选择";
+
 	private void UpdatePromptText(string text)
 	{
 		if (promptText == null)
@@ -446,7 +448,7 @@ public class CharacterManager : MonoBehaviour
 			return;
 		}
 
-		promptText.text = text;
+		promptText.text = $"{text}{CancelSelectionSuffix}";
 	}
 
 	private void SetPromptVisible(bool visible)

@@ -205,7 +205,7 @@ public class Enemy : UnitCombatant
 
         if (!CanActThisTurn())
         {
-            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"无法行动");
+            NotifyTurnSkipped();
             yield break;
         }
 
@@ -499,6 +499,12 @@ public class Enemy : UnitCombatant
     public virtual bool CanUseEnemySkill(EnemySkillBase skill)
     {
         return skill != null && m_isBattleVisible && !dead;
+    }
+
+    /// <summary>蓄力等场景下是否忽略技能冷却。</summary>
+    public virtual bool ShouldBypassSkillCooldown(EnemySkillBase skill)
+    {
+        return false;
     }
 
     protected virtual EnemySkillBase SelectSkillForTurn()

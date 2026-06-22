@@ -71,6 +71,16 @@ public class FieldDomainEffectProfile : ScriptableObject
     {
         FieldDomainEffectProfile profile = CreateInstance<FieldDomainEffectProfile>();
         profile.hideFlags = HideFlags.HideAndDontSave;
+        ApplyPreset(profile, environmentType);
+        return profile;
+    }
+
+    public static void ApplyPreset(FieldDomainEffectProfile profile, EnvironmentType environmentType)
+    {
+        if (profile == null)
+        {
+            return;
+        }
 
         switch (environmentType)
         {
@@ -84,8 +94,6 @@ public class FieldDomainEffectProfile : ScriptableObject
                 ConfigureMiraclePreset(profile);
                 break;
         }
-
-        return profile;
     }
 
     private static void ConfigureVerdictPreset(FieldDomainEffectProfile profile)
@@ -125,13 +133,7 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.flameNoiseTiling = new Vector2(5f, 11f);
         profile.flameNoiseInwardStretch = 2f;
         profile.flameNoiseInwardScroll = 0.4f;
-#if UNITY_EDITOR
-        if (profile.flameNoiseTexture == null)
-        {
-            profile.flameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
-                "Assets/VFX/Textures/NoiseSmooth04.png");
-        }
-#endif
+        AssignDefaultFlameNoise(profile);
     }
 
     private static void ConfigureDesperationPreset(FieldDomainEffectProfile profile)
@@ -171,13 +173,7 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.flameNoiseTiling = new Vector2(5.5f, 13f);
         profile.flameNoiseInwardStretch = 2.1f;
         profile.flameNoiseInwardScroll = 0.95f;
-#if UNITY_EDITOR
-        if (profile.flameNoiseTexture == null)
-        {
-            profile.flameNoiseTexture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
-                "Assets/VFX/Textures/NoiseSmooth04.png");
-        }
-#endif
+        AssignDefaultFlameNoise(profile);
     }
 
     private static void ConfigureMiraclePreset(FieldDomainEffectProfile profile)
@@ -215,5 +211,15 @@ public class FieldDomainEffectProfile : ScriptableObject
         profile.borderVfxHotColor = new Color(1f, 0.52f, 0.88f, 1f);
         profile.borderVfxCoreColor = new Color(0.35f, 0.82f, 1f, 1f);
         profile.flameNoiseTiling = new Vector2(4.5f, 6f);
+    }
+
+    private static void AssignDefaultFlameNoise(FieldDomainEffectProfile profile)
+    {
+        if (profile == null || profile.flameNoiseTexture != null)
+        {
+            return;
+        }
+
+        profile.flameNoiseTexture = FieldDomainRuntimeResources.GetFlameNoiseTexture();
     }
 }

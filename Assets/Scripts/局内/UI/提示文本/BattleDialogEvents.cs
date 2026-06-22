@@ -16,6 +16,9 @@ public enum BattleDialogEventType
     /// <summary>角色混沌值达到5点</summary>
     CharacterChaosMaxReached,
 
+    /// <summary>角色或敌人因震慑、混沌等原因跳过回合</summary>
+    CombatantTurnSkipped,
+
     // ============ 西洋象棋 Boss ============
     /// <summary>兵棋入场</summary>
     ChessPawnsEnter,
@@ -66,6 +69,9 @@ public enum BattleDialogEventType
     /// <summary>Dot龙·无尽炼狱触发</summary>
     DragonDotUltimate,
 
+    /// <summary>Dot龙·净化吞噬清除负面</summary>
+    DragonDotPurify,
+
     /// <summary>直伤龙·即死前兆</summary>
     DragonInstantDeathWarning,
 
@@ -74,6 +80,9 @@ public enum BattleDialogEventType
 
     /// <summary>混沌龙·震慑溃灭</summary>
     DragonChaosUltimate,
+
+    /// <summary>混沌龙·混沌跃动行动提前</summary>
+    DragonChaosLeap,
 
     // ============ 西洋剑剑客 Boss ============
     /// <summary>剑客入场</summary>

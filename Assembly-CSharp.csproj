@@ -81,12 +81,14 @@
      <Compile Include="Assets\Scripts\Audio\GameAudioVolumeController.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ModuleLevelProbabilityConfig.cs" />
      <Compile Include="Assets\Scripts\局内\UI\BattleSettlementView.cs" />
+     <Compile Include="Assets\Scripts\Utils\SettingsPanelDebugOverlay.cs" />
      <Compile Include="Assets\Scripts\局内\GameManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_FrameRateCounter.cs" />
      <Compile Include="Assets\VFX\Lana Studio\Casual RPG VFX\Demo\Scripts\ObjectsSwitcher.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterSelectButtonUI.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\StateIconHoverHandler.cs" />
+     <Compile Include="Assets\VFX\FieldDomain\Scripts\FieldDomainRuntimeResources.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\VFX Library\ParticleEffectsLibrary.cs" />
