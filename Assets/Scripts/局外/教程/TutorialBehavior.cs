@@ -959,7 +959,7 @@ public class ReinforcementArriveTutorial : TutorialBehavior
     private bool m_swapCompleted = false;
     private bool m_tutorialFourteenEnded = false;
     private int m_enemyActCount = 0;
-    private const int RequiredEnemyActCount = 1;
+    private const int RequiredEnemyActCount = 2;
 
     public override void StartListening()
     {
