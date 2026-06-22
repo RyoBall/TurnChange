@@ -13,7 +13,7 @@ public class AmbientFloatingParticlesHost : MonoBehaviour
     public const string BattleSceneName = "Fight";
 
     private static readonly string[] s_anchorChildNames = { "Main", "主界面" };
-    private static readonly string[] s_backgroundChildNames = { "背景", "Background" };
+    private static readonly string[] s_backgroundChildNames = { "背景", "Background", "BackgroundLayer" };
     private const string SceneCanvasName = "Canvas";
     private const int PersistentOverlayCanvasSortingOrder = 100;
     private const string ParticlesPrefabResourcePath = "Prefabs/通用物体/AmbientFloatingParticles";
