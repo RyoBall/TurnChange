@@ -355,15 +355,21 @@ Shader "TurnChange/FieldDomainEffect"
             }
 
             // 场域中心更贴近原画面：0=圆心，1=靠外圈/边框一带
-            float GetMiracleCenterPreserve(float dist, float maxRadius, float insideMask)
+            float GetFieldCenterPreserve(float dist, float maxRadius, float insideMask)
             {
                 if (insideMask <= 0.001)
                 {
                     return 0.0;
                 }
 
-                float t = saturate(dist / max(maxRadius * 0.52, 0.0001));
-                return insideMask * smoothstep(0.06, 0.82, t);
+                float t = saturate(dist / max(maxRadius * 0.58, 0.0001));
+                return insideMask * smoothstep(0.05, 0.8, t);
+            }
+
+            // 径向/直角网格在圆心处会过度汇聚，单独做距离衰减
+            float GetCenterOverlayFade(float dist, float maxRadius)
+            {
+                return smoothstep(0.0, max(maxRadius * 0.22, 0.08), dist);
             }
 
             // 简化水体焦散（3 次迭代），沿顺时针边空间滚动；Miracle 用 flameNoiseTiling 作尺度
@@ -613,18 +619,19 @@ Shader "TurnChange/FieldDomainEffect"
                 result += burnColor * burn * (1.2 + breath);
             }
 
-            float3 ApplyDistortion(float2 uv, float2 aspectCorrected, float dist, float insideMask, int style)
+            float3 ApplyDistortion(float2 uv, float2 aspectCorrected, float dist, float insideMask, int style, float fieldCenterPreserve)
             {
                 float2 sampleUV = uv;
 
                 if (style == STYLE_VERDICT && _HeatShimmerStrength > 0.001 && insideMask > 0.001)
                 {
-                    float heat = _HeatShimmerStrength * insideMask;
+                    float distortMask = fieldCenterPreserve * smoothstep(0.08, 0.5, dist);
+                    float heat = _HeatShimmerStrength * insideMask * distortMask;
                     float n = Noise(uv * 6.0 + _EffectTime * 1.2);
-                    sampleUV.y += sin(uv.x * 24.0 - _EffectTime * 3.5) * heat * 0.004;
-                    sampleUV.x += (n - 0.5) * heat * 0.0025;
+                    sampleUV.y += sin(uv.x * 24.0 - _EffectTime * 3.5) * heat * 0.0018;
+                    sampleUV.x += (n - 0.5) * heat * 0.0011;
                     float2 dir = normalize(aspectCorrected + float2(0.0001, 0.0));
-                    sampleUV += dir * sin(dist * 14.0 - _EffectTime * 3.0) * heat * 0.005;
+                    sampleUV += dir * sin(dist * 14.0 - _EffectTime * 3.0) * heat * 0.0022;
                 }
                 else if (style != STYLE_DESPERATION && _DistortionStrength > 0.001 && insideMask > 0.001)
                 {
@@ -639,7 +646,8 @@ Shader "TurnChange/FieldDomainEffect"
                     float pulse = saturate(sin(_HeartbeatPhase) * 0.5 + 0.5);
                     if (pulse > 0.7)
                     {
-                        float chroma = _ChromaticStrength * (pulse - 0.7) / 0.3 * insideMask * 0.004;
+                        float centerFade = smoothstep(0.0, 0.22, dist);
+                        float chroma = _ChromaticStrength * (pulse - 0.7) / 0.3 * insideMask * centerFade * 0.004;
                         float r = SampleSourceRgb(sampleUV + float2(chroma, 0.0)).r;
                         float g = SampleSourceRgb(sampleUV).g;
                         float b = SampleSourceRgb(sampleUV - float2(chroma, 0.0)).b;
@@ -653,7 +661,7 @@ Shader "TurnChange/FieldDomainEffect"
             float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style, float fieldCenterPreserve)
             {
                 float exposure = _Exposure * (1.0 + pulse * _HeartbeatStrength * 0.18);
-                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION || style == STYLE_VERDICT)
                 {
                     exposure = lerp(1.0, exposure, fieldCenterPreserve);
                 }
@@ -661,7 +669,7 @@ Shader "TurnChange/FieldDomainEffect"
 
                 float luma = dot(color, float3(0.2126, 0.7152, 0.0722));
                 float saturation = _Saturation;
-                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION || style == STYLE_VERDICT)
                 {
                     saturation = lerp(1.0, _Saturation, fieldCenterPreserve);
                 }
@@ -674,7 +682,7 @@ Shader "TurnChange/FieldDomainEffect"
                 }
 
                 float contrast = _Contrast + pulse * _HeartbeatStrength * 0.28;
-                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION || style == STYLE_VERDICT)
                 {
                     contrast = lerp(1.0, contrast, fieldCenterPreserve);
                 }
@@ -687,6 +695,11 @@ Shader "TurnChange/FieldDomainEffect"
                 {
                     color += _TintColor.rgb * _TintColor.a * gradeMask * fieldCenterPreserve * 0.14;
                 }
+                else if (style == STYLE_VERDICT)
+                {
+                    float tintMix = _TintColor.a * gradeMask * pow(fieldCenterPreserve, 1.15);
+                    color = lerp(color, color * _TintColor.rgb, tintMix);
+                }
                 else
                 {
                     color = lerp(color, color * _TintColor.rgb, _TintColor.a * gradeMask);
@@ -698,7 +711,7 @@ Shader "TurnChange/FieldDomainEffect"
                 float vignette = smoothstep(0.2, 1.2, vignetteDist);
                 float vignetteBoost = 1.0 + pulse * _HeartbeatStrength * (style == STYLE_DESPERATION ? 0.65 : 0.0);
                 float vignetteMix = vignette * _VignetteIntensity * gradeMask * vignetteBoost;
-                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION || style == STYLE_VERDICT)
                 {
                     vignetteMix *= fieldCenterPreserve;
                 }
@@ -717,6 +730,10 @@ Shader "TurnChange/FieldDomainEffect"
                 if (style == STYLE_MIRACLE)
                 {
                     bloomMask *= miracleGlassMask * 0.55 + miracleCenterPreserve * 0.12;
+                }
+                else if (style == STYLE_VERDICT)
+                {
+                    bloomMask *= miracleCenterPreserve;
                 }
 
                 if (bloomMask <= 0.001)
@@ -745,7 +762,7 @@ Shader "TurnChange/FieldDomainEffect"
                 return _SecondaryAccentColor.rgb * glow * breath * 0.75;
             }
 
-            void ApplyWaveRingOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float waveRing, float breath, int style, float miracleCenterPreserve)
+            void ApplyWaveRingOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float waveRing, float breath, int style, float fieldCenterPreserve, float centerOverlayFade)
             {
                 if (waveRing <= 0.001)
                 {
@@ -755,28 +772,28 @@ Shader "TurnChange/FieldDomainEffect"
                 if (style == STYLE_VERDICT)
                 {
                     float2 radialUV = aspectCorrected * _GridScale * 28.0;
-                    float radial = RadialGridLine(radialUV, _GridLineWidth + breath * 1.5);
+                    float radial = RadialGridLine(radialUV, _GridLineWidth + breath * 1.5) * centerOverlayFade;
                     float flicker = 0.75 + 0.25 * sin(_EffectTime * 9.0 + dist * 12.0);
                     result = lerp(result, _GridColor.rgb, radial * waveRing * _GridColor.a * flicker);
-                    result += _SecondaryAccentColor.rgb * waveRing * radial * flicker * 0.4;
+                    result += _SecondaryAccentColor.rgb * waveRing * radial * flicker * 0.28;
                 }
                 else if (style == STYLE_DESPERATION)
                 {
                     float2 gridUV = uv * _GridScale * 48.0;
-                    float grid = GridLine(gridUV, _GridLineWidth * 0.85);
+                    float grid = GridLine(gridUV, _GridLineWidth * 0.85) * centerOverlayFade;
                     result = lerp(result, _GridColor.rgb, grid * waveRing * _GridColor.a);
-                    result += _GridColor.rgb * waveRing * 0.2;
+                    result += _GridColor.rgb * waveRing * centerOverlayFade * 0.12;
                 }
                 else
                 {
-                    float softBand = waveRing * (0.65 + 0.35 * sin(_EffectTime * _BreathSpeed * 0.8)) * miracleCenterPreserve;
+                    float softBand = waveRing * (0.65 + 0.35 * sin(_EffectTime * _BreathSpeed * 0.8)) * fieldCenterPreserve;
                     float3 waveColor = lerp(_GridColor.rgb, _SecondaryAccentColor.rgb, 0.55);
                     result = lerp(result, waveColor, softBand * _GridColor.a * 0.1);
                     result += waveColor * softBand * 0.035;
                 }
             }
 
-            void ApplyActiveEdgeOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float safeMaxRadius, float insideMask, float breath, float pulse, int style, float miracleCenterPreserve)
+            void ApplyActiveEdgeOverlay(inout float3 result, float2 uv, float2 aspectCorrected, float dist, float safeMaxRadius, float insideMask, float breath, float pulse, int style, float fieldCenterPreserve, float centerOverlayFade)
             {
                 float ringDist = abs(dist - safeMaxRadius);
                 float edgeInner = max(_EdgeGridWidth, 0.001);
@@ -794,28 +811,28 @@ Shader "TurnChange/FieldDomainEffect"
                 if (style == STYLE_VERDICT)
                 {
                     float2 radialUV = aspectCorrected * _GridScale * 42.0;
-                    float radial = RadialGridLine(radialUV, _GridLineWidth * (0.9 + edgeBreath * 0.5 + breath));
+                    float radial = RadialGridLine(radialUV, _GridLineWidth * (0.9 + edgeBreath * 0.5 + breath)) * centerOverlayFade;
                     float edgeGlow = radial * edgeMask * (_GridColor.a + breath * 0.4) * edgeBreath;
                     result = lerp(result, _GridColor.rgb, edgeGlow);
-                    result += _SecondaryAccentColor.rgb * edgeMask * edgeBreath * 0.18;
+                    result += _SecondaryAccentColor.rgb * edgeMask * edgeBreath * centerOverlayFade * 0.12;
                 }
                 else if (style == STYLE_DESPERATION)
                 {
                     float2 edgeGridUV = uv * _GridScale * 65.0;
-                    float edgeGrid = GridLine(edgeGridUV, _GridLineWidth * (0.7 + edgeBreath * 0.35));
+                    float edgeGrid = GridLine(edgeGridUV, _GridLineWidth * (0.7 + edgeBreath * 0.35)) * centerOverlayFade;
                     float edgeGlow = edgeGrid * edgeMask * (_GridColor.a * 0.9) * (0.6 + pulse * 0.5);
                     result = lerp(result, _GridColor.rgb, edgeGlow);
-                    result += _SecondaryAccentColor.rgb * edgeMask * pulse * 0.08;
+                    result += _SecondaryAccentColor.rgb * edgeMask * pulse * centerOverlayFade * 0.05;
 
                     if (_GrainStrength > 0.001)
                     {
-                        float grain = FilmGrain(uv, _EffectTime) * _GrainStrength * insideMask * 0.04;
+                        float grain = FilmGrain(uv, _EffectTime) * _GrainStrength * insideMask * fieldCenterPreserve * 0.04;
                         result += grain;
                     }
                 }
                 else
                 {
-                    float softEdge = edgeMask * (0.55 + 0.45 * edgeBreath) * miracleCenterPreserve;
+                    float softEdge = edgeMask * (0.55 + 0.45 * edgeBreath) * fieldCenterPreserve;
                     float3 edgeColor = lerp(_GridColor.rgb, _SecondaryAccentColor.rgb, 0.6);
                     result = lerp(result, edgeColor, softEdge * _GridColor.a * 0.09);
                     result += edgeColor * softEdge * 0.03;
@@ -853,17 +870,19 @@ Shader "TurnChange/FieldDomainEffect"
                 float breath = sin(_EffectTime * _BreathSpeed) * _BreathAmplitude;
 
                 float fieldCenterPreserve = 1.0;
+                float centerOverlayFade = 1.0;
                 float miracleGlassMask = 0.0;
-                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION)
+                if (style == STYLE_MIRACLE || style == STYLE_DESPERATION || style == STYLE_VERDICT)
                 {
-                    fieldCenterPreserve = GetMiracleCenterPreserve(dist, safeMaxRadius, insideMask);
+                    fieldCenterPreserve = GetFieldCenterPreserve(dist, safeMaxRadius, insideMask);
+                    centerOverlayFade = GetCenterOverlayFade(dist, safeMaxRadius);
                 }
                 if (style == STYLE_MIRACLE)
                 {
                     miracleGlassMask = GetMiracleGlassMask(uv, aspect, insideMask);
                 }
 
-                float3 sourceRgb = ApplyDistortion(uv, aspectCorrected, dist, insideMask, style);
+                float3 sourceRgb = ApplyDistortion(uv, aspectCorrected, dist, insideMask, style, fieldCenterPreserve);
                 float3 graded = ApplyColorGrade(sourceRgb, uv, insideMask, pulse, style, fieldCenterPreserve);
                 graded = ApplyBloomApprox(graded, insideMask, style, fieldCenterPreserve, miracleGlassMask);
                 graded += ApplyCenterGlow(uv, aspectCorrected, dist, insideMask, style, fieldCenterPreserve, miracleGlassMask);
@@ -875,13 +894,18 @@ Shader "TurnChange/FieldDomainEffect"
                 }
                 else if (style == STYLE_DESPERATION)
                 {
-                    gradeMix *= lerp(0.55, 1.0, fieldCenterPreserve);
+                    gradeMix *= lerp(0.32, 1.0, fieldCenterPreserve);
+                }
+                else if (style == STYLE_VERDICT)
+                {
+                    float gradeFalloff = pow(fieldCenterPreserve, 1.35);
+                    gradeMix *= lerp(0.0, 0.72, gradeFalloff);
                 }
                 float3 result = lerp(sourceRgb, graded, gradeMix);
 
                 if (style == STYLE_DESPERATION && _GrainStrength > 0.001 && insideMask > 0.001)
                 {
-                    float grain = FilmGrain(uv, _EffectTime) * _GrainStrength * insideMask * 0.035;
+                    float grain = FilmGrain(uv, _EffectTime) * _GrainStrength * insideMask * fieldCenterPreserve * 0.035;
                     result += grain;
                 }
 
@@ -893,7 +917,7 @@ Shader "TurnChange/FieldDomainEffect"
                     waveRing *= _Intensity;
                 }
 
-                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style, fieldCenterPreserve);
+                ApplyWaveRingOverlay(result, uv, aspectCorrected, dist, waveRing, breath, style, fieldCenterPreserve, centerOverlayFade);
 
                 if (style == STYLE_VERDICT && waveRing > 0.001)
                 {
@@ -902,7 +926,7 @@ Shader "TurnChange/FieldDomainEffect"
 
                 if (_Phase >= 0.5 && _Phase < 1.5)
                 {
-                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style, fieldCenterPreserve);
+                    ApplyActiveEdgeOverlay(result, uv, aspectCorrected, dist, safeMaxRadius, insideMask, breath, pulse, style, fieldCenterPreserve, centerOverlayFade);
                 }
 
                 if (style == STYLE_VERDICT)
