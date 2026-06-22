@@ -50,6 +50,7 @@ public class BattleSettlementView : MonoBehaviour//结算界面
     private bool m_rewardsApplied;
     private float m_expBeforeReward;
     private bool m_isDefeat;
+    private bool m_hideExperienceOnSettlement;
 
     private void Awake()
     {
@@ -67,7 +68,7 @@ public class BattleSettlementView : MonoBehaviour//结算界面
         BindExitButton();
     }
 
-    public IEnumerator PlaySettlementSequence(int experienceReward, int goldReward)
+    public IEnumerator PlaySettlementSequence(int experienceReward, int goldReward, bool hideExperienceOnSettlement = false)
     {
         if (m_isShowing)
         {
@@ -76,6 +77,7 @@ public class BattleSettlementView : MonoBehaviour//结算界面
 
         m_isShowing = true;
         m_isDefeat = false;
+        m_hideExperienceOnSettlement = hideExperienceOnSettlement;
         m_expBeforeReward = Datas.Instance != null ? Datas.Instance.GetCurrentLevelOverflowExp() : 0f;
         ApplyRewardsIfNeeded(experienceReward, goldReward);
         BindExitButton();
@@ -86,9 +88,12 @@ public class BattleSettlementView : MonoBehaviour//结算界面
 
         yield return ShowSettlementPanel();
 
-        // 胜利时显示奖励面板和经验条
+        // 胜利时显示奖励面板；浓缩模式下隐藏经验相关 UI
         SetRewardPanelVisible(true);
-        StartCoroutine(UpdateExpSlider(experienceReward));
+        if (!m_hideExperienceOnSettlement)
+        {
+            StartCoroutine(UpdateExpSlider(experienceReward));
+        }
     }
 
     /// <summary>
@@ -213,9 +218,10 @@ public class BattleSettlementView : MonoBehaviour//结算界面
     private void SetRewardPanelVisible(bool visible)
     {
         bool showRewards = visible && !m_isDefeat;
+        bool showExperience = showRewards && !m_hideExperienceOnSettlement;
         if (experienceText != null)
         {
-            experienceText.gameObject.SetActive(showRewards);
+            experienceText.gameObject.SetActive(showExperience);
         }
 
         if (goldText != null)
@@ -225,12 +231,12 @@ public class BattleSettlementView : MonoBehaviour//结算界面
 
         if (expSlider != null)
         {
-            expSlider.gameObject.SetActive(showRewards);
+            expSlider.gameObject.SetActive(showExperience);
         }
 
         if (expSliderText != null)
         {
-            expSliderText.gameObject.SetActive(showRewards);
+            expSliderText.gameObject.SetActive(showExperience);
         }
     }
 
@@ -304,6 +310,7 @@ public class BattleSettlementView : MonoBehaviour//结算界面
         m_rewardsApplied = false;
         m_expBeforeReward = 0f;
         m_isDefeat = false;
+        m_hideExperienceOnSettlement = false;
     }
 
     private void ApplyRewardsIfNeeded(int experienceReward, int goldReward)

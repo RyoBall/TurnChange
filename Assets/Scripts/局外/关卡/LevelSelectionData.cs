@@ -26,6 +26,14 @@ public class LevelSelectionData : ScriptableObject//关卡数据
     [Tooltip("战后对话（仅在胜利时播放，在结算界面之前）")]
     public List<BattleStoryDialogData> postBattleDialogs = new List<BattleStoryDialogData>();
 
+    /// <summary>教程关（levelId 以 0- 开头，如 0-1、0-2、0-3）</summary>
+    public bool IsTutorialLevel => IsTutorialLevelId(levelId);
+
+    public static bool IsTutorialLevelId(string levelId)
+    {
+        return !string.IsNullOrEmpty(levelId) && levelId.StartsWith("0-");
+    }
+
     public IReadOnlyList<LevelEnemyWaveData> GetEnemyWaves()
     {
         return enemyWaves != null ? enemyWaves : Array.Empty<LevelEnemyWaveData>();

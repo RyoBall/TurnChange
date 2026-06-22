@@ -11,6 +11,7 @@ public interface ICondensedLevelConfig
     bool IsCondensedModeEnabled { get; }
     bool UseLevelConfiguredPlayerLevel { get; }
     bool ShouldUseLevelConfiguredPlayerLevel { get; }
+    int NonTutorialGoldMultiplier { get; }
     IReadOnlyList<LevelSelectionFloorData> GetActiveLevelFloors();
     void SetCondensedModeEnabled(bool enabled);
     void SetUseLevelConfiguredPlayerLevel(bool enabled);
@@ -20,9 +21,15 @@ public interface ICondensedLevelConfig
 public class CondensedLevelConfig : ScriptableObject, ICondensedLevelConfig
 {
     public const string DefaultResourcePath = "配置可编程物体/关卡数据/CondensedLevelConfig";
+    public const int DefaultNonTutorialGoldMultiplier = 3;
 
     [Header("浓缩关开关")]
     [SerializeField] private bool m_isCondensedModeEnabled;
+
+    [Header("浓缩关奖励")]
+    [Tooltip("浓缩模式下非教程关的金币倍率")]
+    [Min(1)]
+    [SerializeField] private int m_nonTutorialGoldMultiplier = DefaultNonTutorialGoldMultiplier;
 
     [Header("关卡等级")]
     [Tooltip("进入战斗时使用关卡配置的 playerLevel，而非战队等级。Debug 模式开启时也会自动启用（见 Datas.ShouldUseLevelConfiguredPlayerLevel）。")]
@@ -37,6 +44,15 @@ public class CondensedLevelConfig : ScriptableObject, ICondensedLevelConfig
     public bool IsCondensedModeEnabled => m_isCondensedModeEnabled;
     public bool UseLevelConfiguredPlayerLevel => m_useLevelConfiguredPlayerLevel;
     public bool ShouldUseLevelConfiguredPlayerLevel => m_useLevelConfiguredPlayerLevel || m_isCondensedModeEnabled;
+    public int NonTutorialGoldMultiplier => Mathf.Max(1, m_nonTutorialGoldMultiplier);
+
+    /// <summary>浓缩模式已开启且当前关卡不是教程关（用于 3 倍金币）</summary>
+    public static bool ShouldApplyCondensedGoldMultiplier(ICondensedLevelConfig config, string levelId)
+    {
+        return config != null
+            && config.IsCondensedModeEnabled
+            && !LevelSelectionData.IsTutorialLevelId(levelId);
+    }
 
     public IReadOnlyList<LevelSelectionFloorData> PrimaryLevelFloors => m_primaryLevelFloors;
     public IReadOnlyList<LevelSelectionFloorData> CondensedLevelFloors => m_condensedLevelFloors;
