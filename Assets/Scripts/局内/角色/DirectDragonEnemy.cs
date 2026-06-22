@@ -7,13 +7,27 @@ using UnityEngine;
 /// </summary>
 public class DirectDragonEnemy : DragonBossEnemy
 {
-    private bool m_isChargingRage; // 暴怒蓄力标记
+    private bool m_isChargingRage;
 
     public bool IsChargingRage => m_isChargingRage;
 
     public void SetChargingRage(bool charging)
     {
         m_isChargingRage = charging;
+    }
+
+    protected override EnemySkillBase GetForcedSkillForTurn()
+    {
+        if (m_isChargingRage)
+        {
+            EnemySkillBase rageSkill = GetSkillInstance(EnemySkillType.DragonDirectRage);
+            if (rageSkill != null && rageSkill.CanUse(this))
+            {
+                return rageSkill;
+            }
+        }
+
+        return base.GetForcedSkillForTurn();
     }
 
     public override bool CanUseEnemySkill(EnemySkillBase skill)

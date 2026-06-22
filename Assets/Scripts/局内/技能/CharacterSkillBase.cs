@@ -419,7 +419,7 @@ public class CharacterSkillBase : SkillBase
                 enemy.RemoveState(punishMark);
             }
         }
-        State.NotifyDamageSkillUsed(character, markedEnemies);
+
         yield break;
     }
     private IEnumerator EnterSkillTwo(Character character)

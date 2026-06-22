@@ -221,16 +221,7 @@ public class ChessQueenEnemy : Enemy
         BossHealthBarManager.Instance?.RegisterBoss(this);
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}升变入场");
         ClearLinkedPromotionPawns();
-
-        // 配置技能 CD（统一使用 EnemySkillBase.cooldownTurns）
         ConfigureSkillCooldowns();
-
-        if (!isPreviewBoss)
-        {
-            // 完整版：进入二阶段时标记王棋/车棋
-            MarkChessKingAndRook();
-            BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenMarkingKing, enemy: this);
-        }
 
         if (chessSpriteRenderer != null)
         {
@@ -258,16 +249,15 @@ public class ChessQueenEnemy : Enemy
         }
     }
 
-    /// <summary>标记王棋（速度最低）与车棋（速度最高）</summary>
-    private void MarkChessKingAndRook()
+    /// <summary>标记王棋（行动步长最大）与车棋（次大）</summary>
+    public void MarkChessKingAndRook()
     {
         List<Character> aliveCharacters = GetAliveFieldCharacters();
         if (aliveCharacters.Count < 2) return;
 
-        // 先移除所有在场角色已有的王棋/车棋标记
         ClearAllChessMarks(aliveCharacters);
 
-        aliveCharacters.Sort((a, b) => a.speed.CompareTo(b.speed));
+        aliveCharacters.Sort((a, b) => b.currentActionValue.CompareTo(a.currentActionValue));
         Character kingCharacter = aliveCharacters[0];
         Character rookCharacter = aliveCharacters[1];
 
@@ -276,7 +266,7 @@ public class ChessQueenEnemy : Enemy
         FloatingTipGenerator.Instance?.ShowTipAtObject(kingCharacter.transform, "王棋位");
         FloatingTipGenerator.Instance?.ShowTipAtObject(rookCharacter.transform, "车棋位");
 
-        // 触发标记对话
+        BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenMarkingKing, enemy: this);
         BattleDialogEvents.Raise(BattleDialogEventType.ChessKingMarked, character: kingCharacter);
         BattleDialogEvents.Raise(BattleDialogEventType.ChessRookMarked, character: rookCharacter);
     }
@@ -329,6 +319,15 @@ public class ChessQueenEnemy : Enemy
         // 标记不全，重新分配
         MarkChessKingAndRook();
         return true;
+    }
+
+    /// <summary>登记召唤兵卒，用于死亡时扣减威望。</summary>
+    public void RegisterSummonedPawn(ChessSummonedPawnEnemy pawn)
+    {
+        if (pawn != null)
+        {
+            m_summonedPawns.Add(pawn);
+        }
     }
 
     /// <summary>通知召唤兵卒被击杀</summary>
@@ -400,6 +399,11 @@ public class ChessQueenEnemy : Enemy
     public float GetPrestigeDamageBonus()
     {
         return 1f + m_prestigeStacks * 0.1f;
+    }
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return base.GetIncomingDamageMultiplier(isDotDamage, isTrueDamage) * GetPrestigeDamageReduction();
     }
 
     protected override bool CanReceiveState(StateType stateType, UnitCombatant giver)

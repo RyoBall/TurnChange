@@ -71,10 +71,20 @@ public class BattleDialogController : MonoBehaviour
         }
 
         m_battleHintsAllowed = true;
+        StartCoroutine(ProcessPendingDialogEvents());
+    }
+
+    private IEnumerator ProcessPendingDialogEvents()
+    {
         for (int i = 0; i < m_pendingDialogEvents.Count; i++)
         {
             ProcessDialogEvent(m_pendingDialogEvents[i]);
+            if (i < m_pendingDialogEvents.Count - 1)
+            {
+                yield return new WaitForSeconds(dialogInterval);
+            }
         }
+
         m_pendingDialogEvents.Clear();
     }
 

@@ -403,6 +403,7 @@ public class LevelCharacterSpawner : MonoBehaviour//用于生成并初始化角�
             instance.level = Datas.Instance != null ? Datas.Instance.GetTeamLevel() : Mathf.Max(1, instance.level);
         }
         instance.LoadDataFromCSV();
+        instance.InitializeSkill();
     }
 
     private void ConfigureEnemy(Enemy instance, EnemyRosterData data, int standPosition)

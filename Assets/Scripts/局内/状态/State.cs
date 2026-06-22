@@ -73,7 +73,12 @@ public enum StateType
 [CreateAssetMenu(fileName = "State", menuName = "状态/新状态")]
 public class State : ScriptableObject
 {
-    public static event Action OnDamageEventSettled; 
+    public static event Action OnDamageEventSettled;
+
+    public static void NotifyDamageEventSettled()
+    {
+        OnDamageEventSettled?.Invoke();
+    }
     private static UnitCombatant s_activeDotEventUnit;
     private static bool s_activeDotEventHasDamage;
     private static List<UnitCombatant> s_activeDotDamagedUnits;
@@ -321,6 +326,11 @@ public class State : ScriptableObject
     public void OnOwnerSwappedOut(UnitCombatant newOwner)
     {
         Behavior.OnOwnerSwappedOut(newOwner);
+    }
+
+    public bool CanBePurged()
+    {
+        return Behavior.CanBePurged();
     }
 
     public void OnDebuffApplied(UnitCombatant target, UnitCombatant debuffGiver)
@@ -578,6 +588,7 @@ public interface IStateBehavior
     bool CausesOutgoingTrueDamage(bool isDotDamage);
     /// <summary>角色交换回调：当持有者被换下时，将状态转移到新角色上</summary>
     void OnOwnerSwappedOut(UnitCombatant newOwner);
+    bool CanBePurged();
 }
 
 public abstract class StateBehaviorBase : IStateBehavior
@@ -611,6 +622,7 @@ public abstract class StateBehaviorBase : IStateBehavior
     public virtual void DotTrigger(float damageMultiplier) { }
     public virtual bool CausesOutgoingTrueDamage(bool isDotDamage) { return false; }
     public virtual void OnOwnerSwappedOut(UnitCombatant newOwner) { }
+    public virtual bool CanBePurged() { return true; }
 }
 
 public static class StateBehaviorFactory
@@ -1420,20 +1432,68 @@ public class PursuitPunishStateBehavior : StateBehaviorBase
             return;
         }
 
-        if (debuffGiver == state.owner)
+        // 仅响应友方施加的减益；排除追惩持有者自身与敌人自挂减益（如剑客失衡）
+        if (debuffGiver == state.owner || debuffGiver == target || !(debuffGiver is Character))
         {
             return;
         }
 
-        enemy.AddState(StateType.PunishMark, state.owner, 1, 1);
+        bool hadMark = enemy.HasState(StateType.PunishMark);
+        State punishMark = enemy.AddState(StateType.PunishMark, state.owner, 1, 1);
+        if (punishMark == null)
+        {
+            return;
+        }
+
+        // 已有惩戒标记时仅刷新层数/回合，不重复插入追加回合
+        if (hadMark)
+        {
+            return;
+        }
+
+        // 同一角色同时最多存在一个待处理的追加回合
+        if (HasPendingAdditionalTurn(ownerCharacter))
+        {
+            return;
+        }
+
+        CharacterSkillBase additionalSkill = ResolvePursuitPunishAdditionalSkill(ownerCharacter);
+        if (additionalSkill == null)
+        {
+            Debug.LogWarning($"[PursuitPunish] {ownerCharacter.combatantName} 缺少追惩追加技能，无法插入追加回合");
+            return;
+        }
+
+        TurnManager.Instance?.AdditionalTurnInsert(ownerCharacter, additionalSkill, null);
+    }
+
+    private static bool HasPendingAdditionalTurn(Character ownerCharacter)
+    {
+        if (ownerCharacter == null || TurnManager.Instance == null)
+        {
+            return false;
+        }
+
         foreach (var combatant in TurnManager.Instance.CurrentTurnOrder)
         {
             if (combatant is AdditionalCharacter additionalTurnCombatant && additionalTurnCombatant.character == ownerCharacter)
             {
-                return;
+                return true;
             }
         }
-        TurnManager.Instance?.AdditionalTurnInsert(ownerCharacter);
+
+        return false;
+    }
+
+    private static CharacterSkillBase ResolvePursuitPunishAdditionalSkill(Character ownerCharacter)
+    {
+        CharacterSkillBase additionalSkill = ownerCharacter.GetAdditionalSkillInstance();
+        if (additionalSkill != null && additionalSkill.skillType == CharacterSkillType.PursuitPunishAdditional)
+        {
+            return additionalSkill;
+        }
+
+        return SkillDictionaryManager.GetSkill(CharacterSkillType.PursuitPunishAdditional);
     }
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
@@ -1667,6 +1727,43 @@ public class ResistStateBehavior : StateBehaviorBase
 
 public class TauntStateBehavior : StateBehaviorBase
 {
+    /// <summary>
+    /// 嘲讽单位选目标：施加者（盾手）仍在场上则强制锁定；否则清除嘲讽并返回 false，由调用方走正常随机。
+    /// </summary>
+    public static bool TryResolveForcedTarget(Enemy attacker, out Character forcedTarget)
+    {
+        forcedTarget = null;
+        if (attacker == null)
+        {
+            return false;
+        }
+
+        State tauntState = attacker.GetState(StateType.Taunt);
+        if (tauntState == null)
+        {
+            return false;
+        }
+
+        Character tauntGiver = tauntState.giver as Character;
+        if (IsValidFieldTarget(tauntGiver))
+        {
+            forcedTarget = tauntGiver;
+            return true;
+        }
+
+        attacker.RemoveState(tauntState);
+        return false;
+    }
+
+    private static bool IsValidFieldTarget(Character character)
+    {
+        if (character == null || character.IsDead || CharacterManager.Instance == null)
+        {
+            return false;
+        }
+
+        return CharacterManager.Instance.fieldCharacters.Contains(character);
+    }
 }
 
 public class NextActionDamageBoostStateBehavior : StateBehaviorBase//盾手专用增伤
@@ -1765,11 +1862,13 @@ public class PoisonStateBehavior : DotStateBehaviorBase
 /// 混沌整合状态：层数 = 混沌值(1-5)
 /// - 1-2层：每层减少10%造成伤害
 /// - 3-4层：每层增加20点行动冷却（合计-20%~-40%伤害、+20~+40冷却）
-/// - 5层：眩晕1回合，之后混沌值重置为2层
+/// - 5层：眩晕1回合并扣除现存血量40%（不消耗护盾），下回合混沌值重置为2层
 /// </summary>
 public class ChaosStateBehavior : StateBehaviorBase
 {
-    private bool m_hasStunned;
+    private const float ChaosBurstCurrentHpLossRatio = 0.4f;
+
+    private bool m_pendingChaosReset;
 
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
@@ -1792,27 +1891,40 @@ public class ChaosStateBehavior : StateBehaviorBase
     public override bool CanActThisTurn()
     {
         // 5层时眩晕
-        if (state.StackCount >= 5)
-        {
-            m_hasStunned = true;
-            return false;
-        }
-        return true;
+        return state.StackCount < 5;
     }
 
     public override IEnumerator OnOwnerTurnStart()
     {
-        if (m_hasStunned)
+        var cha = state.owner as Character;
+        if (cha == null || cha.IsDead)
         {
-            m_hasStunned = false;
-            var cha = state.owner as Character;
-            if (cha != null)
-            {
-                // 眩晕结算后混沌重置为2
-                FloatingTipGenerator.Instance?.ShowTipAtObject(cha.transform, $"{cha.name}混沌爆发，眩晕解除，混沌回落至2");
-                cha.SetChaos(2);
-            }
+            yield break;
         }
+
+        if (state.StackCount >= 5 && !m_pendingChaosReset)
+        {
+            int hpLoss = Mathf.RoundToInt(cha.currentHP * ChaosBurstCurrentHpLossRatio);
+            if (hpLoss > 0)
+            {
+                cha.TakeDamage(new UnitCombatant.DamageInfo(hpLoss, cha)
+                    .AsTrueDamage()
+                    .BypassingShield()
+                    .WithState(StateType.Chaos));
+            }
+
+            m_pendingChaosReset = true;
+            FloatingTipGenerator.Instance?.ShowTipAtObject(cha.transform, $"{cha.name}混沌爆发，扣除{hpLoss}生命");
+            yield break;
+        }
+
+        if (m_pendingChaosReset)
+        {
+            m_pendingChaosReset = false;
+            cha.SetChaos(2);
+            FloatingTipGenerator.Instance?.ShowTipAtObject(cha.transform, $"{cha.name}眩晕解除，混沌回落至2");
+        }
+
         yield break;
     }
 }
@@ -1877,59 +1989,91 @@ public class ChessRookMarkStateBehavior : StateBehaviorBase
 
 public class ChessExhaustionStateBehavior : StateBehaviorBase
 {
-    private int m_accumulatedDamage;
-    private int m_damageThreshold;
-
-    public override void OnStateApply()
+    public override bool CanActThisTurn()
     {
-        m_accumulatedDamage = 0;
-        m_damageThreshold = state.owner != null ? Mathf.Max(1, Mathf.CeilToInt(state.owner.maxHP * 0.15f)) : 0;
-    }
-
-    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
-    {
-        // 监听持有者受到的伤害
-        if (state.owner == null || target != state.owner || damage <= 0)
-        {
-            return;
-        }
-
-        m_accumulatedDamage += damage;
-        if (m_accumulatedDamage >= m_damageThreshold)
-        {
-            Commander.GetInstance().AddCastlingOpportunity(1, "力竭破绽暴露");
-            m_accumulatedDamage = int.MinValue; // 防止重复触发
-        }
-    }
-
-    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
-    {
-        return 1.25f; // 力竭时受到伤害+25%
+        return false;
     }
 }
 
 public class DragonBreathStateBehavior : StateBehaviorBase
 {
+    public override IEnumerator OnOwnerTurnStart()
+    {
+        TriggerDragonBreathDot();
+        DecayStacksAfterTrigger();
+        yield return new WaitForSeconds(0.1f);
+    }
+
     public override void DotTrigger(float damageMultiplier)
     {
-        if (state.owner == null || state.giver == null) return;
-        float coef = state.skillCoef > 0f ? state.skillCoef : 0.2f;
-        int damage = Mathf.RoundToInt(state.giver.attack * coef * state.StackCount * damageMultiplier);
-        if (damage <= 0) return;
-        var damageInfo = DamageCounter.CountDamage(state.giver, state.owner, coef * state.StackCount, 0f, DamageType.Physical, false, false, false);
+        TriggerDragonBreathDot(damageMultiplier);
+        DecayStacksAfterTrigger();
+    }
+
+    public override void OnOwnerSwappedOut(UnitCombatant newOwner)
+    {
+        state.EndState();
+    }
+
+    private void TriggerDragonBreathDot(float damageMultiplier = 1f)
+    {
+        if (state.owner == null || state.giver == null || state.StackCount <= 0)
+        {
+            return;
+        }
+
+        float coef = state.skillCoef > 0f ? state.skillCoef : 0.3f;
+        var damageInfo = DamageCounter.CountDotDamage(state, state.giver, state.owner);
+        damageInfo.Damage = Mathf.RoundToInt(damageInfo.Damage * state.StackCount * damageMultiplier);
         state.owner.TakeDamage(damageInfo);
+    }
+
+    private void DecayStacksAfterTrigger()
+    {
+        if (state.StackCount <= 1)
+        {
+            state.EndState();
+            return;
+        }
+
+        state.ChangeStackCount(state.StackCount - 1);
     }
 }
 
 public class EternalFlameStateBehavior : StateBehaviorBase
 {
+    public override bool CanBePurged()
+    {
+        return false;
+    }
+
+    public override IEnumerator OnOwnerTurnStart()
+    {
+        TriggerEternalFlameDot();
+        yield return new WaitForSeconds(0.1f);
+    }
+
     public override void DotTrigger(float damageMultiplier)
     {
-        if (state.owner == null || state.giver == null) return;
-        float coef = state.skillCoef > 0f ? state.skillCoef : 0.15f;
-        int damage = Mathf.RoundToInt(state.giver.attack * coef * damageMultiplier);
-        if (damage <= 0) return;
-        var damageInfo = DamageCounter.CountDamage(state.giver, state.owner, coef, 0f, DamageType.Physical, false, false, false);
+        TriggerEternalFlameDot(damageMultiplier);
+    }
+
+    public override void OnOwnerSwappedOut(UnitCombatant newOwner)
+    {
+        state.EndState();
+    }
+
+    private void TriggerEternalFlameDot(float damageMultiplier = 1f)
+    {
+        if (state.owner == null || state.giver == null || state.StackCount <= 0)
+        {
+            return;
+        }
+
+        float coef = state.skillCoef > 0f ? state.skillCoef : 0.5f;
+        float scaledCoef = coef * state.StackCount * damageMultiplier;
+        var damageInfo = DamageCounter.CountDamage(state.giver, state.owner, scaledCoef, 0f, DamageType.Physical, false, false, false);
+        damageInfo = damageInfo.AsDot();
         state.owner.TakeDamage(damageInfo);
     }
 }
@@ -1944,13 +2088,26 @@ public class SwordsmanBrightSwordBehavior : StateBehaviorBase
 
 public class SwordsmanDefenseBehavior : StateBehaviorBase
 {
-    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 0.6f; }
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.7f;
+    }
+
+    public override float GetSpeedMultiplier()
+    {
+        return state.baseExtraData2 > 0f ? state.baseExtraData2 : 1.2f;
+    }
 }
 
 public class SwordsmanGuerrillaBehavior : StateBehaviorBase
 {
     public override float GetOutgoingDamageMultiplier(bool isDotDamage) { return 1f; }
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage) { return 1f; }
+
+    public override float GetSpeedMultiplier()
+    {
+        return state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.8f;
+    }
 }
 
 public class SwordsmanLastStandBehavior : StateBehaviorBase
@@ -1974,15 +2131,11 @@ public class SwordsmanStaggerBehavior : StateBehaviorBase
 
 public class SwordsmanEleganceBehavior : StateBehaviorBase
 {
-    private const float DamageReduction = 0.4f;
-
     public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
-        // 优雅体态：60%独立乘区伤害减免
-        // 通过返回倍率实现：1 - 0.6 = 0.4
         SwordsmanEnemy swordsman = state.owner as SwordsmanEnemy;
         if (swordsman != null && swordsman.IsInStagger) return 1f;
-        return DamageReduction;
+        return state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.6f;
     }
 
     public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)

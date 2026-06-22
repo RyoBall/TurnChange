@@ -227,12 +227,28 @@ public class EnemySkillBase : SkillBase
                 yield return SwordsmanShadow(self);
                 break;
         }
+        NotifyDragonRageSkillIfNeeded(self);
         StartCooldown();
         yield return new WaitForSeconds(0.5f); // 技能执行后的小间隔
         if (enteredSkillCamera)
         {
             yield return CinemachineCameraManager.Instance?.TransitionOutOfSkillCamera();
         }
+    }
+
+    private void NotifyDragonRageSkillIfNeeded(Enemy self)
+    {
+        if (self is DragonBossEnemy dragon && IsDragonRageSkillType(enemySkillType))
+        {
+            dragon.NotifyRageSkillUsed();
+        }
+    }
+
+    private static bool IsDragonRageSkillType(EnemySkillType skillType)
+    {
+        return skillType == EnemySkillType.DragonDotRage
+            || skillType == EnemySkillType.DragonDirectRage
+            || skillType == EnemySkillType.DragonChaosRage;
     }
 
     // 1.护盾手 技能一：给当前HP绝对值最低的敌方单位施加护盾（护盾比例=extraData1，默认15%最大HP）
@@ -272,7 +288,7 @@ public class EnemySkillBase : SkillBase
     // 2.单体攻击手：随机对我方单体造成伤害，并施加混沌值（混沌层数=extraData1，默认2）
     private IEnumerator SingleAttack(Enemy self)
     {
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(self, target, this, DamageType.Physical, true);
@@ -296,7 +312,7 @@ public class EnemySkillBase : SkillBase
     // 3.负面手 技能二：随机对我方单体造成伤害并施加瞩目（瞩目层数=extraData1，默认1）
     private IEnumerator Debuff_2(Enemy self)
     {
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
         // 造成伤害（使用 skillCoef 和 skillBase）
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
@@ -371,7 +387,7 @@ public class EnemySkillBase : SkillBase
     // 5.Dot施加手 技能一：随机对我方单体造成少量伤害并施加鸩毒（鸩毒层数=extraData1，默认2）
     private IEnumerator DotMaster_1(Enemy self)
     {
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
         // 造成伤害
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
@@ -431,10 +447,18 @@ public class EnemySkillBase : SkillBase
             yield break;
         }
 
-        // 初始兵卒：向前推进
+        // 初始兵卒：造成伤害后向前推进
         ChessPawnEnemy pawn = self as ChessPawnEnemy;
         if (pawn != null)
         {
+            Character target = CharacterManager.Instance.GetCharacterByRand(self);
+            if (target != null)
+            {
+                NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+                var damageInfo = DamageCounter.CountDamage(self, target, this, DamageType.Physical);
+                target.TakeDamage(damageInfo);
+            }
+
             yield return pawn.AdvancePawn();
         }
     }
@@ -455,7 +479,7 @@ public class EnemySkillBase : SkillBase
         foreach (var ally in allies)
         {
             if (ally == null || ally.IsDead) continue;
-            var damageInfo = DamageCounter.CountDamage(self, ally, totalCoef, skillBase, DamageType.Physical, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, ally, totalCoef, skillBase, DamageType.Physical, false, false, false);
             ally.TakeDamage(damageInfo);
             ally.TryAddChaos(chaosAmount);
         }
@@ -513,6 +537,7 @@ public class EnemySkillBase : SkillBase
         }
 
         pawn.ConfigureAsSummonedPawn(queen, rosterData, standPosition, GetSummonPawnLevel(queen));
+        queen.RegisterSummonedPawn(pawn);
         pawn.ChangeActionValue(pawn.BaseActionValue, false);
         EnemyManager.Instance?.RegisterEnemy(pawn);
         TurnManager.Instance?.InsertCombatant(pawn);
@@ -535,13 +560,15 @@ public class EnemySkillBase : SkillBase
             yield break;
         }
 
-        // 蓄力前确保王棋/车棋标记存在
-        if (!queen.TryEnsureChessMarks())
+        // 蓄力前标记王棋/车棋
+        List<Character> fieldCharacters = GetAliveFieldCharacters(queen);
+        if (fieldCharacters.Count < 2)
         {
-            // 场上角色不足2人，无法蓄力
             FloatingTipGenerator.Instance?.ShowTipAtObject(queen.transform, "场上目标不足，无法蓄力");
             yield break;
         }
+
+        queen.MarkChessKingAndRook();
 
         // 标记蓄力
         queen.SetChargingThroneAssault(true);
@@ -570,7 +597,7 @@ public class EnemySkillBase : SkillBase
         float totalCoef = skillCoef * prestigeBonus;
 
         NotifyDamageSkillUsed(queen, new List<UnitCombatant> { kingTarget });
-        var damageInfo = DamageCounter.CountDamage(queen, kingTarget, totalCoef, skillBase, DamageType.Physical, true, false, false);
+        var damageInfo = DamageCounter.CountDamage(queen, kingTarget, totalCoef, skillBase, DamageType.Physical, false, false, false);
         kingTarget.TakeDamage(damageInfo);
         Debug.Log($"[EnemySkillBase] {queen.combatantName}对{kingTarget.combatantName}造成了{damageInfo.Damage}点伤害");
         // 行动延后100%
@@ -597,7 +624,7 @@ public class EnemySkillBase : SkillBase
             Character target = targets[i];
             if (target == null) continue;
 
-            var damageInfo = DamageCounter.CountDamage(queen, target, totalSkillCoef, skillBase, DamageType.Physical, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(queen, target, totalSkillCoef, skillBase, DamageType.Physical, false, false, false);
             target.TakeDamage(damageInfo);
         }
 
@@ -610,7 +637,7 @@ public class EnemySkillBase : SkillBase
         ChessQueenEnemy queen = self as ChessQueenEnemy;
         if (queen == null) yield break;
 
-        Character target = CharacterManager.Instance.GetCharacterByRand();
+        Character target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
 
         float prestigeBonus = queen.GetPrestigeDamageBonus();
@@ -619,10 +646,34 @@ public class EnemySkillBase : SkillBase
         NotifyDamageSkillUsed(queen, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(queen, target, totalCoef, skillBase, DamageType.Physical, true, false, false);
         target.TakeDamage(damageInfo);
-        target.TryAddChaos(1);
+        int chaosAmount = ResolveExtraInt(extraData1, 1);
+        target.TryAddChaos(chaosAmount);
     }
 
     // ============ 辅助方法 ============
+
+    private static int ResolveExtraInt(float field, int defaultValue, int minValue = 1)
+    {
+        int resolved = field > 0f ? Mathf.RoundToInt(field) : defaultValue;
+        return Mathf.Max(minValue, resolved);
+    }
+
+    private static float ResolveExtraFloat(float field, float defaultValue)
+    {
+        return field > 0f ? field : defaultValue;
+    }
+
+    private static int ResolveReinforcedInt(float baseField, float reinforcedField, int baseDefault, int reinforcedDefault, bool isReinforced)
+    {
+        float field = isReinforced ? (reinforcedField > 0f ? reinforcedField : baseField) : baseField;
+        return ResolveExtraInt(field, isReinforced ? reinforcedDefault : baseDefault);
+    }
+
+    private static float ResolveReinforcedFloat(float baseField, float reinforcedField, float baseDefault, float reinforcedDefault, bool isReinforced)
+    {
+        float field = isReinforced ? (reinforcedField > 0f ? reinforcedField : baseField) : baseField;
+        return ResolveExtraFloat(field, isReinforced ? reinforcedDefault : baseDefault);
+    }
 
     private List<Character> GetAliveFieldCharacters(ChessQueenEnemy queen)
     {
@@ -676,9 +727,10 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
-        int breathStacks = dragon.ReinforceLevel >= 1 ? 3 : 2;
-        float coef = dragon.ReinforceLevel >= 1 ? (extraData1 > 0f ? extraData1 : 1.5f) : skillCoef;
-        float baseDmg = dragon.ReinforceLevel >= 1 ? (extraData2 > 0f ? extraData2 : 0f) : skillBase;
+        bool isReinforced = dragon.ReinforceLevel >= 1;
+        int breathStacks = ResolveReinforcedInt(extraData3, extraData4, 1, 2, isReinforced);
+        float coef = isReinforced ? (extraData1 > 0f ? extraData1 : 1.5f) : skillCoef;
+        float baseDmg = isReinforced ? (extraData2 > 0f ? extraData2 : 0f) : skillBase;
 
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
@@ -697,7 +749,7 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
-        int clearCount = dragon.ReinforceLevel >= 1 ? 2 : 1;
+        int clearCount = ResolveReinforcedInt(extraData3, extraData4, 1, 2, dragon.ReinforceLevel >= 1);
         if (EnemyManager.Instance == null) yield break;
 
         IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
@@ -707,14 +759,11 @@ public class EnemySkillBase : SkillBase
             if (enemy == null || enemy.IsDead) continue;
 
             int cleared = 0;
-            for (int j = enemy.States.Count - 1; j >= 0 && cleared < clearCount; j--)
+            List<StateType> debuffTypes = CollectRandomDebuffTypes(enemy.States, clearCount);
+            for (int t = 0; t < debuffTypes.Count; t++)
             {
-                State state = enemy.States[j];
-                if (state != null && state.isDebuff)
-                {
-                    enemy.RemoveState(state);
-                    cleared++;
-                }
+                RemoveDebuffType(enemy, debuffTypes[t]);
+                cleared++;
             }
         }
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}净化友方负面状态");
@@ -729,7 +778,8 @@ public class EnemySkillBase : SkillBase
         foreach (var ally in allies)
         {
             if (ally == null || ally.IsDead) continue;
-            ally.AddState(StateType.EternalFlame, self, 99, 1);
+            int flameStacks = ResolveExtraInt(extraData3, 1);
+            ally.AddState(StateType.EternalFlame, self, 99, flameStacks);
         }
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}无尽炼狱！");
         yield break;
@@ -743,15 +793,22 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
 
-        float coef = dragon.ReinforceLevel >= 1 ? (extraData1 > 0f ? extraData1 : 2.5f) : skillCoef;
-        float baseDmg = dragon.ReinforceLevel >= 1 ? (extraData2 > 0f ? extraData2 : 0f) : skillBase;
+        bool isReinforced = dragon.ReinforceLevel >= 1;
+        float coef = isReinforced ? (extraData1 > 0f ? extraData1 : 2.5f) : skillCoef;
+        float baseDmg = isReinforced ? (extraData2 > 0f ? extraData2 : 0f) : skillBase;
 
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(self, target, coef, baseDmg, DamageType.Physical, true, false, false);
         target.TakeDamage(damageInfo);
+
+        if (isReinforced && extraData3 > 0f)
+        {
+            int attractStacks = ResolveExtraInt(extraData3, 1);
+            target.AddState(StateType.Attract, self, 1, attractStacks);
+        }
     }
 
     /// <summary>直伤龙技能二：龙威 — 单体施加瞩目</summary>
@@ -760,10 +817,10 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
 
-        int attractStacks = dragon.ReinforceLevel >= 1 ? 2 : 1;
+        int attractStacks = ResolveReinforcedInt(extraData3, extraData4, 1, 2, dragon.ReinforceLevel >= 1);
         target.AddState(StateType.Attract, self, 1, attractStacks);
         FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"瞩目 x{attractStacks}");
     }
@@ -785,7 +842,12 @@ public class EnemySkillBase : SkillBase
 
         // 否则施加即死状态并蓄力
         BattleDialogEvents.Raise(BattleDialogEventType.DragonInstantDeathWarning, enemy: self as Enemy);
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        List<Character> candidates = new List<Character>(CharacterManager.Instance.fieldCharacters);
+        Character target = CombatDamageTracker.SelectHighestDamageDealer(candidates);
+        if (target == null)
+        {
+            target = CharacterManager.Instance.GetCharacterByRand(self);
+        }
         if (target == null) yield break;
 
         target.AddState(StateType.InstantDeath, self, 1,1);
@@ -819,15 +881,28 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
 
-        int chaosAmount = dragon.ReinforceLevel >= 1 ? 2 : 1;
-        float delayRatio = dragon.ReinforceLevel >= 1 ? 0.5f : 0.2f;
+        bool isReinforced = dragon.ReinforceLevel >= 1;
+        int chaosAmount = ResolveReinforcedInt(extraData3, extraData4, 1, 2, isReinforced);
+        float speedStepPenalty = ResolveReinforcedFloat(extraData1, extraData2, 15f, 30f, isReinforced);
 
         target.TryAddChaos(chaosAmount);
-        target.ChangeActionValue(target.currentActionValue + target.BaseActionValue * delayRatio);
-        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"混沌+{chaosAmount} 行动延后");
+        target.ChangeActionValue(target.currentActionValue + speedStepPenalty);
+
+        if (isReinforced && skillCoef > 0f)
+        {
+            float chaosCoef = skillCoef * target.ChaosValue;
+            if (chaosCoef > 0f)
+            {
+                NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
+                var damageInfo = DamageCounter.CountDamage(self, target, chaosCoef, skillBase, DamageType.Physical, false, false, false);
+                target.TakeDamage(damageInfo);
+            }
+        }
+
+        FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, $"混沌+{chaosAmount} 速度步长+{speedStepPenalty}");
     }
 
     /// <summary>混沌龙技能二：时间扭曲 — 自身与随机友方行动提前</summary>
@@ -836,22 +911,24 @@ public class EnemySkillBase : SkillBase
         DragonBossEnemy dragon = self as DragonBossEnemy;
         if (dragon == null) yield break;
 
-        float advanceRatio = dragon.ReinforceLevel >= 1 ? 0.5f : 0.4f;
+        bool isReinforced = dragon.ReinforceLevel >= 1;
+        float advanceRatio = ResolveReinforcedFloat(extraData1, extraData3, 0.4f, 0.5f, isReinforced);
 
         // 自身行动提前
         self.ChangeActionValue(self.currentActionValue - self.BaseActionValue * advanceRatio);
 
         // 随机一名敌方单体行动提前
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target != null)
         {
             target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * advanceRatio);
             FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, "行动提前");
 
-            // 强化后：下次伤害提升20%
-            if (dragon.ReinforceLevel >= 1)
+            // 强化后：目标下次输出提升
+            if (isReinforced)
             {
-                target.AddState(StateType.DamageChange, self, 1, 1,true,0.2f);
+                float damageBoost = ResolveExtraFloat(extraData2, 0.2f);
+                target.AddState(StateType.DamageChange, self, 1, 1, true, damageBoost);
             }
         }
 
@@ -865,17 +942,17 @@ public class EnemySkillBase : SkillBase
 
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
+        int chaosAmount = ResolveExtraInt(extraData2, 3);
 
         foreach (var ally in allies)
         {
             if (ally == null || ally.IsDead) continue;
-            ally.TryAddChaos(3);
+            ally.TryAddChaos(chaosAmount);
 
-            // 若已处于震慑，额外造成大量直伤
-            if (ally.GetState(StateType.Daze) != null)
+            if (ally.ChaosValue >= ally.MaxChaosValueConst)
             {
                 float extraCoef = extraData1 > 0f ? extraData1 : 2f;
-                var damageInfo = DamageCounter.CountDamage(self, ally, extraCoef, skillBase, DamageType.Physical, true, false, false);
+                var damageInfo = DamageCounter.CountDamage(self, ally, extraCoef, skillBase, DamageType.Physical, false, false, false);
                 ally.TakeDamage(damageInfo);
             }
         }
@@ -888,29 +965,31 @@ public class EnemySkillBase : SkillBase
     /// <summary>亮剑-易伤突刺：单体中等直伤+2层易伤</summary>
     private IEnumerator SwordsmanThrust(Enemy self)
     {
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
 
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(self, target, skillCoef, skillBase, DamageType.Physical, true, false, false);
         target.TakeDamage(damageInfo);
-        target.AddState(StateType.Vulnerable, self, 99, 2);
+        int vulnerableStacks = ResolveExtraInt(extraData1, 2);
+        target.AddState(StateType.Vulnerable, self, 99, vulnerableStacks);
         yield break;
     }
 
-    /// <summary>亮剑-剑舞连斩：随机单体3段微伤，每段1混沌</summary>
+    /// <summary>亮剑-剑舞连斩：随机单体多段微伤，每段施加混沌</summary>
     private IEnumerator SwordsmanDance(Enemy self)
     {
-        for (int i = 0; i < 3; i++)
+        int hitCount = ResolveExtraInt(extraData1, 3);
+        int chaosPerHit = ResolveExtraInt(extraData2, 1);
+        for (int i = 0; i < hitCount; i++)
         {
-            var target = CharacterManager.Instance.GetCharacterByRand();
+            var target = CharacterManager.Instance.GetCharacterByRand(self);
             if (target == null || target.IsDead) continue;
 
-            float microCoef = extraData1 > 0f ? extraData1 : 0.3f;
             NotifyDamageSkillUsed(self, new List<UnitCombatant> { target });
-            var damageInfo = DamageCounter.CountDamage(self, target, microCoef, 0f, DamageType.Physical, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, target, skillCoef, skillBase, DamageType.Physical, true, false, false);
             target.TakeDamage(damageInfo);
-            target.TryAddChaos(1);
+            target.TryAddChaos(chaosPerHit);
             yield return new WaitForSeconds(0.15f);
         }
         yield break;
@@ -919,80 +998,146 @@ public class EnemySkillBase : SkillBase
     /// <summary>防御-铁壁格挡：自身1层抵御，随机单体2混沌</summary>
     private IEnumerator SwordsmanBlock(Enemy self)
     {
-        self.AddState(StateType.Resist, self, 99, 1);
+        int resistStacks = ResolveExtraInt(extraData1, 1);
+        self.AddState(StateType.Resist, self, 99, resistStacks);
 
-        var target = CharacterManager.Instance.GetCharacterByRand();
+        var target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target != null)
         {
-            target.TryAddChaos(2);
+            int chaosAmount = ResolveExtraInt(extraData2, 2);
+            target.TryAddChaos(chaosAmount);
         }
         yield break;
     }
 
-    /// <summary>防御-稳固架势：回复微量HP，清除1个负面</summary>
+    /// <summary>防御-稳固架势：回复微量HP，清除负面状态</summary>
     private IEnumerator SwordsmanSteady(Enemy self)
     {
-        float healRatio = extraData1 > 0f ? extraData1 : 0.05f;
+        float healRatio = ResolveExtraFloat(extraData1, 0.05f);
         int healAmount = Mathf.RoundToInt(self.maxHP * healRatio);
         self.Heal(healAmount);
 
-        // 清除自身1个负面状态
-        for (int i = self.States.Count - 1; i >= 0; i--)
-        {
-            State state = self.States[i];
-            if (state != null && state.isDebuff)
-            {
-                self.RemoveState(state);
-                break;
-            }
-        }
+        int clearCount = ResolveExtraInt(extraData2, 1);
+        RemoveRandomDebuffTypes(self, clearCount);
         yield break;
     }
 
-    /// <summary>游击-扰敌步法：全体微量伤害，自身下次行动提前50%</summary>
+    /// <summary>游击-扰敌步法：全体微量伤害，自身下次行动提前</summary>
     private IEnumerator SwordsmanDisrupt(Enemy self)
     {
-        float microCoef = extraData1 > 0f ? extraData1 : 0.2f;
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
         foreach (var ally in allies)
         {
             if (ally == null || ally.IsDead) continue;
-            var damageInfo = DamageCounter.CountDamage(self, ally, microCoef, 0f, DamageType.Physical, true, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, ally, this, DamageType.Physical);
             ally.TakeDamage(damageInfo);
         }
 
-        // 自身行动提前50%
-        self.ChangeActionValue(self.currentActionValue - self.BaseActionValue * 0.5f);
+        float advanceRatio = ResolveExtraFloat(extraData2, 0.5f);
+        self.ChangeActionValue(self.currentActionValue - self.BaseActionValue * advanceRatio);
         yield break;
     }
 
-    /// <summary>游击-迅影刺击：行动条最前单位低伤+行动延后30%（无视嘲讽）</summary>
+    /// <summary>游击-迅影刺击：行动条最前单位低伤+行动延后（无视嘲讽）</summary>
     private IEnumerator SwordsmanShadow(Enemy self)
     {
-        // 找到行动条最前的角色
-        Character fastest = null;
-        float lowestActionValue = float.MaxValue;
-        for (int i = 0; i < CharacterManager.Instance.fieldCharacters.Count; i++)
+        Character fastest = TurnManager.Instance != null
+            ? TurnManager.Instance.GetNextActingFieldCharacter()
+            : null;
+        if (fastest == null)
         {
-            Character c = CharacterManager.Instance.fieldCharacters[i];
-            if (c == null || c.IsDead) continue;
-            if (c.currentActionValue < lowestActionValue)
+            float lowestActionValue = float.MaxValue;
+            for (int i = 0; i < CharacterManager.Instance.fieldCharacters.Count; i++)
             {
-                lowestActionValue = c.currentActionValue;
-                fastest = c;
+                Character c = CharacterManager.Instance.fieldCharacters[i];
+                if (c == null || c.IsDead) continue;
+                if (c.currentActionValue < lowestActionValue)
+                {
+                    lowestActionValue = c.currentActionValue;
+                    fastest = c;
+                }
             }
         }
 
         if (fastest == null) yield break;
 
-        float lowCoef = extraData1 > 0f ? extraData1 : 0.5f;
         NotifyDamageSkillUsed(self, new List<UnitCombatant> { fastest });
-        var damageInfo = DamageCounter.CountDamage(self, fastest, lowCoef, 0f, DamageType.Physical, true, false, false);
+        var damageInfo = DamageCounter.CountDamage(self, fastest, this, DamageType.Physical);
         fastest.TakeDamage(damageInfo);
 
-        // 行动延后30%
-        fastest.ChangeActionValue(fastest.currentActionValue + fastest.BaseActionValue * 0.3f);
+        float delayRatio = ResolveExtraFloat(extraData2, 0.3f);
+        float delayAmount = fastest.BaseActionValue * delayRatio;
+        fastest.ChangeActionValue(fastest.currentActionValue + delayAmount);
         yield break;
+    }
+
+    private static List<StateType> CollectRandomDebuffTypes(IReadOnlyList<State> states, int pickCount)
+    {
+        List<StateType> availableTypes = new List<StateType>();
+        if (states == null || pickCount <= 0)
+        {
+            return availableTypes;
+        }
+
+        for (int i = 0; i < states.Count; i++)
+        {
+            State state = states[i];
+            if (state == null || !state.isDebuff)
+            {
+                continue;
+            }
+
+            if (!availableTypes.Contains(state.stateType))
+            {
+                availableTypes.Add(state.stateType);
+            }
+        }
+
+        for (int i = availableTypes.Count - 1; i > 0; i--)
+        {
+            int swapIndex = Random.Range(0, i + 1);
+            StateType temp = availableTypes[i];
+            availableTypes[i] = availableTypes[swapIndex];
+            availableTypes[swapIndex] = temp;
+        }
+
+        if (availableTypes.Count > pickCount)
+        {
+            availableTypes.RemoveRange(pickCount, availableTypes.Count - pickCount);
+        }
+
+        return availableTypes;
+    }
+
+    private static void RemoveDebuffType(UnitCombatant target, StateType debuffType)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        for (int i = target.States.Count - 1; i >= 0; i--)
+        {
+            State state = target.States[i];
+            if (state != null && state.isDebuff && state.stateType == debuffType)
+            {
+                target.RemoveState(state);
+            }
+        }
+    }
+
+    private static void RemoveRandomDebuffTypes(UnitCombatant target, int removeTypeCount)
+    {
+        if (target == null || removeTypeCount <= 0)
+        {
+            return;
+        }
+
+        List<StateType> debuffTypes = CollectRandomDebuffTypes(target.States, removeTypeCount);
+        for (int i = 0; i < debuffTypes.Count; i++)
+        {
+            RemoveDebuffType(target, debuffTypes[i]);
+        }
     }
 }

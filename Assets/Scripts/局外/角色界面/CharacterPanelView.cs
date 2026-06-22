@@ -8,8 +8,10 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class CharacterPanelView : MonoBehaviour
 {
-    /// <summary>角色页面关闭时的静态事件（供教程系统监听）</summary>
+    /// <summary>角色页面关闭时的静态事件（供教程系统监听；请订阅 ExitButton.PanelClosed）</summary>
+#pragma warning disable CS0067
     public static event Action PanelClosed;
+#pragma warning restore CS0067
 
     [Header("数据")]
     [SerializeField] private Datas dataSource;
@@ -94,6 +96,7 @@ public class CharacterPanelView : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeFromDataSource();
+        // 面板关闭事件由 ExitButton.PanelClosed(PanelType) 统一派发，避免场景卸载时误触发。
     }
 
     private void Update()

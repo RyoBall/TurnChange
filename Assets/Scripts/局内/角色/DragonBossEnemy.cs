@@ -39,22 +39,53 @@ public class DragonBossEnemy : Enemy
         s_reinforcePhaseRewarded = false;
         s_secondKillRewarded = false;
         s_ragePhaseRewarded = false;
+        CombatDamageTracker.Reset();
+    }
+
+    private float m_baseAttack;
+    private int m_baseDefense;
+    private float m_reinforceIncomingDamageMultiplier = 1f;
+    private float m_reinforceSpeedMultiplier = 1f;
+
+    protected override void InitializeEnemyRuntime()
+    {
+        base.InitializeEnemyRuntime();
+        m_baseAttack = attack;
+        m_baseDefense = defense;
+        DragonPositionSet();
+    }
+
+    protected override float GetSpeed()
+    {
+        return base.GetSpeed() * m_reinforceSpeedMultiplier;
+    }
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        return base.GetIncomingDamageMultiplier(isDotDamage, isTrueDamage) * m_reinforceIncomingDamageMultiplier;
+    }
+
+    /// <summary>根据 enemyID 从 DragonSpawnPositionManager 获取龙Boss的专属生成位置</summary>
+    private void DragonPositionSet()
+    {
+        if (DragonSpawnPositionManager.Instance == null) return;
+        if (!DragonSpawnPositionManager.Instance.TryGetDragonSpawnPosition(enemyID, out Vector3 position, out Quaternion rotation))
+            return;
+
+        transform.SetPositionAndRotation(position, rotation);
     }
 
     protected override void Start()
     {
         base.Start();
-        // 三头龙入场对话（由第一个龙触发）
         BattleDialogEvents.Raise(BattleDialogEventType.DragonEnter, enemy: this);
 
-        // 战斗开始指挥点奖励（仅第一个龙触发一次）
         if (!s_battleStartRewarded)
         {
             s_battleStartRewarded = true;
             ResetDragonCommandPointState();
             s_battleStartRewarded = true;
             Commander.GetInstance().RecoverCommandPoints(1, "龙Boss战斗开始+1");
-            // 阶段一低保阈值：200AV
             Commander.GetInstance().SetBossGuaranteeThreshold(DragonPhaseOneGuaranteeThreshold);
         }
     }
@@ -75,31 +106,37 @@ public class DragonBossEnemy : Enemy
         Commander.GetInstance().RecoverCommandPoints(1, "暴怒技能+1");
     }
 
-    protected override void InitializeEnemyRuntime()
-    {
-        base.InitializeEnemyRuntime();
-        DragonPositionSet();
-    }
-
-    /// <summary>根据 enemyID 从 DragonSpawnPositionManager 获取龙Boss的专属生成位置</summary>
-    private void DragonPositionSet()
-    {
-        if (DragonSpawnPositionManager.Instance == null) return;
-        if (!DragonSpawnPositionManager.Instance.TryGetDragonSpawnPosition(enemyID, out Vector3 position, out Quaternion rotation))
-            return;
-
-        transform.SetPositionAndRotation(position, rotation);
-    }
-
     /// <summary>被其他龙死亡时调用，提升强化等级</summary>
     public void ApplyReinforcement()
     {
-        int previousLevel = m_reinforceLevel;
         m_reinforceLevel = Mathf.Min(m_reinforceLevel + 1, rageThreshold);
+        ApplyReinforceStatScaling();
         if (m_reinforceLevel >= rageThreshold)
         {
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}进入暴怒状态！");
         }
+    }
+
+    private void ApplyReinforceStatScaling()
+    {
+        if (m_reinforceLevel <= 0)
+        {
+            return;
+        }
+
+        if (m_reinforceLevel >= rageThreshold)
+        {
+            attack = m_baseAttack * 1.30f;
+            defense = Mathf.RoundToInt(m_baseDefense * 1.10f);
+            m_reinforceIncomingDamageMultiplier = 0.8f;
+            m_reinforceSpeedMultiplier = 0.85f;
+            return;
+        }
+
+        attack = m_baseAttack * 1.15f;
+        defense = Mathf.RoundToInt(m_baseDefense * 1.10f);
+        m_reinforceIncomingDamageMultiplier = 1f;
+        m_reinforceSpeedMultiplier = 1f;
     }
 
     /// <summary>强化后回复生命（仅最后一头龙）</summary>

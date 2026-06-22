@@ -57,6 +57,7 @@ public class UnitCombatant : Combatant
         public bool IsDotDamage;
         public bool IsTrueDamage;
         public bool IsCriticalHit;
+        public bool BypassShield;
         public DamageType DamageType;
         public StateType StateType;
 
@@ -68,6 +69,7 @@ public class UnitCombatant : Combatant
             IsDotDamage = false;
             IsTrueDamage = false;
             IsCriticalHit = false;
+            BypassShield = false;
             DamageType = damageType;
             StateType = StateType.None;
         }
@@ -76,6 +78,7 @@ public class UnitCombatant : Combatant
         public DamageInfo AsDot(bool isDot = true) { IsDotDamage = isDot; return this; }
         public DamageInfo AsTrueDamage() { IsTrueDamage = true; return this; }
         public DamageInfo AsCriticalHit() { IsCriticalHit = true; return this; }
+        public DamageInfo BypassingShield() { BypassShield = true; return this; }
         public DamageInfo WithDamageType(DamageType damageType) { DamageType = damageType; return this; }
         public DamageInfo WithState(StateType state) { StateType = state; return this; }//用于注明伤害来自于哪个状态
     }
@@ -95,12 +98,15 @@ public class UnitCombatant : Combatant
         }
 
         int finalDamage = damageInfo.Damage;
-        int shieldBefore = currentShield;
-        //结算盾值
-        finalDamage = ConsumeShield(finalDamage);
-        if (shieldBefore > 0 && currentShield <= 0)
+        if (!damageInfo.BypassShield)
         {
-            TemporaryBattleModifierRuntimeManager.NotifyShieldBroken(this, damageInfo.Source);
+            int shieldBefore = currentShield;
+            //结算盾值
+            finalDamage = ConsumeShield(finalDamage);
+            if (shieldBefore > 0 && currentShield <= 0)
+            {
+                TemporaryBattleModifierRuntimeManager.NotifyShieldBroken(this, damageInfo.Source);
+            }
         }
         hitFeedback?.PlayFeedbacks();
         OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType, damageInfo.IsCriticalHit);
@@ -109,6 +115,11 @@ public class UnitCombatant : Combatant
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
         TemporaryBattleModifierRuntimeManager.NotifyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage, damageInfo.DamageType);
         NotifyAnyDamageSettled(damageInfo.Source, this, finalDamage, damageInfo.IsDotDamage, damageInfo.IsTrueDamage);
+
+        if (damageInfo.Source is Character damageDealer && this is Enemy && finalDamage > 0)
+        {
+            CombatDamageTracker.RecordDamageDealt(damageDealer, finalDamage);
+        }
 
         // 角色血量变化时发出事件，携带当前血量百分比
         NotifyHealthChanged();
@@ -323,6 +334,11 @@ public class UnitCombatant : Combatant
             return false;
         }
 
+        if (!state.CanBePurged())
+        {
+            return false;
+        }
+
         state.EndState();
         return true;
     }
@@ -447,7 +463,7 @@ public class UnitCombatant : Combatant
         return false;
     }
 
-    public float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    public virtual float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
     {
         float multiplier = 1f;
         for (int i = 0; i < states.Count; i++)
@@ -551,6 +567,11 @@ public class UnitCombatant : Combatant
 
                 state.OnAnyDamageSettled(source, target, damage, isDotDamage, isTrueDamage);
             }
+        }
+
+        if (damage > 0)
+        {
+            State.NotifyDamageEventSettled();
         }
     }
 

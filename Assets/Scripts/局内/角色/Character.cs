@@ -441,6 +441,23 @@ public class Character : UnitCombatant
         return m_enterSkillInstance;
     }
 
+    /// <summary>获取追加回合技能实例；若尚未初始化则按 additionalSkillType 懒创建。</summary>
+    public CharacterSkillBase GetAdditionalSkillInstance()
+    {
+        if (additionalSkill != null)
+        {
+            return additionalSkill;
+        }
+
+        if (additionalSkillType == CharacterSkillType.None)
+        {
+            return null;
+        }
+
+        additionalSkill = CreateSkillInstance(additionalSkillType);
+        return additionalSkill;
+    }
+
     private CharacterSkillBase CreateSkillInstance(CharacterSkillType skillType)
     {
         CharacterSkillBase template = SkillDictionaryManager.GetSkillTemplate(skillType);

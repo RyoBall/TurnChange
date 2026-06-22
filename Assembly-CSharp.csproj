@@ -167,6 +167,7 @@
      <Compile Include="Assets\Scripts\局内\DamageCounter.cs" />
      <Compile Include="Assets\Scripts\局内\DictionaryManager.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelSelectionListLoader.cs" />
+     <Compile Include="Assets\Scripts\局外\切换界面\StartGameSceneIntro.cs" />
      <Compile Include="Assets\Scripts\局外\总数据\SkillKeywordConfig.cs" />
      <Compile Include="Assets\Scripts\局内\指挥点技能\Commander.cs" />
      <Compile Include="Assets\Scripts\局内\UI\角色UI\CharacterStateUIItem.cs" />
@@ -228,6 +229,7 @@
      <Compile Include="Assets\Scripts\局外\背包\IBackpackInterfaces.cs" />
      <Compile Include="Assets\Scripts\局内\技能\SkillManager.cs" />
      <Compile Include="Assets\Scripts\Audio\GameAudioCatalog.cs" />
+     <Compile Include="Assets\Scripts\局内\角色\CombatDamageTracker.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\EnemyRosterData.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\VFX Library\UICanvasManager.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ShopModuleItemUI.cs" />

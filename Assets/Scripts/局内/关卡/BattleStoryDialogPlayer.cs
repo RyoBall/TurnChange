@@ -25,6 +25,7 @@ public class BattleStoryDialogPlayer : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float m_dialogYRatio = 0.25f;
 
     private bool m_isPlaying;
+    private float m_savedDialogYRatio = 0.3f;
     public bool IsPlaying => m_isPlaying;
 
     private void Awake()
@@ -60,10 +61,13 @@ public class BattleStoryDialogPlayer : MonoBehaviour
         }
 
         m_isPlaying = true;
+        m_savedDialogYRatio = 0.3f;
 
         if (FloatingTipGenerator.Instance != null)
         {
             FloatingTipGenerator.Instance.ClearAllPersistentDialogs();
+            m_savedDialogYRatio = FloatingTipGenerator.Instance.GetPersistentDialogYRatio();
+            FloatingTipGenerator.Instance.SetPersistentDialogYRatio(m_dialogYRatio);
         }
 
         for (int i = 0; i < dialogs.Count; i++)
@@ -81,6 +85,7 @@ public class BattleStoryDialogPlayer : MonoBehaviour
         if (FloatingTipGenerator.Instance != null)
         {
             yield return FloatingTipGenerator.Instance.WaitForDialogQueueIdle();
+            FloatingTipGenerator.Instance.SetPersistentDialogYRatio(m_savedDialogYRatio);
         }
 
         m_isPlaying = false;
@@ -92,6 +97,11 @@ public class BattleStoryDialogPlayer : MonoBehaviour
     public void SkipCurrentDialogs()
     {
         if (!m_isPlaying) return;
+
+        if (FloatingTipGenerator.Instance != null)
+        {
+            FloatingTipGenerator.Instance.SetPersistentDialogYRatio(m_savedDialogYRatio);
+        }
 
         StopAllCoroutines();
         ClearAllDialogs();

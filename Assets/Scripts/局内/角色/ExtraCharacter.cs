@@ -8,6 +8,19 @@ public class ExtraCharacter : UnitCombatant
 
     public override Sprite TurnImageSprite => character != null ? character.TurnImageSprite : null;
 
+    protected override void Awake()
+    {
+        // 不调用 base.Awake()，避免注册到 CombatantDeathMonitor。
+        // ExtraCharacter 是临时回合插入节点，不需要参与死亡监控，
+        // 且其默认 HP=0 会被死亡监控器误判为已死亡而提前移除。
+    }
+
+    protected override void OnDestroy()
+    {
+        // 不调用 base.OnDestroy()，因为 Awake 中跳过了 Register，
+        // 无需 Unregister。
+    }
+
     public void Initialize(Character character)
     {
         this.character = character;

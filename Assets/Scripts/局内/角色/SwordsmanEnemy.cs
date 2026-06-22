@@ -24,7 +24,7 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
 
     [Header("韧性配置")]
     private const int maxTenacity = 20;
-    private const int staggerDuration = 100;
+    private const int staggerDuration = 120;
 
     public enum SwordsmanStance
     {
@@ -157,8 +157,14 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
     protected override void OnTurnStartBeforeStateSettlement()
     {
         base.OnTurnStartBeforeStateSettlement();
+        EnsureStaggerConsistency();
 
-        // 姿态切换倒计时
+        if (m_isInStagger)
+        {
+            SyncDefenseStanceAnimation();
+        }
+
+        // 姿态切换倒计时（失衡、背水一战中暂停）
         if (!m_isInStagger && !m_isLastStand)
         {
             m_stanceSwitchCountdown--;
@@ -285,15 +291,24 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
     private void EnterStagger()
     {
         if (m_isInStagger) return;
-        m_isInStagger = true;
-        // 韧性点归零，在 ExitStagger 中恢复
-        NotifyTenacityChanged();
 
-        // 通过状态机离开当前姿态
+        // 先离开当前姿态；游击姿态的 CanReceiveState 会拦截 debuff，必须在施加失衡前清掉姿态标记
         m_currentStanceState?.OnExit(SwordsmanStance.Defense);
         m_currentStanceState = null;
+        m_currentStance = SwordsmanStance.Defense;
+        SyncDefenseStanceAnimation();
 
-        AddState(StateType.SwordsmanStagger, this, staggerDuration, 1);
+        m_isInStagger = true;
+        NotifyTenacityChanged();
+
+        State staggerState = AddState(StateType.SwordsmanStagger, this, staggerDuration, 1);
+        if (staggerState == null)
+        {
+            Debug.LogWarning($"[SwordsmanEnemy] {combatantName} 失衡状态施加失败，回退至防御姿态");
+            ExitStagger();
+            return;
+        }
+
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "失衡！");
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStaggerEnter, enemy: this);
 
@@ -306,12 +321,37 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
         m_isInStagger = false;
         m_currentTenacity = maxTenacity;
         NotifyTenacityChanged();
-        // 强制切换至防御姿态
         TransitionTo(SwordsmanStance.Defense);
         m_stanceSwitchCountdown = 2;
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStaggerExit, enemy: this);
-        // 优雅体态重复提醒
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEleganceReminder, enemy: this);
+    }
+
+    /// <summary>失衡期间仅同步防御 Idle 动画，不重新挂载姿态 buff。</summary>
+    private void SyncDefenseStanceAnimation()
+    {
+        m_currentStance = SwordsmanStance.Defense;
+        if (Anim != null)
+        {
+            Anim.SetInteger("Stance", (int)SwordsmanStance.Defense);
+        }
+    }
+
+    /// <summary>修复 m_isInStagger 与失衡状态不同步的软锁（如游击姿态误判导致 debuff 未挂上）</summary>
+    private void EnsureStaggerConsistency()
+    {
+        bool hasStaggerState = HasState(StateType.SwordsmanStagger);
+        if (m_isInStagger && !hasStaggerState)
+        {
+            Debug.LogWarning($"[SwordsmanEnemy] {combatantName} 失衡标记与状态不一致，自动恢复");
+            ExitStagger();
+            return;
+        }
+
+        if (!m_isInStagger && hasStaggerState)
+        {
+            m_isInStagger = true;
+        }
     }
 
     // ============ 阶段检测 ============
@@ -393,6 +433,33 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
         return alive;
     }
 
+    protected override bool CanReceiveState(StateType stateType, UnitCombatant giver)
+    {
+        // 自身失衡 debuff 不受游击免疫影响（EnterStagger 前已清姿态，此处作兜底）
+        if (stateType == StateType.SwordsmanStagger && giver == this)
+        {
+            return base.CanReceiveState(stateType, giver);
+        }
+
+        // 追惩惩戒标记由友方施加，不受游击免疫影响
+        if (stateType == StateType.PunishMark && giver is Character)
+        {
+            return base.CanReceiveState(stateType, giver);
+        }
+
+        if (m_currentStance == SwordsmanStance.Guerrilla)
+        {
+            State stateTemplate = StateDictionaryManager.GetState(stateType);
+            if (stateTemplate != null && stateTemplate.isDebuff)
+            {
+                FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}免疫{StateDictionaryManager.GetStateName(stateType)}");
+                return false;
+            }
+        }
+
+        return base.CanReceiveState(stateType, giver);
+    }
+
     public bool IsInStagger => m_isInStagger;
     public SwordsmanStance CurrentStance => m_currentStance;
     public bool IsLastStand => m_isLastStand;
@@ -424,4 +491,19 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
             EnterStagger();
         }
     }
+
+#if UNITY_EDITOR
+    /// <summary>调试：空格键将韧性点设为 1，便于测试失衡。</summary>
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.Space) || dead)
+        {
+            return;
+        }
+
+        m_currentTenacity = 1;
+        NotifyTenacityChanged();
+        FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "Debug: 韧性→1");
+    }
+#endif
 }

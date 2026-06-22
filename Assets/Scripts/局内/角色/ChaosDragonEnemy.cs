@@ -48,13 +48,7 @@ public class ChaosDragonEnemy : DragonBossEnemy
         SkillExecuteManager.ExecuteSkill(this, selectedSkill);
         yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
 
-        // 指挥点奖励：混沌龙每次使用技能 +1
-        bool isRageSkill = selectedSkill.enemySkillType == EnemySkillType.DragonChaosRage;
-        if (isRageSkill)
-        {
-            NotifyRageSkillUsed();
-        }
-        else
+        if (selectedSkill.enemySkillType != EnemySkillType.DragonChaosRage)
         {
             NotifyChaosDragonSkillUsed();
         }

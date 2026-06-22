@@ -521,7 +521,17 @@ public class CharacterManager : MonoBehaviour
 		}
 		return null;
 	}
-	public Character GetCharacterByRand()
+	public Character GetCharacterByRand(Enemy attacker = null)
+	{
+		if (TauntStateBehavior.TryResolveForcedTarget(attacker, out Character forcedTarget))
+		{
+			return forcedTarget;
+		}
+
+		return SelectCharacterByAttractWeight();
+	}
+
+	private Character SelectCharacterByAttractWeight()
 	{
 		float totalWeight = 0f;
 		foreach (var character in fieldCharacters)

@@ -212,24 +212,25 @@ public class BattleSettlementView : MonoBehaviour//结算界面
     /// </summary>
     private void SetRewardPanelVisible(bool visible)
     {
+        bool showRewards = visible && !m_isDefeat;
         if (experienceText != null)
         {
-            experienceText.gameObject.SetActive(visible);
+            experienceText.gameObject.SetActive(showRewards);
         }
 
         if (goldText != null)
         {
-            goldText.gameObject.SetActive(visible);
+            goldText.gameObject.SetActive(showRewards);
         }
 
         if (expSlider != null)
         {
-            expSlider.gameObject.SetActive(visible);
+            expSlider.gameObject.SetActive(showRewards);
         }
 
         if (expSliderText != null)
         {
-            expSliderText.gameObject.SetActive(visible);
+            expSliderText.gameObject.SetActive(showRewards);
         }
     }
 

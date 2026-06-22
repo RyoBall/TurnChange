@@ -18,6 +18,23 @@ public static class SkillExecuteManager
         CoroutineHelper.GetHelper().StartCoroutine(ExecuteSkillCoroutine(unit, skill, selectedEnemies, ifCouldInsert));
     }
 
+    /// <summary>
+    /// 直接返回技能执行协程，调用方通过 yield return 等待技能完成。
+    /// 用于 AdditionalCharacter 等需要在 PerformTurn 中同步等待技能完成的场景。
+    /// </summary>
+    public static IEnumerator ExecuteSkillAsCoroutine(UnitCombatant unit, SkillBase skill)
+    {
+        return ExecuteSkillCoroutine(unit, skill, false);
+    }
+
+    /// <summary>
+    /// 直接返回技能执行协程（带预选目标），调用方通过 yield return 等待技能完成。
+    /// </summary>
+    public static IEnumerator ExecuteSkillAsCoroutine(UnitCombatant unit, SkillBase skill, List<Enemy> selectedEnemies)
+    {
+        return ExecuteSkillCoroutine(unit, skill, selectedEnemies, false);
+    }
+
     private static IEnumerator ExecuteSkillCoroutine(UnitCombatant unit, SkillBase skill,bool ifCouldInsert=false)
     {
         if (s_isExecutingSkill&&!ifCouldInsert)

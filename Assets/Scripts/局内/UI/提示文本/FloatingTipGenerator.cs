@@ -68,6 +68,16 @@ public class FloatingTipGenerator : MonoBehaviour
     private Coroutine m_dialogQueueCoroutine;
     private bool m_isShowingQueuedDialog;
 
+    public void SetPersistentDialogYRatio(float ratio)
+    {
+        persistentDialogYRatio = Mathf.Clamp01(ratio);
+    }
+
+    public float GetPersistentDialogYRatio()
+    {
+        return persistentDialogYRatio;
+    }
+
     private void Awake()
     {
         Instance = this;

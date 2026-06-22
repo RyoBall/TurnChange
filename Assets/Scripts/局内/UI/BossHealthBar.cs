@@ -96,6 +96,11 @@ public class BossHealthBar : MonoBehaviour
     /// <summary>绑定目标Boss</summary>
     public void Bind(UnitCombatant target)
     {
+        if (m_initialized && m_target == target)
+        {
+            return;
+        }
+
         m_target = target;
         m_targetFill = GetHealthPercent();
         m_displayedFill = m_targetFill;

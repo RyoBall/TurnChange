@@ -76,7 +76,7 @@ public class TimeScaleController : MonoBehaviour, ITimeScaleController
 
     private bool TryClaimSingleton()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null && (UnityEngine.Object)Instance != (UnityEngine.Object)this)
         {
             Destroy(gameObject);
             return false;
@@ -88,7 +88,7 @@ public class TimeScaleController : MonoBehaviour, ITimeScaleController
 
     private void ClearSingleton()
     {
-        if (Instance == this)
+        if ((UnityEngine.Object)Instance == (UnityEngine.Object)this)
         {
             Instance = null;
         }

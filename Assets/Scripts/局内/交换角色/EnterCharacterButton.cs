@@ -228,6 +228,11 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        if (m_isPointerOver)
+        {
+            return;
+        }
+
         m_isPointerOver = true;
         if (CanRespondToPointer())
         {

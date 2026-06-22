@@ -70,6 +70,23 @@ public class TutorialSingleEnemy : Enemy
 
         // 掉血机制
         m_turnsSinceLastBleed++;
+        if (m_turnsSinceLastBleed >= m_bleedIntervalTurns)
+        {
+            m_turnsSinceLastBleed = 0;
+            if (m_bleedDamage > 0 && !dead)
+            {
+                int safeBleed = m_bleedDamage;
+                if (currentHP - safeBleed <= 0)
+                {
+                    safeBleed = Mathf.Max(0, currentHP - 1);
+                }
+
+                if (safeBleed > 0)
+                {
+                    TakeDamage(new DamageInfo(safeBleed, this, DamageType.Physical));
+                }
+            }
+        }
 
         if (dead)
         {

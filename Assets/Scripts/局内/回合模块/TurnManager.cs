@@ -462,6 +462,12 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
+        if (ShouldInsertBefore(combatant, turnOrder.First.Value))
+        {
+            turnOrder.AddFirst(combatant);
+            return;
+        }
+
         var node = turnOrder.First.Next;
         while (node != null && !ShouldInsertBefore(combatant, node.Value))
         {
@@ -546,5 +552,26 @@ public class TurnManager : MonoBehaviour
     public Combatant GetCurrentCombatant()
     {
         return turnOrder.First?.Value;
+    }
+
+    /// <summary>按行动顺序返回下一个将出手的场上角色（不含后备）。</summary>
+    public Character GetNextActingFieldCharacter()
+    {
+        if (CharacterManager.Instance == null)
+        {
+            return null;
+        }
+
+        foreach (Combatant combatant in turnOrder)
+        {
+            if (combatant is Character character
+                && !character.IsDead
+                && CharacterManager.Instance.fieldCharacters.Contains(character))
+            {
+                return character;
+            }
+        }
+
+        return null;
     }
 }

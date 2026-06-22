@@ -11,6 +11,19 @@ public class AdditionalCharacter : UnitCombatant
     private SkillBase m_skillOverride;
     private List<Enemy> m_selectedEnemies;
 
+    protected override void Awake()
+    {
+        // 不调用 base.Awake()，避免注册到 CombatantDeathMonitor。
+        // AdditionalCharacter 是临时回合插入节点，不需要参与死亡监控，
+        // 且其默认 HP=0 会被死亡监控器误判为已死亡而提前移除。
+    }
+
+    protected override void OnDestroy()
+    {
+        // 不调用 base.OnDestroy()，因为 Awake 中跳过了 Register，
+        // 无需 Unregister。
+    }
+
     public void Initialize(Character character)
     {
         this.character = character;
@@ -32,14 +45,16 @@ public class AdditionalCharacter : UnitCombatant
         {
             if (m_selectedEnemies != null)
             {
-                SkillExecuteManager.ExecuteSkill(character, skillToExecute, m_selectedEnemies, true);
+                yield return SkillExecuteManager.ExecuteSkillAsCoroutine(character, skillToExecute, m_selectedEnemies);
             }
             else
             {
-                SkillExecuteManager.ExecuteSkill(character, skillToExecute, true);
+                yield return SkillExecuteManager.ExecuteSkillAsCoroutine(character, skillToExecute);
             }
-
-            yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+        }
+        else
+        {
+            Debug.LogWarning($"[AdditionalCharacter] {character.combatantName} 追加回合缺少可用技能，additionalSkillType={character.additionalSkillType}");
         }
 
         TurnManager.Instance?.RemoveCombatant(this);
