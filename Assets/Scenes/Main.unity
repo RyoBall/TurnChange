@@ -1545,7 +1545,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_settingsPanel: {fileID: 0}
-  m_button: {fileID: 0}
+  m_button: {fileID: 247198685}
 --- !u!114 &247198689
 MonoBehaviour:
   m_ObjectHideFlags: 0

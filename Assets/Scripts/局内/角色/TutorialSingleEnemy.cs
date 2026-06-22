@@ -13,8 +13,6 @@ public class TutorialSingleEnemy : Enemy
     [SerializeField] private int m_customAttack = 171;
     [SerializeField] private float m_customK = 120f;
 
-    [Header("掉血机制")]
-    [SerializeField] private int m_bleedDamage = 430;
     [SerializeField] private int m_bleedIntervalTurns = 2;
 
     private int m_turnsSinceLastBleed;
@@ -70,24 +68,6 @@ public class TutorialSingleEnemy : Enemy
 
         // 掉血机制
         m_turnsSinceLastBleed++;
-        if (m_turnsSinceLastBleed >= m_bleedIntervalTurns)
-        {
-            m_turnsSinceLastBleed = 0;
-            if (m_bleedDamage > 0 && !dead)
-            {
-                int safeBleed = m_bleedDamage;
-                if (currentHP - safeBleed <= 0)
-                {
-                    safeBleed = Mathf.Max(0, currentHP - 1);
-                }
-
-                if (safeBleed > 0)
-                {
-                    TakeDamage(new DamageInfo(safeBleed, this, DamageType.Physical));
-                }
-            }
-        }
-
         if (dead)
         {
             yield break;
@@ -158,7 +138,7 @@ public class TutorialSingleEnemy : Enemy
         if (dead) return;
 
         int safeDamage = damageInfo.Damage;
-        if (currentHP - safeDamage <= 0&&m_turnsSinceLastBleed<2)
+        if (currentHP - safeDamage <= 0&&m_turnsSinceLastBleed<m_bleedIntervalTurns)
         {
             safeDamage = currentHP - 1;
             if (safeDamage < 0) safeDamage = 0;

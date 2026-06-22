@@ -191,6 +191,7 @@
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\ETFXLoopScript.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexJitter.cs" />
      <Compile Include="Assets\Scripts\局外\角色界面\CharacterPanelView.cs" />
+     <Compile Include="Assets\Scripts\Utils\ScreenResolutionLocker.cs" />
      <Compile Include="Assets\Scripts\局外\HoverImageSwapper.cs" />
      <Compile Include="Assets\Scripts\Utils\UIButtonHoverEffect.cs" />
      <Compile Include="Assets\Scripts\局内\VFX\SelectionReticleController.cs" />
