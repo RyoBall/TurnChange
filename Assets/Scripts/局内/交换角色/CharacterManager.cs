@@ -149,11 +149,6 @@ public class CharacterManager : MonoBehaviour
 			return;
 		}
 
-		if (character.IsDead)
-		{
-			return;
-		}
-
 		if (!fieldCharacters.Contains(character))
 		{
 			return;
