@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 教程关二 W1 专用敌人：攻击只打副C(standPosition=2)，禁止击杀，每2回合自动掉430血
-/// 继承自 Enemy，重写 PerformTurn 实现定制行为
+/// 教程关二 W1 专用敌人：攻击只打副C(standPosition=2)，前若干回合禁止击杀
+/// 数值从 EnemyData.csv（enemyID=TutorialSingle）读取
 /// </summary>
 public class TutorialSingleEnemy : Enemy
 {
-    [Header("教程定制数值")]
-    [SerializeField] private int m_customMaxHP = 600;
-    [SerializeField] private int m_customAttack = 171;
-    [SerializeField] private float m_customK = 120f;
-
-    [SerializeField] private int m_bleedIntervalTurns = 2;
+    private const int InvincibilityTurns = 3;
 
     private int m_turnsSinceLastBleed;
 
@@ -21,42 +16,14 @@ public class TutorialSingleEnemy : Enemy
 
     protected override void InitializeEnemyRuntime()
     {
-        if (m_runtimeInitialized)
-        {
-            return;
-        }
-
-        participateInTurnLoopAtStart = true;
-        InitializeSkill();
-        LoadCustomData();
-        m_defaultScale = transform.localScale;
-        SetBattleVisibility(true);
+        base.InitializeEnemyRuntime();
 
         // 教程关二：初始指挥点置为0
         Commander.GetInstance()?.SetInitialCommandPoints(0);
-
-        m_runtimeInitialized = true;
-    }
-
-    private void LoadCustomData()
-    {
-        maxHP = m_customMaxHP;
-        currentHP = maxHP;
-        attack = m_customAttack;
-        K = m_customK;
-
-        if (!string.IsNullOrEmpty(enemyID))
-        {
-            if (LevelDataContainer.TryGetEnemyLevelData(enemyID, level, out EnemyLevelData levelData))
-            {
-                defense = levelData.defense;
-                speed = levelData.speed;
-            }
-        }
     }
 
     /// <summary>
-    /// 重写回合执行：添加掉血机制 + 只攻击副C(standPosition=2) + 禁止击杀
+    /// 重写回合执行：只攻击副C(standPosition=2)，前若干回合禁止击杀
     /// </summary>
     public override IEnumerator PerformTurn()
     {
@@ -66,7 +33,7 @@ public class TutorialSingleEnemy : Enemy
             yield break;
         }
 
-        // 掉血机制
+        // 无敌回合计数
         m_turnsSinceLastBleed++;
         if (dead)
         {
@@ -138,7 +105,7 @@ public class TutorialSingleEnemy : Enemy
         if (dead) return;
 
         int safeDamage = damageInfo.Damage;
-        if (currentHP - safeDamage <= 0&&m_turnsSinceLastBleed<m_bleedIntervalTurns)
+        if (currentHP - safeDamage <= 0 && m_turnsSinceLastBleed < InvincibilityTurns)
         {
             safeDamage = currentHP - 1;
             if (safeDamage < 0) safeDamage = 0;

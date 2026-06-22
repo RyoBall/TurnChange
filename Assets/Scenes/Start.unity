@@ -693,6 +693,7 @@ GameObject:
   - component: {fileID: 1086280656}
   - component: {fileID: 1086280655}
   - component: {fileID: 1086280659}
+  - component: {fileID: 1086280660}
   m_Layer: 5
   m_Name: "\u9000\u51FA"
   m_TagString: Untagged
@@ -836,6 +837,19 @@ MonoBehaviour:
   targetImage: {fileID: 1086280657}
   hoverSprite: {fileID: 21300000, guid: 8d1ac53ffe9ee6243a3c6734e8c24bcb, type: 3}
   hoverSize: {x: 260, y: 160}
+--- !u!114 &1086280660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086280653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0b513d169f0b3144ac25589e7864d23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_button: {fileID: 1086280656}
 --- !u!1 &1128943721
 GameObject:
   m_ObjectHideFlags: 0
