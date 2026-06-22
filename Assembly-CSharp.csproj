@@ -197,6 +197,7 @@
     <Compile Include="Assets\Scripts\局内\UI\提示文本\EnvironmentTextDisplay.cs" />
     <Compile Include="Assets\Scripts\局外\教程\TutorialBehavior.cs" />
     <Compile Include="Assets\Scripts\局内\环境\BattleEnvironment.cs" />
+    <Compile Include="Assets\Scripts\局外\关卡\PreparationSwitchCardPreviewView.cs" />
     <Compile Include="Assets\Scripts\局外\切换界面\StartGameButton.cs" />
     <Compile Include="Assets\Scripts\局外\背包\ModuleCellFactory.cs" />
     <Compile Include="Assets\Scripts\局内\关卡\BattleStoryDialogPlayer.cs" />
