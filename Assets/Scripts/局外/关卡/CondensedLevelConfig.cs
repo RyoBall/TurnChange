@@ -5,6 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 浓缩关配置：一号列表为常规关卡，二号列表为浓缩关关卡。
 /// 开启浓缩关时用二号列表覆盖 Datas 的关卡楼层；关闭时用一号列表覆盖。
+/// 浓缩模式下：战斗使用关卡 playerLevel；胜利后无经验、金币倍率；并将战队等级同步为关卡 playerLevel。
 /// </summary>
 public interface ICondensedLevelConfig
 {

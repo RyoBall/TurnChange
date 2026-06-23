@@ -9,6 +9,7 @@ using UnityEngine;
 public class ChessSummonedPawnEnemy : Enemy
 {
     [Header("召唤兵卒配置")]
+    [SerializeField, Range(0f, 1f)] private float hpRatio = 0.3f;
     [SerializeField] private float healRatio = 0.03f;
 
     private ChessQueenEnemy m_linkedQueen;
@@ -29,6 +30,20 @@ public class ChessSummonedPawnEnemy : Enemy
         m_linkedQueen = queen;
         healRatio = queen != null ? queen.SummonedPawnHealRatio : healRatio;
         ConfigureFromRosterData(data, standPosition, level);
+    }
+
+    protected override void InitializeEnemyRuntime()
+    {
+        base.InitializeEnemyRuntime();
+        ApplySummonedHpRatio();
+    }
+
+    /// <summary>按预制体配置的比例缩放 CSV 生命值（最大生命与当前生命）。</summary>
+    private void ApplySummonedHpRatio()
+    {
+        int scaledMaxHp = Mathf.Max(1, Mathf.RoundToInt(maxHP * hpRatio));
+        maxHP = scaledMaxHp;
+        currentHP = scaledMaxHp;
     }
 
     public override void Die()

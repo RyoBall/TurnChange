@@ -4,7 +4,6 @@ using System.Collections.Generic;
 public class SkillBase : ScriptableObject
 {
     public string skillName;
-    public string shortDescription;
 
     [TextArea(2, 5)]
     public string description;

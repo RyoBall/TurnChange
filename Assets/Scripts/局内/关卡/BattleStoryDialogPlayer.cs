@@ -12,7 +12,7 @@ public class BattleStoryDialogPlayer : MonoBehaviour
 
     [Header("对话显示参数")]
     [Tooltip("每段对话的显示时长（秒）")]
-    [SerializeField] private float m_dialogDisplayDuration = 3f;
+    [SerializeField] private float m_dialogDisplayDuration = 5f;
     [Tooltip("两段对话之间的间隔（秒）")]
     [SerializeField] private float m_dialogInterval = 0.5f;
     [Tooltip("对话淡入时长（秒）")]

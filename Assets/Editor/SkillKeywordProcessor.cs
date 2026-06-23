@@ -94,14 +94,12 @@ public static class SkillKeywordProcessor
 
             // 3. 去除尖括号修饰后检索关键词
             string rawDescription = StripHtmlTags(skill.description);
-            string rawShortDescription = StripHtmlTags(skill.shortDescription);
-            string searchText = $"{rawDescription} {rawShortDescription}";
-            if (string.IsNullOrWhiteSpace(searchText))
+            if (string.IsNullOrWhiteSpace(rawDescription))
             {
                 continue;
             }
 
-            List<string> matchedKeywords = FindMatchingKeywords(searchText, allKeywords);
+            List<string> matchedKeywords = FindMatchingKeywords(rawDescription, allKeywords);
             if (matchedKeywords.Count == 0)
             {
                 continue;
@@ -109,19 +107,12 @@ public static class SkillKeywordProcessor
 
             // 4. 在原始描述文本中用 <b><u><color=yellow> 包裹匹配到的关键词
             string newDescription = WrapKeywordsInText(skill.description, matchedKeywords);
-            string newShortDescription = WrapKeywordsInText(skill.shortDescription, matchedKeywords);
 
             bool descriptionChanged = newDescription != skill.description;
-            bool shortDescriptionChanged = newShortDescription != skill.shortDescription;
 
             if (descriptionChanged)
             {
                 skill.description = newDescription;
-            }
-
-            if (shortDescriptionChanged)
-            {
-                skill.shortDescription = newShortDescription;
             }
 
             // 5. 将匹配到的关键词加入技能的 tags 列表（去重）
@@ -135,7 +126,7 @@ public static class SkillKeywordProcessor
                 }
             }
 
-            if (descriptionChanged || shortDescriptionChanged || addedCount > 0)
+            if (descriptionChanged || addedCount > 0)
             {
                 EditorUtility.SetDirty(skill);
                 totalKeywordsAdded += addedCount;

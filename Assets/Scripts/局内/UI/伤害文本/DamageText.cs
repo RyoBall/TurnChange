@@ -117,6 +117,14 @@ public class DamageText : MonoBehaviour
     [SerializeField] private float fadeOutDelay = 0.3f;
     [SerializeField] private Vector2 randomOffsetRange = new Vector2(40f, 30f);
 
+    [Header("位置修正")]
+    [Tooltip("屏幕高度比例低于此值时，将跳字上移到修正区间")]
+    [SerializeField, Range(0f, 1f)] private float m_lowScreenYThreshold = 0.2f;
+    [Tooltip("修正后 Y 轴随机区间下限（屏幕高度比例）")]
+    [SerializeField, Range(0f, 1f)] private float m_correctedScreenYMin = 0.2f;
+    [Tooltip("修正后 Y 轴随机区间上限（屏幕高度比例）")]
+    [SerializeField, Range(0f, 1f)] private float m_correctedScreenYMax = 0.3f;
+
     /// <summary>
     /// 获取基于 randomOffsetRange 的双向随机偏移（世界坐标）
     /// </summary>
@@ -184,6 +192,8 @@ public class DamageText : MonoBehaviour
             return false;
         }
 
+        CorrectLowScreenPosition(ref screenPosition);
+
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 parentRectTransform,
                 screenPosition,
@@ -195,5 +205,21 @@ public class DamageText : MonoBehaviour
 
         rectTransform.anchoredPosition = localPoint;
         return true;
+    }
+
+    /// <summary>
+    /// 跳字落在屏幕下方过低区域时，上移到可见区间，避免被 UI 或屏幕边缘遮挡。
+    /// </summary>
+    private void CorrectLowScreenPosition(ref Vector3 screenPosition)
+    {
+        float lowThreshold = Screen.height * m_lowScreenYThreshold;
+        if (screenPosition.y >= lowThreshold)
+        {
+            return;
+        }
+
+        float minY = Screen.height * m_correctedScreenYMin;
+        float maxY = Screen.height * m_correctedScreenYMax;
+        screenPosition.y = Random.Range(minY, maxY);
     }
 }

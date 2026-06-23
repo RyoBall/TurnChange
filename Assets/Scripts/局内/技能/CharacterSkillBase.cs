@@ -50,6 +50,9 @@ public enum CharacterSkillTag
 [CreateAssetMenu(fileName = "NewSkill", menuName = "技能/CharacterSkill"), System.Serializable]
 public class CharacterSkillBase : SkillBase
 {
+    private const float BossMaxHpDamageCoef = 0.02f;
+    private const float BossExecuteThreshold = 0.12f;
+
     public SkillTargetType skillTargetType;
     public CharacterSkillType skillType;
     [Header("额外参数")]
@@ -680,17 +683,15 @@ public class CharacterSkillBase : SkillBase
             yield break;
         NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         float normalExecuteThreshold = extraData4;
-        float bossExecuteThreshold = 0.08f;
-        float executeThreshold = IsBoss(target) ? bossExecuteThreshold : normalExecuteThreshold;
+        float executeThreshold = IsBoss(target) ? BossExecuteThreshold : normalExecuteThreshold;
         if (target.currentHP <= Mathf.RoundToInt(target.maxHP * executeThreshold))
         {
             target.TakeDamage(new UnitCombatant.DamageInfo(target.currentHP + target.currentShield + 99999, character).AsTrueDamage());
             yield break;
         }
-        //伤害计算
-        float normalHpCoef = extraData3;
-        float bossHpCoef = 0.15f;
-        float hpCoef = IsBoss(target) ? bossHpCoef : normalHpCoef;
+        //伤害计算（首领额外生命系数见 BossMaxHpDamageCoef）
+        float normalHpCoef = extraData3 > 0f ? extraData3 : 0.06f;
+        float hpCoef = IsBoss(target) ? BossMaxHpDamageCoef : normalHpCoef;
         var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), DamageType.Physical, true, false, true);
         target.TakeDamage(damageInfo);
         yield break;
@@ -716,17 +717,15 @@ public class CharacterSkillBase : SkillBase
 
         //斩杀
         float normalExecuteThreshold = extraData1;
-        float bossExecuteThreshold = extraData2;
-        float executeThreshold = IsBoss(target) ? bossExecuteThreshold : normalExecuteThreshold;
+        float executeThreshold = IsBoss(target) ? BossExecuteThreshold : normalExecuteThreshold;
         if (target.currentHP <= Mathf.RoundToInt(target.maxHP * executeThreshold))
         {
             target.TakeDamage(new UnitCombatant.DamageInfo(target.currentHP + target.currentShield + 99999, character).AsTrueDamage());
             yield break;
         }
-        //伤害计算
-        float normalHpCoef = extraData3;
-        float bossHpCoef = extraData4;
-        float hpCoef = IsBoss(target) ? bossHpCoef : normalHpCoef;
+        //伤害计算（首领额外生命系数见 BossMaxHpDamageCoef）
+        float normalHpCoef = extraData3 > 0f ? extraData3 : 0.06f;
+        float hpCoef = IsBoss(target) ? BossMaxHpDamageCoef : normalHpCoef;
         var damageInfo = DamageCounter.CountDamage(character, target, this.skillCoef, this.skillBase + Mathf.RoundToInt(target.maxHP * hpCoef), DamageType.Physical, true, false, true);
         target.TakeDamage(damageInfo);
         yield break;
@@ -753,7 +752,8 @@ public class CharacterSkillBase : SkillBase
         NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
 
         float normalCoef = skillCoef;
-        float debuffCoef = extraData1;
+        // extraData1（CSV Extra_Data_1）：目标有减益时替换使用的 SkillCoef
+        float debuffCoef = extraData1 > 0f ? extraData1 : normalCoef;
         float coef = (HasAnyDebuff(target) ? debuffCoef : normalCoef) * damageScale;
         int scaledSkillBase = Mathf.RoundToInt(skillBase * damageScale);
 
@@ -816,6 +816,9 @@ public class CharacterSkillBase : SkillBase
         Enemy lowestHpEnemy = GetLowestHealthRatioEnemy();
         if (lowestHpEnemy != null)
         {
+            NotifyDamageSkillUsed(character, new List<UnitCombatant> { lowestHpEnemy });
+            var damageInfo = DamageCounter.CountDamage(character, lowestHpEnemy, skillCoef, skillBase, DamageType.Physical, false, true, true);
+            lowestHpEnemy.TakeDamage(damageInfo);
             lowestHpEnemy.AddState(StateType.DesperationMark, character, durationActionValue, 1);
         }
 
@@ -1065,6 +1068,9 @@ public class CharacterSkillBase : SkillBase
                 return true;
             case CharacterSkillType.HealerSkillTwo:
                 return false;
+            case CharacterSkillType.MainDpsSkillOneAdditional:
+            case CharacterSkillType.PursuitPunishAdditional:
+                return false;
             default:
                 return endTurnAfterUse;
         }
@@ -1258,13 +1264,7 @@ public class CharacterSkillBase : SkillBase
 
     private bool IsBoss(Enemy enemy)
     {
-        if (enemy == null)
-        {
-            return false;
-        }
-
-        return !string.IsNullOrEmpty(enemy.enemyID)
-            && enemy.enemyID.IndexOf("boss", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        return enemy != null && enemy.IsBossForSkillRules();
     }
 
     private Enemy GetLowestHealthRatioEnemy()

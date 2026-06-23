@@ -47,6 +47,16 @@ public class CharacterManager : MonoBehaviour
 	public bool IsSelectingReserveCharacter => m_isSelectingReserveCharacter;
 	private Character m_selectedFieldCharacter;
 	private Character m_selectedReserveCharacter;
+	private bool m_pendingCommandPointCharge;
+	private bool m_lastReplaceSucceeded;
+
+	/// <summary>
+	/// 标记下一次成功的指挥换人需要消耗 1 点指挥点（由指挥技能发起时调用）。
+	/// </summary>
+	public void BeginCommandPointSwap()
+	{
+		m_pendingCommandPointCharge = true;
+	}
 
 	private void Awake()
 	{
@@ -103,6 +113,7 @@ public class CharacterManager : MonoBehaviour
 				Debug.Log("[CharacterManager] 换人流程取消：未选择场上角色");
 				SetPromptVisible(false);
 				m_isSelectingFieldCharacter = false;
+				CompleteCommandPointSwap(false);
 				yield break;
 			}
 		}
@@ -124,6 +135,11 @@ public class CharacterManager : MonoBehaviour
 			HideReserveButtonsImmediate();
 			SetPromptVisible(false);
 			m_isSelectingReserveCharacter = false;
+			if (m_selectedFieldCharacter != null)
+			{
+				m_selectedFieldCharacter.SetSelectedVisual(false);
+			}
+			CompleteCommandPointSwap(false);
 			yield break;
 		}
 
@@ -136,10 +152,31 @@ public class CharacterManager : MonoBehaviour
 		//第三步:执行替换
 		HideReserveButtonsImmediate();
 		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter, true));
+		CompleteCommandPointSwap(m_lastReplaceSucceeded);
 		//第四步:清理UI
 		SetPromptVisible(false);
 		m_selectedFieldCharacter = null;
 		m_selectedReserveCharacter = null;
+	}
+
+	private void CompleteCommandPointSwap(bool succeeded)
+	{
+		if (!m_pendingCommandPointCharge)
+		{
+			return;
+		}
+
+		m_pendingCommandPointCharge = false;
+		if (!succeeded)
+		{
+			return;
+		}
+
+		Commander commander = Commander.GetInstance();
+		if (commander != null && !commander.UseCommandPoints(1))
+		{
+			Debug.LogWarning("[CharacterManager] 换人完成但指挥点扣除失败");
+		}
 	}
 
 	public void OnFieldCharacterClicked(Character character)//处理场上角色被点击的逻辑
@@ -211,6 +248,7 @@ public class CharacterManager : MonoBehaviour
 
 	private IEnumerator ReplaceCharacter(Character oldCharacter, Character newCharacter, bool applySwapOutPenalty)//执行角色替换
 	{
+		m_lastReplaceSucceeded = false;
 		if (oldCharacter == null || newCharacter == null)
 		{
 			Debug.LogWarning("[CharacterManager] 替换失败：角色为空");
@@ -294,6 +332,7 @@ public class CharacterManager : MonoBehaviour
 			ExtraText = oldCharacter.combatantName,
 		});
 
+		m_lastReplaceSucceeded = true;
 		yield break;
 	}
 

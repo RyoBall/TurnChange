@@ -64,14 +64,6 @@ public class Commander : MonoBehaviour
         }
         Instance = this;
     }
-    void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.K))
-        {
-            RecoverCommandPointsInternal(1,"");
-            commandPoints -= 1;
-        }
-    }
     public void AddCastlingOpportunity(int amount, string tipText = null)
     {
         if (amount <= 0)
@@ -120,12 +112,12 @@ public class Commander : MonoBehaviour
 
     public bool RecoverCommandPoints(int amount, string tipText = null)
     {
-        return RecoverCommandPointsInternal(amount, tipText);
+        return RecoverCommandPointsInternal(amount);
     }
 
     public void NotifyEnemyKilled()
     {
-        RecoverCommandPoints(KillRecoveryAmount, $"击杀回点+{KillRecoveryAmount}");
+        RecoverCommandPoints(KillRecoveryAmount);
     }
 
     /// <summary>
@@ -151,11 +143,11 @@ public class Commander : MonoBehaviour
         while (actionValueSinceLastRecovery >= threshold)
         {
             actionValueSinceLastRecovery -= threshold;
-            RecoverCommandPointsInternal(GuaranteeRecoveryAmount, $"指挥点+{GuaranteeRecoveryAmount}");
+            RecoverCommandPointsInternal(GuaranteeRecoveryAmount);
         }
     }
 
-    private bool RecoverCommandPointsInternal(int amount, string tipText)
+    private bool RecoverCommandPointsInternal(int amount)
     {
         if (amount <= 0)
         {
@@ -169,9 +161,6 @@ public class Commander : MonoBehaviour
         {
             return false;
         }
-        FloatingTipGenerator.Instance?.ShowDefaultTip(string.IsNullOrEmpty(tipText)
-            ? $"指挥点+{actualRecovered}"
-            : tipText);
 
         // 播放指挥点飞入动画
         PlayFlyInAnimation(actualRecovered);

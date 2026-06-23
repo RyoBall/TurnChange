@@ -42,6 +42,7 @@ public class ShopModuleManager : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text currencyText;
     [SerializeField] private Button refreshButton;
+    [SerializeField] private TMP_Text refreshButtonText;
 
     [Header("序体等级概率")]
     [Tooltip("根据队伍等级配置不同大小序体的刷新概率。若不赋值则所有大小的序体均等概率刷新。")]
@@ -66,6 +67,7 @@ public class ShopModuleManager : MonoBehaviour
         ClampConfig();
         BindRefreshButton();
         SubscribeGoldEvent();
+        UpdateRefreshButtonVisual();
 
         if (autoInitializeOnAwake)
         {
@@ -115,7 +117,15 @@ public class ShopModuleManager : MonoBehaviour
 
         UnbindRefreshButton();
         refreshButton = button;
+        refreshButtonText = null;
         BindRefreshButton();
+        UpdateRefreshButtonVisual();
+    }
+
+    public void SetRefreshButtonTextTarget(TMP_Text target)
+    {
+        refreshButtonText = target;
+        UpdateRefreshButtonVisual();
     }
 
     public void ShowExternalStatusText(string message)
@@ -290,6 +300,7 @@ public class ShopModuleManager : MonoBehaviour
         }
 
         UpdateCurrencyText();
+        UpdateRefreshButtonVisual();
     }
 
     private List<GridModuleDefinition> SelectModulesForRefresh(int spawnPointCount)
@@ -486,6 +497,32 @@ public class ShopModuleManager : MonoBehaviour
         if (currencyText != null)
         {
             currencyText.text = "货币: " + GetCurrentCurrency();
+        }
+    }
+
+    private void EnsureRefreshButtonText()
+    {
+        if (refreshButtonText == null && refreshButton != null)
+        {
+            refreshButtonText = refreshButton.GetComponentInChildren<TMP_Text>(true);
+        }
+    }
+
+    private void UpdateRefreshButtonVisual()
+    {
+        EnsureRefreshButtonText();
+
+        int cost = GetRefreshCost();
+        bool canAfford = GetCurrentCurrency() >= cost;
+
+        if (refreshButtonText != null)
+        {
+            refreshButtonText.text = "刷新\n价格: " + cost;
+        }
+
+        if (refreshButton != null)
+        {
+            refreshButton.interactable = canAfford;
         }
     }
 

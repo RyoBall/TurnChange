@@ -23,6 +23,12 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 5493498301098380921, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: b144ea013cd019943bbe9ae5ab86dbfc,
+        type: 3}
     - target: {fileID: 5504820007762556165, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
         type: 3}
       propertyPath: targetEnemy
@@ -87,6 +93,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Value
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6871428693882969215, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6871428693882969215, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 2.44
+      objectReference: {fileID: 0}
+    - target: {fileID: 6871428693882969215, guid: 5b6c1caa14253954e8542b97b4ce8a7c,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 1.11
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3051947099722636805, guid: 5b6c1caa14253954e8542b97b4ce8a7c, type: 3}
@@ -212,6 +233,7 @@ MonoBehaviour:
   states: []
   enemyID: 
   animator: {fileID: 3422665265389245566}
+  m_hitAnimationHoldDuration: 0.1
   animationOverrideDatabase: {fileID: 11400000, guid: 2c92760deabf7074d9b1b3203a23bd06,
     type: 2}
   selectedScale: 1.1

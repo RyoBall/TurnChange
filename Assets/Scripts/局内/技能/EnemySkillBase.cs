@@ -477,13 +477,10 @@ public class EnemySkillBase : SkillBase
         var allies = new List<Character>(CharacterManager.Instance.fieldCharacters);
         NotifyDamageSkillUsed(self, allies);
 
-        float prestigeBonus = queen.GetPrestigeDamageBonus();
-        float totalCoef = skillCoef * prestigeBonus;
-
         foreach (var ally in allies)
         {
             if (ally == null || ally.IsDead) continue;
-            var damageInfo = DamageCounter.CountDamage(self, ally, totalCoef, skillBase, DamageType.Physical, false, false, false);
+            var damageInfo = DamageCounter.CountDamage(self, ally, skillCoef, skillBase, DamageType.Physical, false, false, false);
             ally.TakeDamage(damageInfo);
             ally.TryAddChaos(chaosAmount);
         }
@@ -597,11 +594,8 @@ public class EnemySkillBase : SkillBase
             yield break;
         }
 
-        float prestigeBonus = queen.GetPrestigeDamageBonus();
-        float totalCoef = skillCoef * prestigeBonus;
-
         NotifyDamageSkillUsed(queen, new List<UnitCombatant> { kingTarget });
-        var damageInfo = DamageCounter.CountDamage(queen, kingTarget, totalCoef, skillBase, DamageType.Physical, false, false, false);
+        var damageInfo = DamageCounter.CountDamage(queen, kingTarget, skillCoef, skillBase, DamageType.Physical, false, false, false);
         kingTarget.TakeDamage(damageInfo);
         Debug.Log($"[EnemySkillBase] {queen.combatantName}对{kingTarget.combatantName}造成了{damageInfo.Damage}点伤害");
         // 行动延后100%
@@ -644,11 +638,8 @@ public class EnemySkillBase : SkillBase
         Character target = CharacterManager.Instance.GetCharacterByRand(self);
         if (target == null) yield break;
 
-        float prestigeBonus = queen.GetPrestigeDamageBonus();
-        float totalCoef = skillCoef * prestigeBonus;
-
         NotifyDamageSkillUsed(queen, new List<UnitCombatant> { target });
-        var damageInfo = DamageCounter.CountDamage(queen, target, totalCoef, skillBase, DamageType.Physical, true, false, false);
+        var damageInfo = DamageCounter.CountDamage(queen, target, skillCoef, skillBase, DamageType.Physical, true, false, false);
         target.TakeDamage(damageInfo);
         int chaosAmount = ResolveExtraInt(extraData1, 1);
         target.TryAddChaos(chaosAmount);

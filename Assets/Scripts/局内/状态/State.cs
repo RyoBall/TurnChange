@@ -66,7 +66,9 @@ public enum StateType
     SwordsmanGuerrilla,//游击姿态
     SwordsmanLastStand,//背水一战
     SwordsmanStagger,//失衡
-    SwordsmanElegance//优雅体态
+    SwordsmanElegance,//优雅体态
+    ChessPawnPromotion,//兵棋升变
+    Prestige//威望
 
 }
 
@@ -717,6 +719,8 @@ public static class StateBehaviorFactory
                 return new SwordsmanStaggerBehavior();
             case StateType.SwordsmanElegance:
                 return new SwordsmanEleganceBehavior();
+            case StateType.Prestige:
+                return new PrestigeStateBehavior();
             default:
                 return new DefaultStateBehavior();
         }
@@ -1258,9 +1262,13 @@ public class ArmorBreakStateBehavior : StateBehaviorBase
 
 public class BloodSurgeHealStateBehavior : StateBehaviorBase
 {
-    public override void OnAnyDamageSettled(UnitCombatant source, UnitCombatant target, int damage, bool isDotDamage, bool isTrueDamage)
+    public override void OnCombatEventTriggered(UnitCombatant triggerUnit, StateCombatEventType eventType, IReadOnlyList<UnitCombatant> damagedUnits)
     {
-        if (state.owner == null || source != state.owner || damage <= 0 || state.StackCount <= 0)
+        if (eventType != StateCombatEventType.DamageSkillUsed
+            || state.owner == null
+            || triggerUnit != state.owner
+            || state.StackCount <= 0
+            || !DamagedAnyEnemy(state.owner, damagedUnits))
         {
             return;
         }
@@ -1276,6 +1284,27 @@ public class BloodSurgeHealStateBehavior : StateBehaviorBase
 
         state.owner.Heal(heal);
         state.ChangeStackCount(state.StackCount - 1);
+    }
+
+    private static bool DamagedAnyEnemy(UnitCombatant owner, IReadOnlyList<UnitCombatant> damagedUnits)
+    {
+        if (damagedUnits == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < damagedUnits.Count; i++)
+        {
+            UnitCombatant unit = damagedUnits[i];
+            if (unit == null || unit == owner || unit.IsDead || unit is not Enemy)
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }
 
@@ -2023,6 +2052,24 @@ public class ChessExhaustionStateBehavior : StateBehaviorBase
     public override bool CanActThisTurn()
     {
         return false;
+    }
+}
+
+/// <summary>
+/// 威望：每层提供 baseExtraData2 输出倍率与 baseExtraData1 承伤减免（默认各 10%）。
+/// </summary>
+public class PrestigeStateBehavior : StateBehaviorBase
+{
+    public override float GetOutgoingDamageMultiplier(bool isDotDamage)
+    {
+        float perStackBonus = state.baseExtraData2 > 0f ? state.baseExtraData2 : 0.1f;
+        return 1f + state.StackCount * perStackBonus;
+    }
+
+    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
+    {
+        float reductionPerStack = state.baseExtraData1 > 0f ? state.baseExtraData1 : 0.1f;
+        return 1f - Mathf.Min(1f, state.StackCount * reductionPerStack);
     }
 }
 

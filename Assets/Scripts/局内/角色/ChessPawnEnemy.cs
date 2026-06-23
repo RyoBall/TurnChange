@@ -33,6 +33,7 @@ public class ChessPawnEnemy : Enemy
         }
         // 兵棋入场对话（仅触发一次，由第一个兵棋触发）
         BattleDialogEvents.Raise(BattleDialogEventType.ChessPawnsEnter, enemy: this);
+        EnsurePromotionDisplayState();
     }
     public override void InitializeFromPendingLevelData(PendingBattleLevelData pendingData, IReadOnlyList<Enemy> spawnedEnemies)
     {
@@ -105,6 +106,17 @@ public class ChessPawnEnemy : Enemy
             }
         }
         return null;
+    }
+
+    /// <summary>挂载仅用于悬停展示升变进度的状态图标，不产生任何战斗效果。</summary>
+    private void EnsurePromotionDisplayState()
+    {
+        if (IsDead || HasState(StateType.ChessPawnPromotion))
+        {
+            return;
+        }
+
+        AddState(StateType.ChessPawnPromotion, this, 0, 1);
     }
 
     private int CountAlivePromotionPawns(ChessQueenEnemy queen)

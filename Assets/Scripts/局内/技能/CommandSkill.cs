@@ -31,11 +31,13 @@ public class CommandSkillBase : SkillBase
             yield break;
         }
 
-        if(!Commander.GetInstance().UseCommandPoints(1))
+        if (Commander.GetInstance().CommandPoints < 1)
         {
             FloatingTipGenerator.Instance.ShowDefaultTip("指挥点不足，无法使用技能");
             yield break;
         }
+
+        CharacterManager.Instance?.BeginCommandPointSwap();
         SkillManager.Instance.changeCharacter.GetComponent<Combatant>().ChangeActionValue(0);
         var changer = Instantiate(SkillManager.Instance.changeCharacter.GetComponent<Combatant>());
         changer.standPosition = 0;

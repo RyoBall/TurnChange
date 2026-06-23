@@ -173,7 +173,7 @@ public class EnterCharacterButton : MonoBehaviour, IPointerEnterHandler, IPointe
         {
             if (enterSkill != null)
             {
-                m_enterSkillText.text = enterSkill.shortDescription;
+                m_enterSkillText.text = enterSkill.description;
             }
             else
             {

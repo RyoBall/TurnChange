@@ -574,6 +574,31 @@ public class Datas : MonoBehaviour
         AddGold(goldReward);
         AddExperience(experienceReward);
     }
+
+    /// <summary>浓缩关胜利后：将战队等级同步为关卡配置的 playerLevel。</summary>
+    public void ApplyCondensedLevelConfiguredTeamLevel(int configuredPlayerLevel)
+    {
+        if (!IsCondensedModeEnabled)
+        {
+            return;
+        }
+
+        int targetLevel = Mathf.Clamp(configuredPlayerLevel, 1, MaxTeamLevel);
+        teamLevel = targetLevel;
+        currentExp = GetTotalExpThresholdForLevel(targetLevel);
+        ClampProgressionData();
+    }
+
+    private static float GetTotalExpThresholdForLevel(int level)
+    {
+        level = Mathf.Max(1, level);
+        if (level <= s_levelExpThresholds.Length)
+        {
+            return s_levelExpThresholds[level - 1];
+        }
+
+        return s_levelExpThresholds[s_levelExpThresholds.Length - 1];
+    }
     #endregion
     #region 局外接入战斗增益
     public IReadOnlyList<TemporaryBattleModifierData> GetActiveBattleModifiers()

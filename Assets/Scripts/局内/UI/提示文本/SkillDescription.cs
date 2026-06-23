@@ -54,7 +54,7 @@ public class SkillDescription : MonoBehaviour
         if (skill != null)
         {
             PauseCameraSway();
-            string description = skill.shortDescription;
+            string description = skill.description;
             if (m_keywordConfig != null)
             {
                 description = m_keywordConfig.ApplyKeywordRichText(description);
@@ -114,6 +114,11 @@ public class SkillDescription : MonoBehaviour
     /// </summary>
     private string BuildStateDurationText(State state)
     {
+        if (state.stateType == StateType.ChessPawnPromotion)
+        {
+            return BuildChessPawnPromotionDurationText(state);
+        }
+
         string result = $"\n层数：{state.StackCount}";
         switch (state.DurationType)
         {
@@ -128,6 +133,20 @@ public class SkillDescription : MonoBehaviour
                 break;
         }
         return result;
+    }
+
+    private string BuildChessPawnPromotionDurationText(State state)
+    {
+        ChessPawnEnemy pawn = state.owner as ChessPawnEnemy;
+        if (pawn == null)
+        {
+            return string.Empty;
+        }
+
+        int current = pawn.PawnAdvanceCount;
+        int total = pawn.PawnPromotionSteps;
+        int remaining = Mathf.Max(0, total - current);
+        return $"\n当前推进：{current}/{total}格\n距离升变：{remaining}格";
     }
 
     /// <summary>

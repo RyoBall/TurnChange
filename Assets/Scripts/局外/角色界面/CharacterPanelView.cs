@@ -344,9 +344,7 @@ public class CharacterPanelView : MonoBehaviour
 
         if (skillDescriptionContentText != null)
         {
-            string description = !string.IsNullOrWhiteSpace(skill.description)
-                ? skill.description
-                : skill.shortDescription;
+            string description = skill.description;
             if (!string.IsNullOrWhiteSpace(description))
             {
                 SkillKeywordConfig config = SkillKeywordConfig.Instance;

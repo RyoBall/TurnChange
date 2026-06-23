@@ -59,7 +59,6 @@ public static class CharacterSkillImporter
 
             skillAsset.name = skillName;
             skillAsset.skillName = skillName;
-            skillAsset.shortDescription = GetString(row, "Description_Simple", skillAsset.shortDescription);
             skillAsset.description = GetString(row, "Description", skillAsset.description);
             skillAsset.skillType = skillType;
             skillAsset.skillCoef = GetFloat(row, "SkillCoef", 1f);

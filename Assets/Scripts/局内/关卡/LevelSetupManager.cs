@@ -244,6 +244,11 @@ public class LevelSetupManager : MonoBehaviour
         int baseExperience = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardExperience : 0;
         int baseGold = m_pendingBattleLevelData != null ? m_pendingBattleLevelData.rewardGold : 0;
         ResolveCondensedBattleRewards(levelId, baseExperience, baseGold, out int rewardExperience, out int rewardGold, out bool hideExperienceOnSettlement);
+        if (Datas.Instance != null && m_pendingBattleLevelData != null)
+        {
+            Datas.Instance.ApplyCondensedLevelConfiguredTeamLevel(m_pendingBattleLevelData.playerLevel);
+        }
+
         Datas.Instance?.MarkLevelCompleted(levelId);
         //结束战斗增益会话，结算界面可能需要读取一些数据来显示，因此放在前面执行，耦合度略高
         TemporaryBattleModifierRuntimeManager.CompleteBattleModifierSession();

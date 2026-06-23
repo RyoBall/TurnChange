@@ -152,6 +152,12 @@ public class Enemy : UnitCombatant
             || this is DragonBossEnemy;
     }
 
+    /// <summary>技能规则用首领判定，与 <see cref="IsBossEnemy"/> 一致。</summary>
+    public bool IsBossForSkillRules()
+    {
+        return IsBossEnemy();
+    }
+
     public virtual void InitializeFromPendingLevelData(PendingBattleLevelData pendingData, IReadOnlyList<Enemy> spawnedEnemies)
     {
     }

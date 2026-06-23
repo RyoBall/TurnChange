@@ -29,7 +29,6 @@ public class ChessQueenEnemy : Enemy
 
     // 内部状态
     private readonly HashSet<ChessSummonedPawnEnemy> m_summonedPawns = new HashSet<ChessSummonedPawnEnemy>();
-    private int m_prestigeStacks;
     private int m_maxPrestige = 3; // 预告关卡最多3层威望
     private bool m_hasUsedCoronation;
     private int m_summonedPawnKillCounter;
@@ -46,7 +45,7 @@ public class ChessQueenEnemy : Enemy
     public bool IsPreviewBoss => isPreviewBoss;
     public bool StartsHiddenUntilPhaseTwo => startHiddenUntilPhaseTwo;
     public override bool ShouldRegisterAtBattleStart => !StartsHiddenUntilPhaseTwo;
-    public int PrestigeStacks => m_prestigeStacks;
+    public int PrestigeStacks => GetState(StateType.Prestige)?.StackCount ?? 0;
     public float SummonedPawnHealRatio => summonedPawnHealRatio;
     public bool HasUsedCoronation => m_hasUsedCoronation;
     public bool IsChargingThroneAssault => m_isChargingThroneAssault;
@@ -201,9 +200,7 @@ public class ChessQueenEnemy : Enemy
             pawn.TakeDamage(new DamageInfo(pawn.currentHP).AsTrueDamage()); // 直接消灭所有残余兵卒
         }
 
-        // 入场威望上限：预告关卡最多3层，完整版无上限（由调用方控制）
-        int maxPrestigeOnEnter = isPreviewBoss ? m_maxPrestige : int.MaxValue;
-        m_prestigeStacks = Mathf.Clamp(prestigeStacks, 0, maxPrestigeOnEnter);
+        SetPrestigeStacks(prestigeStacks);
         StartCoroutine(EnterPhaseTwoWithFadeIn());
     }
 
@@ -356,24 +353,82 @@ public class ChessQueenEnemy : Enemy
         m_isChargingThroneAssault = charging;
     }
 
+    /// <summary>设置威望层数（阶段二入场时调用）</summary>
+    private void SetPrestigeStacks(int stacks)
+    {
+        int maxAllowed = isPreviewBoss ? m_maxPrestige : int.MaxValue;
+        int clampedStacks = Mathf.Clamp(stacks, 0, maxAllowed);
+
+        State existingPrestige = GetState(StateType.Prestige);
+        if (existingPrestige != null)
+        {
+            RemoveState(existingPrestige);
+        }
+
+        if (clampedStacks > 0)
+        {
+            AddState(StateType.Prestige, this, 0, clampedStacks);
+        }
+    }
+
     /// <summary>添加威望层数（预告关卡最多3层）</summary>
     public void AddPrestige(int delta)
     {
-        m_prestigeStacks = Mathf.Max(0, m_prestigeStacks + delta);
-        if (isPreviewBoss)
+        if (delta == 0)
         {
-            m_prestigeStacks = Mathf.Min(m_prestigeStacks, m_maxPrestige);
+            return;
         }
+
+        if (delta > 0)
+        {
+            AddState(StateType.Prestige, this, 0, delta);
+            ClampPrestigeStacks();
+            return;
+        }
+
+        State prestige = GetState(StateType.Prestige);
+        if (prestige == null)
+        {
+            return;
+        }
+
+        int newStacks = Mathf.Max(0, prestige.StackCount + delta);
+        if (newStacks <= 0)
+        {
+            RemoveState(prestige);
+            return;
+        }
+
+        prestige.Stacks = newStacks;
     }
 
     /// <summary>消耗所有威望（加冕时调用）</summary>
     public int ConsumeAllPrestige()
     {
-        int consumed = m_prestigeStacks;
-        m_prestigeStacks = 0;
+        State prestige = GetState(StateType.Prestige);
+        int consumed = prestige != null ? prestige.StackCount : 0;
+        if (prestige != null)
+        {
+            RemoveState(prestige);
+        }
+
         m_hasUsedCoronation = true;
         BattleDialogEvents.Raise(BattleDialogEventType.ChessQueenPrestigeDepleted, enemy: this);
         return consumed;
+    }
+
+    private void ClampPrestigeStacks()
+    {
+        if (!isPreviewBoss)
+        {
+            return;
+        }
+
+        State prestige = GetState(StateType.Prestige);
+        if (prestige != null && prestige.StackCount > m_maxPrestige)
+        {
+            prestige.Stacks = m_maxPrestige;
+        }
     }
 
     /// <summary>延迟行动值</summary>
@@ -389,23 +444,6 @@ public class ChessQueenEnemy : Enemy
         float nextActionValue = BaseActionValue * (1f + Mathf.Max(0f, m_pendingTurnEndDelayRatio));
         m_pendingTurnEndDelayRatio = 0f;
         return nextActionValue;
-    }
-
-    /// <summary>威望伤害减免（独立乘区）</summary>
-    public float GetPrestigeDamageReduction()
-    {
-        return 1f - Mathf.Min(1f, m_prestigeStacks * 0.1f);
-    }
-
-    /// <summary>威望伤害加成</summary>
-    public float GetPrestigeDamageBonus()
-    {
-        return 1f + m_prestigeStacks * 0.1f;
-    }
-
-    public override float GetIncomingDamageMultiplier(bool isDotDamage, bool isTrueDamage)
-    {
-        return base.GetIncomingDamageMultiplier(isDotDamage, isTrueDamage) * GetPrestigeDamageReduction();
     }
 
     protected override bool CanReceiveState(StateType stateType, UnitCombatant giver)
