@@ -628,13 +628,11 @@ public class CharacterSkillBase : SkillBase
         }
 
         int tauntDuration = Mathf.Max(1, Mathf.RoundToInt(extraData3));
-        float pullRatio = extraData1 > 0f ? extraData1 : 1f;
         float weakenedOutputRatio = extraData2 > 0f && extraData2 < 1f ? 1f - extraData2 : 0.4f;
 
         target.AddState(StateType.Taunt, character, tauntDuration, 1);
         State weakenedState = target.AddState(StateType.ActionWeakened, character, 1, 1);
         ApplyStateBaseExtraData(weakenedState, extra1: weakenedOutputRatio);
-        target.ChangeActionValue(target.currentActionValue - target.BaseActionValue * pullRatio);
         NotifyDamageSkillUsed(character, new List<UnitCombatant> { target });
         var damageInfo = DamageCounter.CountDamage(character, target, skillCoef, skillBase, DamageType.Physical, false, true, true);
         target.TakeDamage(damageInfo);

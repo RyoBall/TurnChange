@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 教程关二 W1 专用敌人：攻击只打副C(standPosition=2)，前若干回合禁止击杀
+/// 教程关二 W1 专用敌人：攻击只打副C(standPosition=2)，前若干回合禁止击杀，免疫震慑，绝剑士命中时受到等同于当前生命值的真实伤害
 /// 数值从 EnemyData.csv（enemyID=TutorialSingle）读取
 /// </summary>
 public class TutorialSingleEnemy : Enemy
 {
     private const int InvincibilityTurns = 3;
+    private const string JueJianShiCharacterId = "绝剑士";
 
     private int m_turnsSinceLastBleed;
 
@@ -97,12 +98,33 @@ public class TutorialSingleEnemy : Enemy
         yield return WaitForDeathEvents();
     }
 
+    protected override bool CanReceiveState(StateType stateType, UnitCombatant giver)
+    {
+        if (stateType == StateType.Daze)
+        {
+            FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}免疫{StateDictionaryManager.GetStateName(stateType)}");
+            return false;
+        }
+
+        return base.CanReceiveState(stateType, giver);
+    }
+
     /// <summary>
-    /// 重写伤害处理：禁止击杀
+    /// 重写伤害处理：前若干回合禁止击杀；绝剑士命中时受到等同于当前生命值的真实伤害
     /// </summary>
     public override void TakeDamage(DamageInfo damageInfo)
     {
         if (dead) return;
+
+        if (IsDamageFromJueJianShi(damageInfo.Source))
+        {
+            int trueDamage = currentHP;
+            if (trueDamage <= 0) return;
+
+            DamageInfo lethalTrueDamage = new DamageInfo(trueDamage, damageInfo.Source, damageInfo.DamageType).AsTrueDamage();
+            base.TakeDamage(lethalTrueDamage);
+            return;
+        }
 
         int safeDamage = damageInfo.Damage;
         if (currentHP - safeDamage <= 0 && m_turnsSinceLastBleed < InvincibilityTurns)
@@ -116,5 +138,10 @@ public class TutorialSingleEnemy : Enemy
         DamageInfo safeInfo = new DamageInfo(safeDamage, damageInfo.Source, damageInfo.DamageType);
 
         base.TakeDamage(safeInfo);
+    }
+
+    private static bool IsDamageFromJueJianShi(UnitCombatant source)
+    {
+        return source is Character character && character.characterID == JueJianShiCharacterId;
     }
 }
