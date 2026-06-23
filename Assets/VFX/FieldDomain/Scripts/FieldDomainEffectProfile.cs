@@ -24,7 +24,7 @@ public class FieldDomainEffectProfile : ScriptableObject
     [Tooltip("重裁/绝境：越大火焰内缘越柔和。奇迹：玻璃内侧衰减幂次，越大过渡越长（建议 2.5~4）")]
     [Range(0.25f, 4f)] public float borderVfxEdgeSoftness = 0.72f;
     [Range(0f, 1.5f)] public float ringBurnStrength;
-    [Range(0.5f, 4f)] public float borderVfxSpeed = 1.2f;
+    [Range(0f, 4f)] public float borderVfxSpeed = 1.2f;
     public Color borderVfxHotColor = new Color(1f, 0.48f, 0.08f, 1f);
     public Color borderVfxCoreColor = new Color(0.75f, 0.1f, 0.02f, 1f);
     public Texture2D flameNoiseTexture;
