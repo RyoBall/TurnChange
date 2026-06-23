@@ -82,7 +82,6 @@
      <Compile Include="Assets\Scripts\Audio\GameAudioVolumeController.cs" />
      <Compile Include="Assets\Scripts\局外\商店\ModuleLevelProbabilityConfig.cs" />
      <Compile Include="Assets\Scripts\局内\UI\BattleSettlementView.cs" />
-     <Compile Include="Assets\Scripts\Utils\SettingsPanelDebugOverlay.cs" />
      <Compile Include="Assets\Scripts\局内\GameManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_FrameRateCounter.cs" />

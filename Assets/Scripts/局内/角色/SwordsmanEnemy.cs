@@ -101,6 +101,7 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
     private bool m_phaseTwoTriggered;
     private bool m_phaseThreeTriggered;
     private int m_previousHp;
+    private bool m_suppressStaggerExitCallback;
 
     // ============ 指挥点奖励 ============
     private const float SwordsmanGuaranteeThreshold = 200f;
@@ -158,11 +159,6 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
     {
         base.OnTurnStartBeforeStateSettlement();
         EnsureStaggerConsistency();
-
-        if (m_isInStagger)
-        {
-            SyncDefenseStanceAnimation();
-        }
 
         // 姿态切换倒计时（失衡、背水一战中暂停）
         if (!m_isInStagger && !m_isLastStand)
@@ -292,11 +288,9 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
     {
         if (m_isInStagger) return;
 
-        // 先离开当前姿态；游击姿态的 CanReceiveState 会拦截 debuff，必须在施加失衡前清掉姿态标记
-        m_currentStanceState?.OnExit(SwordsmanStance.Defense);
+        // 先离开当前姿态 buff；游击免疫会拦截 debuff，必须在施加失衡前清掉。动画/枚举保持进入失衡前的姿态。
+        m_currentStanceState?.OnExit(m_currentStance);
         m_currentStanceState = null;
-        m_currentStance = SwordsmanStance.Defense;
-        SyncDefenseStanceAnimation();
 
         m_isInStagger = true;
         NotifyTenacityChanged();
@@ -318,23 +312,41 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
 
     public void ExitStagger()
     {
+        if (m_suppressStaggerExitCallback)
+        {
+            return;
+        }
+
         m_isInStagger = false;
         m_currentTenacity = maxTenacity;
         NotifyTenacityChanged();
-        TransitionTo(SwordsmanStance.Defense);
+        TransitionTo(m_isLastStand ? SwordsmanStance.BrightSword : SwordsmanStance.Defense);
         m_stanceSwitchCountdown = 2;
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanStaggerExit, enemy: this);
         BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanEleganceReminder, enemy: this);
     }
 
-    /// <summary>失衡期间仅同步防御 Idle 动画，不重新挂载姿态 buff。</summary>
-    private void SyncDefenseStanceAnimation()
+    /// <summary>背水一战：强制清除失衡 debuff，随后由 EnterLastStand 切入亮剑。</summary>
+    private void ForceEndStaggerForLastStand()
     {
-        m_currentStance = SwordsmanStance.Defense;
-        if (Anim != null)
+        if (!m_isInStagger && !HasState(StateType.SwordsmanStagger))
         {
-            Anim.SetInteger("Stance", (int)SwordsmanStance.Defense);
+            return;
         }
+
+        m_isInStagger = false;
+        m_currentTenacity = maxTenacity;
+        NotifyTenacityChanged();
+
+        State staggerState = GetState(StateType.SwordsmanStagger);
+        if (staggerState == null)
+        {
+            return;
+        }
+
+        m_suppressStaggerExitCallback = true;
+        RemoveState(staggerState);
+        m_suppressStaggerExitCallback = false;
     }
 
     /// <summary>修复 m_isInStagger 与失衡状态不同步的软锁（如游击姿态误判导致 debuff 未挂上）</summary>
@@ -369,11 +381,12 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
             BattleDialogEvents.Raise(BattleDialogEventType.SwordsmanPhaseTwo, enemy: this);
         }
 
-        // 阶段三：血量低于25%
+        // 阶段三：血量低于25% — 背水一战锁定亮剑，若处于失衡则强制结束失衡
         if (!m_phaseThreeTriggered && hpRatio <= phaseThreeHpThreshold)
         {
             m_phaseThreeTriggered = true;
             m_isLastStand = true;
+            ForceEndStaggerForLastStand();
             TransitionTo(SwordsmanStance.BrightSword);
             AddState(StateType.SwordsmanLastStand, this, 99, 1);
             FloatingTipGenerator.Instance?.ShowTipAtObject(transform, "背水一战！");
@@ -447,7 +460,7 @@ public class SwordsmanEnemy : Enemy, ISwordsmanTenacityProvider
             return base.CanReceiveState(stateType, giver);
         }
 
-        if (m_currentStance == SwordsmanStance.Guerrilla)
+        if (m_currentStanceState != null && m_currentStanceState.Stance == SwordsmanStance.Guerrilla)
         {
             State stateTemplate = StateDictionaryManager.GetState(stateType);
             if (stateTemplate != null && stateTemplate.isDebuff)
