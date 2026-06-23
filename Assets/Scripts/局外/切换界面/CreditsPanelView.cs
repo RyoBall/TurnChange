@@ -15,13 +15,15 @@ public class CreditsPanelView : MonoBehaviour
     public static CreditsPanelView Instance { get; private set; }
 
     private const string DefaultCreditsText =
-        "策划：容克Kaiser,雨大神\n程序：张良\n美术：Akane,111\n特效：吟月R";
+        "策划：容克Kaiser,雨达神\n程序：张良\n美术：Akane,猫猫\n特效/音效：Seabed";
+    private const string DefaultThanksText = "感谢游玩我们的游戏！";
 
     [Header("面板")]
     [SerializeField] private GameObject m_panelRoot;
     [SerializeField] private Image m_dimOverlay;
     [SerializeField] private CanvasGroup m_contentCanvasGroup;
     [SerializeField] private TMP_Text m_creditsText;
+    [SerializeField] private TMP_Text m_thanksText;
     [SerializeField] private Button m_closeButton;
 
     [Header("可选：背景渐暗（开始场景）")]
@@ -248,7 +250,7 @@ public class CreditsPanelView : MonoBehaviour
 
         ResolveReferences();
         BindCloseButton();
-        ApplyCreditsText();
+        ApplyPanelTexts();
         m_initialized = true;
     }
 
@@ -279,7 +281,20 @@ public class CreditsPanelView : MonoBehaviour
 
         if (m_creditsText == null)
         {
-            m_creditsText = GetComponentInChildren<TMP_Text>(true);
+            Transform credits = transform.Find("ContentPanel/CreditsText");
+            if (credits != null)
+            {
+                m_creditsText = credits.GetComponent<TMP_Text>();
+            }
+        }
+
+        if (m_thanksText == null)
+        {
+            Transform thanks = transform.Find("ContentPanel/CreditsText/ThanksText");
+            if (thanks != null)
+            {
+                m_thanksText = thanks.GetComponent<TMP_Text>();
+            }
         }
 
         if (m_closeButton == null)
@@ -303,11 +318,16 @@ public class CreditsPanelView : MonoBehaviour
         m_closeButton.onClick.AddListener(Close);
     }
 
-    private void ApplyCreditsText()
+    private void ApplyPanelTexts()
     {
         if (m_creditsText != null)
         {
             m_creditsText.text = DefaultCreditsText;
+        }
+
+        if (m_thanksText != null)
+        {
+            m_thanksText.text = DefaultThanksText;
         }
     }
 

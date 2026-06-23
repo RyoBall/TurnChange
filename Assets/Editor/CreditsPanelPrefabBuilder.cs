@@ -13,6 +13,8 @@ public static class CreditsPanelPrefabBuilder
     private const string PrefabPath = "Assets/Resources/Prefabs/CreditsPanel.prefab";
     private const string SharedPrefabPath = "Assets/Resources/Prefabs/通用物体/通用物体.prefab";
     private const string FontPath = "Assets/Resources/font/哥特.asset";
+    private const string StartCreditsButtonSpritePath = "Assets/Resources/Art/UIs/按钮/buttons_0001s_0000_已插入图像.png";
+    private const string PanelBackgroundSpritePath = "Assets/Resources/Art/背景.png";
     private const string StartScenePath = "Assets/Scenes/Start.unity";
     private const string MainScenePath = "Assets/Scenes/Main.unity";
 
@@ -130,9 +132,33 @@ public static class CreditsPanelPrefabBuilder
 
         if (removedAny)
         {
+            ClearStaleCreditsPanelButtonReferences();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log($"[CreditsPanelPrefabBuilder] 已从场景移除独立 CreditsPanel：{scenePath}");
+        }
+    }
+
+    private static void ClearStaleCreditsPanelButtonReferences()
+    {
+        CreditsPanelButton[] buttons = Object.FindObjectsOfType<CreditsPanelButton>(true);
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            CreditsPanelButton button = buttons[i];
+            if (button == null)
+            {
+                continue;
+            }
+
+            SerializedObject serializedButton = new SerializedObject(button);
+            SerializedProperty creditsPanelProperty = serializedButton.FindProperty("m_creditsPanel");
+            if (creditsPanelProperty == null)
+            {
+                continue;
+            }
+
+            creditsPanelProperty.objectReferenceValue = null;
+            serializedButton.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 
@@ -149,6 +175,7 @@ public static class CreditsPanelPrefabBuilder
         CreditsPanelButton existingButton = Object.FindObjectOfType<CreditsPanelButton>(true);
         if (existingButton != null)
         {
+            ApplyStartCreditsButtonStyle(existingButton.gameObject);
             WireStartCreditsButton(existingButton.gameObject);
             return;
         }
@@ -172,7 +199,7 @@ public static class CreditsPanelPrefabBuilder
         rect.localScale = new Vector3(0.6f, 0.6f, 1f);
 
         Image image = buttonGo.GetComponent<Image>();
-        image.color = new Color(0.12f, 0.12f, 0.12f, 0.75f);
+        ApplyStartCreditsButtonStyle(buttonGo);
 
         GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
         textGo.transform.SetParent(buttonGo.transform, false);
@@ -195,6 +222,23 @@ public static class CreditsPanelPrefabBuilder
         label.color = Color.white;
 
         WireStartCreditsButton(buttonGo);
+    }
+
+    private static void ApplyStartCreditsButtonStyle(GameObject buttonGo)
+    {
+        Image image = buttonGo.GetComponent<Image>();
+        if (image == null)
+        {
+            return;
+        }
+
+        Sprite buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(StartCreditsButtonSpritePath);
+        if (buttonSprite != null)
+        {
+            image.sprite = buttonSprite;
+        }
+
+        image.color = Color.white;
     }
 
     private static void WireStartCreditsButton(GameObject buttonGo)
@@ -249,6 +293,24 @@ public static class CreditsPanelPrefabBuilder
         contentRect.sizeDelta = new Vector2(760f, 520f);
         contentRect.anchoredPosition = Vector2.zero;
 
+        GameObject backgroundGo = new GameObject("Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        backgroundGo.transform.SetParent(contentGo.transform, false);
+        backgroundGo.transform.SetAsFirstSibling();
+        RectTransform backgroundRect = backgroundGo.GetComponent<RectTransform>();
+        backgroundRect.anchorMin = Vector2.zero;
+        backgroundRect.anchorMax = Vector2.one;
+        backgroundRect.offsetMin = Vector2.zero;
+        backgroundRect.offsetMax = Vector2.zero;
+        Image backgroundImage = backgroundGo.GetComponent<Image>();
+        Sprite panelBackgroundSprite = AssetDatabase.LoadAssetAtPath<Sprite>(PanelBackgroundSpritePath);
+        if (panelBackgroundSprite != null)
+        {
+            backgroundImage.sprite = panelBackgroundSprite;
+        }
+
+        backgroundImage.color = Color.white;
+        backgroundImage.raycastTarget = false;
+
         GameObject creditsTextGo = new GameObject("CreditsText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
         creditsTextGo.transform.SetParent(contentGo.transform, false);
         RectTransform creditsRect = creditsTextGo.GetComponent<RectTransform>();
@@ -265,11 +327,32 @@ public static class CreditsPanelPrefabBuilder
             creditsText.font = font;
         }
 
-        creditsText.text = "策划：容克Kaiser,雨大神\n程序：张良\n美术：Akane,111\n特效：吟月R";
+        creditsText.text = "策划：容克Kaiser,雨达神\n程序：张良\n美术：Akane,猫猫\n特效/音效：Seabed";
         creditsText.fontSize = 34f;
         creditsText.lineSpacing = 18f;
         creditsText.alignment = TextAlignmentOptions.Center;
         creditsText.color = Color.white;
+
+        GameObject thanksTextGo = new GameObject("ThanksText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        thanksTextGo.transform.SetParent(creditsTextGo.transform, false);
+        RectTransform thanksRect = thanksTextGo.GetComponent<RectTransform>();
+        thanksRect.anchorMin = new Vector2(1f, 0f);
+        thanksRect.anchorMax = new Vector2(1f, 0f);
+        thanksRect.pivot = new Vector2(1f, 0f);
+        thanksRect.anchoredPosition = Vector2.zero;
+        thanksRect.sizeDelta = new Vector2(420f, 40f);
+
+        TMP_Text thanksText = thanksTextGo.GetComponent<TextMeshProUGUI>();
+        if (font != null)
+        {
+            thanksText.font = font;
+        }
+
+        thanksText.text = "感谢游玩我们的游戏！";
+        thanksText.fontSize = 34f;
+        thanksText.alignment = TextAlignmentOptions.BottomRight;
+        thanksText.color = Color.black;
+        thanksText.raycastTarget = false;
 
         GameObject closeGo = new GameObject("CloseButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         closeGo.transform.SetParent(contentGo.transform, false);
@@ -308,6 +391,7 @@ public static class CreditsPanelPrefabBuilder
         serializedView.FindProperty("m_dimOverlay").objectReferenceValue = dimImage;
         serializedView.FindProperty("m_contentCanvasGroup").objectReferenceValue = contentGo.GetComponent<CanvasGroup>();
         serializedView.FindProperty("m_creditsText").objectReferenceValue = creditsText;
+        serializedView.FindProperty("m_thanksText").objectReferenceValue = thanksText;
         serializedView.FindProperty("m_closeButton").objectReferenceValue = closeGo.GetComponent<Button>();
         serializedView.ApplyModifiedPropertiesWithoutUndo();
 
