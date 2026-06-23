@@ -1930,6 +1930,12 @@ public class ChaosStateBehavior : StateBehaviorBase
 
     private bool m_pendingChaosReset;
 
+    public override bool CanBePurged()
+    {
+        // 混沌与 Character.chaosValue 绑定，只能通过 ReduceChaos / SetChaos 等专用逻辑变更
+        return false;
+    }
+
     public override float GetOutgoingDamageMultiplier(bool isDotDamage)
     {
         // 每层减少10%伤害

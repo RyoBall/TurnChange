@@ -45,7 +45,7 @@ public class ShopModuleManager : MonoBehaviour
     [SerializeField] private TMP_Text refreshButtonText;
 
     [Header("序体等级概率")]
-    [Tooltip("根据队伍等级配置不同大小序体的刷新概率。若不赋值则所有大小的序体均等概率刷新。")]
+    [Tooltip("根据队伍等级配置不同大小序体的刷新概率，每个商品槽独立掷骰。若不赋值则所有大小的序体均等概率刷新。")]
     [SerializeField] private ModuleLevelProbabilityConfig levelProbabilityConfig;
 
     private readonly List<ShopRuntimeEntry> m_runtimeEntries = new List<ShopRuntimeEntry>();
@@ -305,56 +305,62 @@ public class ShopModuleManager : MonoBehaviour
 
     private List<GridModuleDefinition> SelectModulesForRefresh(int spawnPointCount)
     {
-        List<GridModuleDefinition> candidateModules = BuildModuleCandidateList();
+        List<GridModuleDefinition> availableModules = BuildAvailableProductPool();
         List<GridModuleDefinition> selectedModules = new List<GridModuleDefinition>();
-        int targetCount = Mathf.Min(itemsPerRefresh, spawnPointCount, candidateModules.Count);
+        int targetCount = Mathf.Min(itemsPerRefresh, spawnPointCount, availableModules.Count);
 
         for (int i = 0; i < targetCount; i++)
         {
-            int selectedIndex = UnityEngine.Random.Range(0, candidateModules.Count);
-            selectedModules.Add(candidateModules[selectedIndex]);
-            candidateModules.RemoveAt(selectedIndex);
+            GridModuleLevel rolledLevel = RollModuleLevelForCurrentTeam();
+            List<GridModuleDefinition> candidates = FilterProductsByLevel(availableModules, rolledLevel);
+
+            // 该尺寸无可用模块时，回退到剩余全部模块
+            if (candidates.Count == 0)
+            {
+                candidates = availableModules;
+            }
+
+            int selectedIndex = UnityEngine.Random.Range(0, candidates.Count);
+            GridModuleDefinition selected = candidates[selectedIndex];
+            selectedModules.Add(selected);
+            availableModules.Remove(selected);
         }
 
         return selectedModules;
     }
 
-    private List<GridModuleDefinition> BuildModuleCandidateList()
+    private List<GridModuleDefinition> BuildAvailableProductPool()
     {
-        List<GridModuleDefinition> candidateModules = new List<GridModuleDefinition>();
-
-        // 根据队伍等级决定本次刷新允许的序体大小
-        GridModuleLevel rolledLevel = RollModuleLevelForCurrentTeam();
+        List<GridModuleDefinition> pool = new List<GridModuleDefinition>();
 
         for (int i = 0; i < productPool.Count; i++)
         {
             GridModuleDefinition product = productPool[i];
-            if (product == null)
+            if (product != null)
             {
-                continue;
-            }
-
-            // 仅添加与当前队伍等级概率匹配的序体大小
-            if (product.level == rolledLevel)
-            {
-                candidateModules.Add(product);
+                pool.Add(product);
             }
         }
 
-        // 如果按概率筛选后没有可用模块，回退到全部模块
-        if (candidateModules.Count == 0)
+        return pool;
+    }
+
+    private static List<GridModuleDefinition> FilterProductsByLevel(
+        List<GridModuleDefinition> source,
+        GridModuleLevel level)
+    {
+        List<GridModuleDefinition> filtered = new List<GridModuleDefinition>();
+
+        for (int i = 0; i < source.Count; i++)
         {
-            for (int i = 0; i < productPool.Count; i++)
+            GridModuleDefinition product = source[i];
+            if (product != null && product.level == level)
             {
-                GridModuleDefinition product = productPool[i];
-                if (product != null)
-                {
-                    candidateModules.Add(product);
-                }
+                filtered.Add(product);
             }
         }
 
-        return candidateModules;
+        return filtered;
     }
 
     /// <summary>

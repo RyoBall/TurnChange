@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 场景材质控制器 - 单例，控制两个物体的主纹理
-/// 在 Awake 中克隆材质，在进入战斗场景时根据楼层ID更新纹理
+/// 在 Awake 中克隆材质，在进入战斗场景时优先使用关卡配置纹理，否则按楼层ID回退
 /// </summary>
 [DisallowMultipleComponent]
 public class SceneMaterialController : MonoBehaviour
@@ -114,7 +114,7 @@ public class SceneMaterialController : MonoBehaviour
     }
 
     /// <summary>
-    /// 根据当前楼层ID查找对应纹理并填充到材质中
+    /// 优先使用关卡配置纹理，缺失时按楼层ID回退，并填充到材质中
     /// 在每次进入战斗场景时调用
     /// </summary>
     public void ApplyFloorTextures()
@@ -124,8 +124,53 @@ public class SceneMaterialController : MonoBehaviour
             CloneMaterials();
         }
 
-        int floorId = GetCurrentFloorId();
+        Sprite textureA = GetLevelSceneTextureA();
+        Sprite textureB = GetLevelSceneTextureB();
 
+        if (textureA == null || textureB == null)
+        {
+            int floorId = GetCurrentFloorId();
+            FloorTextureConfig config = ResolveFloorTextureConfig();
+            if (config != null && config.TryGetTextures(floorId, out Sprite floorTextureA, out Sprite floorTextureB))
+            {
+                if (textureA == null)
+                {
+                    textureA = floorTextureA;
+                }
+
+                if (textureB == null)
+                {
+                    textureB = floorTextureB;
+                }
+            }
+        }
+
+        if (textureA == null && textureB == null)
+        {
+            Debug.LogWarning("[SceneMaterialController] 未找到关卡或楼层纹理配置");
+            return;
+        }
+
+        ApplyTextureToMaterial(m_clonedMaterialA, textureA);
+        ApplyTextureToMaterial(m_clonedMaterialB, textureB);
+    }
+
+    private Sprite GetLevelSceneTextureA()
+    {
+        return LevelSetupManager.Instance != null
+            ? LevelSetupManager.Instance.LevelSceneTextureA
+            : null;
+    }
+
+    private Sprite GetLevelSceneTextureB()
+    {
+        return LevelSetupManager.Instance != null
+            ? LevelSetupManager.Instance.LevelSceneTextureB
+            : null;
+    }
+
+    private FloorTextureConfig ResolveFloorTextureConfig()
+    {
         if (floorTextureConfig == null)
         {
             floorTextureConfig = FloorTextureConfig.Instance;
@@ -134,17 +179,9 @@ public class SceneMaterialController : MonoBehaviour
         if (floorTextureConfig == null)
         {
             Debug.LogWarning("[SceneMaterialController] 未找到 FloorTextureConfig 配置");
-            return;
         }
 
-        if (!floorTextureConfig.TryGetTextures(floorId, out Sprite textureA, out Sprite textureB))
-        {
-            Debug.LogWarning($"[SceneMaterialController] 未找到楼层 {floorId} 的纹理配置");
-            return;
-        }
-
-        ApplyTextureToMaterial(m_clonedMaterialA, textureA);
-        ApplyTextureToMaterial(m_clonedMaterialB, textureB);
+        return floorTextureConfig;
     }
 
     /// <summary>

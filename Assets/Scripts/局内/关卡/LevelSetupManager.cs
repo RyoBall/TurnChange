@@ -34,6 +34,14 @@ public class LevelSetupManager : MonoBehaviour
             ? m_pendingBattleLevelData.preBattleDialogs
             : null;
 
+    /// <summary>本关卡配置的场景纹理（第一张，如背景）</summary>
+    public Sprite LevelSceneTextureA =>
+        m_pendingBattleLevelData != null ? m_pendingBattleLevelData.sceneTextureA : null;
+
+    /// <summary>本关卡配置的场景纹理（第二张，如前景/叠加层）</summary>
+    public Sprite LevelSceneTextureB =>
+        m_pendingBattleLevelData != null ? m_pendingBattleLevelData.sceneTextureB : null;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

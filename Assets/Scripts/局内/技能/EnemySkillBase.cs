@@ -1101,7 +1101,7 @@ public class EnemySkillBase : SkillBase
         for (int i = 0; i < states.Count; i++)
         {
             State state = states[i];
-            if (state == null || !state.isDebuff)
+            if (state == null || !state.isDebuff || !state.CanBePurged())
             {
                 continue;
             }

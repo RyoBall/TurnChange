@@ -27,7 +27,7 @@ public class ModuleLevelProbabilityEntry
 
 /// <summary>
 /// 可编程物体：配置每个队伍等级对应的不同大小序体的刷新概率。
-/// 在 ShopModuleManager 中引用此资产，刷新序体时根据队伍等级读取对应权重进行概率刷新。
+/// 在 ShopModuleManager 中引用此资产，每个商品槽刷新时根据队伍等级读取对应权重独立掷骰。
 /// </summary>
 [CreateAssetMenu(fileName = "ModuleLevelProbabilityConfig", menuName = "背包/序体等级概率配置")]
 public class ModuleLevelProbabilityConfig : ScriptableObject

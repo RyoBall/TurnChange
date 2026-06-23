@@ -36,6 +36,7 @@ public class ChessQueenEnemy : Enemy
 
     // ============ 指挥点奖励 ============
     private const float ChessGuaranteeThreshold = 180f;
+    private const int SummonedPawnQueenDeathCleanupDamage = 10000;
     private bool m_battleStartRewarded;
     private bool m_phaseTransitionRewarded;
 
@@ -563,12 +564,18 @@ public class ChessQueenEnemy : Enemy
         for (int i = 0; i < enemies.Count; i++)
         {
             ChessSummonedPawnEnemy pawn = enemies[i] as ChessSummonedPawnEnemy;
-            if (pawn == null)
+            if (pawn == null || pawn.IsDead)
             {
                 continue;
             }
 
-            pawn.gameObject.SetActive(false);
+            pawn.TakeDamage(new DamageInfo(SummonedPawnQueenDeathCleanupDamage, this)
+                .AsTrueDamage()
+                .BypassingShield());
+            if (!pawn.IsDead && pawn.currentHP <= 0)
+            {
+                pawn.Die();
+            }
         }
     }
 }

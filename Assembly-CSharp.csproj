@@ -233,6 +233,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshProFloatingText.cs" />
      <Compile Include="Assets\Scripts\局外\教程\TutorialData.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\BattleLaunchContext.cs" />
+     <Compile Include="Assets\Scripts\局外\背包\BackpackDevHotkeys.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\ETFXButtonScript.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
      <Compile Include="Assets\Scripts\局外\背包\IBackpackInterfaces.cs" />

@@ -43,6 +43,8 @@
      <Compile Include="Assets\Editor\CSVReader.cs" />
      <Compile Include="Assets\Editor\GameAudioCatalogEditor.cs" />
      <Compile Include="Assets\Editor\GridModuleImporter.cs" />
+     <Compile Include="Assets\Editor\GridModuleColorApplier.cs" />
+     <Compile Include="Assets\Editor\GridModuleAssetRepair.cs" />
      <Compile Include="Assets\Editor\EnemySkillImporter.cs" />
      <Compile Include="Assets\Editor\CharacterSwitchAnimationSetup.cs" />
      <Compile Include="Assets\Editor\AmbientFloatingParticlesPrefabCreator.cs" />
@@ -65,6 +67,7 @@
      <Compile Include="Assets\Editor\SkillKeywordImporter.cs" />
      <Compile Include="Assets\Editor\StateImporter.cs" />
      <Compile Include="Assets\Editor\GameAudioCatalogWindow.cs" />
+     <Compile Include="Assets\Editor\GridModuleColorPalette.cs" />
      <Compile Include="Assets\Editor\ReadOnlyDrawer.cs" />
      <Compile Include="Assets\Editor\TagColorImporter.cs" />
      <Compile Include="Assets\Editor\CreditsPanelPrefabBuilder.cs" />

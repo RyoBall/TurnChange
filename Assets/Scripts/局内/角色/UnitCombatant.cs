@@ -353,7 +353,7 @@ public class UnitCombatant : Combatant
     }
 
     /// <summary>
-    /// 清除所有负面状态（isDebuff == true）
+    /// 清除所有可被净化的负面状态（isDebuff == true 且 CanBePurged）
     /// </summary>
     public void ClearAllDebuffs()
     {
@@ -362,7 +362,7 @@ public class UnitCombatant : Combatant
             State state = states[i];
             if (state != null && state.isDebuff)
             {
-                state.EndState();
+                RemoveState(state);
             }
         }
     }

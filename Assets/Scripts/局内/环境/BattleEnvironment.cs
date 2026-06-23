@@ -300,7 +300,7 @@ public class GravityEnvironmentBehavior : EnvironmentBehaviorBase
             return 1f;
         }
 
-        return environment.RuntimeData1 > 0f ? environment.RuntimeData1 : 2f;
+        return environment.RuntimeData1 > 0f ? environment.RuntimeData1 : 1.5f;
     }
 }
 

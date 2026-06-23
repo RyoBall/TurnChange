@@ -7511,7 +7511,7 @@ Transform:
   m_GameObject: {fileID: 1224791539}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 57.5, y: 48.3, z: 235}
+  m_LocalPosition: {x: 56.7, y: 50, z: 235}
   m_LocalScale: {x: 20, y: 20, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10953,7 +10953,7 @@ MonoBehaviour:
   dragonSpawnEntries:
   - enemyID: "\u8680\u7130\u9F99\u9996"
     spawnPoint: {fileID: 1480658500}
-  - enemyID: "\u5650\u5FC3\u9F99\u9996"
+  - enemyID: "\u566C\u5FC3\u9F99\u9996"
     spawnPoint: {fileID: 1224791540}
   - enemyID: "\u88C2\u7A7A\u9F99\u9996"
     spawnPoint: {fileID: 1299285654}

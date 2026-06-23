@@ -1232,7 +1232,7 @@ public class CharacterSkillBase : SkillBase
         for (int i = 0; i < states.Count && removedCount < removeCount; i++)
         {
             State state = states[i];
-            if (state == null || !state.isDebuff)
+            if (state == null || !state.isDebuff || !state.CanBePurged())
             {
                 continue;
             }

@@ -25,6 +25,8 @@ public class PendingBattleLevelData
     public int rewardExperience;
     public int rewardGold;
     public AudioClip levelBgmClip;
+    public Sprite sceneTextureA;
+    public Sprite sceneTextureB;
     public List<BattleEnemyWaveData> enemyWaves = new List<BattleEnemyWaveData>();
     public List<CharacterRosterData> selectedFieldCharacters = new List<CharacterRosterData>();
     public List<BattleStoryDialogData> preBattleDialogs = new List<BattleStoryDialogData>();
@@ -73,6 +75,8 @@ public static class BattleLaunchContext
             rewardExperience = Mathf.Max(0, source.rewardExperience),
             rewardGold = Mathf.Max(0, source.rewardGold),
             levelBgmClip = source.levelBgmClip,
+            sceneTextureA = source.sceneTextureA,
+            sceneTextureB = source.sceneTextureB,
             enemyWaves = new List<BattleEnemyWaveData>()
         };
 

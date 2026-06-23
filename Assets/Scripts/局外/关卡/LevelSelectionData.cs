@@ -20,6 +20,13 @@ public class LevelSelectionData : ScriptableObject//关卡数据
     [Tooltip("本关卡专属BGM（为空则从通用战斗BGM中随机选取）")]
     public AudioClip levelBgmClip;
 
+    [Header("场景纹理")]
+    [Tooltip("本关卡战斗场景的第一张纹理（如背景），为空则使用楼层默认纹理")]
+    public Sprite sceneTextureA;
+
+    [Tooltip("本关卡战斗场景的第二张纹理（如前景/叠加层），为空则使用楼层默认纹理")]
+    public Sprite sceneTextureB;
+
     [Header("剧情对话")]
     [Tooltip("战前对话（在切入技之前播放）")]
     public List<BattleStoryDialogData> preBattleDialogs = new List<BattleStoryDialogData>();

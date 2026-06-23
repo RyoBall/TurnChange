@@ -111,6 +111,7 @@ public static class GridModuleImporter
             moduleAsset.description = GetString(row, "详细词条描述", "Description", moduleAsset.description);
             moduleAsset.moduleType = moduleType;
             moduleAsset.level = moduleLevel;
+            GridModuleColorPalette.ApplyColors(moduleAsset);
 
             EditorUtility.SetDirty(moduleAsset);
             importedCount++;

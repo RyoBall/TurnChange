@@ -55,7 +55,6 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
     public Color color = new Color(0.28f, 0.78f, 1f, 0.9f);
     public Color gradientColorB = new Color(0.1f, 0.3f, 0.85f, 0.9f);
     public TemporaryBattleModifierData modifierData = new TemporaryBattleModifierData();
-    [SerializeField]int privePerCell = 5;
     public List<Vector2Int> cells = new List<Vector2Int>
     {
         Vector2Int.zero
@@ -67,8 +66,24 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
     public Color GradientColorB => gradientColorB;
     public int GetPricePerCell()
     {
-        return Mathf.Max(0, privePerCell);
+        return GetDefaultPricePerCell(level);
     }
+
+    public static int GetDefaultPricePerCell(GridModuleLevel moduleLevel)
+    {
+        switch (moduleLevel)
+        {
+            case GridModuleLevel.Small:
+                return 4;
+            case GridModuleLevel.Normal:
+                return 5;
+            case GridModuleLevel.Large:
+                return 7;
+            default:
+                return 4;
+        }
+    }
+
     public GridModuleDefinition Clone()
     {
         GridModuleDefinition clone = Instantiate(this);
@@ -80,7 +95,6 @@ public class GridModuleDefinition : ScriptableObject, IGridModule
         clone.color = color;
         clone.gradientColorB = gradientColorB;
         clone.modifierData = modifierData != null ? modifierData.Clone() : null;
-        clone.privePerCell = privePerCell;
         clone.cells = new List<Vector2Int>(cells.Count);
         clone.m_isLoaded = false;
 
