@@ -230,6 +230,9 @@ public static class TemporaryBattleModifierRuntimeManager
     private static readonly Dictionary<int, Dictionary<Character, float>> s_reserveAdvanceProgressByModule = new Dictionary<int, Dictionary<Character, float>>();
     private static readonly Dictionary<int, Dictionary<Character, int>> s_swapChargeStacksByModule = new Dictionary<int, Dictionary<Character, int>>();
     private static readonly Dictionary<Character, float> s_pendingNextDamageBonusByCharacter = new Dictionary<Character, float>();
+    private static readonly HashSet<Character> s_pendingGuaranteedCritByCharacter = new HashSet<Character>();
+    private static float s_teamDotResonanceBoostMultiplier = 1f;
+    private static float s_teamDotResonanceBoostRemainingActionValue;
 
     private static bool s_hasBattleModifierSnapshot;
 
@@ -299,6 +302,9 @@ public static class TemporaryBattleModifierRuntimeManager
         s_reserveAdvanceProgressByModule.Clear();
         s_swapChargeStacksByModule.Clear();
         s_pendingNextDamageBonusByCharacter.Clear();
+        s_pendingGuaranteedCritByCharacter.Clear();
+        s_teamDotResonanceBoostMultiplier = 1f;
+        s_teamDotResonanceBoostRemainingActionValue = 0f;
 
         ChargeStateBehavior.OnCounterChargeTriggered += OnCounterChargeEventTriggered;
 
@@ -358,6 +364,9 @@ public static class TemporaryBattleModifierRuntimeManager
         s_reserveAdvanceProgressByModule.Clear();
         s_swapChargeStacksByModule.Clear();
         s_pendingNextDamageBonusByCharacter.Clear();
+        s_pendingGuaranteedCritByCharacter.Clear();
+        s_teamDotResonanceBoostMultiplier = 1f;
+        s_teamDotResonanceBoostRemainingActionValue = 0f;
         HybridDamageModuleBehavior.ResetAllModuleTracking();
         FocusFireModuleBehavior.ResetAllModuleTracking();
         s_hasBattleModifierSnapshot = false;
@@ -762,6 +771,120 @@ public static class TemporaryBattleModifierRuntimeManager
         s_pendingNextDamageBonusByCharacter[character] = bonus;
     }
 
+    public static bool HasActiveGridModule(GridModuleType moduleType)
+    {
+        if (moduleType == GridModuleType.None)
+        {
+            return false;
+        }
+
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier != null && modifier.moduleType == moduleType && modifier.sourceModuleIndex >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static void AddPendingGuaranteedCriticalHit(Character character)
+    {
+        if (character == null)
+        {
+            return;
+        }
+
+        s_pendingGuaranteedCritByCharacter.Add(character);
+    }
+
+    public static bool ConsumeGuaranteedCriticalHit(UnitCombatant attacker)
+    {
+        if (!(attacker is Character character))
+        {
+            return false;
+        }
+
+        return s_pendingGuaranteedCritByCharacter.Remove(character);
+    }
+
+    public static void ActivateTeamDotResonanceBoost(float multiplier, float durationActionValue)
+    {
+        s_teamDotResonanceBoostMultiplier = Mathf.Max(1f, multiplier);
+        s_teamDotResonanceBoostRemainingActionValue = Mathf.Max(0f, durationActionValue);
+    }
+
+    public static void TickTeamDotResonanceBoost(float actionValueAdvanced)
+    {
+        if (s_teamDotResonanceBoostRemainingActionValue <= 0f || actionValueAdvanced <= 0f)
+        {
+            return;
+        }
+
+        s_teamDotResonanceBoostRemainingActionValue = Mathf.Max(0f, s_teamDotResonanceBoostRemainingActionValue - actionValueAdvanced);
+    }
+
+    public static float GetTeamDotResonanceDotDamageMultiplier()
+    {
+        return s_teamDotResonanceBoostRemainingActionValue > 0f ? s_teamDotResonanceBoostMultiplier : 1f;
+    }
+
+    public static void PreparePlayerDirectDamageModifiers(UnitCombatant attacker, DamageType damageType)
+    {
+        if (!(attacker is Character))
+        {
+            return;
+        }
+
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier == null || modifier.sourceModuleIndex < 0)
+            {
+                continue;
+            }
+
+            if (modifier.moduleType == GridModuleType.HybridDamage)
+            {
+                HybridDamageModuleBehavior.RecordDamageTypeForStack(modifier.sourceModuleIndex, damageType);
+            }
+        }
+    }
+
+    public static bool TryHandleLethalDamage(Character targetCharacter, int incomingDamage)
+    {
+        if (targetCharacter == null || targetCharacter.IsDead || incomingDamage <= 0)
+        {
+            return false;
+        }
+
+        if (targetCharacter.currentHP - incomingDamage > 0)
+        {
+            return false;
+        }
+
+        IReadOnlyList<TemporaryBattleModifierData> modifiers = GetEffectiveBattleModifiers();
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            TemporaryBattleModifierData modifier = modifiers[i];
+            if (modifier == null || modifier.moduleType != GridModuleType.FatalGuard || modifier.sourceModuleIndex < 0)
+            {
+                continue;
+            }
+
+            if (FatalGuardModuleBehavior.TryApplyFatalGuardRevive(targetCharacter, 0.50f, modifier.sourceModuleIndex))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static float ConsumePendingNextDamageMultiplier(UnitCombatant attacker)
     {
         if (!(attacker is Character character) || !s_pendingNextDamageBonusByCharacter.TryGetValue(character, out float bonus) || bonus <= 0f)
@@ -911,7 +1034,12 @@ public static class TemporaryBattleModifierRuntimeManager
 
     public static bool IsNextCombatantEnemy()
     {
-        return TurnManager.Instance != null && TurnManager.Instance.GetCurrentCombatant() is Enemy;
+        return TurnManager.Instance != null && TurnManager.Instance.IsNextCombatantEnemyAfter(null);
+    }
+
+    public static bool IsNextCombatantEnemyAfter(Character swappedInCharacter)
+    {
+        return TurnManager.Instance != null && TurnManager.Instance.IsNextCombatantEnemyAfter(swappedInCharacter);
     }
 
     private static void DispatchRuntimeEvent(TemporaryBattleModifierRuntimeContext context)

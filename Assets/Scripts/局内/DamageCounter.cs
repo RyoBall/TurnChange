@@ -69,7 +69,14 @@ public class DamageCounter : MonoBehaviour
             effectiveCritDamage += TemporaryBattleModifierRuntimeManager.GetPlayerCritDamageBonus(attacker);
         }
 
-        isCrit = canCrit && Random.value < Mathf.Clamp01(effectiveCritRate);
+        if (canCrit && attacker is Character && TemporaryBattleModifierRuntimeManager.ConsumeGuaranteedCriticalHit(attacker))
+        {
+            isCrit = true;
+        }
+        else
+        {
+            isCrit = canCrit && Random.value < Mathf.Clamp01(effectiveCritRate);
+        }
         //获取防御系数与随机系数
         float randomFactor = applyRandomVariance ? Random.Range(0.85f, 1.15f) : 1f;
         float defenseFactor = isTrueDamage ? 1f : (defender.K / (defender.K + defender.defense));
@@ -89,6 +96,7 @@ public class DamageCounter : MonoBehaviour
         //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
         if (attacker is Character)
         {
+            TemporaryBattleModifierRuntimeManager.PreparePlayerDirectDamageModifiers(attacker, damageType);
             raw *= TemporaryBattleModifierRuntimeManager.ConsumePendingNextDamageMultiplier(attacker);
             raw *= TemporaryBattleModifierRuntimeManager.GetPlayerDamageMultiplier(attacker, defender, damageType, isCrit);
         }
@@ -127,7 +135,11 @@ public class DamageCounter : MonoBehaviour
         damage *= defender.GetIncomingDamageMultiplier(true, isTrueDamage);
         damage *= EnvironmentManager.Instance != null ? EnvironmentManager.Instance.GetIncomingDamageMultiplier(attacker, defender, true, isTrueDamage) : 1f;
         //高耦合度标记，后续可以考虑通过事件系统或其他方式解耦
-        damage *= attacker is Character ? TemporaryBattleModifierRuntimeManager.GetPlayerDamageMultiplier(attacker, defender, DamageType.Magical, false) : 1f;
+        if (attacker is Character)
+        {
+            damage *= TemporaryBattleModifierRuntimeManager.GetPlayerDamageMultiplier(attacker, defender, DamageType.Magical, false);
+            damage *= TemporaryBattleModifierRuntimeManager.GetTeamDotResonanceDotDamageMultiplier();
+        }
 
         var damageInfo = new UnitCombatant.DamageInfo(Mathf.RoundToInt(damage), attacker, DamageType.Magical)
             .AsDot()

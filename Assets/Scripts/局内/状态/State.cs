@@ -836,6 +836,11 @@ public class BurningBloodStateBehavior : StateBehaviorBase
             return;
         }
 
+        if (TemporaryBattleModifierRuntimeManager.HasActiveGridModule(GridModuleType.BloodReverse))
+        {
+            return;
+        }
+
         float selfDamageRatio = state.baseExtraData1;
         int selfDamage = Mathf.RoundToInt(state.owner.maxHP * selfDamageRatio);
         // 若当前生命不足以承受自损，则降至1点而不会死亡
@@ -1849,17 +1854,21 @@ public class ChargeStateBehavior : StateBehaviorBase
             float shieldHpRatio = state.baseExtraData1;
             float fixedShieldScale = state.baseExtraData3;
             float enemyDelayRatio = state.baseExtraData4 > 0f ? state.baseExtraData4 : 0.2f;
-            foreach (var ally in CharacterManager.Instance.fieldCharacters)
+            bool suppressBurstShield = TemporaryBattleModifierRuntimeManager.HasActiveGridModule(GridModuleType.ChargeCounterResonance);
+            if (!suppressBurstShield)
             {
-                if (ally == null)
+                foreach (var ally in CharacterManager.Instance.fieldCharacters)
                 {
-                    continue;
-                }
+                    if (ally == null)
+                    {
+                        continue;
+                    }
 
-                int shieldValue = CalculateBurstShieldGrant(state.owner, ally, shieldHpRatio, fixedShieldScale, BurstShieldTargetCapRatio);
-                if (shieldValue > 0)
-                {
-                    ally.AddShield(shieldValue);
+                    int shieldValue = CalculateBurstShieldGrant(state.owner, ally, shieldHpRatio, fixedShieldScale, BurstShieldTargetCapRatio);
+                    if (shieldValue > 0)
+                    {
+                        ally.AddShield(shieldValue);
+                    }
                 }
             }
 
