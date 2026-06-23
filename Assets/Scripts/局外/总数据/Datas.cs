@@ -90,6 +90,8 @@ public class Datas : MonoBehaviour
 
     public readonly Dictionary<CharacterType, CharacterRosterData> m_characterTypeLookup = new Dictionary<CharacterType, CharacterRosterData>();
     private bool m_characterLookupBuilt;
+    private bool m_devCurrentFloorFullyUnlocked;
+    private int m_devUnlockedFloorIndex = -1;
 
     private void Awake()
     {
@@ -100,6 +102,7 @@ public class Datas : MonoBehaviour
 
         InitializeCharacterLookup();
         NormalizeUnlockedCharacters();
+        ApplyCondensedModePreference();
         ApplyLevelFloorsFromConfig();
         ClampProgressionData();
         SubscribeInternalEvents();
@@ -261,9 +264,26 @@ public class Datas : MonoBehaviour
 
     public void RefreshLevelFloorsFromConfig()
     {
+        ClearDevFloorUnlockOverride();
         ApplyLevelFloorsFromConfig();
         ClampProgressionData();
         UpdateLevelUnlockStates(GetCurrentFloorData());
+        LevelFloorsChanged?.Invoke();
+    }
+
+    /// <summary>开发者快捷键：强制解锁当前楼层全部关卡（不改变完成状态）。</summary>
+    public void DevUnlockCurrentFloorLevels()
+    {
+        LevelSelectionFloorData floorData = GetCurrentFloorData();
+        if (floorData == null)
+        {
+            Debug.LogWarning("[Datas] 当前楼层数据为空，无法解锁关卡。");
+            return;
+        }
+
+        m_devCurrentFloorFullyUnlocked = true;
+        m_devUnlockedFloorIndex = GetCurrentFloorIndex();
+        ApplyDevUnlockOverride(floorData);
         LevelFloorsChanged?.Invoke();
     }
 
@@ -329,6 +349,7 @@ public class Datas : MonoBehaviour
         }
 
         currentFloorIndex++;
+        LevelFloorsChanged?.Invoke();
         return true;
     }
 
@@ -401,6 +422,58 @@ public class Datas : MonoBehaviour
             LevelSelectionData previousLevel = GetPreviousLevel(levels, i);
             currentLevel.isUnlocked = previousLevel == null || IsLevelCompleted(previousLevel.levelId);
         }
+
+        if (HasDevUnlockOverrideForFloor(GetFloorIndex(floorData)))
+        {
+            ApplyDevUnlockOverride(floorData);
+        }
+    }
+
+    private void ClearDevFloorUnlockOverride()
+    {
+        m_devCurrentFloorFullyUnlocked = false;
+        m_devUnlockedFloorIndex = -1;
+    }
+
+    private bool HasDevUnlockOverrideForFloor(int floorIndex)
+    {
+        return m_devCurrentFloorFullyUnlocked && m_devUnlockedFloorIndex == floorIndex;
+    }
+
+    private int GetFloorIndex(LevelSelectionFloorData floorData)
+    {
+        if (levelFloors == null || floorData == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < levelFloors.Count; i++)
+        {
+            if (levelFloors[i] == floorData)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private void ApplyDevUnlockOverride(LevelSelectionFloorData floorData)
+    {
+        if (floorData == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<LevelSelectionData> levels = floorData.GetLevels();
+        for (int i = 0; i < levels.Count; i++)
+        {
+            LevelSelectionData level = levels[i];
+            if (level != null)
+            {
+                level.isUnlocked = true;
+            }
+        }
     }
 
     private LevelSelectionData GetPreviousLevel(IReadOnlyList<LevelSelectionData> levels, int currentIndex)
@@ -429,6 +502,11 @@ public class Datas : MonoBehaviour
         }
 
         return CondensedLevelConfig.LoadDefaultAsset();
+    }
+
+    private void ApplyCondensedModePreference()
+    {
+        CondensedModePreference.ApplyToConfigWithoutNotify(ResolveCondensedLevelConfig());
     }
 
     private void ApplyLevelFloorsFromConfig()

@@ -517,11 +517,11 @@ public class Character : UnitCombatant
     }
 
     /// <summary>
-    /// 被切出时调用，护盾减半（向下取整），并清零行动值混沌累加器
+    /// 被切出时调用，移除全部护盾，并清零行动值混沌累加器
     /// </summary>
     public void OnSwapOut()
     {
-        currentShield /= 2;
+        currentShield = 0;
         ResetActionValueChaosAccumulator();
     }
 

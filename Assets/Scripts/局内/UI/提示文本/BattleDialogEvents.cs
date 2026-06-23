@@ -26,6 +26,9 @@ public enum BattleDialogEventType
     /// <summary>兵棋即将升变（倒数第二次行动后）</summary>
     ChessPawnsAboutToPromote,
 
+    /// <summary>兵棋升变进度刷新（最高推进格数更新时）</summary>
+    ChessPawnsPromotionProgress,
+
     /// <summary>皇后标记王棋（三后袭王座）</summary>
     ChessQueenMarkingKing,
 

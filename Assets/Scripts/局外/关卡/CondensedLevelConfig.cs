@@ -70,13 +70,18 @@ public class CondensedLevelConfig : ScriptableObject, ICondensedLevelConfig
             return;
         }
 
+        ApplyRuntimeCondensedMode(enabled);
+        NotifyLevelFloorsChanged();
+    }
+
+    /// <summary>仅写入运行时状态，不触发关卡列表刷新（供 Datas 初始化使用）。</summary>
+    public void ApplyRuntimeCondensedMode(bool enabled)
+    {
         m_isCondensedModeEnabled = enabled;
         if (enabled)
         {
             m_useLevelConfiguredPlayerLevel = true;
         }
-
-        NotifyLevelFloorsChanged();
     }
 
     public void SetUseLevelConfiguredPlayerLevel(bool enabled)

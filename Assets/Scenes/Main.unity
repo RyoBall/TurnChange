@@ -7327,10 +7327,20 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2605374678960468794, guid: e0379d9ea68fbc1408e16b4302db7714,
+        type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 6505422408377757663, guid: e0379d9ea68fbc1408e16b4302db7714,
         type: 3}
       propertyPath: m_Name
       value: CreditsPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 6505422408377757663, guid: e0379d9ea68fbc1408e16b4302db7714,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -13962,7 +13972,7 @@ PrefabInstance:
     - target: {fileID: 631565993468548976, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}
       propertyPath: m_isDebugMode
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1977110280919525233, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}
@@ -13979,10 +13989,20 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3258802442271749055, guid: aa35eb7d4b89832469b5a7b49624b24d,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 40
+      objectReference: {fileID: 0}
     - target: {fileID: 3814928108241634785, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3946479716897770488, guid: aa35eb7d4b89832469b5a7b49624b24d,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 4155293158514313599, guid: aa35eb7d4b89832469b5a7b49624b24d,
         type: 3}

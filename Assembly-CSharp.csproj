@@ -64,6 +64,7 @@
      <Compile Include="Assets\Scripts\Utils\DontDestroyCanvas.cs" />
      <Compile Include="Assets\Scripts\局内\角色\EnemyManager.cs" />
      <Compile Include="Assets\Scripts\局内\技能\SkillBase.cs" />
+     <Compile Include="Assets\Scripts\局外\切换界面\StartScreenDevOverlay.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\CondensedLevelConfig.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_A.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01_UGUI.cs" />
@@ -182,6 +183,7 @@
      <Compile Include="Assets\Scripts\局外\关卡\PreparationSwitchCardPreviewView.cs" />
      <Compile Include="Assets\Scripts\局外\切换界面\StartGameButton.cs" />
      <Compile Include="Assets\Scripts\局外\背包\ModuleCellFactory.cs" />
+     <Compile Include="Assets\Scripts\局外\切换界面\LevelSelectionDevHotkeys.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\BattleStoryDialogPlayer.cs" />
      <Compile Include="Assets\Scripts\局内\状态\State.cs" />
      <Compile Include="Assets\Scripts\局内\CinemachineCameraManager.cs" />
@@ -242,6 +244,7 @@
      <Compile Include="Assets\Scripts\局外\商店\ShopModuleItemUI.cs" />
      <Compile Include="Assets\Scripts\局内\UI\角色UI\ChaosPointSlotUI.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\ETFXProjectileScript.cs" />
+     <Compile Include="Assets\Scripts\局外\关卡\CondensedModePreference.cs" />
      <Compile Include="Assets\Scripts\局外\LevelEventData.cs" />
      <Compile Include="Assets\Scripts\Utils\CustomAnimatedCursor.cs" />
      <Compile Include="Assets\Scripts\局外\切换界面\HorizontalSnapCarousel.cs" />

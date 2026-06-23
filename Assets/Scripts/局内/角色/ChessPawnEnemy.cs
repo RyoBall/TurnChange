@@ -19,10 +19,17 @@ public class ChessPawnEnemy : Enemy
     [SerializeField, Min(0)] private int m_pawnAdvanceCount;
     private bool m_hasTriggeredPromotion;
 
+    private static readonly Dictionary<string, int> s_highestAdvanceByBossGroup = new Dictionary<string, int>();
+
     public bool IsChessPromotionPawn => true;
     public int PawnAdvanceCount => m_pawnAdvanceCount;
     public int PawnPromotionSteps => pawnPromotionSteps;
     public string BossGroupId => bossGroupId;
+
+    public static void ResetPromotionTracking()
+    {
+        s_highestAdvanceByBossGroup.Clear();
+    }
 
     protected override void Start()
     {
@@ -78,6 +85,8 @@ public class ChessPawnEnemy : Enemy
 
         FloatingTipGenerator.Instance?.ShowTipAtObject(transform, $"{combatantName}推进至第{m_pawnAdvanceCount}格");
 
+        TryRaisePromotionProgressDialog();
+
         // 倒数第二次行动后提示即将升变
         if (m_pawnAdvanceCount >= pawnPromotionSteps - 1 && !m_hasTriggeredPromotion)
         {
@@ -93,6 +102,60 @@ public class ChessPawnEnemy : Enemy
                 m_linkedQueen.EnterPhaseTwo(aliveCount);
             }
         }
+    }
+
+    private void TryRaisePromotionProgressDialog()
+    {
+        if (m_hasTriggeredPromotion || string.IsNullOrEmpty(bossGroupId))
+        {
+            return;
+        }
+
+        int groupMax = GetMaxAdvanceCountForGroup(bossGroupId);
+        if (!s_highestAdvanceByBossGroup.TryGetValue(bossGroupId, out int previousMax))
+        {
+            previousMax = 0;
+        }
+
+        if (groupMax <= previousMax)
+        {
+            return;
+        }
+
+        s_highestAdvanceByBossGroup[bossGroupId] = groupMax;
+        int stepsRemaining = pawnPromotionSteps - groupMax;
+        if (stepsRemaining <= 1)
+        {
+            return;
+        }
+
+        BattleDialogEvents.Raise(
+            BattleDialogEventData.Create(BattleDialogEventType.ChessPawnsPromotionProgress)
+                .WithEnemy(this)
+                .WithExtraInt(stepsRemaining));
+    }
+
+    private static int GetMaxAdvanceCountForGroup(string groupId)
+    {
+        if (EnemyManager.Instance == null || string.IsNullOrEmpty(groupId))
+        {
+            return 0;
+        }
+
+        int maxAdvance = 0;
+        IReadOnlyList<Enemy> aliveEnemies = EnemyManager.Instance.AliveEnemies;
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            ChessPawnEnemy pawn = aliveEnemies[i] as ChessPawnEnemy;
+            if (pawn == null || pawn.IsDead || !string.Equals(pawn.BossGroupId, groupId, System.StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            maxAdvance = Mathf.Max(maxAdvance, pawn.PawnAdvanceCount);
+        }
+
+        return maxAdvance;
     }
 
     private ChessQueenEnemy FindQueenByGroup(IReadOnlyList<Enemy> spawnedEnemies)

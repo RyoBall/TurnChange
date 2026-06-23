@@ -155,7 +155,7 @@ public class DragonBossEnemy : Enemy
     /// </summary>
     public void NotifyChaosDragonSkillUsed()
     {
-        Commander.GetInstance().RecoverCommandPoints(1, "混沌龙技能+1");
+        Commander.GetInstance().RecoverCommandPoints(1, "噬心龙首技能+1");
     }
 
     /// <summary>

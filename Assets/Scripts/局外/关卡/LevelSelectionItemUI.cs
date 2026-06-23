@@ -177,12 +177,7 @@ public class LevelSelectionItemUI : MonoBehaviour
             return;
         }
 
-        if (listLoader == null)
-        {
-            listLoader = GetComponentInParent<LevelSelectionListLoader>(true);
-        }
-
-        listLoader?.ApplyLevels();
+        ResolveListLoader()?.ApplyLevels();
     }
     #endregion
     public void SetLevelData(LevelSelectionData data)
@@ -254,10 +249,22 @@ public class LevelSelectionItemUI : MonoBehaviour
             eventPanel = EventLevelPanelPreview.Instance;
         }
 
+        ResolveListLoader();
+    }
+
+    private LevelSelectionListLoader ResolveListLoader()
+    {
         if (listLoader == null)
         {
             listLoader = GetComponentInParent<LevelSelectionListLoader>(true);
         }
+
+        if (listLoader == null)
+        {
+            listLoader = LevelSelectionListLoader.instance;
+        }
+
+        return listLoader;
     }
 
     private void RefreshView()
@@ -268,7 +275,9 @@ public class LevelSelectionItemUI : MonoBehaviour
         }
 
         string displayName = GetDisplayName();
-        bool canInteract = m_isUnlocked && !m_isCompleted;
+        bool canInteract = levelType == LevelSelectionButtonType.NextFloor
+            ? m_isUnlocked
+            : m_isUnlocked && !m_isCompleted;
 
         if (levelNameText != null)
         {

@@ -1922,11 +1922,11 @@ public class PoisonStateBehavior : DotStateBehaviorBase
 /// 混沌整合状态：层数 = 混沌值(1-5)
 /// - 1-2层：每层减少10%造成伤害
 /// - 3-4层：每层增加20点行动冷却（合计-20%~-40%伤害、+20~+40冷却）
-/// - 5层：眩晕1回合并扣除现存血量40%（不消耗护盾），下回合混沌值重置为2层
+/// - 5层：眩晕1回合并扣除当前生命值30%（不消耗护盾），下回合混沌值重置为2层
 /// </summary>
 public class ChaosStateBehavior : StateBehaviorBase
 {
-    private const float ChaosBurstCurrentHpLossRatio = 0.4f;
+    private const float ChaosBurstCurrentHpLossRatio = 0.3f;
 
     private bool m_pendingChaosReset;
 

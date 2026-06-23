@@ -10951,11 +10951,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dragonSpawnEntries:
-  - enemyID: "Dot\u9F99"
+  - enemyID: "\u8680\u7130\u9F99\u9996"
     spawnPoint: {fileID: 1480658500}
-  - enemyID: "\u6DF7\u6C8C\u9F99"
+  - enemyID: "\u5650\u5FC3\u9F99\u9996"
     spawnPoint: {fileID: 1224791540}
-  - enemyID: "\u76F4\u4F24\u9F99"
+  - enemyID: "\u88C2\u7A7A\u9F99\u9996"
     spawnPoint: {fileID: 1299285654}
   environmentArtPrefab: {fileID: 1267665435212863218, guid: c12225a2e59f31e4a85070f1e16f9902,
     type: 3}

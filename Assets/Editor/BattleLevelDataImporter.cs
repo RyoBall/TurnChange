@@ -22,9 +22,9 @@ public static class BattleLevelDataImporter
         { "E4", "Bomb" },     // 群体自爆手
         { "E5", "Dot" },      // 持续伤害施加手
         { "B1", "剑客" },
-        { "B2", "混沌龙" },
-        { "B3", "Dot龙" },
-        { "B4", "直伤龙" },
+        { "B2", "噬心龙首" },
+        { "B3", "蚀焰龙首" },
+        { "B4", "裂空龙首" },
         { "B5", "Chess" },    // 初始棋子
         { "B6", "Queen" },    // 皇后
     };
@@ -191,7 +191,7 @@ public static class BattleLevelDataImporter
     /// 格式: W1:E2*1+E5*1;W2:E1*1+E5*1
     /// 支持独立等级: E2:-1*1 表示 E2 等级 -1
     /// 教程敌人: T1=教程盾手, T2=教程单体
-    /// Boss敌人: B1=剑客, B2=混沌龙, B3=Dot龙, B4=直伤龙, B5=初始棋子, B6=皇后
+    /// Boss敌人: B1=剑客, B2=噬心龙首, B3=蚀焰龙首, B4=裂空龙首, B5=初始棋子, B6=皇后
     /// W(Wave) = 波次, *后面的数字 = 数量
     /// </summary>
     private static List<LevelEnemyWaveData> ParseEnemyConfig(string config, int defaultLevel)

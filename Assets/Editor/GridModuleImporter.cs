@@ -16,7 +16,7 @@ public static class GridModuleImporter
         { "呼吸回血", GridModuleType.SwapSelfHeal },
         { "治愈增强", GridModuleType.HealingBoost },
         { "混沌疗化", GridModuleType.HealChaosCleanse },
-        { "Dot强化", GridModuleType.DotBoost },
+        { "法术强化", GridModuleType.DotBoost },
         { "直伤强化", GridModuleType.DirectDamageBoost },
         { "紧急回避", GridModuleType.EmergencyEvade },
         { "起死回生", GridModuleType.FatalGuard },

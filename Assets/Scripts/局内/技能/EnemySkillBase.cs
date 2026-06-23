@@ -440,7 +440,7 @@ public class EnemySkillBase : SkillBase
 
     // ============ 棋局Boss技能 ============
 
-    /// <summary>棋子行动：初始兵卒推进，召唤兵卒回血</summary>
+    /// <summary>步进：初始兵卒推进，召唤兵卒回血</summary>
     private IEnumerator ChessPawnAction(Enemy self)
     {
         // 召唤兵卒：为皇后回血

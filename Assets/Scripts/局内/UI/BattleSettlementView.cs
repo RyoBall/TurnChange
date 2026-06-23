@@ -86,10 +86,11 @@ public class BattleSettlementView : MonoBehaviour//结算界面
         SetTitleText(victoryTitleText);
         UpdateRewardTexts(experienceReward, goldReward);
 
+        // 淡入前设置奖励可见性，避免浓缩模式下经验 UI 闪现
+        SetRewardPanelVisible(true);
+
         yield return ShowSettlementPanel();
 
-        // 胜利时显示奖励面板；浓缩模式下隐藏经验相关 UI
-        SetRewardPanelVisible(true);
         if (!m_hideExperienceOnSettlement)
         {
             StartCoroutine(UpdateExpSlider(experienceReward));

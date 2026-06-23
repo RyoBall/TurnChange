@@ -29,10 +29,8 @@ public class ModuleCellConfig : ScriptableObject
         }
     }
 
-    private const string EmptyCellSpriteResourcePath = "Art/新的/方块底";
-
     [Header("背包网格空单元格")]
-    [Tooltip("网格背包底色 Sprite。为空时尝试从 Resources/Art/新的/方块底 加载。")]
+    [Tooltip("网格背包底色 Sprite。为空时不使用 Sprite，由放置面板以纯色渲染。")]
     [SerializeField] private Sprite m_emptyCellSprite;
 
     [Header("单元格预制体（可选）")]
@@ -50,17 +48,5 @@ public class ModuleCellConfig : ScriptableObject
     public Shader GradientShader => m_gradientShader;
     public float GradientAngle => m_gradientAngle;
 
-    public Sprite EmptyCellSprite
-    {
-        get
-        {
-            if (m_emptyCellSprite != null)
-            {
-                return m_emptyCellSprite;
-            }
-
-            Sprite[] sprites = Resources.LoadAll<Sprite>(EmptyCellSpriteResourcePath);
-            return sprites != null && sprites.Length > 0 ? sprites[0] : null;
-        }
-    }
+    public Sprite EmptyCellSprite => m_emptyCellSprite;
 }

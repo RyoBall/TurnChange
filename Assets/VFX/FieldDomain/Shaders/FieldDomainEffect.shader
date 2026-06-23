@@ -641,6 +641,8 @@ Shader "TurnChange/FieldDomainEffect"
                     sampleUV += dir * sin(dist * 18.0 - _EffectTime * 4.0) * _DistortionStrength * insideMask * 0.01;
                 }
 
+                float3 result = SampleSourceRgb(sampleUV);
+
                 if (style == STYLE_DESPERATION && _ChromaticStrength > 0.001 && _HeartbeatStrength > 0.001)
                 {
                     float pulse = saturate(sin(_HeartbeatPhase) * 0.5 + 0.5);
@@ -651,11 +653,11 @@ Shader "TurnChange/FieldDomainEffect"
                         float r = SampleSourceRgb(sampleUV + float2(chroma, 0.0)).r;
                         float g = SampleSourceRgb(sampleUV).g;
                         float b = SampleSourceRgb(sampleUV - float2(chroma, 0.0)).b;
-                        return float3(r, g, b);
+                        result = float3(r, g, b);
                     }
                 }
 
-                return SampleSourceRgb(sampleUV);
+                return result;
             }
 
             float3 ApplyColorGrade(float3 color, float2 uv, float gradeMask, float pulse, int style, float fieldCenterPreserve)
@@ -697,7 +699,7 @@ Shader "TurnChange/FieldDomainEffect"
                 }
                 else if (style == STYLE_VERDICT)
                 {
-                    float tintMix = _TintColor.a * gradeMask * pow(fieldCenterPreserve, 1.15);
+                    float tintMix = _TintColor.a * gradeMask * pow(saturate(fieldCenterPreserve), 1.15);
                     color = lerp(color, color * _TintColor.rgb, tintMix);
                 }
                 else
@@ -898,7 +900,7 @@ Shader "TurnChange/FieldDomainEffect"
                 }
                 else if (style == STYLE_VERDICT)
                 {
-                    float gradeFalloff = pow(fieldCenterPreserve, 1.35);
+                    float gradeFalloff = pow(saturate(fieldCenterPreserve), 1.35);
                     gradeMix *= lerp(0.0, 0.72, gradeFalloff);
                 }
                 float3 result = lerp(sourceRgb, graded, gradeMix);

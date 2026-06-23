@@ -14,6 +14,7 @@ public interface ISettingsPanelView
     void Close();
     void QuitGame();
     void OnVolumeChanged(float value);
+    void OnCondensedModeChanged(bool isOn);
 }
 
 [DisallowMultipleComponent]
@@ -28,6 +29,7 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     [SerializeField] private GameObject m_panelRoot;
     [SerializeField] private Slider m_volumeSlider;
     [SerializeField] private TMP_Text m_volumeValueText;
+    [SerializeField] private Toggle m_condensedModeToggle;
 
     private bool m_hasPushedTimeScalePause;
 
@@ -174,6 +176,7 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
         PushTimeScalePause();
 
         SyncVolumeControls();
+        SyncCondensedModeToggle();
         transform.SetAsLastSibling();
         FadeIn();
     }
@@ -208,6 +211,12 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
     {
         GameAudioVolumeController.SetMasterVolume(value);
         UpdateVolumeLabel(value);
+    }
+
+    /// <summary>浓缩模式 Toggle 回调 — 绑定 Toggle.onValueChanged</summary>
+    public void OnCondensedModeChanged(bool isOn)
+    {
+        CondensedModePreference.SetEnabled(isOn);
     }
 
     private void PushTimeScalePause()
@@ -267,6 +276,16 @@ public class SettingsPanelView : MonoBehaviour, ISettingsPanelView
         }
 
         UpdateVolumeLabel(volume);
+    }
+
+    private void SyncCondensedModeToggle()
+    {
+        if (m_condensedModeToggle == null)
+        {
+            return;
+        }
+
+        m_condensedModeToggle.SetIsOnWithoutNotify(CondensedModePreference.IsEnabled);
     }
 
     private void UpdateVolumeLabel(float volume)

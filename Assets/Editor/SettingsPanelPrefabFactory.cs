@@ -120,7 +120,7 @@ public static class SettingsPanelPrefabFactory
         GameObject volumeRow = new GameObject("VolumeRow", typeof(RectTransform));
         volumeRow.transform.SetParent(panelContainer.transform, false);
         RectTransform volumeRowRect = volumeRow.GetComponent<RectTransform>();
-        StretchAnchored(volumeRowRect, new Vector2(0.08f, 0.58f), new Vector2(0.92f, 0.58f), new Vector2(0f, -32f), new Vector2(0f, 32f));
+        StretchAnchored(volumeRowRect, new Vector2(0.08f, 0.66f), new Vector2(0.92f, 0.66f), new Vector2(0f, -32f), new Vector2(0f, 32f));
 
         TMP_Text volumeLabel = CreateTMP("VolumeLabel", volumeRow.transform, "音量", 32, FontStyles.Normal, panelFont, s_panelTextColor);
         RectTransform volumeLabelRect = volumeLabel.rectTransform;
@@ -148,19 +148,55 @@ public static class SettingsPanelPrefabFactory
         volumeValueText.fontSizeMin = 18f;
         volumeValueText.fontSizeMax = 28f;
 
+        GameObject condensedRow = new GameObject("CondensedModeRow", typeof(RectTransform));
+        condensedRow.transform.SetParent(panelContainer.transform, false);
+        RectTransform condensedRowRect = condensedRow.GetComponent<RectTransform>();
+        StretchAnchored(condensedRowRect, new Vector2(0.08f, 0.5f), new Vector2(0.92f, 0.5f), new Vector2(0f, -32f), new Vector2(0f, 32f));
+
+        TMP_Text condensedLabel = CreateTMP("CondensedModeLabel", condensedRow.transform, "浓缩模式", 32, FontStyles.Normal, panelFont, s_panelTextColor);
+        RectTransform condensedLabelRect = condensedLabel.rectTransform;
+        StretchAnchored(condensedLabelRect, new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(160f, 0f));
+        condensedLabel.alignment = TextAlignmentOptions.MidlineLeft;
+        condensedLabel.enableAutoSizing = true;
+        condensedLabel.fontSizeMin = 20f;
+        condensedLabel.fontSizeMax = 32f;
+
+        GameObject toggleObject = DefaultControls.CreateToggle(resources);
+        toggleObject.name = "CondensedModeToggle";
+        toggleObject.transform.SetParent(condensedRow.transform, false);
+        RectTransform toggleRect = toggleObject.GetComponent<RectTransform>();
+        StretchAnchored(toggleRect, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(168f, -20f), new Vector2(248f, 20f));
+        Toggle condensedModeToggle = toggleObject.GetComponent<Toggle>();
+        condensedModeToggle.isOn = false;
+
+        TMP_Text condensedHint = CreateTMP(
+            "CondensedModeHint",
+            condensedRow.transform,
+            "开启后使用浓缩关卡，战斗等级跟随关卡配置",
+            22,
+            FontStyles.Normal,
+            panelFont,
+            s_panelTextColor);
+        RectTransform condensedHintRect = condensedHint.rectTransform;
+        StretchAnchored(condensedHintRect, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(256f, 0f), Vector2.zero);
+        condensedHint.alignment = TextAlignmentOptions.MidlineLeft;
+        condensedHint.enableAutoSizing = true;
+        condensedHint.fontSizeMin = 14f;
+        condensedHint.fontSizeMax = 22f;
+
         Button returnButton = CreateButton(panelContainer.transform, "ReturnButton", "返回游戏", buttonSprite, panelFont);
         StretchAnchored(
             returnButton.GetComponent<RectTransform>(),
-            new Vector2(0.16f, 0.38f),
-            new Vector2(0.84f, 0.38f),
+            new Vector2(0.16f, 0.32f),
+            new Vector2(0.84f, 0.32f),
             new Vector2(0f, -34f),
             new Vector2(0f, 34f));
 
         Button quitButton = CreateButton(panelContainer.transform, "QuitButton", "退出游戏", buttonSprite, panelFont);
         StretchAnchored(
             quitButton.GetComponent<RectTransform>(),
-            new Vector2(0.16f, 0.18f),
-            new Vector2(0.84f, 0.18f),
+            new Vector2(0.16f, 0.14f),
+            new Vector2(0.84f, 0.14f),
             new Vector2(0f, -34f),
             new Vector2(0f, 34f));
 
@@ -169,6 +205,7 @@ public static class SettingsPanelPrefabFactory
         serializedView.FindProperty("m_panelRoot").objectReferenceValue = panelRoot;
         serializedView.FindProperty("m_volumeSlider").objectReferenceValue = volumeSlider;
         serializedView.FindProperty("m_volumeValueText").objectReferenceValue = volumeValueText;
+        serializedView.FindProperty("m_condensedModeToggle").objectReferenceValue = condensedModeToggle;
         serializedView.ApplyModifiedPropertiesWithoutUndo();
 
         SetLayerRecursively(host, 5);
@@ -181,6 +218,7 @@ public static class SettingsPanelPrefabFactory
         Button returnButton = host.Find("PanelRoot/PanelContainer/ReturnButton")?.GetComponent<Button>();
         Button quitButton = host.Find("PanelRoot/PanelContainer/QuitButton")?.GetComponent<Button>();
         Slider volumeSlider = host.Find("PanelRoot/PanelContainer/VolumeRow/VolumeSlider")?.GetComponent<Slider>();
+        Toggle condensedModeToggle = host.Find("PanelRoot/PanelContainer/CondensedModeRow/CondensedModeToggle")?.GetComponent<Toggle>();
 
         if (returnButton != null)
         {
@@ -198,6 +236,12 @@ public static class SettingsPanelPrefabFactory
         {
             ClearPersistentListeners(volumeSlider.onValueChanged);
             UnityEventTools.AddPersistentListener(volumeSlider.onValueChanged, view.OnVolumeChanged);
+        }
+
+        if (condensedModeToggle != null)
+        {
+            ClearPersistentListeners(condensedModeToggle.onValueChanged);
+            UnityEventTools.AddPersistentListener(condensedModeToggle.onValueChanged, view.OnCondensedModeChanged);
         }
     }
 

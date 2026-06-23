@@ -130,6 +130,12 @@ public class BattleDialogController : MonoBehaviour
             case BattleDialogEventType.ChessPawnsAboutToPromote:
                 ShowCenterDialog("残存的兵棋将在下一回合后升变！", importantDialogDuration);
                 break;
+            case BattleDialogEventType.ChessPawnsPromotionProgress:
+                if (data.ExtraInt > 1)
+                {
+                    ShowCenterDialog($"距离升变还有{data.ExtraInt}步", defaultDialogDuration);
+                }
+                break;
             case BattleDialogEventType.ChessQueenMarkingKing:
                 ShowCenterDialog("皇后正在锁定目标……速度最低者将被标记为王棋！", importantDialogDuration);
                 break;
@@ -331,6 +337,7 @@ public class BattleDialogController : MonoBehaviour
         m_characterLowHealthTriggered.Clear();
         m_characterChaosMaxTriggered.Clear();
         m_dragonDeathTriggered.Clear();
+        ChessPawnEnemy.ResetPromotionTracking();
     }
 
     #endregion
