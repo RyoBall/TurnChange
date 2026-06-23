@@ -67,6 +67,7 @@
      <Compile Include="Assets\Editor\GameAudioCatalogWindow.cs" />
      <Compile Include="Assets\Editor\ReadOnlyDrawer.cs" />
      <Compile Include="Assets\Editor\TagColorImporter.cs" />
+     <Compile Include="Assets\Editor\CreditsPanelPrefabBuilder.cs" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\CurveGrid.shader" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\Trackball.shader" />
      <None Include="Library\PackageCache\com.unity.postprocessing@3.4.0\PostProcessing\Shaders\Editor\ConvertToLog.shader" />

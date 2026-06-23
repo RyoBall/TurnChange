@@ -78,7 +78,7 @@ public enum BattleDialogEventType
     /// <summary>直伤龙·即死触发</summary>
     DragonInstantDeathTriggered,
 
-    /// <summary>混沌龙·震慑溃灭</summary>
+    /// <summary>混沌龙·震慑溃灭（混沌值达5额外直伤）</summary>
     DragonChaosUltimate,
 
     /// <summary>混沌龙·混沌跃动行动提前</summary>

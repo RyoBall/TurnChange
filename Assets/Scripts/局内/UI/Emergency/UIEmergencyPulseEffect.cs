@@ -59,6 +59,12 @@ public class UIEmergencyPulseEffect : MonoBehaviour
     [SerializeField] private float alphaBlur = 5f;
     [SerializeField] private float rectOutset = 18f;
 
+    private const string LayeredMaterialResourcePath = "Materials/UIEmergencyPulse";
+    private const string SoftMaterialResourcePath = "Materials/UIEmergencyPulse_Soft";
+
+    private static Material s_LayeredMaterialTemplate;
+    private static Material s_SoftMaterialTemplate;
+
     private Material m_PulseMaterial;
     private CanvasGroup m_PulseCanvasGroup;
     private float m_Phase;
@@ -393,14 +399,7 @@ public class UIEmergencyPulseEffect : MonoBehaviour
 
         if (m_PulseMaterial == null)
         {
-            Material template = pulseMaterialTemplate;
-#if UNITY_EDITOR
-            if (template == null)
-            {
-                template = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(
-                    "Assets/VFX/UI/EmergencyPulse/UIEmergencyPulse.mat");
-            }
-#endif
+            Material template = ResolvePulseMaterialTemplate();
             if (template == null)
             {
                 Debug.LogWarning("[UIEmergencyPulseEffect] 缺少脉冲材质模板。", this);
@@ -411,6 +410,46 @@ public class UIEmergencyPulseEffect : MonoBehaviour
         }
 
         pulseImage.material = m_PulseMaterial;
+    }
+
+    private Material ResolvePulseMaterialTemplate()
+    {
+        if (pulseMaterialTemplate != null)
+        {
+            return pulseMaterialTemplate;
+        }
+
+        if (renderMode == EmergencyPulseRenderMode.Soft)
+        {
+            if (s_SoftMaterialTemplate == null)
+            {
+                s_SoftMaterialTemplate = Resources.Load<Material>(SoftMaterialResourcePath);
+            }
+
+            if (s_SoftMaterialTemplate != null)
+            {
+                return s_SoftMaterialTemplate;
+            }
+        }
+
+        if (s_LayeredMaterialTemplate == null)
+        {
+            s_LayeredMaterialTemplate = Resources.Load<Material>(LayeredMaterialResourcePath);
+        }
+
+        if (s_LayeredMaterialTemplate != null)
+        {
+            return s_LayeredMaterialTemplate;
+        }
+
+#if UNITY_EDITOR
+        return UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(
+            renderMode == EmergencyPulseRenderMode.Soft
+                ? "Assets/Resources/Materials/UIEmergencyPulse_Soft.mat"
+                : "Assets/VFX/UI/EmergencyPulse/UIEmergencyPulse.mat");
+#else
+        return null;
+#endif
     }
 
     private void SyncFromShapeSource()

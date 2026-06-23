@@ -412,7 +412,7 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
-        InsertCombatantByActionValue(combatant);
+        InsertCombatantByActionValue(combatant, skipFirstPosition: true);
         if (TurnImageManager.Instance != null)
         {
             TurnImageManager.Instance.Reorder();
@@ -441,7 +441,7 @@ public class TurnManager : MonoBehaviour
         NotifyTurnOrderChanged();
     }
     #region 工具
-    private void InsertCombatantByActionValue(Combatant combatant)//插入角色回合，目前默认插入时会排在所有相同行动值角色之前
+    private void InsertCombatantByActionValue(Combatant combatant, bool skipFirstPosition = false)
     {
         if (combatant == null)
         {
@@ -462,13 +462,36 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
+        if (skipFirstPosition)
+        {
+            InsertCombatantAfterFirst(combatant);
+            return;
+        }
+
         if (ShouldInsertBefore(combatant, turnOrder.First.Value))
         {
             turnOrder.AddFirst(combatant);
             return;
         }
 
-        var node = turnOrder.First.Next;
+        InsertCombatantBeforeNode(turnOrder.First.Next, combatant);
+    }
+
+    /// <summary>从链表第二个节点起按行动值插入，保证不会成为当前正在执行的回合。</summary>
+    private void InsertCombatantAfterFirst(Combatant combatant)
+    {
+        if (turnOrder.First.Next == null)
+        {
+            turnOrder.AddLast(combatant);
+            return;
+        }
+
+        InsertCombatantBeforeNode(turnOrder.First.Next, combatant);
+    }
+
+    private void InsertCombatantBeforeNode(LinkedListNode<Combatant> startNode, Combatant combatant)
+    {
+        var node = startNode;
         while (node != null && !ShouldInsertBefore(combatant, node.Value))
         {
             node = node.Next;

@@ -440,7 +440,7 @@ public class FloatingTipGenerator : MonoBehaviour
     /// <param name="dialogId">唯一ID，用于后续关闭</param>
     /// <param name="message">显示的文本</param>
     /// <param name="autoDismissDelay">自动消失延迟（秒），0表示不自动消失</param>
-    public void StartPersistentDialog(string dialogId, string message, float autoDismissDelay = 0f)
+    public void StartPersistentDialog(string dialogId, string message, float autoDismissDelay = 0f, int fontSize = 0)
     {
         if (string.IsNullOrEmpty(dialogId))
         {
@@ -457,7 +457,12 @@ public class FloatingTipGenerator : MonoBehaviour
         // 加入队列，按顺序显示
         m_dialogQueue.Enqueue(dialogId);
         // 存储消息以便后续使用
-        m_pendingDialogMessages[dialogId] = new DialogEntry { Message = message, AutoDismissDelay = autoDismissDelay };
+        m_pendingDialogMessages[dialogId] = new DialogEntry
+        {
+            Message = message,
+            AutoDismissDelay = autoDismissDelay,
+            FontSize = fontSize
+        };
 
         if (m_dialogQueueCoroutine == null)
         {
@@ -471,6 +476,7 @@ public class FloatingTipGenerator : MonoBehaviour
     {
         public string Message;
         public float AutoDismissDelay;
+        public int FontSize;
     }
 
     private IEnumerator ProcessDialogQueue()
@@ -492,14 +498,14 @@ public class FloatingTipGenerator : MonoBehaviour
             }
 
             m_isShowingQueuedDialog = true;
-            yield return StartCoroutine(ShowPersistentDialogCoroutine(dialogId, entry.Message, entry.AutoDismissDelay));
+            yield return StartCoroutine(ShowPersistentDialogCoroutine(dialogId, entry.Message, entry.AutoDismissDelay, entry.FontSize));
             m_isShowingQueuedDialog = false;
         }
 
         m_dialogQueueCoroutine = null;
     }
 
-    private IEnumerator ShowPersistentDialogCoroutine(string dialogId, string message, float autoDismissDelay)
+    private IEnumerator ShowPersistentDialogCoroutine(string dialogId, string message, float autoDismissDelay, int fontSize)
     {
         if (parentCanvasRect == null)
         {
@@ -508,7 +514,7 @@ public class FloatingTipGenerator : MonoBehaviour
         }
 
         // 创建对话框对象
-        GameObject dialogObj = CreatePersistentDialogObject(message);
+        GameObject dialogObj = CreatePersistentDialogObject(message, fontSize);
         RectTransform rect = dialogObj.GetComponent<RectTransform>();
         CanvasGroup cg = dialogObj.GetComponent<CanvasGroup>();
 
@@ -673,7 +679,7 @@ public class FloatingTipGenerator : MonoBehaviour
         }
     }
 
-    private GameObject CreatePersistentDialogObject(string message)
+    private GameObject CreatePersistentDialogObject(string message, int fontSize = 0)
     {
         GameObject dialogObj = new GameObject("PersistentDialog");
         dialogObj.layer = LayerMask.NameToLayer("UI");
@@ -683,7 +689,7 @@ public class FloatingTipGenerator : MonoBehaviour
 
         TextMeshProUGUI tmp = dialogObj.AddComponent<TextMeshProUGUI>();
         tmp.text = message;
-        tmp.fontSize = persistentFontSize;
+        tmp.fontSize = fontSize > 0 ? fontSize : persistentFontSize;
         tmp.color = persistentTextColor;
         tmp.font = tmpFont;
         tmp.alignment = TextAlignmentOptions.Center;
@@ -706,10 +712,11 @@ public class FloatingTipGenerator : MonoBehaviour
     /// <summary>
     /// 在屏幕中央显示一个短期对话框（非持续，自动消失）
     /// </summary>
-    public void ShowCenterDialog(string message, float duration = 2.5f)
+    /// <param name="fontSize">字体大小，0 表示使用 persistentFontSize</param>
+    public void ShowCenterDialog(string message, float duration = 2.5f, int fontSize = 0)
     {
         string dialogId = System.Guid.NewGuid().ToString();
-        StartPersistentDialog(dialogId, message, duration);
+        StartPersistentDialog(dialogId, message, duration, fontSize);
     }
 
     /// <summary>等待中央对话框队列播放完毕（含淡出）</summary>

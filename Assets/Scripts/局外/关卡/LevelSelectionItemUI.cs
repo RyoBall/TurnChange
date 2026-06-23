@@ -62,6 +62,9 @@ public class LevelSelectionItemUI : MonoBehaviour
             case LevelSelectionButtonType.NextFloor:
                 EnterNextFloor();
                 break;
+            case LevelSelectionButtonType.CreditsLevel:
+                OpenCreditsLevel();
+                break;
         }
     }
 
@@ -97,6 +100,17 @@ public class LevelSelectionItemUI : MonoBehaviour
         StartCoroutine(ExecuteWithTransition(AdvanceToNextFloor));
     }
 
+    private void OpenCreditsLevel()
+    {
+        bool isDebug = DebugMode.Instance != null && DebugMode.Instance.IsDebugMode;
+        if (!isDebug && (m_isCompleted || !m_isUnlocked))
+        {
+            return;
+        }
+
+        OpenCreditsPanel();
+    }
+
     private IEnumerator ExecuteWithTransition(Action action)
     {
         yield return ScreenTransition.Instance.Transition(action);
@@ -125,6 +139,28 @@ public class LevelSelectionItemUI : MonoBehaviour
         if (levelData == null)
             Debug.LogWarning("缺少关卡数据");
         eventPanel.OpenWithLevelData(levelData);
+    }
+
+    private void OpenCreditsPanel()
+    {
+        CreditsPanelView panel = CreditsPanelView.Instance;
+        if (panel == null)
+        {
+            Debug.LogWarning("[LevelSelectionItemUI] 未找到 CreditsPanelView，无法显示制作人名单。", this);
+            return;
+        }
+
+        panel.Show(OnCreditsPanelClosed);
+    }
+
+    private void OnCreditsPanelClosed()
+    {
+        if (levelData == null || Datas.Instance == null)
+        {
+            return;
+        }
+
+        Datas.Instance.MarkLevelCompleted(levelData.levelId);
     }
 
     private void AdvanceToNextFloor()

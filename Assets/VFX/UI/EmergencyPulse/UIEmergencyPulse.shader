@@ -62,7 +62,7 @@ Shader "UI/EmergencyPulse"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag_outer
-            #pragma shader_feature_local _PULSE_SOFT
+            #pragma multi_compile_local __ _PULSE_SOFT
             #pragma target 2.0
             #include "UnityCG.cginc"
             #include "UnityUI.cginc"
@@ -79,7 +79,7 @@ Shader "UI/EmergencyPulse"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag_core
-            #pragma shader_feature_local _PULSE_SOFT
+            #pragma multi_compile_local __ _PULSE_SOFT
             #pragma target 3.0
             #include "UnityCG.cginc"
             #include "UnityUI.cginc"

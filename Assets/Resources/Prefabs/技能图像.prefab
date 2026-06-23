@@ -304,7 +304,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shapeSource: {fileID: 7881096340168173433}
   pulseImage: {fileID: 0}
-  pulseMaterialTemplate: {fileID: 2100000, guid: e7c4a1b92f3d4658a0b1c2d3e4f50604, type: 2}
+  pulseMaterialTemplate: {fileID: 2100000, guid: a9b8c7d6e5f44321a0b1c2d3e4f50606, type: 2}
   pulseSpeed: 1.5
   usePingPong: 1
   renderOnTop: 1

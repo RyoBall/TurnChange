@@ -953,7 +953,7 @@ public class EnemySkillBase : SkillBase
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, "时间扭曲");
     }
 
-    /// <summary>混沌龙暴怒：混沌风暴 — 全体3混沌，震慑者额外直伤</summary>
+    /// <summary>混沌龙暴怒：混沌风暴 — 全体加混沌，混沌值达到5的角色额外直伤</summary>
     private IEnumerator DragonChaosRage(Enemy self)
     {
         BattleDialogEvents.Raise(BattleDialogEventType.DragonChaosUltimate, enemy: self as Enemy);

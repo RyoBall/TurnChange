@@ -18,6 +18,10 @@ public class BattleDialogController : MonoBehaviour
     [Tooltip("重要对话持续时间（秒）")]
     [SerializeField] private float importantDialogDuration = 3.5f;
 
+    [Header("对话外观")]
+    [Tooltip("战斗提示对话字体大小")]
+    [SerializeField] private int battleHintFontSize = 32;
+
     [Header("低血量检测")]
     [Tooltip("低血量阈值（比例）")]
     [SerializeField, Range(0f, 1f)] private float lowHealthThreshold = 0.4f;
@@ -180,7 +184,7 @@ public class BattleDialogController : MonoBehaviour
                 ShowCenterDialog("即死效果触发！", defaultDialogDuration);
                 break;
             case BattleDialogEventType.DragonChaosUltimate:
-                ShowCenterDialog("混沌吐息侵蚀全场——全体混沌值上升，震慑中的单位将承受重击。", importantDialogDuration);
+                ShowCenterDialog("混沌吐息侵蚀全场——全体混沌值上升，陷入混沌的角色将承受重击。", importantDialogDuration);
                 break;
             case BattleDialogEventType.DragonChaosLeap:
                 ShowCenterDialog("三头龙的行动提前了！", defaultDialogDuration);
@@ -259,7 +263,7 @@ public class BattleDialogController : MonoBehaviour
         if (m_characterChaosMaxTriggered.Contains(charId)) return;
 
         m_characterChaosMaxTriggered.Add(charId);
-        ShowCenterDialog($"{data.RelatedCharacter.combatantName}混沌值已达五点，下回合将无法行动！", importantDialogDuration);
+        ShowCenterDialog($"{data.RelatedCharacter.combatantName}陷入混沌！下回合将无法行动并受到大量伤害", importantDialogDuration);
 
         // 延迟清除标记，允许下次混沌值再满时重新触发
         StartCoroutine(ClearChaosMaxFlagAfterDelay(charId, 3f));
@@ -315,7 +319,7 @@ public class BattleDialogController : MonoBehaviour
     {
         if (FloatingTipGenerator.Instance != null)
         {
-            FloatingTipGenerator.Instance.ShowCenterDialog(message, duration);
+            FloatingTipGenerator.Instance.ShowCenterDialog(message, duration, battleHintFontSize);
         }
     }
 

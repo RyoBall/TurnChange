@@ -6,7 +6,8 @@ public enum LevelSelectionButtonType
 {
     BattleLevel,
     EventLevel,
-    NextFloor
+    NextFloor,
+    CreditsLevel
 }
 
 public enum LevelEventOptionType

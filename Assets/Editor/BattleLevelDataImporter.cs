@@ -111,8 +111,18 @@ public static class BattleLevelDataImporter
             levelAsset.levelName = levelName;
             levelAsset.name = $"{levelId}-{levelName}";
             levelAsset.isUnlocked = false; // 默认未解锁，由游戏逻辑控制
-            levelAsset.buttonType = LevelSelectionButtonType.BattleLevel;
-            levelAsset.eventData = null; // 战斗关无事件数据
+            string winCondition = GetString(row, "胜利条件");
+            if (IsCreditsLevel(winCondition))
+            {
+                levelAsset.buttonType = LevelSelectionButtonType.CreditsLevel;
+                levelAsset.eventData = null;
+                levelAsset.enemyWaves.Clear();
+            }
+            else
+            {
+                levelAsset.buttonType = LevelSelectionButtonType.BattleLevel;
+                levelAsset.eventData = null; // 战斗关无事件数据
+            }
             levelAsset.playerLevel = Mathf.Max(1, GetInt(row, "玩家等级", 1));
 
             // 奖励
@@ -388,6 +398,17 @@ public static class BattleLevelDataImporter
     {
         string value = GetString(row, key);
         return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result) ? result : defaultValue;
+    }
+
+    private static bool IsCreditsLevel(string winCondition)
+    {
+        if (string.IsNullOrWhiteSpace(winCondition))
+        {
+            return false;
+        }
+
+        return winCondition.Contains("制作人")
+            || winCondition.Contains("Credits", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string SanitizeAssetName(string assetName)

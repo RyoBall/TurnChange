@@ -103,6 +103,7 @@
      <Compile Include="Assets\Scripts\局外\总数据\Datas.cs" />
      <Compile Include="Assets\Scripts\局内\UI\指挥UI\CommandButton.cs" />
      <Compile Include="Assets\Scripts\局内\角色\CombatantDeathMonitor.cs" />
+     <Compile Include="Assets\Scripts\局外\切换界面\CreditsPanelButton.cs" />
      <Compile Include="Assets\Scripts\局内\角色\Enemy.cs" />
      <Compile Include="Assets\Scripts\局内\关卡\LevelSetupManager.cs" />
      <Compile Include="Assets\Scripts\局内\角色\TutorialSingleEnemy.cs" />
@@ -155,6 +156,7 @@
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMPro_InstructionOverlay.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\ETFXTarget.cs" />
      <Compile Include="Assets\Epic Toon FX\Demo\Scripts\ETFXFireProjectile.cs" />
+     <Compile Include="Assets\Scripts\局外\切换界面\CreditsPanelView.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeB.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\LevelDataTypes.cs" />
      <Compile Include="Assets\Scripts\局外\关卡\EnemyInfoDisplayUI.cs" />

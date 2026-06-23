@@ -240,7 +240,7 @@ MonoBehaviour:
   selectAnimDuration: 0.12
   skills: 
   explodeState: 0
-  hpRatio: 0.3
+  hpRatio: 0.5
   healRatio: 0.03
 --- !u!114 &8978152631924308604 stripped
 MonoBehaviour:
