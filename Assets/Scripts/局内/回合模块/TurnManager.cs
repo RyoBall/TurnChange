@@ -333,6 +333,7 @@ public class TurnManager : MonoBehaviour
             {
                 EnvironmentManager.Instance.TickEnvironments(advanceValue);
             }
+            TemporaryBattleModifierRuntimeManager.TickTeamDotResonanceBoost(advanceValue);
             ////// 回合开始。
             yield return StartCoroutine(nextCombatant.PerformTurn());
             ////// 回合结束
@@ -575,6 +576,56 @@ public class TurnManager : MonoBehaviour
     public Combatant GetCurrentCombatant()
     {
         return turnOrder.First?.Value;
+    }
+
+    /// <summary>
+    /// 在回合队列中查找指定角色之后的下一个可行动单位是否为敌人。
+    /// swappedInCharacter 为 null 时，以队列头节点的下一位作为判定起点。
+    /// </summary>
+    public bool IsNextCombatantEnemyAfter(Character swappedInCharacter)
+    {
+        LinkedListNode<Combatant> startNode = null;
+        if (swappedInCharacter != null)
+        {
+            for (LinkedListNode<Combatant> node = turnOrder.First; node != null; node = node.Next)
+            {
+                if (node.Value == swappedInCharacter)
+                {
+                    startNode = node.Next;
+                    break;
+                }
+            }
+
+            if (startNode == null)
+            {
+                return false;
+            }
+        }
+        else if (turnOrder.First != null)
+        {
+            startNode = turnOrder.First.Next;
+        }
+
+        for (LinkedListNode<Combatant> node = startNode; node != null; node = node.Next)
+        {
+            Combatant combatant = node.Value;
+            if (combatant == null || (combatant is UnitCombatant unit && unit.IsDead))
+            {
+                continue;
+            }
+
+            if (combatant is Enemy)
+            {
+                return true;
+            }
+
+            if (combatant is Character)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>按行动顺序返回下一个将出手的场上角色（不含后备）。</summary>

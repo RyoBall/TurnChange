@@ -277,7 +277,7 @@ public sealed class HeavyPoisonModuleBehavior : BattleModifierBehaviorBase
             return 1f;
         }
 
-        float penalty = enemy is ChessQueenEnemy ? m_bossSpeedPenaltyPerDebuff : m_speedPenaltyPerDebuff;
+        float penalty = enemy.IsBossForSkillRules() ? m_bossSpeedPenaltyPerDebuff : m_speedPenaltyPerDebuff;
         return 1f + debuffCount * penalty;
     }
 }
@@ -422,7 +422,9 @@ public sealed class EmergencySwapInModuleBehavior : BattleModifierBehaviorBase
             return;
         }
 
-        float advanceRatio = TemporaryBattleModifierRuntimeManager.IsNextCombatantEnemy() ? m_enemyAheadAdvanceRatio : m_baseAdvanceRatio;
+        float advanceRatio = TemporaryBattleModifierRuntimeManager.IsNextCombatantEnemyAfter(context.CurrentCharacter)
+            ? m_enemyAheadAdvanceRatio
+            : m_baseAdvanceRatio;
         context.CurrentCharacter.ChangeActionValue(Mathf.Max(0f, context.CurrentCharacter.currentActionValue - context.CurrentCharacter.BaseActionValue * advanceRatio));
     }
 }
@@ -455,12 +457,28 @@ public sealed class FatalGuardModuleBehavior : BattleModifierBehaviorBase
             return;
         }
 
-        // 回复到最大生命值的指定比例
-        int healAmount = Mathf.RoundToInt(targetCharacter.maxHP * m_healRatio);
-        targetCharacter.currentHP = Mathf.Max(1, healAmount);
+        ApplyFatalGuardRevive(targetCharacter, m_healRatio);
+    }
 
-        // 清除所有负面状态
-        targetCharacter.ClearAllDebuffs();
+    internal static bool TryApplyFatalGuardRevive(Character targetCharacter, float healRatio, int moduleIndex)
+    {
+        if (targetCharacter == null || targetCharacter.IsDead || moduleIndex < 0)
+        {
+            return false;
+        }
+
+        if (!TemporaryBattleModifierRuntimeManager.TryConsumeFatalGuard(moduleIndex))
+        {
+            return false;
+        }
+
+        ApplyFatalGuardRevive(targetCharacter, healRatio);
+        return true;
+    }
+
+    private static void ApplyFatalGuardRevive(Character targetCharacter, float healRatio)
+    {
+        targetCharacter.ReviveFromFatalGuardModule(healRatio);
     }
 }
 
@@ -495,14 +513,12 @@ public sealed class BloodReverseModuleBehavior : BattleModifierBehaviorBase
             return;
         }
 
-        // 反转逻辑：击杀成功 → 扣血25% + 获得必暴buff
+        // 击杀成功 → 扣血25% + 下次攻击必定暴击且暴击伤害提高
         int selfDamage = Mathf.RoundToInt(sourceCharacter.maxHP * m_killPenaltyRatio);
         sourceCharacter.TakeDamage(new UnitCombatant.DamageInfo(selfDamage, sourceCharacter).AsTrueDamage());
 
-        // 添加"下一次攻击必定暴击，暴击伤害提高"的buff
-        // 通过 pendingNextDamageBonus 系统实现暴伤加成，暴击率通过临时buff
         TemporaryBattleModifierRuntimeManager.AddPendingNextDamageBonus(sourceCharacter, m_critDamageBonus);
-        sourceCharacter.AddState(StateType.CritRhythm, sourceCharacter, 99, 1);
+        TemporaryBattleModifierRuntimeManager.AddPendingGuaranteedCriticalHit(sourceCharacter);
     }
 
     private static bool HasBurningBlood(Character character)
@@ -614,20 +630,8 @@ public sealed class ChargeCounterResonanceModuleBehavior : BattleModifierBehavio
             }
         }
 
-        // 我方全体DOT伤害提升，持续指定回合
-        if (CharacterManager.Instance != null)
-        {
-            for (int i = 0; i < CharacterManager.Instance.allCharacters.Count; i++)
-            {
-                Character character = CharacterManager.Instance.allCharacters[i];
-                if (character == null || character.IsDead)
-                {
-                    continue;
-                }
-
-                character.AddState(StateType.DamageChange, sourceCharacter, m_dotDamageBonusTurns, 1);
-            }
-        }
+        // 我方全体持续伤害提升，持续约1回合（100行动值）
+        TemporaryBattleModifierRuntimeManager.ActivateTeamDotResonanceBoost(1f + m_dotDamageBonus, 100f);
     }
 
     private static void SettleDotsOnTarget(UnitCombatant target, float ratio)
@@ -668,6 +672,27 @@ public sealed class HybridDamageModuleBehavior : BattleModifierBehaviorBase
         m_damageBonusPerStack = Mathf.Max(0f, damageBonusPerStack);
     }
 
+    public static void RecordDamageTypeForStack(int moduleIndex, DamageType damageType)
+    {
+        if (moduleIndex < 0)
+        {
+            return;
+        }
+
+        bool hasLastType = s_lastDamageTypeByModule.TryGetValue(moduleIndex, out DamageType lastType);
+        if (hasLastType && lastType != damageType)
+        {
+            int newStack = s_hybridStackByModule.TryGetValue(moduleIndex, out int stack) ? stack + 1 : 1;
+            s_hybridStackByModule[moduleIndex] = newStack;
+        }
+        else if (hasLastType && lastType == damageType)
+        {
+            s_hybridStackByModule[moduleIndex] = 0;
+        }
+
+        s_lastDamageTypeByModule[moduleIndex] = damageType;
+    }
+
     public override float GetPlayerDamageMultiplier(TemporaryBattleModifierData modifier, UnitCombatant attacker, UnitCombatant target, DamageType damageType, bool isCriticalHit)
     {
         if (modifier.sourceModuleIndex < 0)
@@ -675,24 +700,7 @@ public sealed class HybridDamageModuleBehavior : BattleModifierBehaviorBase
             return 1f;
         }
 
-        int moduleIndex = modifier.sourceModuleIndex;
-        bool hasLastType = s_lastDamageTypeByModule.TryGetValue(moduleIndex, out DamageType lastType);
-
-        if (hasLastType && lastType != damageType)
-        {
-            // 类型不同 → 叠层+1
-            int newStack = s_hybridStackByModule.TryGetValue(moduleIndex, out int stack) ? stack + 1 : 1;
-            s_hybridStackByModule[moduleIndex] = newStack;
-        }
-        else if (hasLastType && lastType == damageType)
-        {
-            // 类型相同 → 层数清零
-            s_hybridStackByModule[moduleIndex] = 0;
-        }
-
-        s_lastDamageTypeByModule[moduleIndex] = damageType;
-
-        int currentStack = s_hybridStackByModule.TryGetValue(moduleIndex, out int s) ? s : 0;
+        int currentStack = s_hybridStackByModule.TryGetValue(modifier.sourceModuleIndex, out int stack) ? stack : 0;
         return 1f + currentStack * m_damageBonusPerStack;
     }
 

@@ -110,6 +110,15 @@ public class UnitCombatant : Combatant
         }
         hitFeedback?.PlayFeedbacks();
         OnDamaged(finalDamage, damageInfo.IsDotDamage, damageInfo.StateType, damageInfo.IsCriticalHit);
+
+        if (this is Character lethalCharacter
+            && finalDamage > 0
+            && currentHP - finalDamage <= 0
+            && TemporaryBattleModifierRuntimeManager.TryHandleLethalDamage(lethalCharacter, finalDamage))
+        {
+            return;
+        }
+
         //扣血  
         currentHP = Mathf.Max(0, currentHP - finalDamage);
         GameAudioEvents.Raise(GameAudioEventType.CombatDamage, damageInfo.Source, this, finalDamage);
@@ -145,10 +154,32 @@ public class UnitCombatant : Combatant
         {
             return;
         }
-        DamageTextPool.Instance?.ShowHeal(amount, transform.position);
-        currentHP = Mathf.Min(maxHP, currentHP + amount);
+
+        int finalAmount = amount;
+        if (this is Character)
+        {
+            finalAmount = Mathf.Max(0, Mathf.RoundToInt(amount * TemporaryBattleModifierRuntimeManager.GetPlayerHealingReceivedMultiplier(this)));
+        }
+
+        if (finalAmount <= 0)
+        {
+            return;
+        }
+
+        DamageTextPool.Instance?.ShowHeal(finalAmount, transform.position);
+        currentHP = Mathf.Min(maxHP, currentHP + finalAmount);
         healFeedback?.PlayFeedbacks();
-        TemporaryBattleModifierRuntimeManager.NotifyUnitHealed(this, amount);
+        TemporaryBattleModifierRuntimeManager.NotifyUnitHealed(this, finalAmount);
+    }
+
+    /// <summary>起死回生序体：无效致命伤害并回复至指定比例最大生命值，清除负面状态。</summary>
+    public void ReviveFromFatalGuardModule(float healRatio)
+    {
+        int healAmount = Mathf.RoundToInt(maxHP * Mathf.Clamp01(healRatio));
+        currentHP = Mathf.Max(1, healAmount);
+        ClearAllDebuffs();
+        healFeedback?.PlayFeedbacks();
+        NotifyHealthChanged();
     }
 
     protected virtual void OnDamaged(int damage, bool isDotDamage = false, StateType stateType = StateType.None, bool isCriticalHit = false)
@@ -209,6 +240,16 @@ public class UnitCombatant : Combatant
 
     public virtual void AddShield(int amount)
     {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        if (this is Character)
+        {
+            amount = Mathf.Max(0, Mathf.RoundToInt(amount * TemporaryBattleModifierRuntimeManager.GetPlayerShieldGainMultiplier(this)));
+        }
+
         if (amount <= 0)
         {
             return;
