@@ -6,11 +6,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// 创建制作人名单预制体，并挂载到 Start / Main 场景。
+/// 创建制作人名单预制体，并挂载到通用物体 Prefab（随 DontDestroyOnLoad 跨场景保留）。
 /// </summary>
 public static class CreditsPanelPrefabBuilder
 {
     private const string PrefabPath = "Assets/Resources/Prefabs/CreditsPanel.prefab";
+    private const string SharedPrefabPath = "Assets/Resources/Prefabs/通用物体/通用物体.prefab";
     private const string FontPath = "Assets/Resources/font/哥特.asset";
     private const string StartScenePath = "Assets/Scenes/Start.unity";
     private const string MainScenePath = "Assets/Scenes/Main.unity";
@@ -30,45 +31,117 @@ public static class CreditsPanelPrefabBuilder
     public static void SetupCreditsPanelInScenes()
     {
         CreateCreditsPanelPrefab();
+        SetupCreditsPanelInSharedPrefab();
+        RemoveCreditsPanelFromScenes();
         SetupStartScene();
-        SetupMainScene();
         AssetDatabase.SaveAssets();
-        Debug.Log("[CreditsPanelPrefabBuilder] Start / Main 场景制作人名单配置完成。");
+        Debug.Log("[CreditsPanelPrefabBuilder] 通用物体 / Start 场景制作人名单配置完成。");
+    }
+
+    public static void SetupCreditsPanelInSharedPrefab()
+    {
+        CreateCreditsPanelPrefab();
+
+        GameObject sharedPrefabRoot = PrefabUtility.LoadPrefabContents(SharedPrefabPath);
+        if (sharedPrefabRoot == null)
+        {
+            Debug.LogError($"[CreditsPanelPrefabBuilder] 未找到通用物体 Prefab：{SharedPrefabPath}");
+            return;
+        }
+
+        try
+        {
+            CreditsPanelView existing = sharedPrefabRoot.GetComponentInChildren<CreditsPanelView>(true);
+            if (existing != null)
+            {
+                if (!existing.gameObject.activeSelf)
+                {
+                    existing.gameObject.SetActive(true);
+                }
+
+                PrefabUtility.SaveAsPrefabAsset(sharedPrefabRoot, SharedPrefabPath);
+                return;
+            }
+
+            GameObject creditsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (creditsPrefab == null)
+            {
+                Debug.LogError("[CreditsPanelPrefabBuilder] 未找到 CreditsPanel 预制体。");
+                return;
+            }
+
+            Transform canvasRoot = sharedPrefabRoot.transform.Find("不摧毁的Canvas");
+            Transform parent = canvasRoot != null ? canvasRoot : sharedPrefabRoot.transform;
+            GameObject instance = PrefabUtility.InstantiatePrefab(creditsPrefab, parent) as GameObject;
+            if (instance == null)
+            {
+                Debug.LogError("[CreditsPanelPrefabBuilder] 无法将 CreditsPanel 实例化到通用物体 Prefab。");
+                return;
+            }
+
+            RectTransform rect = instance.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                rect.localScale = Vector3.one;
+            }
+
+            PrefabUtility.SaveAsPrefabAsset(sharedPrefabRoot, SharedPrefabPath);
+            Debug.Log("[CreditsPanelPrefabBuilder] 已将 CreditsPanel 写入通用物体 Prefab。");
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(sharedPrefabRoot);
+        }
+    }
+
+    private static void RemoveCreditsPanelFromScenes()
+    {
+        RemoveCreditsPanelFromScene(StartScenePath);
+        RemoveCreditsPanelFromScene(MainScenePath);
+    }
+
+    private static void RemoveCreditsPanelFromScene(string scenePath)
+    {
+        Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+        CreditsPanelView[] panels = Object.FindObjectsOfType<CreditsPanelView>(true);
+        bool removedAny = false;
+
+        for (int i = 0; i < panels.Length; i++)
+        {
+            CreditsPanelView panel = panels[i];
+            if (panel == null)
+            {
+                continue;
+            }
+
+            GameObject nearestRoot = PrefabUtility.GetNearestPrefabInstanceRoot(panel.gameObject);
+            if (nearestRoot != null && nearestRoot != panel.gameObject)
+            {
+                continue;
+            }
+
+            Object.DestroyImmediate(panel.gameObject);
+            removedAny = true;
+        }
+
+        if (removedAny)
+        {
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log($"[CreditsPanelPrefabBuilder] 已从场景移除独立 CreditsPanel：{scenePath}");
+        }
     }
 
     private static void SetupStartScene()
     {
         Scene scene = EditorSceneManager.OpenScene(StartScenePath, OpenSceneMode.Single);
-        EnsureCreditsPanelInstance();
         EnsureStartCreditsButton();
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-    }
-
-    private static void SetupMainScene()
-    {
-        Scene scene = EditorSceneManager.OpenScene(MainScenePath, OpenSceneMode.Single);
-        EnsureCreditsPanelInstance();
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene);
-    }
-
-    private static void EnsureCreditsPanelInstance()
-    {
-        CreditsPanelView existing = Object.FindObjectOfType<CreditsPanelView>(true);
-        if (existing != null)
-        {
-            return;
-        }
-
-        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
-        if (prefab == null)
-        {
-            Debug.LogError("[CreditsPanelPrefabBuilder] 未找到 CreditsPanel 预制体。");
-            return;
-        }
-
-        PrefabUtility.InstantiatePrefab(prefab);
     }
 
     private static void EnsureStartCreditsButton()
@@ -149,6 +222,7 @@ public static class CreditsPanelPrefabBuilder
         rootRect.anchorMax = Vector2.one;
         rootRect.offsetMin = Vector2.zero;
         rootRect.offsetMax = Vector2.zero;
+        rootRect.localScale = Vector3.one;
 
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;

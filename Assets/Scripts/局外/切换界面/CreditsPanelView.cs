@@ -49,6 +49,13 @@ public class CreditsPanelView : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
         EnsureInitialized();
         HideImmediate();
     }
@@ -237,18 +244,6 @@ public class CreditsPanelView : MonoBehaviour
         if (m_initialized)
         {
             return;
-        }
-
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        if (!gameObject.activeSelf)
-        {
-            gameObject.SetActive(true);
         }
 
         ResolveReferences();

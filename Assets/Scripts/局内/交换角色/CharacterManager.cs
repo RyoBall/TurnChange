@@ -48,6 +48,8 @@ public class CharacterManager : MonoBehaviour
 	private Character m_selectedFieldCharacter;
 	private Character m_selectedReserveCharacter;
 	private bool m_pendingCommandPointCharge;
+	private bool m_pendingEmergencyEvadeSwap;
+	private Character m_emergencyEvadeCharacterToSwapOut;
 	private bool m_lastReplaceSucceeded;
 
 	/// <summary>
@@ -56,6 +58,48 @@ public class CharacterManager : MonoBehaviour
 	public void BeginCommandPointSwap()
 	{
 		m_pendingCommandPointCharge = true;
+	}
+
+	public bool TryInsertEmergencyEvadeSwapTurn(Character characterToSwapOut)
+	{
+		if (characterToSwapOut == null || !CanStartSwapFlow())
+		{
+			ClearEmergencyEvadeSwap();
+			return false;
+		}
+
+		if (TurnManager.Instance == null || TurnManager.Instance.HasChangerTurn())
+		{
+			ClearEmergencyEvadeSwap();
+			return false;
+		}
+
+		if (SkillManager.Instance == null || SkillManager.Instance.changeCharacter == null)
+		{
+			ClearEmergencyEvadeSwap();
+			return false;
+		}
+
+		Combatant changerTemplate = SkillManager.Instance.changeCharacter.GetComponent<Combatant>();
+		if (changerTemplate == null)
+		{
+			ClearEmergencyEvadeSwap();
+			return false;
+		}
+
+		m_pendingEmergencyEvadeSwap = true;
+		m_emergencyEvadeCharacterToSwapOut = characterToSwapOut;
+		changerTemplate.ChangeActionValue(0f);
+		Combatant changer = Instantiate(changerTemplate);
+		changer.standPosition = 0;
+		TurnManager.Instance.InsertCombatant(changer);
+		return true;
+	}
+
+	private void ClearEmergencyEvadeSwap()
+	{
+		m_pendingEmergencyEvadeSwap = false;
+		m_emergencyEvadeCharacterToSwapOut = null;
 	}
 
 	private void Awake()
@@ -97,6 +141,11 @@ public class CharacterManager : MonoBehaviour
 			yield break;
 		}
 
+		if (m_pendingEmergencyEvadeSwap && selectedFieldCharacter == null)
+		{
+			selectedFieldCharacter = m_emergencyEvadeCharacterToSwapOut;
+		}
+
 		m_selectedFieldCharacter = selectedFieldCharacter;
 		m_selectedReserveCharacter = null;
 		m_isSelectingReserveCharacter = false;
@@ -114,6 +163,7 @@ public class CharacterManager : MonoBehaviour
 				SetPromptVisible(false);
 				m_isSelectingFieldCharacter = false;
 				CompleteCommandPointSwap(false);
+				ClearEmergencyEvadeSwap();
 				yield break;
 			}
 		}
@@ -140,6 +190,7 @@ public class CharacterManager : MonoBehaviour
 				m_selectedFieldCharacter.SetSelectedVisual(false);
 			}
 			CompleteCommandPointSwap(false);
+			ClearEmergencyEvadeSwap();
 			yield break;
 		}
 
@@ -153,6 +204,7 @@ public class CharacterManager : MonoBehaviour
 		HideReserveButtonsImmediate();
 		yield return StartCoroutine(ReplaceCharacter(m_selectedFieldCharacter, m_selectedReserveCharacter, true));
 		CompleteCommandPointSwap(m_lastReplaceSucceeded);
+		ClearEmergencyEvadeSwap();
 		//第四步:清理UI
 		SetPromptVisible(false);
 		m_selectedFieldCharacter = null;

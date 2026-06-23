@@ -523,7 +523,7 @@ public class ShopModuleManager : MonoBehaviour
 
         if (refreshButtonText != null)
         {
-            refreshButtonText.text = "刷新\n价格: " + cost;
+            refreshButtonText.text = "价格: " + cost;
         }
 
         if (refreshButton != null)

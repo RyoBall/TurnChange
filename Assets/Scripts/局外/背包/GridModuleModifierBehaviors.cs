@@ -235,12 +235,24 @@ public sealed class EmergencyEvadeModuleBehavior : BattleModifierBehaviorBase
             return;
         }
 
+        CharacterManager characterManager = CharacterManager.Instance;
+        if (characterManager == null || !characterManager.CanStartSwapFlow())
+        {
+            return;
+        }
+
+        if (TurnManager.Instance != null && TurnManager.Instance.HasChangerTurn())
+        {
+            return;
+        }
+
         if (!TemporaryBattleModifierRuntimeManager.TryConsumeEmergencyEvade(modifier.sourceModuleIndex))
         {
             return;
         }
 
-        CharacterManager.Instance?.TryAutoSwapToFirstReserve(targetCharacter, false);
+        FloatingTipGenerator.Instance?.ShowCenterDialog("[紧急回避]发动");
+        characterManager.TryInsertEmergencyEvadeSwapTurn(targetCharacter);
     }
 }
 
