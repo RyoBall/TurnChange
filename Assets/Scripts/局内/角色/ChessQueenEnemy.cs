@@ -16,7 +16,6 @@ public class ChessQueenEnemy : Enemy
     [SerializeField] private bool startHiddenUntilPhaseTwo = true;
     [SerializeField] private bool isPreviewBoss = false;
     [SerializeField] internal EnemyRosterData summonPawnData;
-    [SerializeField, Min(1)] internal int summonPawnLevel = 1;
     [SerializeField] internal ChessSummonedPawnEnemy summonPawnPrefabFallback;
     [SerializeField] private Transform[] chessSummonPoints;
     [SerializeField, Range(0f, 1f)] private float summonedPawnHealRatio = 0.03f;

@@ -36,7 +36,7 @@ Name,EnumName,Description,BaseMultiplier,IsDebuff,IsDot,MaxStacks,DurationType,D
 威望,Prestige,每层提供10%伤害减免与10%伤害加成。,0,否,否,99,Special,0,100,0.1,每层减免比例,0.1,每层增伤比例,0,预留,0,预留,7
 龙息,DragonBreath,在目标行动前造成伤害，可叠加多层。,0.2,是,是,5,ActionValue,1,300,0,预留,0,预留,0,预留,0,预留,8
 不灭之焰,EternalFlame,在目标行动前造成伤害，无法被净化。,0.15,是,是,1,ActionValue,1,300,0,预留,0,预留,0,预留,0,预留,9
-即死,InstantDeath,在下次蓄力触发时承受即死伤害。,0,是,否,1,Turn,1,100,0,预留,0,预留,0,预留,0,预留,1
+即死,InstantDeath,在下次蓄力触发时承受即死伤害。,0,是,否,1,Special,0,100,0,预留,0,预留,0,预留,0,预留,1
 亮剑姿态,SwordsmanBrightSword,伤害+30%，受到伤害+30%。,0,否,否,1,Special,0,100,1.3,伤害倍率,1.3,承伤倍率,0,预留,0,预留,2
 防御姿态,SwordsmanDefense,受到伤害-30%。,0,否,否,1,Special,0,100,0.7,承伤倍率,1.2,行动冷却倍率,0,预留,0,预留,3
 游击姿态,SwordsmanGuerrilla,速度提升20%，不会获取新的负面效果。,0,否,否,1,Special,0,100,0.8,行动冷却倍率,0,预留,0,预留,0,预留,4

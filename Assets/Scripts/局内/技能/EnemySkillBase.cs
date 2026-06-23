@@ -713,7 +713,7 @@ public class EnemySkillBase : SkillBase
 
     private static int GetSummonPawnLevel(ChessQueenEnemy queen)
     {
-        return queen != null ? queen.summonPawnLevel : 1;
+        return queen != null ? queen.level : 1;
     }
 
     private static ChessSummonedPawnEnemy GetSummonPawnPrefabFallback(ChessQueenEnemy queen)
@@ -856,7 +856,7 @@ public class EnemySkillBase : SkillBase
         }
         if (target == null) yield break;
 
-        target.AddState(StateType.InstantDeath, self, 1,1);
+        target.AddState(StateType.InstantDeath, self, 1, 1);
         dragon.SetChargingRage(true);
         FloatingTipGenerator.Instance?.ShowTipAtObject(target.transform, "即死标记");
         FloatingTipGenerator.Instance?.ShowTipAtObject(self.transform, $"{self.combatantName}蓄力中...");
@@ -869,14 +869,33 @@ public class EnemySkillBase : SkillBase
         {
             Character ally = allies[i];
             if (ally == null || ally.IsDead) continue;
-            State instantDeath = ally.GetState(StateType.InstantDeath);
-            if (instantDeath != null)
-            {
-                ally.TakeDamage(new UnitCombatant.DamageInfo(ally.maxHP, ally).AsTrueDamage());
-                FloatingTipGenerator.Instance?.ShowTipAtObject(ally.transform, "即死触发！");
-            }
+            if (ally.GetState(StateType.InstantDeath) == null) continue;
+
+            ApplyInstantDeathTo(ally);
         }
+
         yield break;
+    }
+
+    private static void ApplyInstantDeathTo(Character ally)
+    {
+        State instantDeath = ally.GetState(StateType.InstantDeath);
+        if (instantDeath != null)
+        {
+            ally.RemoveState(instantDeath);
+        }
+
+        int lethalDamage = ally.currentHP + ally.currentShield;
+        if (lethalDamage <= 0)
+        {
+            return;
+        }
+
+        ally.TakeDamage(new UnitCombatant.DamageInfo(lethalDamage, ally)
+            .AsTrueDamage()
+            .BypassingShield()
+            .WithState(StateType.InstantDeath));
+        FloatingTipGenerator.Instance?.ShowTipAtObject(ally.transform, "即死触发！");
     }
 
     // --- 混沌龙 ---
