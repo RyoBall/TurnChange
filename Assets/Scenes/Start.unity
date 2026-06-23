@@ -1276,7 +1276,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4295814bddbb57b4cb91741608bdafb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_creditsPanel: {fileID: 884202798}
+  m_creditsPanel: {fileID: 0}
   m_button: {fileID: 1676282824}
   m_backgroundTransform: {fileID: 1888888802}
   m_backgroundImage: {fileID: 1888888804}
@@ -1338,14 +1338,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.28930807, g: 0.28930807, b: 0.28930807, a: 0.75}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: a444ca4d400740e4c968b4f91cd9acbf, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
