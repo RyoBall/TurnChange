@@ -119,6 +119,7 @@
      <Compile Include="Assets\Scripts\局内\UI\伤害文本\DamageText.cs" />
      <Compile Include="Assets\Scripts\局内\UI\提示文本\FloatingTipGenerator.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\CameraController.cs" />
+     <Compile Include="Assets\Scripts\局外\角色界面\CharacterRosterDevHotkeys.cs" />
      <Compile Include="Assets\Scripts\局内\回合模块\TurnImageManager.cs" />
      <Compile Include="Assets\Scripts\局内\交换角色\CharacterManager.cs" />
      <Compile Include="Assets\Scripts\局内\角色\DotDragonEnemy.cs" />

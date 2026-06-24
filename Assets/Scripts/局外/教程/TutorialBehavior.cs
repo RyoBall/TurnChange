@@ -460,7 +460,7 @@ public class BattleUITutorial : TutorialBehavior
             case 1:
                 m_controller.ShowGuideHighlight(GuideHighlightType.角色状态栏);
                 break;
-            case 5:
+            case 6:
                 m_controller.ShowGuideHighlight(GuideHighlightType.行动序列);
                 break;
         }
@@ -817,24 +817,37 @@ public class BackpackPlacementTutorial : TutorialBehavior
 #region 教程十二
 /// <summary>
 /// 第二关引导教程行为（教程十二）
-/// 离开序体页面后触发，纯点击
+/// 教程十一完成后，离开序体页面时触发，纯点击
 /// </summary>
 public class SecondLevelIntroTutorial : TutorialBehavior
 {
+    private static bool s_tutorialElevenCompleted = false;
+
     public override void StartListening()
     {
+        TutorialEnded += OnTutorialElevenEnded;
         ExitButton.PanelClosed += OnBackpackClosed;
     }
 
     public override void StopListening()
     {
+        TutorialEnded -= OnTutorialElevenEnded;
         ExitButton.PanelClosed -= OnBackpackClosed;
+    }
+
+    private void OnTutorialElevenEnded(TutorialType type)
+    {
+        if (type == TutorialType.教程十一)
+            s_tutorialElevenCompleted = true;
     }
 
     private void OnBackpackClosed(PanelType panelType)
     {
-        if (panelType == PanelType.背包页面)
+        if (panelType == PanelType.背包页面 && s_tutorialElevenCompleted)
+        {
+            s_tutorialElevenCompleted = false;
             m_controller.StartTutorial(m_data.Type);
+        }
     }
 }
 #endregion

@@ -232,6 +232,26 @@ public class Datas : MonoBehaviour
 
         characterDatas.Clear();
     }
+
+    /// <summary>开发者快捷键：解锁全部可用角色。</summary>
+    public void DevUnlockAllCharacters()
+    {
+        InitializeCharacterLookup();
+        bool anyAdded = false;
+
+        foreach (CharacterType characterType in m_characterTypeLookup.Keys)
+        {
+            if (AddCharacterData(characterType))
+            {
+                anyAdded = true;
+            }
+        }
+
+        if (anyAdded)
+        {
+            CharacterRosterChanged?.Invoke();
+        }
+    }
     #endregion
     #region 关卡进度相关
     public bool ShouldUseLevelConfiguredPlayerLevel

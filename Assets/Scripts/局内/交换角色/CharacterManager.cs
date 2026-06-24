@@ -356,9 +356,12 @@ public class CharacterManager : MonoBehaviour
 		}
 		//执行入场动画
 		yield return newCharacter.PlayEnterAnimation();
-		//执行入场技能
-		SkillExecuteManager.ExecuteSkill(newCharacter, newCharacter.GetEnterSkillInstance(), true);
-		yield return new WaitUntil(() => !SkillExecuteManager.s_isExecutingSkill);
+		//执行入场技能；必须 yield 嵌套协程，不能等待 s_isExecutingSkill 清零（技能内切出时外层仍持有执行锁）
+		CharacterSkillBase enterSkill = newCharacter.GetEnterSkillInstance();
+		if (enterSkill != null)
+		{
+			yield return SkillExecuteManager.ExecuteSkillAsCoroutine(newCharacter, enterSkill, true);
+		}
 		//更新 TurnManager 中的角色引用，确保回合顺序正确
 		if (TurnManager.Instance != null)
 		{

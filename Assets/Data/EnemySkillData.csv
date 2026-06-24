@@ -2,13 +2,13 @@
 敌人/技能名称,Type,SkillCoef,SkillBase,TargetType,CooldownTurns,ExtraData1,,ExtraData2,,ExtraData3,,ExtraData4,,备注
 护盾术,ShieldSupport_1,0,0,Self,0,0.15,护盾比例(MaxHP×),0,未使用,0,未使用,0,预留,给当前HP最低友方施加护盾
 盾击,ShieldSupport_2,0.28,15,Character,0,0.4,行动延后比例(BaseAV×),0,未使用,0,未使用,0,预留,对我方全体造成伤害并行动延后
-刺击,SingleAttack,0.9,15,Character,0,2,混沌层数,0,未使用,0,未使用,0,预留,随机单体伤害+混沌
+刺击,SingleAttack,0.8,15,Character,0,2,混沌层数,0,未使用,0,未使用,0,预留,随机单体伤害+混沌
 迷幻,Debuff_1,0,0,Character,0,2,混沌层数,0,未使用,0,未使用,0,预留,对我方全体施加混沌
 瞩目,Debuff_2,0.45,15,Character,0,1,瞩目层数,0,未使用,0,未使用,0,预留,随机单体伤害+瞩目
 启动,Exploder,0,0,None,0,0,未使用,0,未使用,0,未使用,0,预留,空过并提示启动失败
 致命爆破,Exploder2,0.6,0,Character,0,0.5,可用概率(CanUse),2,自爆倒计时层数,3,爆炸混沌层数,0,预留,启动自爆流程; 倒计时归零后爆炸
-鸩毒,DotMaster_1,0.24,0,Character,0,2,鸩毒层数,0,未使用,0,未使用,0,预留,随机单体伤害+鸩毒
-毒爆,DotMaster_2,0.15,5,Character,0,0.2,鸩毒转化判定系数,0.5,鸩毒削减比例,1,转化失败额外鸩毒层数,0,预留,全体伤害并独立判定鸩毒转化
+鸩毒,DotMaster_1,0.36,0,Character,0,2,鸩毒层数,0,未使用,0,未使用,0,预留,随机单体伤害+鸩毒
+毒爆,DotMaster_2,0.3,5,Character,0,0.2,鸩毒转化判定系数,0.5,鸩毒削减比例,1,转化失败额外鸩毒层数,0,预留,全体伤害并独立判定鸩毒转化
 步进,ChessPawnAction,0.4,10,None,0,0,召唤兵卒回血比例(0则用pawn默认),0,未使用,0,未使用,0,预留,兵卒推进; 召唤兵卒时为皇后回血
 混沌冲击,ChessQueenChaosCharge,0.45,25,Character,0,2,混沌层数,0,未使用,0,未使用,0,预留,全体伤害+混沌
 兵卒召唤,ChessQueenSummonPawn,0,0,Self,0,0,未使用,0,未使用,0,未使用,0,预留,召唤1个兵卒; 皇后获得1层威望
