@@ -223,6 +223,12 @@ public class UnitCombatant : Combatant
         mouseHoverParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
+    /// <summary>清除选目标悬停特效（右键取消时鼠标可能仍在单位上，OnMouseExit 不会触发）。</summary>
+    public void ClearTargetSelectionHoverVisual()
+    {
+        StopMouseHoverEffect();
+    }
+
     public IEnumerator ExecuteDeathEvent()
     {
         yield return OnDeathEvent();

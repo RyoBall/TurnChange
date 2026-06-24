@@ -10,6 +10,8 @@ public class SkillManager : MonoBehaviour
     public GameObject changeCharacter;
     [Header("选敌提示")]
     public TMP_Text targetPromptText;
+    [Header("选目标视觉")]
+    [SerializeField] private SkillTargetSelectionVisualController m_targetSelectionVisual;
     //选敌相关
     private readonly List<Enemy> m_selectedEnemies = new List<Enemy>();
     private int m_requiredEnemyCount;
@@ -31,6 +33,21 @@ public class SkillManager : MonoBehaviour
 
         Instance = this;
         SetPromptVisible(false);
+        ResolveTargetSelectionVisual();
+    }
+
+    private void ResolveTargetSelectionVisual()
+    {
+        if (m_targetSelectionVisual != null)
+        {
+            return;
+        }
+
+        m_targetSelectionVisual = GetComponent<SkillTargetSelectionVisualController>();
+        if (m_targetSelectionVisual == null)
+        {
+            m_targetSelectionVisual = SkillTargetSelectionVisualController.Instance;
+        }
     }
 
     private void OnDestroy()
@@ -63,6 +80,8 @@ public class SkillManager : MonoBehaviour
         m_isSelectingEnemies = true;
         UpdatePromptText($"请选择技能作用的敌人:{m_selectedEnemies.Count}/{m_requiredEnemyCount}");
         SetPromptVisible(true);
+        ResolveTargetSelectionVisual();
+        m_targetSelectionVisual?.ShowEnemyTargetSelection();
 
         yield return new WaitUntil(() => m_selectedEnemies.Count >= m_requiredEnemyCount||Input.GetKeyDown(KeyCode.Mouse1));
         selectedResult?.Clear();
@@ -145,6 +164,8 @@ public class SkillManager : MonoBehaviour
         m_isSelectingCharacters = true;
         UpdatePromptText($"请选择技能作用的我方角色:{m_selectedCharacters.Count}/{m_requiredCharacterCount}");
         SetPromptVisible(true);
+        ResolveTargetSelectionVisual();
+        m_targetSelectionVisual?.ShowAllyTargetSelection();
         yield return new WaitUntil(() => m_selectedCharacters.Count >= m_requiredCharacterCount||Input.GetKeyDown(KeyCode.Mouse1));
 
         selectedResult?.Clear();
@@ -212,7 +233,9 @@ public class SkillManager : MonoBehaviour
 
     private void ClearSelectionState()
     {
-        TurnImageManager.Instance?.ClearCombatantHoverHighlight();
+        ResolveTargetSelectionVisual();
+        m_targetSelectionVisual?.Hide();
+        ClearAllTargetSelectionHoverVisuals();
 
         for (int i = 0; i < m_selectedEnemies.Count; i++)
         {
@@ -237,5 +260,11 @@ public class SkillManager : MonoBehaviour
         m_isSelectingEnemies = false;
         m_isSelectingCharacters = false;
         SetPromptVisible(false);
+    }
+
+    private void ClearAllTargetSelectionHoverVisuals()
+    {
+        ResolveTargetSelectionVisual();
+        m_targetSelectionVisual?.ClearSelectionHoverVisuals();
     }
 }

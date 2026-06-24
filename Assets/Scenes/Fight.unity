@@ -3682,6 +3682,7 @@ GameObject:
   m_Component:
   - component: {fileID: 554545412}
   - component: {fileID: 554545413}
+  - component: {fileID: 554545414}
   m_Layer: 0
   m_Name: CommandSkillManager
   m_TagString: Untagged
@@ -3719,6 +3720,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   changeCharacter: {fileID: 1388979213}
   targetPromptText: {fileID: 5676860992029022536}
+  m_targetSelectionVisual: {fileID: 554545414}
+--- !u!114 &554545414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 554545411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c4e9a2b1d8f4e6a9b3c5d7e8f0a1b2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_dimMultiplier: 0.3
+  m_duration: 0.3
+  m_ease: 6
+  m_targetPromptText: {fileID: 5676860992029022536}
+  m_battleUiGroupsToDim: []
 --- !u!1 &566772527
 GameObject:
   m_ObjectHideFlags: 0
@@ -8603,6 +8622,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   promptText: {fileID: 5676860992029022536}
+  m_swapSelectionVisual: {fileID: 554545414}
   m_switchPopupView: {fileID: 985835603}
   reserveButtonContainer: {fileID: 2122485859}
   reserveButtonPrefab: {fileID: 1644372549910762980, guid: 1aa82dc45b9adf642a677f04958df1b4,
