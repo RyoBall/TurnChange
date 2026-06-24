@@ -17,6 +17,13 @@ public class CharacterRosterData : ScriptableObject
     public CharacterSkillType enterSkill;
     public CharacterSkillType additionalSkill;
 
+    [Header("角色职责介绍（技能页第三面板）")]
+    [TextArea(1, 2)]
+    public string characterRoleTitle;
+
+    [TextArea(5, 15)]
+    public string characterRoleDescription;
+
     public string GetCharacterId()
     {
         return string.IsNullOrWhiteSpace(characterID) ? string.Empty : characterID;

@@ -49,6 +49,11 @@ public class CharacterPanelView : MonoBehaviour
     [SerializeField] private GameObject keywordDescriptionPanel;
     [SerializeField] private TMP_Text keywordDescriptionText;
 
+    [Header("角色职责三级菜单")]
+    [SerializeField] private GameObject characterRoleDescriptionPanel;
+    [SerializeField] private TMP_Text characterRoleTitleText;
+    [SerializeField] private TMP_Text characterRoleContentText;
+
     [Header("标签")]
     [SerializeField] private RectTransform tagAnchor;
     [SerializeField] private GameObject tagPrefab;
@@ -79,6 +84,11 @@ public class CharacterPanelView : MonoBehaviour
         {
             keywordDescriptionPanel.SetActive(false);
         }
+
+        if (characterRoleDescriptionPanel != null)
+        {
+            characterRoleDescriptionPanel.SetActive(false);
+        }
     }
 
     private void Start()
@@ -101,7 +111,7 @@ public class CharacterPanelView : MonoBehaviour
 
     private void Update()
     {
-        if (skillDescriptionPanel == null || !skillDescriptionPanel.activeSelf)
+        if (descriptionCanvasGroup == null || !descriptionCanvasGroup.gameObject.activeInHierarchy)
         {
             return;
         }
@@ -112,7 +122,8 @@ public class CharacterPanelView : MonoBehaviour
         }
 
         Vector2 pointerPosition = Input.mousePosition;
-        if (IsPointerInside(skillDescriptionPanel.transform as RectTransform, pointerPosition))
+        RectTransform descriptionRoot = descriptionCanvasGroup.transform as RectTransform;
+        if (IsPointerInside(descriptionRoot, pointerPosition))
         {
             return;
         }
@@ -354,6 +365,7 @@ public class CharacterPanelView : MonoBehaviour
         }
 
         UpdateKeywordDescription(skill);
+        UpdateCharacterRoleDescription();
         SpawnTags(skill);
         StartSkillDescriptionFade(true);
     }
@@ -424,6 +436,50 @@ public class CharacterPanelView : MonoBehaviour
 
         keywordDescriptionText.text = result;
         keywordDescriptionPanel.SetActive(true);
+    }
+
+    /// <summary>
+    /// 根据当前选中角色更新第三面板（角色职责介绍），无内容时隐藏面板
+    /// </summary>
+    private void UpdateCharacterRoleDescription()
+    {
+        if (characterRoleDescriptionPanel == null
+            || characterRoleTitleText == null
+            || characterRoleContentText == null)
+        {
+            return;
+        }
+
+        if (m_currentCharacter == null)
+        {
+            characterRoleDescriptionPanel.SetActive(false);
+            return;
+        }
+
+        string title = m_currentCharacter.characterRoleTitle;
+        string description = m_currentCharacter.characterRoleDescription;
+        bool hasTitle = !string.IsNullOrWhiteSpace(title);
+        bool hasDescription = !string.IsNullOrWhiteSpace(description);
+
+        if (!hasTitle && !hasDescription)
+        {
+            characterRoleDescriptionPanel.SetActive(false);
+            return;
+        }
+
+        characterRoleTitleText.text = hasTitle ? title : string.Empty;
+        characterRoleContentText.text = BuildCharacterRoleContentText(
+            hasDescription ? description : "暂无角色介绍");
+        characterRoleDescriptionPanel.SetActive(true);
+    }
+
+    private const string CharacterRoleFooterText = "简略攻略，晕字只需看这页";
+    private const int CharacterRoleFooterFontSize = 28;
+
+    private static string BuildCharacterRoleContentText(string bodyText)
+    {
+        string footer = $"\n\n<size={CharacterRoleFooterFontSize}>{CharacterRoleFooterText}</size>";
+        return string.IsNullOrWhiteSpace(bodyText) ? footer.TrimStart() : bodyText + footer;
     }
 
     [Header("技能描述淡入淡出")]
