@@ -27,6 +27,9 @@ public class CharacterManager : MonoBehaviour
 	[Header("换人提示")]
 	public TMP_Text promptText;
 
+	[Header("切人选目标视觉")]
+	[SerializeField] private SkillTargetSelectionVisualController m_swapSelectionVisual;
+
 	[Header("切人弹窗动画")]
 	[SerializeField] private CharacterSwitchPopupView m_switchPopupView;
 
@@ -111,6 +114,24 @@ public class CharacterManager : MonoBehaviour
 		}
 
 		Instance = this;
+		ResolveSwapSelectionVisual();
+	}
+
+	private void ResolveSwapSelectionVisual()
+	{
+		if (m_swapSelectionVisual != null)
+		{
+			return;
+		}
+
+		m_swapSelectionVisual = SkillTargetSelectionVisualController.Instance;
+	}
+
+	private void ClearSwapSelectionVisualState()
+	{
+		ResolveSwapSelectionVisual();
+		m_swapSelectionVisual?.Hide();
+		m_swapSelectionVisual?.ClearSelectionHoverVisuals();
 	}
 
 	private void Start()
@@ -155,11 +176,14 @@ public class CharacterManager : MonoBehaviour
 		{
 			UpdatePromptText("请选择一个场上角色进行更换");
 			SetPromptVisible(true);
+			ResolveSwapSelectionVisual();
+			m_swapSelectionVisual?.ShowAllyTargetSelection();
 			Debug.Log("[CharacterManager] 进入换人流程：请选择一个场上角色进行更换");
 			yield return new WaitUntil(() => m_selectedFieldCharacter != null || Input.GetKeyDown(KeyCode.Mouse1));
 			if (m_selectedFieldCharacter == null)
 			{
 				Debug.Log("[CharacterManager] 换人流程取消：未选择场上角色");
+				ClearSwapSelectionVisualState();
 				SetPromptVisible(false);
 				m_isSelectingFieldCharacter = false;
 				CompleteCommandPointSwap(false);
@@ -177,11 +201,14 @@ public class CharacterManager : MonoBehaviour
 		BuildReserveButtons();
 		PlayReserveButtonsEnterAnim();
 		UpdatePromptText($"请选择替换 {m_selectedFieldCharacter.combatantName} 的候补角色");
+		ResolveSwapSelectionVisual();
+		m_swapSelectionVisual?.ShowSwapReserveSelection();
 
 		yield return new WaitUntil(() => m_selectedReserveCharacter != null || Input.GetKeyDown(KeyCode.Mouse1));
 		if (m_selectedReserveCharacter == null)
 		{
 			Debug.Log("[CharacterManager] 换人流程取消：未选择候补角色");
+			ClearSwapSelectionVisualState();
 			HideReserveButtonsImmediate();
 			SetPromptVisible(false);
 			m_isSelectingReserveCharacter = false;
@@ -206,6 +233,7 @@ public class CharacterManager : MonoBehaviour
 		CompleteCommandPointSwap(m_lastReplaceSucceeded);
 		ClearEmergencyEvadeSwap();
 		//第四步:清理UI
+		ClearSwapSelectionVisualState();
 		SetPromptVisible(false);
 		m_selectedFieldCharacter = null;
 		m_selectedReserveCharacter = null;
@@ -477,9 +505,6 @@ public class CharacterManager : MonoBehaviour
 
 	private void PlayReserveButtonsEnterAnim()
 	{
-		//弹出按钮时让背景暗淡（优先级 2，高于 SkillDescription 的优先级 1）
-		BackgroundManager.Instance?.ChangeBackground(true, 2);
-
 		for (int i = 0; i < m_runtimeButtons.Count; i++)
 		{
 			Button button = m_runtimeButtons[i];
@@ -515,9 +540,6 @@ public class CharacterManager : MonoBehaviour
 
 	private void HideReserveButtonsImmediate()
 	{
-		//隐藏按钮时恢复背景（优先级 2，确保能解除自己设置的变暗）
-		BackgroundManager.Instance?.ChangeBackground(false, 2);
-
 		for (int i = 0; i < m_runtimeButtons.Count; i++)
 		{
 			if (m_runtimeButtons[i] != null)

@@ -7,6 +7,7 @@ public class SkillDescription : MonoBehaviour
 {
     public static SkillDescription Instance { get; private set; }
     private Sequence m_currentSequence;
+    private bool m_hidePending;
     private SkillKeywordConfig m_keywordConfig { get { return SkillKeywordConfig.Instance; } set { } }
 
     private void Awake()
@@ -42,6 +43,7 @@ public class SkillDescription : MonoBehaviour
             m_canvasGroup = GetComponent<CanvasGroup>();
         }
         m_canvasGroup.alpha = 0;
+        m_canvasGroup.gameObject.SetActive(false);
 
         // 加载关键词配置
         m_keywordConfig = Resources.Load<SkillKeywordConfig>("配置可编程物体/技能/关键词配置/SkillKeywordConfig");
@@ -50,9 +52,12 @@ public class SkillDescription : MonoBehaviour
     public void ChangeDescription(SkillBase skill = null)
     {
         KillCurrentSequence();
+        PrepareCanvasGroupForAnimation();
         m_currentSequence = DOTween.Sequence().SetUpdate(true);
         if (skill != null)
         {
+            m_hidePending = false;
+            ShowDescriptionPanel();
             PauseCameraSway();
             string description = skill.description;
             if (m_keywordConfig != null)
@@ -67,11 +72,7 @@ public class SkillDescription : MonoBehaviour
         }
         else
         {
-            ResumeCameraSway();
-            DestroySpawnedTags();
-            m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
-            BackgroundManager.Instance.ChangeBackground(false);
-            m_currentSequence.AppendCallback(ClearDescriptionText);
+            BeginHideSequence();
         }
     }
 
@@ -81,9 +82,12 @@ public class SkillDescription : MonoBehaviour
     public void ChangeDescription(State state)
     {
         KillCurrentSequence();
+        PrepareCanvasGroupForAnimation();
         m_currentSequence = DOTween.Sequence().SetUpdate(true);
         if (state != null)
         {
+            m_hidePending = false;
+            ShowDescriptionPanel();
             PauseCameraSway();
             string stateName = StateDictionaryManager.GetStateName(state.stateType);
             string text = $"{stateName}：{state.description}";
@@ -101,11 +105,7 @@ public class SkillDescription : MonoBehaviour
         }
         else
         {
-            ResumeCameraSway();
-            DestroySpawnedTags();
-            m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
-            BackgroundManager.Instance.ChangeBackground(false);
-            m_currentSequence.AppendCallback(ClearDescriptionText);
+            BeginHideSequence();
         }
     }
 
@@ -231,8 +231,55 @@ public class SkillDescription : MonoBehaviour
     {
         if (m_currentSequence != null && m_currentSequence.IsActive())
         {
+            bool wasHiding = m_hidePending;
             m_currentSequence.Kill();
+            if (wasHiding)
+            {
+                CompleteHide();
+            }
         }
+    }
+
+    private void PrepareCanvasGroupForAnimation()
+    {
+        if (m_canvasGroup == null)
+        {
+            return;
+        }
+
+        DOTween.Kill(m_canvasGroup, complete: false);
+    }
+
+    private void ShowDescriptionPanel()
+    {
+        if (m_canvasGroup == null)
+        {
+            return;
+        }
+
+        m_canvasGroup.gameObject.SetActive(true);
+    }
+
+    private void BeginHideSequence()
+    {
+        m_hidePending = true;
+        ResumeCameraSway();
+        DestroySpawnedTags();
+        m_currentSequence.Join(m_canvasGroup.DOFade(0, 0.3f).SetEase(Ease.InOutQuad));
+        BackgroundManager.Instance.ChangeBackground(false);
+        m_currentSequence.AppendCallback(CompleteHide);
+    }
+
+    private void CompleteHide()
+    {
+        ClearDescriptionText();
+        if (m_canvasGroup != null)
+        {
+            m_canvasGroup.alpha = 0f;
+            m_canvasGroup.gameObject.SetActive(false);
+        }
+
+        m_hidePending = false;
     }
 
     private void ClearDescriptionText()

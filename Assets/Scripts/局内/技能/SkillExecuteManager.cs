@@ -43,6 +43,7 @@ public static class SkillExecuteManager
             yield break;
         }
         s_isExecutingSkill = true;
+        SkillDescription.Instance?.HideDescription();
         yield return skill.Execute(unit);
         yield return UnitCombatant.WaitForPendingDeaths();
         s_isExecutingSkill = false;
@@ -58,6 +59,7 @@ public static class SkillExecuteManager
         }
 
         s_isExecutingSkill = true;
+        SkillDescription.Instance?.HideDescription();
         yield return skill.Execute(unit, selectedEnemies);
         yield return UnitCombatant.WaitForPendingDeaths();
         s_isExecutingSkill = false;

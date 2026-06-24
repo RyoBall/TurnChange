@@ -91,6 +91,10 @@ public class CommandButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             Debug.LogWarning($"[CommandButton] {name} 未绑定技能或角色");
             return;
         }
+
+        m_isPointerOver = false;
+        SkillDescription.Instance?.HideDescription();
+
         if(m_skill is CommandSkillBase commandSkill && commandSkill.commandSkillType == CommandSkillType.Change)
         {
             OnChangeButtonClicked?.Invoke();
